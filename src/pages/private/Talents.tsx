@@ -281,14 +281,14 @@ export const Talents = () => {
                                                 options={["CV", "CV Fractal"]}
                                                 onSelect={() => openModal('modalCv')}
                                                 buttonLabel="Ver CV"
-                                                buttonStyle="w-32 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"
+                                                buttonStyle="w-36 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"
                                             />
                                             {/* Contact */}
                                             <div className="flex flex-col gap-4">
                                                 <button
                                                     type="button"
                                                     onClick={() => openModal('modalContact')}
-                                                    className="flex items-center w-32 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2">
+                                                    className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2">
                                                     <img src="/assets/ic_phone.svg" alt="icon contact" className="h-5 w-5" />
                                                     Contactar
                                                 </button>
