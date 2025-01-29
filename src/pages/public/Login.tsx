@@ -78,7 +78,7 @@ export const Login = () => {
                     </button>
                 </form>
             </section>
-            <section className="flex-1 flex flex-col items-center justify-center bg-[#F4F4F5] relative">
+            <section className="flex-1 flex-col items-center justify-center bg-[#F4F4F5] relative hidden lg:flex">
                 <img src="assets/map.png" alt="Map" />
                 <img src="assets/people.png" alt="Login" className="absolute" />
             </section>

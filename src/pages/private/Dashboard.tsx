@@ -5,9 +5,10 @@ interface Props {
 }
 
 export const Dashboard = ({ children }: Props) => {
+
     return (
         <>
-            <nav className="flex px-36 justify-between items-center h-[85px] shadow-lg">
+            <nav className="flex flex-row px-4 lg:px-36 justify-between items-center h-[85px] py-3 shadow-lg">
                 {/* Logo */}
                 <div >
                     <img src="/assets/fractal-logo.png" alt="Logo Fractal" className="h-12" />

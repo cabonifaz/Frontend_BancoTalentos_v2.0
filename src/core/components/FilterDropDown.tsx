@@ -39,7 +39,7 @@ export const FilterDropDown = ({ label, options, name, optionsType, inputPositio
 
     return (
         <div ref={dropdownRef} className="relative">
-            <button type="button" onClick={onToggle} className="hover:bg-[#27272A] hover:text-white transition-all duration-300 py-2 px-4 rounded-full text-sm bg-[#f2f4f7]">
+            <button type="button" onClick={onToggle} className="hover:bg-[#27272A] whitespace-nowrap hover:text-white transition-all duration-300 py-2 px-4 rounded-full text-sm bg-[#f2f4f7]">
                 {label}
             </button>
             <div className={`${optionsPanelSize} ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"} absolute bg-white shadow-lg mt-2 rounded p-2 z-10 transition-all duration-300 overflow-hidden`}>

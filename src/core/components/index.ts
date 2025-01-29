@@ -9,4 +9,4 @@ export * from "./OptionsButton";
 export * from "./Pagination";
 export * from "./RoutesWithNotFound";
 export * from "./FilterDropDown";
-export * from "./Modal"
+export * from "./modals/ModalsForTalentsPage"
