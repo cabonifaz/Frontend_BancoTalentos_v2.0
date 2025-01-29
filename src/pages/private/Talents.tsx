@@ -246,7 +246,12 @@ export const Talents = () => {
                                                 </button>
                                             </div>
                                             <div>
-                                                <p className="text-base">{talent.name}</p>
+                                                <div className="flex gap-2 items-center h-5">
+                                                    <p className="text-base">{talent.name}</p>
+                                                    <button type="button" className="p-1 bg-white rounded-full hover:shadow-lg hover:border-[.5px] transition-all duration-200">
+                                                        <img src="/assets/ic_outline_heart.svg" alt="icon favourite" className="h-5 w-5" />
+                                                    </button>
+                                                </div>
                                                 <p className="text-sm text-[#71717A] flex items-end my-1 h-5">
                                                     <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
                                                     {talent.location}
