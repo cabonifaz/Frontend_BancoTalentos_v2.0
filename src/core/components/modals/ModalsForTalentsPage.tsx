@@ -11,6 +11,7 @@ import { ModalSocialMedia } from "./ModalSocialMedia";
 import { ModalSoftSkills } from "./ModalSoftSkills";
 import { ModalSummary } from "./ModalSummary";
 import { ModalTechSkills } from "./ModalTechSkills";
+import { ModalUploadResume } from "./ModalUploadResume";
 
 export const ModalsForTalentsPage = () => {
     return (
@@ -28,6 +29,7 @@ export const ModalsForTalentsPage = () => {
             <ModalSoftSkills />
             <ModalSummary />
             <ModalTechSkills />
+            <ModalUploadResume />
         </>
     );
 }

@@ -1,10 +1,10 @@
 import { Modal } from "./Modal";
 
-export const ModalEditPhoto = () => {
+export const ModalUploadResume = () => {
     return (
-        <Modal id="modalEditPhoto" title="Modifica tu foto de perfil" confirmationLabel="Editar">
+        <Modal id="modalUploadResume" title="Editar Curriculum Vitae" confirmationLabel="Subir">
             <div>
-                <h3 className="text-[#71717A] text-sm mt-6">Sube una nueva foto de perfil.</h3>
+                <h3 className="text-[#71717A] text-sm mt-6">Sube tu nuevo Curriculum Vitae.</h3>
                 <div className="rounded-lg overflow-hidden py-4">
                     <div className="w-full">
                         <div className="relative h-32 rounded-lg border-2 border-gray-100 flex justify-center items-center hover:bg-gray-100">
@@ -15,14 +15,14 @@ export const ModalEditPhoto = () => {
                                     src="/assets/ic_upload.svg"
                                 />
                                 <span className="block text-[#0b85c3] font-normal mt-1">
-                                    Sube una nueva foto de perfil
+                                    Sube un archivo
                                 </span>
-                                <span className="text-sm text-[#71717A] mb-6">PNG o JPG</span>
+                                <span className="text-sm text-[#71717A] mb-6">PDF (max. 5MB)</span>
                             </div>
                             <input
                                 type="file"
                                 name="user-photo"
-                                accept=".png, .jpg"
+                                accept=".pdf"
                                 className="h-full w-full opacity-0 cursor-pointer"
                             />
                         </div>

@@ -1,34 +1,40 @@
-import { useEffect, useState } from "react";
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utils";
+import { useEffect, useRef, useState } from "react";
+import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
 import { Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton, EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage } from '../../core/components';
-import { useModal } from "../../core/context/ModalContext";
 
 export const Talents = () => {
-    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-    const [talent, setTalent] = useState<Talent | null>(null);
     const { openModal } = useModal();
-    const [isVisible, setIsVisible] = useState(true);
+    const favouriteRef = useRef<HTMLDivElement>(null);
+    const [talent, setTalent] = useState<Talent | null>(null);
+    const [isFavouriteVisible, setFavouriteVisible] = useState(false);
+    const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
+    const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
-    const handleToggle = (index: number) => {
+    const handleDropdownToggle = (index: number) => {
         setOpenDropdown((prev) => (prev === index ? null : index));
     };
+
+    const handleFavouriteToggle = () => {
+        setFavouriteVisible((prev) => !prev);
+    }
 
     const handleTalentSelection = (talent: Talent) => {
         setTalent(talent);
 
         if (window.innerWidth <= 678) {
-            setIsVisible((prev) => !prev);
+            setTalentPanelVisible((prev) => !prev);
         }
     };
 
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth > 678) {
-                setIsVisible(true);
+                setTalentPanelVisible(true);
             } else {
-                setIsVisible(false);
+                setTalentPanelVisible(false);
             }
         };
 
@@ -36,6 +42,20 @@ export const Talents = () => {
 
         return () => {
             window.removeEventListener("resize", handleResize);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (favouriteRef.current && !favouriteRef.current.contains(event.target as Node)) {
+                setFavouriteVisible(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
 
@@ -191,7 +211,7 @@ export const Talents = () => {
                                         key={index}
                                         {...dropdown}
                                         isOpen={openDropdown === index}
-                                        onToggle={() => handleToggle(index)}
+                                        onToggle={() => handleDropdownToggle(index)}
                                     />
                                 ))}
                             </div>
@@ -226,10 +246,10 @@ export const Talents = () => {
                             </div>
                         </div>
                         {/* Talent details */}
-                        <div className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${!isVisible ? "hidden" : ""}`}>
+                        <div className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${!isTalentPanelVisible ? "hidden" : ""}`}>
                             {talent && (
                                 <div className="flex flex-col px-8 md:pt-8 overflow-y-scroll overflow-x-hidden h-full lg:h-[calc(100vh-205px)]">
-                                    <button type="button" onClick={() => setIsVisible(false)} className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
+                                    <button type="button" onClick={() => setTalentPanelVisible(false)} className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
                                         <img src="/assets/ic_go_back.svg" alt="icon close" className="h-6 w-6" />
                                         <p className="text-[#2e2e2e]">Volver</p>
                                     </button>
@@ -248,9 +268,25 @@ export const Talents = () => {
                                             <div>
                                                 <div className="flex gap-2 items-center h-5">
                                                     <p className="text-base">{talent.name}</p>
-                                                    <button type="button" className="p-1 bg-white rounded-full hover:shadow-lg hover:border-[.5px] transition-all duration-200">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleFavouriteToggle}
+                                                        className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 relative">
                                                         <img src="/assets/ic_outline_heart.svg" alt="icon favourite" className="h-5 w-5" />
+                                                        {/* Favourite panel */}
+                                                        <div
+                                                            ref={favouriteRef}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className={`w-72 absolute p-5 flex-col gap-2 border border-gray-50 shadow-lg bg-white rounded-lg left-5 z-20 ${isFavouriteVisible ? "flex" : "hidden"}`}>
+                                                            <input type="text" className="text-[#3f3f46] p-2 border-gray-300 border rounded-lg w-full focus:outline-none focus:border-[#4F46E5]" />
+                                                            <button type="button" className="p-2 text-white bg-[#009695] hover:bg-[#2d8d8d] rounded-lg w-full focus:outline-none">Crear Favorito</button>
+                                                            <select name="favs" id="favs" className="text-[#3f3f46] p-2 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                                                <option value="0">Elegir favorito</option>
+                                                                <option value="fav-1">Favs</option>
+                                                            </select>
+                                                        </div>
                                                     </button>
+
                                                 </div>
                                                 <p className="text-sm text-[#71717A] flex items-end my-1 h-5">
                                                     <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
@@ -329,9 +365,10 @@ export const Talents = () => {
                                                     </div>
 
                                                     <input
-                                                        name="cert-file"
-                                                        className="h-full w-full opacity-0 cursor-pointer"
                                                         type="file"
+                                                        name="cert-file"
+                                                        accept=".pdf"
+                                                        className="h-full w-full opacity-0 cursor-pointer"
                                                     />
                                                 </div>
                                             </div>
