@@ -2,7 +2,7 @@ import { Login } from "./pages/public/Login";
 import { PrivateRouter } from "./pages/private/PrivateRouter";
 import { PrivateRouteGuard } from "./guard/PrivateRouteGuard";
 import { BrowserRouter, Navigate, Route } from "react-router-dom";
-import { RoutesWithNotFound } from "./core/components/RoutesWithNotFound";
+import { RoutesWithNotFound } from "./core/components";
 
 export const AppRouter = () => {
     return (

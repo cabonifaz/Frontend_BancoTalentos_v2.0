@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from "react-hook-form";
 import { LoginFormSchema, LoginFormType } from "../../core/schemas/LoginFormSchema";
 import { useNavigate } from "react-router-dom";
-import { LoadingOverlay, InputForm } from "../../core/components";
+import { Loading, InputForm } from "../../core/components";
 
 const useLogin = () => {
     const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ export const Login = () => {
         return handleLogin(data.username, data.password);
     };
 
-    if (loading) return <LoadingOverlay />;
+    if (loading) return <Loading />;
 
     return (
         <div className="flex h-screen">

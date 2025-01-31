@@ -1,7 +1,7 @@
-import { Navigate, Route } from "react-router-dom";
-import { RoutesWithNotFound } from "../../core/components/RoutesWithNotFound";
 import { Talents } from "./Talents";
 import { AddTalent } from "./AddTalent";
+import { Navigate, Route } from "react-router-dom";
+import { RoutesWithNotFound } from "../../core/components";
 
 export const PrivateRouter = () => {
     return (

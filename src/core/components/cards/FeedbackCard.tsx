@@ -1,20 +1,25 @@
-import { Education } from "../models/Education";
+import { Feedback } from "../../models/Feedback";
+import { Utils } from "../../utils";
 
 interface Props {
-    data: Education;
+    data: Feedback;
 }
 
-export const EducationCard = ({ data }: Props) => {
+export const FeedbackCard = ({ data }: Props) => {
     return (
         <div className="flex items-center justify-between rounded-md my-1 px-2 sm:px-12 py-4 bg-[#f4f4f5] w-full">
             <div className="flex gap-2 sm:gap-12 items-center">
                 <img src={data.image ? data.image : "/assets/ic_no_image.svg"} alt="Foto Perfil Talento" className="w-16 h-16 rounded-full border" />
                 <div className="flex flex-col gap-2">
-                    <h2 className="text-[#27272A] text-base">{data.entityName}</h2>
-                    <p className="text-[#71717A] text-sm flex flex-col">{data.description} <span>{`${data.startYear} - ${data.endYear}`}</span></p>
+                    <h2 className="text-[#27272A] text-base flex gap-4 items-center">
+                        {data.user}
+                        <div className="flex gap-2 my-2">
+                            {Utils.getStars(data.stars)}
+                        </div>
+                    </h2>
+                    <p className="text-[#71717A] text-sm">{data.feedback}</p>
                 </div>
             </div>
-
             {/* Actions */}
             <div>
                 <button
