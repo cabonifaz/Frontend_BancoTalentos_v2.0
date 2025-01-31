@@ -10,3 +10,4 @@ export * from "./Pagination";
 export * from "./RoutesWithNotFound";
 export * from "./FilterDropDown";
 export * from "./modals/ModalsForTalentsPage"
+export * from "./DynamicSection"

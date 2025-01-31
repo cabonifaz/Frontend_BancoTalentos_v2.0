@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para el scroll */
 
 /* width */
 ::-webkit-scrollbar {
@@ -24,4 +25,18 @@
 ::-webkit-scrollbar-thumb:hover {
     cursor: pointer;
     background: #c0c0c0;
+}
+
+/* Estilos para el input number */
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    appearance: none;
+    -moz-appearance: textfield;
 }

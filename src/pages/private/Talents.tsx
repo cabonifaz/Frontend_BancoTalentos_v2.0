@@ -4,14 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
 import { Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton, EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage } from '../../core/components';
+import { useNavigate } from "react-router-dom";
 
 export const Talents = () => {
+    const navigate = useNavigate();
     const { openModal } = useModal();
     const favouriteRef = useRef<HTMLDivElement>(null);
     const [talent, setTalent] = useState<Talent | null>(null);
     const [isFavouriteVisible, setFavouriteVisible] = useState(false);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+
+
+    const goToAddTalent = () => {
+        return navigate("/dashboard/nuevo-talento");
+    }
 
     const handleDropdownToggle = (index: number) => {
         setOpenDropdown((prev) => (prev === index ? null : index));
@@ -165,6 +172,7 @@ export const Talents = () => {
     {
         idExperience: 1,
         image: '',
+        area: '',
         entityName: 'University of XYZ',
         description: 'Bachelor of Science in Computer Science',
         startYear: 2015,
@@ -197,6 +205,7 @@ export const Talents = () => {
                         <div className="flex flex-col lg:flex-row lg:items-center gap-7 w-full sm:w-1/3">
                             <button
                                 type="button"
+                                onClick={goToAddTalent}
                                 className="w-full xl:w-fit flex items-center whitespace-nowrap gap-1 py-2 px-3 border border-[#3b82f6] hover:bg-blue-50 text-sm font-normal text-[#3b82f6] text-center rounded-lg">
                                 <img src="/assets/ic_add.svg" alt="add talent icon" />
                                 <span>Nuevo Talento</span>
