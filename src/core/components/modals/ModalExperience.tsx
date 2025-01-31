@@ -30,7 +30,7 @@ export const ModalExperience = () => {
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Año y mes de inicio</label>
+                        <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
                         <input
                             type="month"
                             name="initDate"
@@ -42,7 +42,7 @@ export const ModalExperience = () => {
                         </div>
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Año y mes de fin</label>
+                        <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
                         <input
                             type="month"
                             name="endDate"

@@ -340,7 +340,7 @@ export const AddTalent = () => {
                                         </div>
                                         <div className="flex gap-4">
                                             <div className="flex flex-col w-1/2">
-                                                <label htmlFor="initDate" className="text-[#71717A] text-sm px-1">Año y mes de inicio</label>
+                                                <label htmlFor="initDate" className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
                                                 <input
                                                     id="initDate"
                                                     type="month"
@@ -354,7 +354,7 @@ export const AddTalent = () => {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col w-1/2">
-                                                <label htmlFor="endDate" className="text-[#71717A] text-sm px-1">Año y mes de fin</label>
+                                                <label htmlFor="endDate" className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
                                                 <input
                                                     id="endDate"
                                                     type="month"
@@ -421,7 +421,7 @@ export const AddTalent = () => {
                                         </div>
                                         <div className="flex gap-4">
                                             <div className="flex flex-col w-1/2">
-                                                <label htmlFor="initDateEducation" className="text-[#71717A] text-sm px-1">Año y mes de inicio</label>
+                                                <label htmlFor="initDateEducation" className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
                                                 <input
                                                     type="month"
                                                     id="initDateEducation"
@@ -435,7 +435,7 @@ export const AddTalent = () => {
                                                 </div>
                                             </div>
                                             <div className="flex flex-col w-1/2">
-                                                <label htmlFor="endDateEducation" className="text-[#71717A] text-sm px-1">Año y mes de fin</label>
+                                                <label htmlFor="endDateEducation" className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
                                                 <input
                                                     type="month"
                                                     id="endDateEducation"

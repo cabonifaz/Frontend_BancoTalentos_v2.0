@@ -38,7 +38,7 @@ export const ModalEducation = () => {
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDateEducation" className="text-[#37404c] text-base my-2">Año y mes de inicio</label>
+                        <label htmlFor="initDateEducation" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
                         <input
                             type="month"
                             name="initDateEducation"
@@ -50,7 +50,7 @@ export const ModalEducation = () => {
                         </div>
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDateEducation" className="text-[#37404c] text-base my-2">Año y mes de fin</label>
+                        <label htmlFor="endDateEducation" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
                         <input
                             type="month"
                             name="endDateEducation"
