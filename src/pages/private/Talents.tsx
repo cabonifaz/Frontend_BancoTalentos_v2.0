@@ -1,39 +1,40 @@
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
-import { Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton, EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage } from '../../core/components';
+import { Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton, EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, OutsideClickHandler } from '../../core/components';
 import { useNavigate } from "react-router-dom";
+
+interface Dropdown {
+    name: string;
+    label: string;
+    options: string[];
+    optionsType: "checkbox" | "radio";
+    optionsPanelSize: string;
+    inputPosition: "left" | "right";
+}
 
 export const Talents = () => {
     const navigate = useNavigate();
     const { openModal } = useModal();
-    const favouriteRef = useRef<HTMLDivElement>(null);
     const [talent, setTalent] = useState<Talent | null>(null);
     const [isFavouriteVisible, setFavouriteVisible] = useState(false);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
+    const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
 
-    const goToAddTalent = () => {
-        return navigate("/dashboard/nuevo-talento");
-    }
+    const handleDropdownToggle = (index: number) => setOpenDropdown((prev) => (prev === index ? null : index));
 
-    const handleDropdownToggle = (index: number) => {
-        setOpenDropdown((prev) => (prev === index ? null : index));
-    };
-
-    const handleFavouriteToggle = () => {
-        setFavouriteVisible((prev) => !prev);
-    }
+    const handleFavouriteToggle = () => setFavouriteVisible((prev) => !prev);
 
     const handleTalentSelection = (talent: Talent) => {
         setTalent(talent);
 
-        if (window.innerWidth <= 678) {
-            setTalentPanelVisible((prev) => !prev);
-        }
+        if (window.innerWidth > 678) return;
+
+        setTalentPanelVisible((prev) => !prev);
     };
 
     useEffect(() => {
@@ -52,19 +53,32 @@ export const Talents = () => {
         };
     }, []);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (favouriteRef.current && !favouriteRef.current.contains(event.target as Node)) {
-                setFavouriteVisible(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    const dropdowns: Dropdown[] = [
+        {
+            name: "habilidades",
+            label: "Habilidades",
+            options: ["Frontend", "Backend", "Asistente de marketing/Intérprete"],
+            optionsType: "checkbox",
+            optionsPanelSize: "w-72",
+            inputPosition: "left",
+        },
+        {
+            name: "nivelIngles",
+            label: "Nivel de inglés",
+            options: ["Básico", "Intermedio", "Avanzado"],
+            optionsType: "radio",
+            optionsPanelSize: "w-32",
+            inputPosition: "right",
+        },
+        {
+            name: "favoritos",
+            label: "Favoritos",
+            options: ["Favoritos", "Seniors"],
+            optionsType: "radio",
+            optionsPanelSize: "w-32",
+            inputPosition: "right",
+        },
+    ];
 
     const talents: Talent[] = [
         {
@@ -123,40 +137,6 @@ export const Talents = () => {
             image: '',
         }
     ];
-
-    const dropdowns: {
-        name: string;
-        label: string;
-        options: string[];
-        optionsType: "checkbox" | "radio";
-        optionsPanelSize: string;
-        inputPosition: "left" | "right";
-    }[] = [
-            {
-                name: "habilidades",
-                label: "Habilidades",
-                options: ["Frontend", "Backend", "Asistente de marketing/Intérprete"],
-                optionsType: "checkbox",
-                optionsPanelSize: "w-72",
-                inputPosition: "left",
-            },
-            {
-                name: "nivelIngles",
-                label: "Nivel de inglés",
-                options: ["Básico", "Intermedio", "Avanzado"],
-                optionsType: "radio",
-                optionsPanelSize: "w-32",
-                inputPosition: "right",
-            },
-            {
-                name: "favoritos",
-                label: "Favoritos",
-                options: ["Favoritos", "Seniors"],
-                optionsType: "radio",
-                optionsPanelSize: "w-32",
-                inputPosition: "right",
-            },
-        ];
 
     const educationData: Education =
     {
@@ -283,17 +263,16 @@ export const Talents = () => {
                                                         className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 relative">
                                                         <img src="/assets/ic_outline_heart.svg" alt="icon favourite" className="h-5 w-5" />
                                                         {/* Favourite panel */}
-                                                        <div
-                                                            ref={favouriteRef}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className={`w-72 absolute p-5 flex-col gap-2 border border-gray-50 shadow-lg bg-white rounded-lg left-5 z-20 ${isFavouriteVisible ? "flex" : "hidden"}`}>
-                                                            <input type="text" className="text-[#3f3f46] p-2 border-gray-300 border rounded-lg w-full focus:outline-none focus:border-[#4F46E5]" />
-                                                            <button type="button" className="p-2 text-white bg-[#009695] hover:bg-[#2d8d8d] rounded-lg w-full focus:outline-none">Crear Favorito</button>
-                                                            <select name="favs" id="favs" className="text-[#3f3f46] p-2 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                                                <option value="0">Elegir favorito</option>
-                                                                <option value="fav-1">Favs</option>
-                                                            </select>
-                                                        </div>
+                                                        <OutsideClickHandler onOutsideClick={handleFavouriteToggle}>
+                                                            <div className={`w-72 absolute p-5 flex-col gap-2 border border-gray-50 shadow-lg bg-white rounded-lg left-5 z-20 ${isFavouriteVisible ? "flex" : "hidden"}`}>
+                                                                <input type="text" className="text-[#3f3f46] p-2 border-gray-300 border rounded-lg w-full focus:outline-none focus:border-[#4F46E5]" />
+                                                                <button type="button" className="p-2 text-white bg-[#009695] hover:bg-[#2d8d8d] rounded-lg w-full focus:outline-none">Crear Favorito</button>
+                                                                <select name="favs" id="favs" className="text-[#3f3f46] p-2 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                                                    <option value="0">Elegir favorito</option>
+                                                                    <option value="fav-1">Favs</option>
+                                                                </select>
+                                                            </div>
+                                                        </OutsideClickHandler>
                                                     </button>
 
                                                 </div>
