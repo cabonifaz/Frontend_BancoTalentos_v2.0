@@ -1,5 +1,5 @@
 import { Language } from "../../models/Language";
-import { Utils } from "../../utils";
+import { Utils } from "../../utilities/utils";
 
 interface Props {
     data: Language;

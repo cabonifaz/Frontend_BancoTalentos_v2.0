@@ -1,5 +1,5 @@
 import { Dashboard } from "./Dashboard";
-import { Utils } from "../../core/utils";
+import { Utils } from "../../core/utilities/utils";
 import { useEffect, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
