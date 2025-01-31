@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { OutsideClickHandler } from "./OutsideClickHandler";
 
 interface ButtonSelectProps {
     options: string[];
@@ -28,19 +29,21 @@ export const OptionsButton = ({
             </button>
 
             {isOpen && (
-                <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg border-gray-300">
-                    {options.map((option, index) => (
-                        <div
-                            key={index}
-                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-[#3f3f46]"
-                            onClick={() => {
-                                onSelect(option);
-                                setIsOpen(false);
-                            }}>
-                            {option}
-                        </div>
-                    ))}
-                </div>
+                <OutsideClickHandler onOutsideClick={toggleDropdown}>
+                    <div className="absolute left-0 mt-2 w-full bg-white shadow-lg rounded-lg border-gray-300">
+                        {options.map((option, index) => (
+                            <div
+                                key={index}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-[#3f3f46]"
+                                onClick={() => {
+                                    onSelect(option);
+                                    setIsOpen(false);
+                                }}>
+                                {option}
+                            </div>
+                        ))}
+                    </div>
+                </OutsideClickHandler>
             )}
         </div>
     );

@@ -9,5 +9,6 @@ export * from "./ui/OptionsButton";
 export * from "./ui/Pagination";
 export * from "./ui/RoutesWithNotFound";
 export * from "./ui/FilterDropDown";
+export * from "./ui/DynamicSection";
+export * from "./ui/OutsideClickHandler"
 export * from "./modals/ModalsForTalentsPage"
-export * from "./ui/DynamicSection"
