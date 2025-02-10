@@ -40,12 +40,15 @@ export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, o
                 return response;
             } catch (err) {
                 setError(err as Error);
+                if (options?.onError) {
+                    options.onError(err as Error);
+                }
                 throw err;
             } finally {
                 setLoading(false);
             }
         },
-        [apiCall]
+        [apiCall, options]
     );
 
     useEffect(() => {

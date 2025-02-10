@@ -26,6 +26,7 @@ export const Login = () => {
         try {
             const response = await fetch(formData);
             handleResponse(response, enqueueSnackbar);
+            console.log(response);
 
             if (response.data.result.idMensaje === 2) {
                 localStorage.setItem("token", response.data.token);

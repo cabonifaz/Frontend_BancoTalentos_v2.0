@@ -7,7 +7,6 @@ export * from './interfaces/TechnicalSkill';
 export * from './interfaces/SoftSkill';
 export * from './interfaces/Talent';
 export * from './interfaces/TalentDetails';
-export * from './interfaces/ApiCall';
 export * from './response/LoginResponse';
 export * from './params/LoginParams';
 export * from './schemas/LoginFormSchema';

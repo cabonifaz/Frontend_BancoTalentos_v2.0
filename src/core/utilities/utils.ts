@@ -32,16 +32,20 @@ export class Utils {
         return stars;
     };
 
-    static existsValidToken = (): boolean => {
-        const token = localStorage.getItem("token");
-
+    static isValidToken = (token?: string): boolean => {
         if (!token) return false;
 
         const decodedToken = Utils.decodeJwt(token);
+        if (!decodedToken) {
+            localStorage.removeItem("token");
+            return false;
+        }
+
         const currentTime = Math.floor(Date.now() / 1000);
         if (decodedToken.exp && decodedToken.exp > currentTime) {
-            return true
+            return true;
         }
+
         localStorage.removeItem("token");
         return false;
     }
@@ -52,7 +56,6 @@ export class Utils {
 
     static decodeJwt = (token: string): any => {
         try {
-
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(
@@ -63,9 +66,8 @@ export class Utils {
             );
             return JSON.parse(jsonPayload);
         } catch (err) {
-            console.log(err);
-        } finally {
-            return {};
+            console.error("Error decoding token:", err);
+            return null;
         }
     };
 }

@@ -13,8 +13,8 @@ const setupInterceptors = (instance: AxiosInstance, configToken: boolean = false
     instance.interceptors.request.use(
         (config: InternalAxiosRequestConfig) => {
             if (configToken) {
-                if (Utils.existsValidToken()) {
-                    const token = localStorage.getItem("token");
+                const token = localStorage.getItem("token") || undefined;
+                if (Utils.isValidToken(token)) {
                     config.headers.Authorization = `Bearer ${token}`;
                     return config;
                 }
