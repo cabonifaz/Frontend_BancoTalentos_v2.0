@@ -1,9 +1,4 @@
-import { DocumentFile } from "./DocumentFile";
-import { Education } from "./Education";
-import { Experience } from "./Experience";
-import { Feedback } from "./Feedback";
-import { Language } from "./Language";
-import { SoftSkill } from "./SoftSkill";
+import { DocumentFile, Education, Experience, Feedback, Language, SoftSkill } from "..";
 import { TechnicalSkill } from "./TechnicalSkill";
 
 export interface TalentDetails {

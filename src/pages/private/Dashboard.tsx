@@ -1,14 +1,25 @@
 import { ReactNode, useState } from "react";
 import { OutsideClickHandler } from "../../core/components";
+import { Utils } from "../../core/utilities/utils";
+import { Navigate } from "react-router-dom";
+import { enqueueSnackbar } from "notistack";
 
 interface Props {
     children: ReactNode;
 }
 
 export const Dashboard = ({ children }: Props) => {
+    const [redirect, setRedirect] = useState(false);
     const [isUserOptionsVisible, setUserOptionsVisibility] = useState(false);
-
     const toggleUserOptionsVisibility = () => setUserOptionsVisibility((prev) => !prev);
+
+    const logout = () => {
+        Utils.removeToken();
+        setRedirect(true);
+        enqueueSnackbar("Sesión cerrada", { variant: 'success' });
+    }
+
+    if (redirect) return <Navigate to={"/login"} replace />
 
     return (
         <>
@@ -29,7 +40,7 @@ export const Dashboard = ({ children }: Props) => {
                     {isUserOptionsVisible && (
                         <OutsideClickHandler onOutsideClick={toggleUserOptionsVisibility}>
                             <div className="p-2 w-full rounded-lg shadow-sm absolute top-14 left-5 border-[0.5px] border-gray-50 bg-white flex z-10">
-                                <button type="button" className="flex justify-center py-2 gap-4 w-full rounded-lg hover:bg-gray-100">
+                                <button type="button" onClick={logout} className="flex justify-center py-2 gap-4 w-full rounded-lg hover:bg-gray-100">
                                     <img src="/assets/ic_logout.svg" alt="icon logout" className="w-5 h-5" />
                                     <p>Cerrar sesión</p>
                                 </button>

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import { useState } from "react";
 import { DynamicSection } from "../../core/components";
-import { EducationType, ExperienceType, LanguageType, SoftSkillType, TechnicalSkillType } from "../../core/types/AddTalentPageTypes";
+import { EducationType, ExperienceType, LanguageType, SoftSkillType, TechnicalSkillType } from "../../core/models/interfaces/AddTalentPage";
 
 export const AddTalent = () => {
     const navigate = useNavigate();

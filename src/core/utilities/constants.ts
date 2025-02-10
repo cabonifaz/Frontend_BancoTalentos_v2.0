@@ -1,0 +1,1 @@
+export const BASE_URL = "https://bdtv2backendstaging-c5h8cza8fdgvf3ba.brazilsouth-01.azurewebsites.net";

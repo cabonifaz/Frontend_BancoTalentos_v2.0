@@ -1,31 +1,20 @@
 import { useState } from "react";
+import { useSnackbar } from "notistack";
+import { Navigate } from "react-router-dom";
+import { useApi } from "../../core/hooks/useApi";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, SubmitHandler } from "react-hook-form";
-import { LoginFormSchema, LoginFormType } from "../../core/schemas/LoginFormSchema";
-import { useNavigate } from "react-router-dom";
+import { loginApp } from "../../core/services/apiService";
 import { Loading, InputForm } from "../../core/components";
-
-const useLogin = () => {
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-
-    const handleLogin = (username: string, password: string) => {
-        console.log("Logging in:", username, password);
-        setLoading(true);
-
-        setTimeout(() => {
-            setLoading(false);
-            navigate("/dashboard/talentos");
-        }, 1000);
-    };
-
-    return { handleLogin, loading };
-};
+import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import { LoginFormSchema, LoginFormType, LoginParams, LoginResponse } from "../../core/models";
 
 export const Login = () => {
-    const { handleLogin, loading } = useLogin();
+    const { enqueueSnackbar } = useSnackbar();
+    const [redirect, setRedirect] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
+    const { loading, fetch } = useApi<LoginResponse, LoginParams>(loginApp, { onError: (error) => { handleError(error, enqueueSnackbar); } });
 
     const { control, handleSubmit, formState: { errors } } = useForm<LoginFormType>({
         resolver: zodResolver(LoginFormSchema),
@@ -33,10 +22,21 @@ export const Login = () => {
         defaultValues: { username: "", password: "" },
     });
 
-    const login: SubmitHandler<LoginFormType> = (data) => {
-        return handleLogin(data.username, data.password);
+    const login: SubmitHandler<LoginFormType> = async (formData) => {
+        try {
+            const response = await fetch(formData);
+            handleResponse(response, enqueueSnackbar);
+
+            if (response.data.result.idMensaje === 2) {
+                localStorage.setItem("token", response.data.token);
+                setRedirect(true);
+            }
+        } catch (err) {
+            handleError(err as Error, enqueueSnackbar);
+        }
     };
 
+    if (redirect) return <Navigate to={"/dashboard/talentos"} />;
     if (loading) return <Loading />;
 
     return (

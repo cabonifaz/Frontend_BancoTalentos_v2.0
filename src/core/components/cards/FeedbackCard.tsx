@@ -1,4 +1,4 @@
-import { Feedback } from "../../models/Feedback";
+import { Feedback } from "../../models/interfaces/Feedback";
 import { Utils } from "../../utilities/utils";
 
 interface Props {

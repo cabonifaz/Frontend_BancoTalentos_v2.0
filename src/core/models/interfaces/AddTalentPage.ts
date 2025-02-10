@@ -1,13 +1,13 @@
-export type TechnicalSkillType = {
+export interface TechnicalSkillType {
     techSkill: string;
     skillYears: string;
 }
 
-export type SoftSkillType = {
+export interface SoftSkillType {
     name: string;
 }
 
-export type ExperienceType = {
+export interface ExperienceType {
     entityName: string;
     area: string;
     description: string;
@@ -15,7 +15,7 @@ export type ExperienceType = {
     endYear: string;
 }
 
-export type EducationType = {
+export interface EducationType {
     entityName: string;
     carrer: string;
     degree: string;
@@ -23,7 +23,7 @@ export type EducationType = {
     endYear: string;
 }
 
-export type LanguageType = {
+export interface LanguageType {
     language: number;
     level: number;
 }

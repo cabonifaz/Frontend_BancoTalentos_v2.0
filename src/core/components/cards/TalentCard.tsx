@@ -1,4 +1,4 @@
-import { Talent } from "../../models/Talent";
+import { Talent } from "../../models/interfaces/Talent";
 import { Utils } from "../../utilities/utils";
 
 interface Props {
