@@ -10,10 +10,7 @@ export const OutsideClickHandler = ({ onOutsideClick, children }: Props) => {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                wrapperRef.current &&
-                !wrapperRef.current.contains(event.target as Node)
-            ) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
                 onOutsideClick();
             }
         };

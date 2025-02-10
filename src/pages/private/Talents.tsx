@@ -3,7 +3,10 @@ import { Utils } from "../../core/utilities/utils";
 import { useEffect, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
-import { Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton, EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, OutsideClickHandler } from '../../core/components';
+import {
+    Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton,
+    EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, FavouriteButton
+} from '../../core/components';
 import { useNavigate } from "react-router-dom";
 
 interface Dropdown {
@@ -19,15 +22,12 @@ export const Talents = () => {
     const navigate = useNavigate();
     const { openModal } = useModal();
     const [talent, setTalent] = useState<Talent | null>(null);
-    const [isFavouriteVisible, setFavouriteVisible] = useState(false);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
 
     const handleDropdownToggle = (index: number) => setOpenDropdown((prev) => (prev === index ? null : index));
-
-    const handleFavouriteToggle = () => setFavouriteVisible((prev) => !prev);
 
     const handleTalentSelection = (talent: Talent) => {
         setTalent(talent);
@@ -257,24 +257,7 @@ export const Talents = () => {
                                             <div>
                                                 <div className="flex gap-2 items-center h-5">
                                                     <p className="text-base">{talent.name}</p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleFavouriteToggle}
-                                                        className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 relative">
-                                                        <img src="/assets/ic_outline_heart.svg" alt="icon favourite" className="h-5 w-5" />
-                                                        {/* Favourite panel */}
-                                                        <OutsideClickHandler onOutsideClick={handleFavouriteToggle}>
-                                                            <div className={`w-72 absolute p-5 flex-col gap-2 border border-gray-50 shadow-lg bg-white rounded-lg left-5 z-20 ${isFavouriteVisible ? "flex" : "hidden"}`}>
-                                                                <input type="text" className="text-[#3f3f46] p-2 border-gray-300 border rounded-lg w-full focus:outline-none focus:border-[#4F46E5]" />
-                                                                <button type="button" className="p-2 text-white bg-[#009695] hover:bg-[#2d8d8d] rounded-lg w-full focus:outline-none">Crear Favorito</button>
-                                                                <select name="favs" id="favs" className="text-[#3f3f46] p-2 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                                                    <option value="0">Elegir favorito</option>
-                                                                    <option value="fav-1">Favs</option>
-                                                                </select>
-                                                            </div>
-                                                        </OutsideClickHandler>
-                                                    </button>
-
+                                                    <FavouriteButton />
                                                 </div>
                                                 <p className="text-sm text-[#71717A] flex items-end my-1 h-5">
                                                     <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
