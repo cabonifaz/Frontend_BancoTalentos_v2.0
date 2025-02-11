@@ -17,7 +17,7 @@ export const handleResponse = (
 
     switch (code) {
         case 1: enqueueSnackbar(message, { variant: 'warning' }); break;
-        case 2: enqueueSnackbar(message, { variant: 'success' }); break;
+        case 2: break;
         case 3: enqueueSnackbar(message, { variant: 'error' }); break;
         default: enqueueSnackbar("Error al consultar API", { variant: 'error' }); break;
     }
