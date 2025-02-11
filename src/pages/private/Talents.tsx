@@ -11,7 +11,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getTalents } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
-import { handleError } from "../../core/utilities/errorHandler";
+import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
 
 interface Dropdown {
@@ -31,9 +31,13 @@ export const Talents = () => {
     const [talent, setTalent] = useState<Talent | null>(null);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-    const { loading, data, fetch } = useApi<TalentsResponse, TalentParams>(
-        getTalents,
-        { autoFetch: true, params: { nPag: currentPage }, onError: (error) => { handleError(error, enqueueSnackbar); } }
+    const { loading, data, fetch } = useApi<TalentsResponse, TalentParams>(getTalents,
+        {
+            autoFetch: true,
+            params: { nPag: currentPage },
+            onError: (error) => { handleError(error, enqueueSnackbar); },
+            onSuccess: (response) => { handleResponse(response, enqueueSnackbar); }
+        }
     );
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
@@ -178,7 +182,7 @@ export const Talents = () => {
                         {/* Talents list */}
                         <div className="flex flex-col w-full md:w-1/3">
                             <div className="*:mb-2 h-[calc(100vh-230px)] overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
-                                {data?.talents.map((talent, index) => (
+                                {(data?.talents || []).map((talent, index) => (
                                     <TalentCard
                                         key={index}
                                         talent={talent}

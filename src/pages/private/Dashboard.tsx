@@ -12,6 +12,13 @@ export const Dashboard = ({ children }: Props) => {
     const [redirect, setRedirect] = useState(false);
     const [isUserOptionsVisible, setUserOptionsVisibility] = useState(false);
     const toggleUserOptionsVisibility = () => setUserOptionsVisibility((prev) => !prev);
+    const token = localStorage.getItem("token");
+
+    if (!token) return <Navigate to={"/login"} replace />
+
+    const fullName = Utils.decodeJwt(token).fullname;
+    const firstLetter = fullName.charAt(0);
+    const rol = Utils.decodeJwt(token).roles[0];
 
     const logout = () => {
         Utils.removeToken();
@@ -31,10 +38,10 @@ export const Dashboard = ({ children }: Props) => {
                 {/* User info */}
                 <div className="relative">
                     <div className="flex gap-4 cursor-pointer" onClick={toggleUserOptionsVisibility}>
-                        <span className="rounded-[100%] text-center py-2 bg-zinc-200 text-2xl font-normal h-12 w-12">A</span>
+                        <span className="rounded-[100%] text-center py-2 bg-zinc-200 text-2xl font-normal h-12 w-12">{firstLetter}</span>
                         <div className="flex flex-col">
-                            <p className="text-base font-semibold">Adrian Dedworth</p>
-                            <p className="text-sm text-[#71717A] font-light">Reclutador</p>
+                            <p className="text-base font-semibold">{fullName}</p>
+                            <p className="text-sm text-[#71717A] font-light">{rol}</p>
                         </div>
                     </div>
                     {isUserOptionsVisible && (

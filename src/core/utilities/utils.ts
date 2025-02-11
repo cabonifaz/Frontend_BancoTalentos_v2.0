@@ -35,7 +35,7 @@ export class Utils {
     static isValidToken = (token?: string): boolean => {
         if (!token) return false;
 
-        const decodedToken = Utils.decodeJwt(token);
+        const decodedToken = this.decodeJwt(token);
         if (!decodedToken) {
             localStorage.removeItem("token");
             return false;

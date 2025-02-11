@@ -8,6 +8,7 @@ interface UseApiOptions<P> {
     autoFetch?: boolean;
     params?: P;
     onError?: (error: Error) => void;
+    onSuccess?: (response: AxiosResponse) => void;
 }
 
 interface UseApiResult<T, P> {
@@ -17,10 +18,7 @@ interface UseApiResult<T, P> {
     fetch: (params: P) => Promise<AxiosResponse<T>>;
 }
 
-export const useApi = <T, P>(
-    apiCall: (param: P) => Promise<AxiosResponse<T>>,
-    options?: UseApiOptions<P>
-): UseApiResult<T, P> => {
+export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, options?: UseApiOptions<P>): UseApiResult<T, P> => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<Data<T>>(null);
     const [error, setError] = useState<CustomError>(null);
@@ -43,6 +41,11 @@ export const useApi = <T, P>(
             try {
                 const response = await apiCall(params);
                 setData(response.data);
+
+                if (memoizedOptions?.onSuccess) {
+                    memoizedOptions.onSuccess(response);
+                }
+
                 return response;
             } catch (err) {
                 setError(err as Error);
@@ -59,7 +62,7 @@ export const useApi = <T, P>(
 
     useEffect(() => {
         if (memoizedOptions?.autoFetch && memoizedOptions.params) {
-            fetch(memoizedOptions.params).catch(() => { });
+            fetch(memoizedOptions.params);
         }
 
         return () => {

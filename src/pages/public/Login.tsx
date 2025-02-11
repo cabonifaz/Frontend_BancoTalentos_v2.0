@@ -14,7 +14,17 @@ export const Login = () => {
     const [redirect, setRedirect] = useState(false);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
-    const { loading, fetch } = useApi<LoginResponse, LoginParams>(loginApp, { onError: (error) => { handleError(error, enqueueSnackbar); } });
+    const { loading, fetch } = useApi<LoginResponse, LoginParams>(loginApp, {
+        onError: (error) => { handleError(error, enqueueSnackbar); },
+        onSuccess: (response) => {
+            handleResponse(response, enqueueSnackbar);
+
+            if (response.data.result.idMensaje === 2) {
+                localStorage.setItem("token", response.data.token);
+                setRedirect(true);
+            }
+        },
+    });
 
     const { control, handleSubmit, formState: { errors } } = useForm<LoginFormType>({
         resolver: zodResolver(LoginFormSchema),
@@ -23,17 +33,7 @@ export const Login = () => {
     });
 
     const login: SubmitHandler<LoginFormType> = async (formData) => {
-        try {
-            const response = await fetch(formData);
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.result.idMensaje === 2) {
-                localStorage.setItem("token", response.data.token);
-                setRedirect(true);
-            }
-        } catch (err) {
-            handleError(err as Error, enqueueSnackbar);
-        }
+        await fetch(formData);
     };
 
     if (redirect) return <Navigate to={"/dashboard/talentos"} />;
