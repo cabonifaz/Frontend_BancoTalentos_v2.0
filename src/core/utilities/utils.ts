@@ -70,4 +70,16 @@ export class Utils {
             return null;
         }
     };
+
+    static buildQueryString = (params: Record<string, any>): string => {
+        const queryParams = new URLSearchParams();
+
+        for (const [key, value] of Object.entries(params)) {
+            if (value !== undefined && value !== null) {
+                queryParams.append(key, value.toString());
+            }
+        }
+
+        return queryParams.toString();
+    };
 }

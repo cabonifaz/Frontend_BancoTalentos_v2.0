@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 
 type Data<T> = T | null;
 type CustomError = Error | null;
@@ -17,11 +17,17 @@ interface UseApiResult<T, P> {
     fetch: (params: P) => Promise<AxiosResponse<T>>;
 }
 
-export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, options?: UseApiOptions<P>): UseApiResult<T, P> => {
+export const useApi = <T, P>(
+    apiCall: (param: P) => Promise<AxiosResponse<T>>,
+    options?: UseApiOptions<P>
+): UseApiResult<T, P> => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<Data<T>>(null);
     const [error, setError] = useState<CustomError>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const memoizedOptions = useMemo(() => options, [JSON.stringify(options)]);
 
     const fetch = useCallback(
         async (params: P): Promise<AxiosResponse<T>> => {
@@ -40,20 +46,20 @@ export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, o
                 return response;
             } catch (err) {
                 setError(err as Error);
-                if (options?.onError) {
-                    options.onError(err as Error);
+                if (memoizedOptions?.onError) {
+                    memoizedOptions.onError(err as Error);
                 }
                 throw err;
             } finally {
                 setLoading(false);
             }
         },
-        [apiCall, options]
+        [apiCall, memoizedOptions]
     );
 
     useEffect(() => {
-        if (options?.autoFetch && options.params) {
-            fetch(options.params).catch(() => { });
+        if (memoizedOptions?.autoFetch && memoizedOptions.params) {
+            fetch(memoizedOptions.params).catch(() => { });
         }
 
         return () => {
@@ -61,7 +67,7 @@ export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, o
                 abortControllerRef.current.abort();
             }
         };
-    }, [fetch, options?.autoFetch, options?.params])
+    }, [fetch, memoizedOptions?.autoFetch, memoizedOptions?.params]);
 
-    return { loading, data, error, fetch }
-}
+    return { loading, data, error, fetch };
+};

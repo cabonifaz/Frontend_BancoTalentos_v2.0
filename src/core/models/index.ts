@@ -8,5 +8,8 @@ export * from './interfaces/SoftSkill';
 export * from './interfaces/Talent';
 export * from './interfaces/TalentDetails';
 export * from './response/LoginResponse';
+export * from './response/BaseResponse';
+export * from './response/TalentsResponse';
 export * from './params/LoginParams';
+export * from './params/TalentsParams';
 export * from './schemas/LoginFormSchema';

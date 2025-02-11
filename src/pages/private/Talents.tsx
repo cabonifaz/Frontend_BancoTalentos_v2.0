@@ -2,12 +2,17 @@ import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
 import { useEffect, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
-import { Education, Experience, Feedback, Language, Talent } from "../../core/models";
+import { Education, Experience, Feedback, Language, Talent, TalentParams, TalentsResponse } from "../../core/models";
 import {
     Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton,
-    EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, FavouriteButton
+    EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, FavouriteButton,
+    Loading
 } from '../../core/components';
 import { useNavigate } from "react-router-dom";
+import { getTalents } from "../../core/services/apiService";
+import { useSnackbar } from "notistack";
+import { handleError } from "../../core/utilities/errorHandler";
+import { useApi } from "../../core/hooks/useApi";
 
 interface Dropdown {
     name: string;
@@ -21,9 +26,15 @@ interface Dropdown {
 export const Talents = () => {
     const navigate = useNavigate();
     const { openModal } = useModal();
+    const { enqueueSnackbar } = useSnackbar();
+    const [currentPage, setCurrentPage] = useState(1);
     const [talent, setTalent] = useState<Talent | null>(null);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+    const { loading, data, fetch } = useApi<TalentsResponse, TalentParams>(
+        getTalents,
+        { autoFetch: true, params: { nPag: currentPage }, onError: (error) => { handleError(error, enqueueSnackbar); } }
+    );
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
 
@@ -35,6 +46,11 @@ export const Talents = () => {
         if (window.innerWidth > 678) return;
 
         setTalentPanelVisible((prev) => !prev);
+    };
+
+    const handlePaginate = (page: number) => {
+        setCurrentPage(page);
+        fetch({ nPag: page });
     };
 
     useEffect(() => {
@@ -80,63 +96,7 @@ export const Talents = () => {
         },
     ];
 
-    const talents: Talent[] = [
-        {
-            name: 'Kelvin Huanca Arcos',
-            profession: 'UX/UI Designer',
-            location: 'Lima, Perú',
-            salaryRxHInit: 5000,
-            salaryRxHEnd: 8000,
-            salaryPlanillaInit: 0,
-            salaryPlanillaEnd: 7000,
-            rating: 0, // 0 to 5 stars
-            image: '',
-        },
-        {
-            name: 'Mariana Torres',
-            profession: 'Frontend Developer',
-            location: 'Buenos Aires, Argentina',
-            salaryRxHInit: 0,
-            salaryRxHEnd: 10000,
-            salaryPlanillaInit: 0,
-            salaryPlanillaEnd: 9000,
-            rating: 4, // 0 to 5 stars
-            image: '',
-        },
-        {
-            name: 'Jorge Ramirez',
-            profession: 'Backend Developer',
-            location: 'Santiago, Chile',
-            salaryRxHInit: 0,
-            salaryRxHEnd: 12000,
-            salaryPlanillaInit: 0,
-            salaryPlanillaEnd: 11000,
-            rating: 5, // 0 to 5 stars
-            image: '',
-        },
-        {
-            name: 'Carlos Pérez',
-            profession: 'Backend Developer',
-            location: 'Mexico City, Mexico',
-            salaryRxHInit: 0,
-            salaryRxHEnd: 12000,
-            salaryPlanillaInit: 0,
-            salaryPlanillaEnd: 11000,
-            rating: 4.5, // 0 to 5 stars
-            image: '',
-        },
-        {
-            name: 'Lucia González',
-            profession: 'UI/UX Designer',
-            location: 'Madrid, Spain',
-            salaryRxHInit: 0,
-            salaryRxHEnd: 9500,
-            salaryPlanillaInit: 0,
-            salaryPlanillaEnd: 8500,
-            rating: 4.8, // 0 to 5 stars
-            image: '',
-        }
-    ];
+    if (loading) return <Loading />
 
     const educationData: Education =
     {
@@ -190,7 +150,7 @@ export const Talents = () => {
                                 <img src="/assets/ic_add.svg" alt="add talent icon" />
                                 <span>Nuevo Talento</span>
                             </button>
-                            <p className="text-sm text-[#71717A] hidden xl:block">{`${talents.length} resultados encontrados`}</p>
+                            <p className="text-sm text-[#71717A] hidden xl:block">{`${data?.total || 0} resultados encontrados`}</p>
                         </div>
                         <div className="flex lg:flex-row flex-col-reverse items-center w-full sm:w-2/3 gap-4 lg:gap-12 lg:h-12">
                             {/* Filters */}
@@ -218,7 +178,7 @@ export const Talents = () => {
                         {/* Talents list */}
                         <div className="flex flex-col w-full md:w-1/3">
                             <div className="*:mb-2 h-[calc(100vh-230px)] overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
-                                {talents.map((talent, index) => (
+                                {data?.talents.map((talent, index) => (
                                     <TalentCard
                                         key={index}
                                         talent={talent}
@@ -228,9 +188,10 @@ export const Talents = () => {
                             {/* Pagination */}
                             <div>
                                 <Pagination
-                                    totalItems={talents.length + 25}
+                                    totalItems={data?.total || 0}
                                     itemsPerPage={5}
-                                    onPaginate={() => { }}
+                                    currentPage={currentPage}
+                                    onPaginate={handlePaginate}
                                 />
                             </div>
                         </div>
@@ -246,7 +207,7 @@ export const Talents = () => {
                                     <div className="flex flex-col sm:flex-row items-center w-full justify-between">
                                         <div className="flex gap-10 sm:h-28">
                                             <div className="relative">
-                                                <img src={talent.image ? talent.image : "/assets/ic_no_image.svg"} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
+                                                <img src={talent.imagen ? talent.imagen : "/assets/ic_no_image.svg"} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
                                                 <button
                                                     type="button"
                                                     onClick={() => openModal("modalEditPhoto")}
@@ -256,20 +217,20 @@ export const Talents = () => {
                                             </div>
                                             <div>
                                                 <div className="flex gap-2 items-center h-5">
-                                                    <p className="text-base">{talent.name}</p>
+                                                    <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
                                                     <FavouriteButton />
                                                 </div>
                                                 <p className="text-sm text-[#71717A] flex items-end my-1 h-5">
                                                     <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
-                                                    {talent.location}
+                                                    {`${talent.pais}, ${talent.ciudad}`}
                                                 </p>
                                                 <div className="text-sm text-[#71717A] flex items-center gap-2 h-5 mt-4 mb-2 xl:m-0">
                                                     <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1">
                                                         <p>
-                                                            {`RxH S/. ${talent.salaryRxHInit} - ${talent.salaryRxHEnd}`}
+                                                            {`RxH S/. ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}
                                                         </p>
                                                         <p className="hidden xl:block">|</p>
-                                                        <p>{`Planilla S/. ${talent.salaryPlanillaInit} - ${talent.salaryPlanillaEnd}`}</p>
+                                                        <p>{`Planilla S/. ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
                                                     </div>
                                                     <button
                                                         type="button"
@@ -280,9 +241,9 @@ export const Talents = () => {
                                                 </div>
                                                 <div className="flex flex-col xl:flex-row xl:gap-2 xl:items-center">
                                                     <div className="flex gap-2 my-2">
-                                                        {Utils.getStars(talent.rating)}
+                                                        {Utils.getStars(talent.estrellas)}
                                                     </div>
-                                                    {talent.rating <= 0 && (<p className="text-sm text-[#71717A]">Ningún feedback Registrado</p>)}
+                                                    {talent.estrellas <= 0 && (<p className="text-sm text-[#71717A]">Ningún feedback Registrado</p>)}
                                                 </div>
                                             </div>
                                         </div>

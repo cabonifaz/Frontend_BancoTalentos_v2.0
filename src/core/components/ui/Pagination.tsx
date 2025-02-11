@@ -1,20 +1,19 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Props {
     totalItems: number;
     itemsPerPage: number;
+    currentPage: number;
     onPaginate: (page: number) => void;
 }
 
-export const Pagination = ({ totalItems, itemsPerPage, onPaginate }: Props) => {
+export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }: Props) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
-    const [currentPage, setCurrentPage] = useState(1);
     const [pageRange, setPageRange] = useState([1, 2, 3, 4]);
 
     const handlePageChange = (page: number) => {
         if (page === currentPage) return;
 
-        setCurrentPage(page);
         onPaginate(page);
 
         const isOutsideRange = page > pageRange[3] || page < pageRange[0];
@@ -23,7 +22,7 @@ export const Pagination = ({ totalItems, itemsPerPage, onPaginate }: Props) => {
         }
     };
 
-    const updatePageRange = (page: number) => {
+    const updatePageRange = useCallback((page: number) => {
         const newRangeStart = page > pageRange[3] ? page - 3 : page;
         setPageRange([
             newRangeStart,
@@ -31,7 +30,12 @@ export const Pagination = ({ totalItems, itemsPerPage, onPaginate }: Props) => {
             newRangeStart + 2,
             newRangeStart + 3
         ]);
-    };
+    }, [pageRange]);
+
+    useEffect(() => {
+        updatePageRange(currentPage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
 
     const handleNext = () => {
         if (currentPage < totalPages) {
@@ -47,7 +51,6 @@ export const Pagination = ({ totalItems, itemsPerPage, onPaginate }: Props) => {
 
     const handleFirst = () => {
         if (currentPage !== 1) {
-            setCurrentPage(1);
             setPageRange([1, 2, 3, 4]);
             onPaginate(1);
         }
@@ -55,7 +58,6 @@ export const Pagination = ({ totalItems, itemsPerPage, onPaginate }: Props) => {
 
     const handleLast = () => {
         if (currentPage !== totalPages) {
-            setCurrentPage(totalPages);
             setPageRange([
                 totalPages - 3,
                 totalPages - 2,

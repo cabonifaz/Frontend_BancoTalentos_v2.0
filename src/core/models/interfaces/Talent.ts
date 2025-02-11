@@ -1,11 +1,17 @@
 export interface Talent {
-    name: string;
-    profession: string;
-    location: string;
-    salaryRxHInit: number;
-    salaryRxHEnd: number;
-    salaryPlanillaInit: number;
-    salaryPlanillaEnd: number;
-    rating: number;
-    image: string;
+    idTalento: number;
+    nombres: string;
+    apellidoPaterno: string;
+    apellidoMaterno: string;
+    imagen: string;
+    puesto: string;
+    pais: string;
+    ciudad: string;
+    montoInicialPlanilla: number;
+    montoFinalPlanilla: number;
+    montoInicialRxH: number;
+    montoFinalRxH: number;
+    moneda: string;
+    estrellas: number;
+    esFavorito: number;
 }
