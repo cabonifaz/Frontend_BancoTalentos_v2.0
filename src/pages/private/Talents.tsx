@@ -211,7 +211,7 @@ export const Talents = () => {
                                     <div className="flex flex-col sm:flex-row items-center w-full justify-between">
                                         <div className="flex gap-10 sm:h-28">
                                             <div className="relative">
-                                                <img src={talent.imagen ? talent.imagen : "/assets/ic_no_image.svg"} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
+                                                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
                                                 <button
                                                     type="button"
                                                     onClick={() => openModal("modalEditPhoto")}

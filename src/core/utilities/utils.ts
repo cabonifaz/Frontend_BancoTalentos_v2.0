@@ -82,4 +82,35 @@ export class Utils {
 
         return queryParams.toString();
     };
+
+    static getImageSrc = (base64String: string) => {
+        const formato = this.detectarFormatoDesdeBase64(base64String);
+        const base64WithPrefix = this.addBase64ImagePrefix(base64String, formato);
+
+        if (this.isValidImageBase64(base64WithPrefix)) {
+            return base64WithPrefix;
+        }
+        return "/assets/ic_no_image.svg";
+    };
+
+    static detectarFormatoDesdeBase64 = (base64String: string) => {
+        if (base64String.startsWith("iVBORw0KGgo")) {
+            return "png";
+        } else if (base64String.startsWith("/9j/4AAQSkZJRg")) {
+            return "jpeg";
+        }
+
+        return "jpeg";
+    };
+
+    static isValidImageBase64 = (base64String: string) => {
+        return /^data:image\/(jpeg|png|jpg);base64,[A-Za-z0-9+/=]+$/.test(base64String);
+    };
+
+    static addBase64ImagePrefix = (base64String: string, formato: string) => {
+        if (base64String && !base64String.startsWith('data:image/')) {
+            return `data:image/${formato};base64,${base64String}`;
+        }
+        return base64String;
+    };
 }
