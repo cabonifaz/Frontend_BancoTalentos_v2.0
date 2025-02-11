@@ -3,16 +3,24 @@ import { Utils } from "../../core/utilities/utils";
 import { useEffect, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { Education, Experience, Feedback, Language, Talent, TalentParams, TalentsResponse } from "../../core/models";
-import {
-    Pagination, TalentCard, FeedbackCard, LanguageCard, OptionsButton,
-    EducationCard, FilterDropDown, ExperienceCard, ModalsForTalentsPage, FavouriteButton,
-    Loading
-} from '../../core/components';
 import { useNavigate } from "react-router-dom";
 import { getTalents } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
+import {
+    Pagination,
+    TalentCard,
+    FeedbackCard,
+    LanguageCard,
+    OptionsButton,
+    EducationCard,
+    FilterDropDown,
+    ExperienceCard,
+    ModalsForTalentsPage,
+    FavouriteButton,
+    SkeletonCard
+} from '../../core/components';
 
 interface Dropdown {
     name: string;
@@ -100,7 +108,7 @@ export const Talents = () => {
         },
     ];
 
-    if (loading) return <Loading />
+    // if (loading) return <Loading />
 
     const educationData: Education =
     {
@@ -182,12 +190,19 @@ export const Talents = () => {
                         {/* Talents list */}
                         <div className="flex flex-col w-full md:w-1/3">
                             <div className="*:mb-2 h-[calc(100vh-230px)] overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
-                                {(data?.talents || []).map((talent, index) => (
-                                    <TalentCard
-                                        key={index}
-                                        talent={talent}
-                                        selectTalent={() => handleTalentSelection(talent)} />
-                                ))}
+                                {loading ? (
+                                    Array.from({ length: 5 }).map((_, index) => (
+                                        <SkeletonCard key={index} />
+                                    ))
+                                ) : (
+                                    (data?.talents || []).map((talent, index) => (
+                                        <TalentCard
+                                            key={index}
+                                            talent={talent}
+                                            selectTalent={() => handleTalentSelection(talent)}
+                                        />
+                                    ))
+                                )}
                             </div>
                             {/* Pagination */}
                             <div>
