@@ -9,7 +9,7 @@ initAxios();
 function App() {
   return (
     <ModalProvider>
-      <SnackbarProvider maxSnack={2} autoHideDuration={2000}>
+      <SnackbarProvider maxSnack={2} autoHideDuration={4000}>
         <AppRouter />
       </SnackbarProvider>
     </ModalProvider>
