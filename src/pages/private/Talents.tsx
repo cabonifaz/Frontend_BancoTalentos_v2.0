@@ -1,10 +1,10 @@
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
-import { Education, Experience, Feedback, Language, Talent, TalentParams, TalentsResponse } from "../../core/models";
+import { Education, Experience, FavouritesResponse, Feedback, Language, ParamsResponse, Talent, TalentParams, TalentsResponse } from "../../core/models";
 import { useNavigate } from "react-router-dom";
-import { getTalents } from "../../core/services/apiService";
+import { getParams, getTalents, getUserFavourites } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
@@ -19,17 +19,9 @@ import {
     ExperienceCard,
     ModalsForTalentsPage,
     FavouriteButton,
-    SkeletonCard
+    SkeletonCard,
+    Loading
 } from '../../core/components';
-
-interface Dropdown {
-    name: string;
-    label: string;
-    options: string[];
-    optionsType: "checkbox" | "radio";
-    optionsPanelSize: string;
-    inputPosition: "left" | "right";
-}
 
 export const Talents = () => {
     const navigate = useNavigate();
@@ -39,18 +31,40 @@ export const Talents = () => {
     const [talent, setTalent] = useState<Talent | null>(null);
     const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-    const { loading, data, fetch } = useApi<TalentsResponse, TalentParams>(getTalents,
-        {
-            autoFetch: true,
-            params: { nPag: currentPage },
-            onError: (error) => { handleError(error, enqueueSnackbar); },
-            onSuccess: (response) => { handleResponse(response, enqueueSnackbar); }
-        }
-    );
+
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
+    const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<number | null>(null);
+    const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
+
+    const {
+        loading: loadingParams,
+        data: paramsData,
+        fetch: fetchParams,
+    } = useApi<ParamsResponse, string>(getParams, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+    });
+
+    const {
+        loading: loadingFavourites,
+        data: favouritesData,
+        fetch: fetchFavourites,
+    } = useApi<FavouritesResponse, null>(getUserFavourites, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+    });
+
+    const {
+        loading: loadingTalents,
+        data: talentsData,
+        fetch: fetchTalents,
+    } = useApi<TalentsResponse, TalentParams>(getTalents, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+    });
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
-
-    const handleDropdownToggle = (index: number) => setOpenDropdown((prev) => (prev === index ? null : index));
 
     const handleTalentSelection = (talent: Talent) => {
         setTalent(talent);
@@ -62,8 +76,20 @@ export const Talents = () => {
 
     const handlePaginate = (page: number) => {
         setCurrentPage(page);
-        fetch({ nPag: page });
+        fetchTalents({ nPag: page });
     };
+
+    const handleSearch = () => {
+        const searchValue = searchInputRef.current?.value || "";
+
+        fetchTalents({
+            nPag: 1,
+            search: searchValue,
+            techAbilities: selectedSkills.join(","),
+            idEnglishLevel: selectedEnglishLevel || undefined,
+            idTalentCollection: selectedFavourites || undefined,
+        });
+    }
 
     useEffect(() => {
         const handleResize = () => {
@@ -81,34 +107,13 @@ export const Talents = () => {
         };
     }, []);
 
-    const dropdowns: Dropdown[] = [
-        {
-            name: "habilidades",
-            label: "Habilidades",
-            options: ["Frontend", "Backend", "Asistente de marketing/Intérprete"],
-            optionsType: "checkbox",
-            optionsPanelSize: "w-72",
-            inputPosition: "left",
-        },
-        {
-            name: "nivelIngles",
-            label: "Nivel de inglés",
-            options: ["Básico", "Intermedio", "Avanzado"],
-            optionsType: "radio",
-            optionsPanelSize: "w-32",
-            inputPosition: "right",
-        },
-        {
-            name: "favoritos",
-            label: "Favoritos",
-            options: ["Favoritos", "Seniors"],
-            optionsType: "radio",
-            optionsPanelSize: "w-32",
-            inputPosition: "right",
-        },
-    ];
+    useEffect(() => {
+        fetchParams("19,16");
+        fetchFavourites(null);
+        fetchTalents({ nPag: currentPage });
+    }, [currentPage, fetchParams, fetchFavourites, fetchTalents]);
 
-    // if (loading) return <Loading />
+    if (loadingParams || loadingFavourites) return <Loading />;
 
     const educationData: Education =
     {
@@ -162,27 +167,76 @@ export const Talents = () => {
                                 <img src="/assets/ic_add.svg" alt="add talent icon" />
                                 <span>Nuevo Talento</span>
                             </button>
-                            <p className="text-sm text-[#71717A] hidden xl:block">{`${data?.total || 0} resultados encontrados`}</p>
+                            <p className="text-sm text-[#71717A] hidden xl:block">{`${talentsData?.total || 0} resultados encontrados`}</p>
                         </div>
                         <div className="flex lg:flex-row flex-col-reverse items-center w-full sm:w-2/3 gap-4 lg:gap-12 lg:h-12">
                             {/* Filters */}
                             <div className="flex flex-row flex-grow justify-between lg:justify-around lg:gap-4 items-center w-full">
-                                {dropdowns.map((dropdown, index) => (
-                                    <FilterDropDown
-                                        key={index}
-                                        {...dropdown}
-                                        isOpen={openDropdown === index}
-                                        onToggle={() => handleDropdownToggle(index)}
-                                    />
-                                ))}
+                                <FilterDropDown
+                                    name="habilidades"
+                                    label="Habilidades"
+                                    options={
+                                        paramsData?.paramsList
+                                            .filter((param) => param.idMaestro === 19)
+                                            .map((param) => ({
+                                                label: param.string1,
+                                                value: param.num1.toString(),
+                                            })) ?? []
+                                    }
+                                    optionsType="checkbox"
+                                    optionsPanelSize="w-72"
+                                    inputPosition="left"
+                                    isOpen={openDropdown === 0}
+                                    onToggle={() => setOpenDropdown(openDropdown === 0 ? null : 0)}
+                                    selectedValues={selectedSkills.map(String)}
+                                    onChange={(selectedValues) => setSelectedSkills(selectedValues.map(Number))}
+                                />
+
+                                <FilterDropDown
+                                    name="nivelIngles"
+                                    label="Nivel de inglés"
+                                    options={
+                                        paramsData?.paramsList
+                                            .filter((param) => param.idMaestro === 16)
+                                            .map((param) => ({
+                                                label: param.string1,
+                                                value: param.num1.toString(),
+                                            })) ?? []
+                                    }
+                                    optionsType="radio"
+                                    optionsPanelSize="w-36"
+                                    inputPosition="right"
+                                    isOpen={openDropdown === 1}
+                                    onToggle={() => setOpenDropdown(openDropdown === 1 ? null : 1)}
+                                    selectedValues={selectedEnglishLevel ? [selectedEnglishLevel.toString()] : []}
+                                    onChange={(selectedValues) => setSelectedEnglishLevel(selectedValues[0] ? Number(selectedValues[0]) : null)}
+                                />
+
+                                <FilterDropDown
+                                    name="favoritos"
+                                    label="Favoritos"
+                                    options={
+                                        favouritesData?.userFavList.map((favourite) => ({
+                                            label: favourite.nombreColeccion,
+                                            value: favourite.idColeccion.toString(),
+                                        })) ?? []
+                                    }
+                                    optionsType="radio"
+                                    optionsPanelSize="w-32"
+                                    inputPosition="right"
+                                    isOpen={openDropdown === 2}
+                                    onToggle={() => setOpenDropdown(openDropdown === 2 ? null : 2)}
+                                    selectedValues={selectedFavourites ? [selectedFavourites.toString()] : []}
+                                    onChange={(selectedValues) => setSelectedFavourites(selectedValues[0] ? Number(selectedValues[0]) : null)}
+                                />
                             </div>
                             {/* Search */}
                             <div className="flex items-center justify-between w-full gap-4">
                                 <div className="flex relative h-10 w-11/12">
                                     <img src="/assets/ic_search.svg" alt="search icon" className="absolute top-2 left-3" />
-                                    <input type="text" placeholder="Buscar por talento o puesto" className="text-sm w-full rounded-full ps-10 pe-4 border-2 focus:outline-none focus:border-[#4F46E5]" />
+                                    <input type="text" ref={searchInputRef} placeholder="Buscar por talento o puesto" className="text-sm w-full rounded-full ps-10 pe-4 border-2 focus:outline-none focus:border-[#4F46E5]" />
                                 </div>
-                                <button type="button" className="bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white py-2 px-4 font-normal text-normal">Buscar</button>
+                                <button type="button" onClick={handleSearch} className="bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white py-2 px-4 font-normal text-normal">Buscar</button>
                             </div>
                         </div>
                     </div>
@@ -190,12 +244,12 @@ export const Talents = () => {
                         {/* Talents list */}
                         <div className="flex flex-col w-full md:w-1/3">
                             <div className="*:mb-2 h-[calc(100vh-230px)] overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
-                                {loading ? (
+                                {loadingTalents ? (
                                     Array.from({ length: 5 }).map((_, index) => (
                                         <SkeletonCard key={index} />
                                     ))
                                 ) : (
-                                    (data?.talents || []).map((talent, index) => (
+                                    (talentsData?.talents || []).map((talent, index) => (
                                         <TalentCard
                                             key={index}
                                             talent={talent}
@@ -205,9 +259,9 @@ export const Talents = () => {
                                 )}
                             </div>
                             {/* Pagination */}
-                            <div>
+                            <div className="mt-2">
                                 <Pagination
-                                    totalItems={data?.total || 0}
+                                    totalItems={talentsData?.total || 0}
                                     itemsPerPage={5}
                                     currentPage={currentPage}
                                     onPaginate={handlePaginate}

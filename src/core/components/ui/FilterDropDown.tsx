@@ -1,58 +1,66 @@
-import { useState } from "react";
 import { OutsideClickHandler } from "./OutsideClickHandler";
+
+interface Option {
+    label: string;
+    value: string;
+}
 
 interface Props {
     name: string;
     label: string;
     isOpen: boolean;
-    options: string[];
+    options: Option[];
     optionsPanelSize: string;
     optionsType: "radio" | "checkbox";
     inputPosition: "left" | "right";
     onToggle: () => void;
+    selectedValues: string[];
+    onChange: (selectedValues: string[]) => void;
 }
 
-export const FilterDropDown = ({ label, options, name, optionsType, inputPosition, optionsPanelSize, isOpen, onToggle }: Props) => {
-    const [selectedOptions, setSelectedOptions] = useState<Map<string, string>>(new Map());
-
+export const FilterDropDown = ({
+    label,
+    options,
+    name,
+    optionsType,
+    inputPosition,
+    optionsPanelSize,
+    isOpen,
+    onToggle,
+    selectedValues,
+    onChange,
+}: Props) => {
     const handleOptionClick = (index: number) => {
         const inputElement = document.getElementById(`${name}-${index}`) as HTMLInputElement;
 
         if (!inputElement) return;
 
+        const value = inputElement.getAttribute("option-value") || "";
+
         if (optionsType === "checkbox") {
             inputElement.checked = !inputElement.checked;
-            const value = inputElement.getAttribute("option-value");
+            const newSelectedValues = selectedValues.includes(value)
+                ? selectedValues.filter((v) => v !== value)
+                : [...selectedValues, value];
 
-            if (!value) return;
-
-            const newMap = new Map(selectedOptions);
-
-            if (newMap.has(value)) {
-                newMap.delete(value);
-                inputElement.checked = false;
-            } else {
-                newMap.set(value, value);
-                inputElement.checked = true;
-            }
-
-            setSelectedOptions(newMap);
+            onChange(newSelectedValues);
             return;
         }
 
         if (inputElement.checked) {
             inputElement.checked = false;
-            return;
+            onChange([]);
+        } else {
+            inputElement.checked = true;
+            onChange([value]);
         }
-        inputElement.checked = true;
     };
 
     const handleRemoveOption = (value: string) => {
         if (optionsType !== "checkbox") return;
 
-        const newMap = new Map(selectedOptions);
-        newMap.delete(value);
-        setSelectedOptions(newMap);
+        const newSelectedValues = selectedValues.filter((v) => v !== value);
+        onChange(newSelectedValues);
 
         const inputElement = document.querySelector(`input[option-value="${value}"]`) as HTMLInputElement;
         if (inputElement) {
@@ -67,13 +75,13 @@ export const FilterDropDown = ({ label, options, name, optionsType, inputPositio
             </button>
             {isOpen && (
                 <OutsideClickHandler onOutsideClick={onToggle}>
-                    <div className={`${optionsPanelSize} max-h-[500px] opacity-100 z-20 absolute bg-white shadow-lg mt-4 rounded p-2 flex flex-col`}>
+                    <div className={`${optionsPanelSize} max-h-[500px] overflow-y-auto opacity-100 z-20 absolute bg-white shadow-lg mt-4 rounded p-2 flex flex-col`}>
                         <div className={`border border-gray-300 rounded-lg mb-2 p-2 min-h-12 ${optionsType === "checkbox" ? "block" : "hidden"}`}>
                             <ul className="list-none text-[#312e81] flex gap-1 flex-wrap">
-                                {Array.from(selectedOptions.entries()).map(([value], index) => (
+                                {selectedValues.map((value, index) => (
                                     <li className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full" key={index}>
-                                        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-[calc(100%-10px)]">
-                                            {value}
+                                        <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">
+                                            {options.find((opt) => opt.value === value)?.label || value}
                                         </span>
                                         <button type="button" onClick={() => handleRemoveOption(value)}>
                                             <img src="/assets/ic_close.svg" alt="icon close" className="h-5 w-5" />
@@ -91,11 +99,12 @@ export const FilterDropDown = ({ label, options, name, optionsType, inputPositio
                                     name={name}
                                     type={optionsType}
                                     id={`${name}-${index}`}
-                                    option-value={option}
-                                    className={`cursor-pointer h-4 w-4 accent-[#4f46e5]`}
+                                    option-value={option.value}
+                                    defaultChecked={selectedValues.includes(option.value)}
+                                    className="cursor-pointer h-4 w-4 accent-[#4f46e5]"
                                 />
                                 <p className="flex items-center cursor-pointer text-sm my-2">
-                                    {option}
+                                    {option.label}
                                 </p>
                             </div>
                         ))}
@@ -104,4 +113,4 @@ export const FilterDropDown = ({ label, options, name, optionsType, inputPositio
             )}
         </div>
     );
-}
+};
