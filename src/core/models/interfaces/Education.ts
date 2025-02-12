@@ -1,8 +1,9 @@
 export interface Education {
-    idEducation: number;
-    image: string;
-    entityName: string;
-    description: string;
-    startYear: number;
-    endYear: number;
+    idEducacion: number;
+    nombreInstitucion: string;
+    carrera: string;
+    grado: string;
+    fechaInicio: string;
+    fechaFin: string;
+    flActualidad: number;
 }

@@ -1,9 +1,9 @@
 export interface Experience {
-    idExperience: number;
-    image: string;
-    entityName: string;
-    area: string;
-    description: string;
-    startYear: number;
-    endYear: number;
+    idExperiencia: number;
+    nombreEmpresa: string;
+    puesto: string;
+    funciones: string;
+    fechaInicio: string;
+    fechaFin: string;
+    flActualidad: number;
 }

@@ -1,7 +1,12 @@
 import { useModal } from "../../context/ModalContext";
+import { TalentFile } from "../../models";
 import { Modal } from "./Modal";
 
-export const ModalResume = () => {
+interface Props {
+    cvData?: TalentFile;
+}
+
+export const ModalResume = ({ cvData }: Props) => {
     const { openModal, closeModal } = useModal();
 
     const replaceResumeFile = () => {
@@ -15,7 +20,7 @@ export const ModalResume = () => {
                 <h3 className="text-[#71717A] text-sm mt-6">Curriculum Vitae</h3>
                 <div className="my-8 flex flex-col justify-center w-fit items-center relative self-center">
                     <img src="/assets/ic_pdf_info.svg" alt="icon pdf" className="w-48 h-48" />
-                    <p className="text-[#71717A] text-xs my-2 text-ellipsis max-w-40 line-clamp-1">CV username userlastname userlastname userlastname</p>
+                    <p className="text-[#71717A] text-xs my-2 text-ellipsis max-w-40 line-clamp-1">{cvData?.nombreArchivo}</p>
                     <button type="button" className="hover:shadow-lg hover:rounded-full hover:bg-gray-100" onClick={replaceResumeFile}>
                         <img src="/assets/ic_edit.svg" alt="icon edit" className="absolute right-0 top-0 w-6 h-6" />
                     </button>

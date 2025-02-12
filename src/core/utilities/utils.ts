@@ -113,4 +113,15 @@ export class Utils {
         }
         return base64String;
     };
+
+    static splitDateAsNumbers = (date?: string | null) => {
+        if (!date?.trim()) {
+            return { day: "", month: "", year: "" };
+        }
+
+        // DMY Format
+        const [day, month, year] = date.split('-');
+
+        return { day: day, month: month, year: year };
+    }
 }

@@ -1,8 +1,8 @@
 export interface Language {
-    idLanguage: number;
-    languageName: string;
-    languageCode: string;
-    idProficiency: number;
-    proficiency: string;
-    starCount: number;
+    idTalentoIdioma: number;
+    idIdioma: number;
+    nombreIdioma: string;
+    idNivel: number;
+    nivelIdioma: string;
+    estrellas: number;
 }

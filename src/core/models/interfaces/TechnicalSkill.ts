@@ -1,4 +1,4 @@
 export interface TechnicalSkill {
-    name: string;
-    years: number;
+    nombreHabilidad: string;
+    aniosExperiencia: number;
 }

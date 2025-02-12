@@ -8,13 +8,13 @@ interface Props {
 export const LanguageCard = ({ data }: Props) => {
     return (
         <div className="flex items-center justify-between rounded-md my-1 px-6 sm:px-12 py-4 bg-[#f4f4f5] w-full">
-            <div className="flex gap-6 sm:gap-12 items-center">
-                <div className="flex flex-col gap-2">
-                    <h2 className="text-[#27272A] text-base">{data.languageName}</h2>
-                    <p className="text-[#71717A] text-sm">{data.proficiency}</p>
+            <div className="flex gap-6 sm:gap-0 items-center">
+                <div className="flex flex-col gap-2 min-w-20 overflow-ellipsis">
+                    <h2 className="text-[#27272A] text-base text-ellipsis text-nowrap">{data.nombreIdioma}</h2>
+                    <p className="text-[#71717A] text-sm text-ellipsis text-nowrap">{data.nivelIdioma}</p>
                 </div>
-                <div className="flex gap-2 my-2">
-                    {Utils.getStars(data.starCount)}
+                <div className="flex gap-2 my-2 mx-4">
+                    {Utils.getStars(data.estrellas)}
                 </div>
             </div>
 

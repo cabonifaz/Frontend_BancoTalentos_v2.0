@@ -2,12 +2,12 @@ import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
 import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
-import { Education, Experience, FavouritesResponse, Feedback, Language, ParamsResponse, Talent, TalentParams, TalentsResponse } from "../../core/models";
 import { useNavigate } from "react-router-dom";
-import { getParams, getTalents, getUserFavourites } from "../../core/services/apiService";
+import { getParams, getTalent, getTalents, getUserFavourites } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
+import { FavouritesResponse, ParamsResponse, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
 import {
     Pagination,
     TalentCard,
@@ -20,7 +20,8 @@ import {
     ModalsForTalentsPage,
     FavouriteButton,
     SkeletonCard,
-    Loading
+    Loading,
+    TalentDetailsSkeleton
 } from '../../core/components';
 
 export const Talents = () => {
@@ -60,6 +61,15 @@ export const Talents = () => {
         data: talentsData,
         fetch: fetchTalents,
     } = useApi<TalentsResponse, TalentParams>(getTalents, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+    });
+
+    const {
+        loading: loadingTalentDets,
+        data: talentDets,
+        fetch: fetchTalentDets,
+    } = useApi<TalentResponse, number>(getTalent, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
@@ -110,49 +120,21 @@ export const Talents = () => {
         fetchTalents({ nPag: currentPage });
     }, [currentPage, fetchTalents]);
 
+    useEffect(() => {
+        const id = talent?.idTalento;
+
+        if (id) {
+            fetchTalentDets(id);
+        }
+
+    }, [fetchTalentDets, talent?.idTalento])
+
     if (loadingParams || loadingFavourites) return <Loading />;
-
-    const educationData: Education =
-    {
-        idEducation: 1,
-        image: '',
-        entityName: 'University of XYZ',
-        description: 'Bachelor of Science in Computer Science',
-        startYear: 2015,
-        endYear: 2019,
-    };
-
-    const experienceData: Experience =
-    {
-        idExperience: 1,
-        image: '',
-        area: '',
-        entityName: 'University of XYZ',
-        description: 'Bachelor of Science in Computer Science',
-        startYear: 2015,
-        endYear: 2019,
-    };
-
-    const languageData: Language = {
-        idLanguage: 1,
-        languageName: 'English',
-        languageCode: 'EN',
-        idProficiency: 3,
-        proficiency: 'Advanced',
-        starCount: 3,
-    };
-
-    const feedbackData: Feedback = {
-        image: '',
-        user: 'John Doe',
-        feedback: 'This is a fantastic product! I am really satisfied with the quality and performance.',
-        stars: 4,
-    };
 
     return (
         <div className="relative">
             <Dashboard>
-                <ModalsForTalentsPage />
+                <ModalsForTalentsPage cvData={talentDets?.cv} />
                 <div className="py-3 px-4 2xl:px-[155px] overflow-x-hidden">
                     {/* Options section */}
                     <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
@@ -269,253 +251,255 @@ export const Talents = () => {
                         </div>
                         {/* Talent details */}
                         <div className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${!isTalentPanelVisible ? "hidden" : ""}`}>
-                            {talent && (
-                                <div className="flex flex-col px-8 md:pt-8 overflow-y-scroll overflow-x-hidden h-full lg:h-[calc(100vh-205px)]">
-                                    <button type="button" onClick={() => setTalentPanelVisible(false)} className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
-                                        <img src="/assets/ic_go_back.svg" alt="icon close" className="h-6 w-6" />
-                                        <p className="text-[#2e2e2e]">Volver</p>
-                                    </button>
-                                    {/* Talent main info */}
-                                    <div className="flex flex-col sm:flex-row items-center w-full justify-between">
-                                        <div className="flex gap-10 sm:h-28">
-                                            <div className="relative">
-                                                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openModal("modalEditPhoto")}
-                                                    className="absolute bottom-4 -right-2 h-9 w-9 bg-white shadow-lg rounded-full p-2 hover:bg-zinc-50">
-                                                    <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
-                                                </button>
-                                            </div>
-                                            <div>
-                                                <div className="flex gap-2 items-center h-5">
-                                                    <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
-                                                    <FavouriteButton />
-                                                </div>
-                                                <p className="text-sm text-[#71717A] flex items-end my-1 h-5">
-                                                    <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
-                                                    {`${talent.pais}, ${talent.ciudad}`}
-                                                </p>
-                                                <div className="text-sm text-[#71717A] flex items-center gap-2 h-5 mt-4 mb-2 xl:m-0">
-                                                    <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1">
-                                                        <p>
-                                                            {`RxH S/. ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}
-                                                        </p>
-                                                        <p className="hidden xl:block">|</p>
-                                                        <p>{`Planilla S/. ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                            {loadingTalentDets ? <TalentDetailsSkeleton /> : (
+                                <div>
+                                    {talent && (
+                                        <div className="flex flex-col px-8 md:pt-8 overflow-y-scroll overflow-x-hidden h-full lg:h-[calc(100vh-205px)]">
+                                            <button type="button" onClick={() => setTalentPanelVisible(false)} className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
+                                                <img src="/assets/ic_go_back.svg" alt="icon close" className="h-6 w-6" />
+                                                <p className="text-[#2e2e2e]">Volver</p>
+                                            </button>
+                                            {/* Talent main info */}
+                                            <div className="flex flex-col sm:flex-row items-center w-full justify-between">
+                                                <div className="flex gap-10 sm:h-28">
+                                                    <div className="relative">
+                                                        <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="h-24 w-24 rounded-full border" />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openModal("modalEditPhoto")}
+                                                            className="absolute bottom-4 -right-2 h-9 w-9 bg-white shadow-lg rounded-full p-2 hover:bg-zinc-50">
+                                                            <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
+                                                        </button>
                                                     </div>
+                                                    <div className="flex flex-col">
+                                                        <div className="flex gap-2 items-center w-fit">
+                                                            <p className="text-base text-wrap">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
+                                                            <FavouriteButton isFavourited={talent.esFavorito} />
+                                                        </div>
+                                                        <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
+                                                            <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />
+                                                            {`${talent.pais}, ${talent.ciudad}`}
+                                                        </p>
+                                                        <div className="text-sm text-[#71717A] flex items-center gap-2 my-2 xl:m-0">
+                                                            <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
+                                                                <p className="w-fit">
+                                                                    {`RxH ${talent.moneda} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}
+                                                                </p>
+                                                                <p className="hidden w-fit xl:block">|</p>
+                                                                <p className="w-fit">{`Planilla ${talent.moneda} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openModal("modalSalary")}
+                                                                className="hover:rounded-full hover:shadow-inner px-2 flex-shrink-0">
+                                                                <img src="/assets/ic_edit.svg" alt="icon edit" className="h-4 w-4 mb-1 opacity-40 hover:opacity-80" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex flex-col xl:flex-row xl:gap-2 xl:items-center">
+                                                            <div className="flex gap-2 my-2">
+                                                                {Utils.getStars(talent.estrellas)}
+                                                            </div>
+                                                            {talent.estrellas <= 0 && (<p className="text-sm text-[#71717A]">0 feedbacks</p>)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end sm:h-28 my-4 sm:my-0">
+                                                    {/* CV */}
+                                                    <OptionsButton
+                                                        options={["CV", "CV Fractal"]}
+                                                        onSelect={() => openModal('modalCv')}
+                                                        buttonLabel="Ver CV"
+                                                        buttonStyle="w-36 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"
+                                                    />
+                                                    {/* Contact */}
+                                                    <div className="flex flex-col gap-4">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openModal('modalContact')}
+                                                            className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2">
+                                                            <img src="/assets/ic_phone.svg" alt="icon contact" className="h-5 w-5" />
+                                                            Contactar
+                                                        </button>
+                                                        <div className="flex gap-4 justify-center items-end">
+                                                            <a href="/#">
+                                                                <img src="/assets/ic_github.svg" alt="icon github" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
+                                                            </a>
+                                                            <a href="/#">
+                                                                <img src="/assets/ic_linkedin.svg" alt="icon linkedin" className="h-8 w-8 opacity-40 hover:opacity-80" />
+                                                            </a>
+                                                            <button type="button" onClick={() => openModal("modalSocialMedia")}>
+                                                                <img src="/assets/ic_edit.svg" alt="icon edit" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* File upload */}
+                                            <div className="flex flex-col sm:flex-row items-center w-full justify-between gap-4">
+                                                <p className="text-[#609af8] text-justify"> Sube tu certificado, diploma o algún archivo que respalde tus aptitudes. </p>
+                                                <div className="rounded-lg overflow-hidden max-w-xl my-4 sm:my-0">
+                                                    <div className="w-full sm:py-12">
+                                                        <div className="relative h-32 rounded-lg bg-gray-50 flex justify-center items-center hover:bg-gray-100">
+                                                            <div className="absolute flex flex-col items-center">
+                                                                <img
+                                                                    alt="File Icon"
+                                                                    className="mb-3 w-8 h-8"
+                                                                    src="/assets/ic_upload.svg"
+                                                                />
+                                                                <span className="block text-[#0b85c3] font-normal mt-1">
+                                                                    Sube un archivo
+                                                                </span>
+                                                            </div>
+
+                                                            <input
+                                                                type="file"
+                                                                name="cert-file"
+                                                                accept=".pdf"
+                                                                className="h-full w-full opacity-0 cursor-pointer"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Skills */}
+                                            <div className="flex flex-col sm:flex-row w-full">
+                                                {/* Technical */}
+                                                <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
+                                                    <div className="flex items-center gap-4 h-6">
+                                                        <p className="text-[#52525B] font-semibold">Habilidades Técnicas</p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openModal("modalTechSkills")}
+                                                            className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
+                                                            <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5"
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {(talentDets?.habilidadesTecnicas || []).map((item) => (
+                                                            <p className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* Soft */}
+                                                <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
+                                                    <div className="flex items-center gap-4 h-6">
+                                                        <p className="text-[#52525B] font-semibold">Habilidades Blandas</p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openModal("modalSoftSkills")}
+                                                            className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
+                                                            <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5"
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {(talentDets?.habilidadesBlandas || []).map((item) => (
+                                                            <p className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {/* Description */}
+                                            <div className="flex flex-col py-8 w-full gap-4">
+                                                <h2 className="text-[#52525B] font-semibold my-2">Resumen profesional</h2>
+                                                <div className="flex gap-4 items-center">
+                                                    <p className="text-justify text-[#71717A] text-sm w-fit">
+                                                        {talentDets?.descripcion}
+                                                    </p>
                                                     <button
                                                         type="button"
-                                                        onClick={() => openModal("modalSalary")}
-                                                        className="hover:rounded-full hover:shadow-inner px-2">
-                                                        <img src="/assets/ic_edit.svg" alt="icon edit" className="h-4 w-4 mb-1 opacity-40 hover:opacity-80" />
-                                                    </button>
-                                                </div>
-                                                <div className="flex flex-col xl:flex-row xl:gap-2 xl:items-center">
-                                                    <div className="flex gap-2 my-2">
-                                                        {Utils.getStars(talent.estrellas)}
-                                                    </div>
-                                                    {talent.estrellas <= 0 && (<p className="text-sm text-[#71717A]">Ningún feedback Registrado</p>)}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end sm:h-28 my-4 sm:my-0">
-                                            {/* CV */}
-                                            <OptionsButton
-                                                options={["CV", "CV Fractal"]}
-                                                onSelect={() => openModal('modalCv')}
-                                                buttonLabel="Ver CV"
-                                                buttonStyle="w-36 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"
-                                            />
-                                            {/* Contact */}
-                                            <div className="flex flex-col gap-4">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openModal('modalContact')}
-                                                    className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2">
-                                                    <img src="/assets/ic_phone.svg" alt="icon contact" className="h-5 w-5" />
-                                                    Contactar
-                                                </button>
-                                                <div className="flex gap-4 justify-center items-end">
-                                                    <a href="/#">
-                                                        <img src="/assets/ic_github.svg" alt="icon github" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
-                                                    </a>
-                                                    <a href="/#">
-                                                        <img src="/assets/ic_linkedin.svg" alt="icon linkedin" className="h-8 w-8 opacity-40 hover:opacity-80" />
-                                                    </a>
-                                                    <button type="button" onClick={() => openModal("modalSocialMedia")}>
-                                                        <img src="/assets/ic_edit.svg" alt="icon edit" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
+                                                        onClick={() => openModal("modalSummary")}
+                                                        className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5">
+                                                        <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
                                                     </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    {/* File upload */}
-                                    <div className="flex flex-col sm:flex-row items-center w-full justify-between gap-4">
-                                        <p className="text-[#609af8] text-justify"> Sube tu certificado, diploma o algún archivo que respalde tus aptitudes. </p>
-                                        <div className="rounded-lg overflow-hidden max-w-xl my-4 sm:my-0">
-                                            <div className="w-full sm:py-12">
-                                                <div className="relative h-32 rounded-lg bg-gray-50 flex justify-center items-center hover:bg-gray-100">
-                                                    <div className="absolute flex flex-col items-center">
-                                                        <img
-                                                            alt="File Icon"
-                                                            className="mb-3 w-8 h-8"
-                                                            src="/assets/ic_upload.svg"
-                                                        />
-                                                        <span className="block text-[#0b85c3] font-normal mt-1">
-                                                            Sube un archivo
-                                                        </span>
-                                                    </div>
-
-                                                    <input
-                                                        type="file"
-                                                        name="cert-file"
-                                                        accept=".pdf"
-                                                        className="h-full w-full opacity-0 cursor-pointer"
-                                                    />
+                                            {/* Availability */}
+                                            <div className="flex flex-col pb-8 justify-center">
+                                                <h2 className="text-[#52525B] font-semibold my-2">Dispinobilidad</h2>
+                                                <p className="text-[#71717A] text-sm flex gap-2 items-center">
+                                                    {talentDets?.disponibilidad}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openModal("modalAvailability")}
+                                                        className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5">
+                                                        <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
+                                                    </button>
+                                                </p>
+                                            </div>
+                                            {/* Experience */}
+                                            <div className="flex flex-col">
+                                                <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
+                                                    Experiencia
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openModal("modalExperience")}
+                                                        className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
+                                                        <img src="/assets/ic_add_dark.svg" alt="add exp tech" className="w-5 h-5" />
+                                                    </button>
+                                                </h2>
+                                                <div className="flex flex-col">
+                                                    {(talentDets?.experiencias || []).map((item) => (
+                                                        <ExperienceCard data={item} />
+                                                    ))}
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    {/* Skills */}
-                                    <div className="flex flex-col sm:flex-row w-full">
-                                        {/* Technical */}
-                                        <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
-                                            <div className="flex items-center gap-4 h-6">
-                                                <p className="text-[#52525B] font-semibold">Habilidades Técnicas</p>
+                                            {/* Education */}
+                                            <div className="flex flex-col">
+                                                <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
+                                                    Educación
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openModal("modalEducation")}
+                                                        className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
+                                                        <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
+                                                    </button>
+                                                </h2>
+                                                <div className="flex flex-col">
+                                                    {(talentDets?.educaciones || []).map((item) => (
+                                                        <EducationCard data={item} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Language */}
+                                            <div className="flex flex-col">
+                                                <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
+                                                    Idiomas
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openModal("modalLanguage")}
+                                                        className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
+                                                        <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
+                                                    </button>
+                                                </h2>
+                                                <div className="flex flex-col">
+                                                    {(talentDets?.idiomas || []).map((item) => (
+                                                        <LanguageCard data={item} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Feedback */}
+                                            <div className="flex flex-col">
+                                                <h2 className="text-[#52525B] font-semibold my-2">
+                                                    Feedback
+                                                </h2>
+                                                <div className="flex flex-col">
+                                                    {(talentDets?.feedback || []).map((item) => (
+                                                        <FeedbackCard data={item} />
+                                                    ))}
+                                                </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => openModal("modalTechSkills")}
-                                                    className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
-                                                    <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5"
-                                                    />
+                                                    onClick={() => openModal("modalFeedback")}
+                                                    className="text-[#52525B] text-sm rounded-lg my-2 p-2 hover:text-[#27272A] hover:shadow-[0px_0px_4px_4px_rgba(0,0,0,0.05)] flex items-center gap-2 w-fit">
+                                                    <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
+                                                    Dar nuevo feedback
                                                 </button>
                                             </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                <p className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">UX/UI</p>
-                                            </div>
                                         </div>
-                                        {/* Soft */}
-                                        <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
-                                            <div className="flex items-center gap-4 h-6">
-                                                <p className="text-[#52525B] font-semibold">Habilidades Blandas</p>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openModal("modalSoftSkills")}
-                                                    className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
-                                                    <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5"
-                                                    />
-                                                </button>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                <p className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1">Responsabilidad</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {/* Description */}
-                                    <div className="flex flex-col py-8 w-full gap-4">
-                                        <h2 className="text-[#52525B] font-semibold my-2">Resumen profesional</h2>
-                                        <div className="flex gap-4 items-center">
-                                            <p className="text-justify text-[#71717A] text-sm w-fit">
-                                                Soy un Ingeniero de Sistemas titulado y colegiado, actualmente finalizando una maestría en Negocios
-                                                Digitales con un enfoque en el diseño y análisis de arquitecturas híbridas y en la nube, particularmente
-                                                en plataformas como AWS, Azure y GCP. Mi orientación está fuertemente dirigida hacia la optimización
-                                                de costos(FinOps), y poseo un conocimiento amplio en la administración de la mayoría de los servicios
-                                                de AWS. Además, cuento con habilidades blandas significativas para liderar equipos de administración
-                                                de infraestructura, aplicando eficientemente la metodología SCRUM y Kanban sobre herramientas Jira y
-                                                Azure DevOps.
-                                            </p>
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal("modalSummary")}
-                                                className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5">
-                                                <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {/* Availability */}
-                                    <div className="flex flex-col pb-8 justify-center">
-                                        <h2 className="text-[#52525B] font-semibold my-2">Dispinobilidad</h2>
-                                        <p className="text-[#71717A] text-sm flex gap-2 items-center">
-                                            Inmediata
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal("modalAvailability")}
-                                                className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5">
-                                                <img src="/assets/ic_edit.svg" alt="edit icon" className="opacity-40 hover:opacity-100" />
-                                            </button>
-                                        </p>
-                                    </div>
-                                    {/* Experience */}
-                                    <div className="flex flex-col">
-                                        <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
-                                            Experiencia
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal("modalExperience")}
-                                                className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
-                                                <img src="/assets/ic_add_dark.svg" alt="add exp tech" className="w-5 h-5" />
-                                            </button>
-                                        </h2>
-                                        <div className="flex flex-col">
-                                            <ExperienceCard data={experienceData} />
-                                            <ExperienceCard data={experienceData} />
-                                            <ExperienceCard data={experienceData} />
-                                        </div>
-                                    </div>
-                                    {/* Education */}
-                                    <div className="flex flex-col">
-                                        <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
-                                            Educación
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal("modalEducation")}
-                                                className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
-                                                <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
-                                            </button>
-                                        </h2>
-                                        <div className="flex flex-col">
-                                            <EducationCard data={educationData} />
-                                            <EducationCard data={educationData} />
-                                            <EducationCard data={educationData} />
-                                        </div>
-                                    </div>
-                                    {/* Language */}
-                                    <div className="flex flex-col">
-                                        <h2 className="text-[#52525B] font-semibold my-2 flex item justify-between w-full">
-                                            Idiomas
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal("modalLanguage")}
-                                                className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
-                                                <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
-                                            </button>
-                                        </h2>
-                                        <div className="flex flex-col">
-                                            <LanguageCard data={languageData} />
-                                            <LanguageCard data={languageData} />
-                                            <LanguageCard data={languageData} />
-                                        </div>
-                                    </div>
-                                    {/* Feedback */}
-                                    <div className="flex flex-col">
-                                        <h2 className="text-[#52525B] font-semibold my-2">
-                                            Feedback
-                                        </h2>
-                                        <div className="flex flex-col">
-                                            <FeedbackCard data={feedbackData} />
-                                            <FeedbackCard data={feedbackData} />
-                                            <FeedbackCard data={feedbackData} />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => openModal("modalFeedback")}
-                                            className="text-[#52525B] text-sm rounded-lg my-2 p-2 hover:text-[#27272A] hover:shadow-[0px_0px_4px_4px_rgba(0,0,0,0.05)] flex items-center gap-2 w-fit">
-                                            <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
-                                            Dar nuevo feedback
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             )}
                         </div>

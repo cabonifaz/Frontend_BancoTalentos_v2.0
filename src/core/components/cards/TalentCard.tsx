@@ -11,7 +11,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
         // #c7eeea teal
         <div
             onClick={() => selectTalent(talent)}
-            className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer">
+            className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer relative">
             <div className="mx-2 lg:ms-4 lg:me-8 w-1/4 md:w-fit">
                 <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="w-32 h-32 md:w-16 md:h-16 rounded-full border" />
             </div>
@@ -27,12 +27,17 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
                 </p>
                 <div className="text-sm text-[#71717A]">
                     <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">
-                        <p>{`RxH S/. ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
+                        <p>{`RxH ${talent.moneda} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
                         <p className="block md:hidden xl:block">|</p>
-                        <p>{`Planilla S/. ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                        <p>{`Planilla ${talent.moneda} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
                     </div>
                 </div>
             </div>
+            {talent.esFavorito === 1 && (
+                <div className="absolute right-4 top-2">
+                    <img src="/assets/ic_fill_heart.svg" alt="fav" className="h-5 w-5" />
+                </div>
+            )}
         </div>
     );
 }

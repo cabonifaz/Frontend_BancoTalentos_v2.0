@@ -1,3 +1,4 @@
+import { TalentFile } from "../../models";
 import { ModalAvailability } from "./ModalAvailability";
 import { ModalContact } from "./ModalContact";
 import { ModalEditPhoto } from "./ModalEditPhoto";
@@ -13,9 +14,14 @@ import { ModalSummary } from "./ModalSummary";
 import { ModalTechSkills } from "./ModalTechSkills";
 import { ModalUploadResume } from "./ModalUploadResume";
 
-export const ModalsForTalentsPage = () => {
+interface Props {
+    cvData?: TalentFile;
+}
+
+export const ModalsForTalentsPage = ({ cvData }: Props) => {
     return (
         <>
+            <ModalResume cvData={cvData} />
             <ModalAvailability />
             <ModalContact />
             <ModalEditPhoto />
@@ -23,7 +29,6 @@ export const ModalsForTalentsPage = () => {
             <ModalExperience />
             <ModalFeedback />
             <ModalLanguage />
-            <ModalResume />
             <ModalSalary />
             <ModalSocialMedia />
             <ModalSoftSkills />

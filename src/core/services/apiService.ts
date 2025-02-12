@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios";
 import { axiosInstance, axiosInstanceNoToken } from "./axiosService";
 import { Utils } from "../utilities/utils";
-import { FavouritesResponse, LoginParams, LoginResponse, ParamsResponse, TalentParams, TalentsResponse } from "../models";
+import { FavouritesResponse, LoginParams, LoginResponse, ParamsResponse, TalentParams, TalentResponse, TalentsResponse } from "../models";
 
 // auth
 export const loginApp = ({ username, password }: LoginParams): Promise<AxiosResponse<LoginResponse>> => {
@@ -15,8 +15,8 @@ export const getTalents = (params: TalentParams): Promise<AxiosResponse<TalentsR
     return axiosInstance.get(url);
 }
 
-export const getTalent = () => {
-
+export const getTalent = (talentId: number): Promise<AxiosResponse<TalentResponse>> => {
+    return axiosInstance.get(`/bdt/talent/data?talentId=${talentId}`);
 }
 
 export const addTalent = () => {
