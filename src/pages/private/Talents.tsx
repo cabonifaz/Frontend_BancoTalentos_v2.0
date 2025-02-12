@@ -173,12 +173,13 @@ export const Talents = () => {
                                     name="habilidades"
                                     label="Habilidades"
                                     options={
-                                        paramsData?.paramsList
-                                            .filter((param) => param.idMaestro === 19)
-                                            .map((param) => ({
-                                                label: param.string1,
-                                                value: param.num1.toString(),
-                                            })) ?? []
+                                        paramsData && Array.isArray(paramsData?.paramsList) ?
+                                            paramsData.paramsList
+                                                .filter((param) => param?.idMaestro === 19)
+                                                .map((param) => ({
+                                                    label: param?.string1,
+                                                    value: param?.num1?.toString(),
+                                                })).filter(option => option.label && option.value) : []
                                     }
                                     optionsType="checkbox"
                                     optionsPanelSize="w-72"
@@ -193,12 +194,13 @@ export const Talents = () => {
                                     name="nivelIngles"
                                     label="Nivel de inglés"
                                     options={
-                                        paramsData?.paramsList
-                                            .filter((param) => param.idMaestro === 16)
-                                            .map((param) => ({
-                                                label: param.string1,
-                                                value: param.num1.toString(),
-                                            })) ?? []
+                                        paramsData && Array.isArray(paramsData?.paramsList) ?
+                                            paramsData.paramsList
+                                                .filter((param) => param?.idMaestro === 16)
+                                                .map((param) => ({
+                                                    label: param?.string1,
+                                                    value: param?.num1?.toString(),
+                                                })).filter(option => option.label && option.value) : []
                                     }
                                     optionsType="radio"
                                     optionsPanelSize="w-36"
@@ -213,7 +215,7 @@ export const Talents = () => {
                                     name="favoritos"
                                     label="Favoritos"
                                     options={
-                                        favouritesData?.userFavList.map((favourite) => ({
+                                        favouritesData?.userFavList?.map((favourite) => ({
                                             label: favourite.nombreColeccion,
                                             value: favourite.idColeccion.toString(),
                                         })) ?? []
