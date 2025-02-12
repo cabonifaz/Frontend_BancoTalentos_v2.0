@@ -65,18 +65,12 @@ export const Talents = () => {
     });
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
+    const handlePaginate = (page: number) => setCurrentPage(page);
 
     const handleTalentSelection = (talent: Talent) => {
         setTalent(talent);
-
         if (window.innerWidth > 678) return;
-
         setTalentPanelVisible((prev) => !prev);
-    };
-
-    const handlePaginate = (page: number) => {
-        setCurrentPage(page);
-        fetchTalents({ nPag: page });
     };
 
     const handleSearch = () => {
@@ -110,8 +104,11 @@ export const Talents = () => {
     useEffect(() => {
         fetchParams("19,16");
         fetchFavourites(null);
+    }, [fetchParams, fetchFavourites]);
+
+    useEffect(() => {
         fetchTalents({ nPag: currentPage });
-    }, [currentPage, fetchParams, fetchFavourites, fetchTalents]);
+    }, [currentPage, fetchTalents]);
 
     if (loadingParams || loadingFavourites) return <Loading />;
 
