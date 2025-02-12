@@ -12,8 +12,6 @@ export const loginApp = ({ username, password }: LoginParams): Promise<AxiosResp
 export const getTalents = (params: TalentParams): Promise<AxiosResponse<TalentsResponse>> => {
     const queryString = Utils.buildQueryString(params);
     const url = `/bdt/talent/list${queryString ? `?${queryString}` : ''}`;
-    console.log(url);
-
     return axiosInstance.get(url);
 }
 
