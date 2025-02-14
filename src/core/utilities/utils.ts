@@ -131,7 +131,9 @@ export class Utils {
 
             reader.onload = () => {
                 const base64String = reader.result as string;
-                resolve(base64String);
+                const pureBase64 = base64String.split(",")[1];
+
+                resolve(pureBase64);
             };
 
             reader.onerror = (error) => {

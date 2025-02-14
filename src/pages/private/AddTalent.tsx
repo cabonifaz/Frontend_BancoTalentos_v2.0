@@ -37,6 +37,8 @@ export const AddTalent = () => {
     const [selectedCountryPhone, setSelectedCountryPhone] = useState<number | null>(null);
     const [cvFile, setCvFile] = useState<File | null>(null);
     const [fotoFile, setFotoFile] = useState<File | null>(null);
+    const [cvFileErrors, setCvFileErrors] = useState("");
+    const [fotoFileErrors, setFotoFileErrors] = useState("");
 
     const paises = paramsByMaestro[12] || [];
     const ciudades = paramsByMaestro[13] || [];
@@ -72,23 +74,26 @@ export const AddTalent = () => {
     });
 
     const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
+        setCvFileErrors("");
+        setFotoFileErrors("");
+
         // Validación manual
         if (!data.cv[0] || !(data.cv[0] instanceof File)) {
-            console.error("El CV es requerido");
+            setCvFileErrors("El CV es requerido");
             return;
         }
         if (!data.cv[0].name.endsWith(".pdf")) {
-            console.error("El CV debe ser un archivo PDF");
+            setCvFileErrors("El CV debe ser un archivo PDF");
             return;
         }
 
         // Validación manual
         if (!data.foto[0] || !(data.foto[0] instanceof File)) {
-            console.error("La foto es requerida");
+            setFotoFileErrors("La foto es requerida");
             return;
         }
         if (!data.foto[0].name.endsWith(".png") && !data.foto[0].name.endsWith(".jpg")) {
-            console.error("La foto debe ser un archivo PNG o JPG");
+            setFotoFileErrors("La foto debe ser un archivo PNG o JPG");
             return;
         }
 
@@ -259,8 +264,6 @@ export const AddTalent = () => {
         }
     };
 
-    console.log(errors);
-
     return (
         <>
             <Dashboard>
@@ -302,6 +305,7 @@ export const AddTalent = () => {
                                         acceptedTypes=".pdf"
                                         onChange={(file) => handleFileChange("cv", file)}
                                     />
+                                    {cvFileErrors !== "" && (<p className="text-red-400 text-sm">{cvFileErrors}</p>)}
                                     <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
                                     <FileInput
                                         register={register}
@@ -311,6 +315,7 @@ export const AddTalent = () => {
                                         acceptedTypes=".png, .jpg"
                                         onChange={(file) => handleFileChange("foto", file)}
                                     />
+                                    {fotoFileErrors !== "" && (<p className="text-red-400 text-sm">{fotoFileErrors}</p>)}
                                 </div>
                                 {/* Data */}
                                 <div className="*:mb-4">
