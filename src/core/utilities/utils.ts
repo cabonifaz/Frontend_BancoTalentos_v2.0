@@ -1,5 +1,7 @@
 import { createElement, ReactNode } from "react";
 
+type fileNameType = string | undefined | null;
+
 export class Utils {
     static getStars = (rating: number): ReactNode[] => {
 
@@ -93,10 +95,10 @@ export class Utils {
         return "/assets/ic_no_image.svg";
     };
 
-    static detectarFormatoDesdeBase64 = (base64String: string) => {
-        if (base64String.startsWith("iVBORw0KGgo")) {
+    static detectarFormatoDesdeBase64 = (imageBase64String: string) => {
+        if (imageBase64String.startsWith("iVBORw0KGgo")) {
             return "png";
-        } else if (base64String.startsWith("/9j/4AAQSkZJRg")) {
+        } else if (imageBase64String.startsWith("/9j/4AAQSkZJRg")) {
             return "jpeg";
         }
 
@@ -142,5 +144,16 @@ export class Utils {
 
             reader.readAsDataURL(file);
         });
+    };
+
+    static getFileNameWithoutExtension = (fileName: fileNameType): string => {
+
+        if (!fileName) return "";
+
+        const parts = fileName.split('.');
+
+        if (parts.length === 1) return fileName;
+
+        return parts.slice(0, -1).join('.');
     };
 }

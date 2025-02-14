@@ -92,8 +92,8 @@ export const AddTalent = () => {
             setFotoFileErrors("La foto es requerida");
             return;
         }
-        if (!data.foto[0].name.endsWith(".png") && !data.foto[0].name.endsWith(".jpg")) {
-            setFotoFileErrors("La foto debe ser un archivo PNG o JPG");
+        if (!data.foto[0].name.endsWith(".png") && !data.foto[0].name.endsWith(".jpeg")) {
+            setFotoFileErrors("La foto debe ser un archivo PNG o JPEG");
             return;
         }
 
@@ -121,14 +121,14 @@ export const AddTalent = () => {
                 educaciones: cleanEducaciones,
                 cvArchivo: {
                     stringB64: cvBase64,
-                    nombre: cvFile?.name,
-                    extension: cvFile?.name.split('.').pop(),
+                    nombre: Utils.getFileNameWithoutExtension(cvFile?.name),
+                    extension: ".pdf",
                     idTipo: 1
                 },
                 fotoArchivo: {
                     stringB64: fotoBase64,
-                    nombre: fotoFile?.name,
-                    extension: fotoFile?.name.split('.').pop(),
+                    nombre: Utils.getFileNameWithoutExtension(fotoFile?.name),
+                    extension: `.${Utils.detectarFormatoDesdeBase64(fotoBase64)}`,
                     idTipo: 2
                 },
             };
@@ -312,7 +312,7 @@ export const AddTalent = () => {
                                         errors={errors}
                                         name="foto"
                                         initialText="Sube una foto"
-                                        acceptedTypes=".png, .jpg"
+                                        acceptedTypes=".png, .jpeg"
                                         onChange={(file) => handleFileChange("foto", file)}
                                     />
                                     {fotoFileErrors !== "" && (<p className="text-red-400 text-sm">{fotoFileErrors}</p>)}
