@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 type Data<T> = T | null;
 type CustomError = Error | null;
 
-interface UseApiOptions<P> {
+interface UseApiOptions<T, P> {
     autoFetch?: boolean;
     params?: P;
     onError?: (error: Error) => void;
-    onSuccess?: (response: AxiosResponse) => void;
+    onSuccess?: (response: AxiosResponse<T>) => void;
 }
 
 interface UseApiResult<T, P> {
@@ -18,7 +18,7 @@ interface UseApiResult<T, P> {
     fetch: (params: P) => Promise<AxiosResponse<T>>;
 }
 
-export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, options?: UseApiOptions<P>): UseApiResult<T, P> => {
+export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, options?: UseApiOptions<T, P>): UseApiResult<T, P> => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<Data<T>>(null);
     const [error, setError] = useState<CustomError>(null);

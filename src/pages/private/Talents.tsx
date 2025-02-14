@@ -3,11 +3,11 @@ import { Utils } from "../../core/utilities/utils";
 import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { useNavigate } from "react-router-dom";
-import { getParams, getTalent, getTalents, getUserFavourites } from "../../core/services/apiService";
+import { getTalent, getTalents, getUserFavourites } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
-import { FavouritesResponse, ParamsResponse, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
+import { FavouritesResponse, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
 import {
     Pagination,
     TalentCard,
@@ -23,6 +23,7 @@ import {
     Loading,
     TalentDetailsSkeleton
 } from '../../core/components';
+import { useParamContext } from "../../core/context/ParamsContext";
 
 export const Talents = () => {
     const navigate = useNavigate();
@@ -38,14 +39,7 @@ export const Talents = () => {
     const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<number | null>(null);
     const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
 
-    const {
-        loading: loadingParams,
-        data: paramsData,
-        fetch: fetchParams,
-    } = useApi<ParamsResponse, string>(getParams, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
-    });
+    const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
 
     const {
         loading: loadingFavourites,
@@ -112,9 +106,14 @@ export const Talents = () => {
     }, []);
 
     useEffect(() => {
-        fetchParams("19,16");
+        if (!paramsByMaestro[19] || !paramsByMaestro[16]) {
+            fetchParams("19,16");
+        }
+    }, [fetchParams, paramsByMaestro]);
+
+    useEffect(() => {
         fetchFavourites(null);
-    }, [fetchParams, fetchFavourites]);
+    }, [fetchFavourites]);
 
     useEffect(() => {
         fetchTalents({ nPag: currentPage });
@@ -155,13 +154,10 @@ export const Talents = () => {
                                     name="habilidades"
                                     label="Habilidades"
                                     options={
-                                        paramsData && Array.isArray(paramsData?.paramsList) ?
-                                            paramsData.paramsList
-                                                .filter((param) => param?.idMaestro === 19)
-                                                .map((param) => ({
-                                                    label: param?.string1,
-                                                    value: param?.num1?.toString(),
-                                                })).filter(option => option.label && option.value) : []
+                                        paramsByMaestro[19]?.map((param) => ({
+                                            label: param.string1,
+                                            value: param.num1.toString(),
+                                        })) || []
                                     }
                                     optionsType="checkbox"
                                     optionsPanelSize="w-72"
@@ -176,13 +172,10 @@ export const Talents = () => {
                                     name="nivelIngles"
                                     label="Nivel de inglés"
                                     options={
-                                        paramsData && Array.isArray(paramsData?.paramsList) ?
-                                            paramsData.paramsList
-                                                .filter((param) => param?.idMaestro === 16)
-                                                .map((param) => ({
-                                                    label: param?.string1,
-                                                    value: param?.num1?.toString(),
-                                                })).filter(option => option.label && option.value) : []
+                                        paramsByMaestro[16]?.map((param) => ({
+                                            label: param.string1,
+                                            value: param.num1.toString(),
+                                        })) || []
                                     }
                                     optionsType="radio"
                                     optionsPanelSize="w-36"

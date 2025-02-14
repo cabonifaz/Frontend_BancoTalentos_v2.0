@@ -14,4 +14,10 @@ export * from "./ui/DynamicSection";
 export * from "./ui/OutsideClickHandler"
 export * from "./ui/FavouriteButton";
 export * from "./ui/TalentDetailsSkeleton";
+export * from "./ui/FileInput";
+export * from "./ui/TechSkillSection";
+export * from "./ui/SoftSkillSection";
+export * from "./ui/ExperienceSection";
+export * from "./ui/EducationSection";
+export * from "./ui/LanguageSection";
 export * from "./modals/ModalsForTalentsPage";

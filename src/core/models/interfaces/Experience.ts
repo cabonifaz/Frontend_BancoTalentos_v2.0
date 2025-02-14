@@ -5,5 +5,9 @@ export interface Experience {
     funciones: string;
     fechaInicio: string;
     fechaFin: string;
-    flActualidad: number;
+    flActualidad: boolean;
+}
+
+export interface AddExperience extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa'> {
+    empresa: string;
 }

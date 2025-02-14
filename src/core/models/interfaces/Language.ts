@@ -6,3 +6,5 @@ export interface Language {
     nivelIdioma: string;
     estrellas: number;
 }
+
+export type AddLanguage = Omit<Language, 'idTalentoIdioma' | 'nombreIdioma' | 'nivelIdioma'>;

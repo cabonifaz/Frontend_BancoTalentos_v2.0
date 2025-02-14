@@ -5,5 +5,9 @@ export interface Education {
     grado: string;
     fechaInicio: string;
     fechaFin: string;
-    flActualidad: number;
+    flActualidad: boolean;
+}
+
+export interface AddEducation extends Omit<Education, 'idEducacion' | 'nombreInstitucion'> {
+    institucion: string;
 }

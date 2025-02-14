@@ -1,22 +1,142 @@
 import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { useState } from "react";
-import { DynamicSection } from "../../core/components";
-import { EducationType, ExperienceType, LanguageType, SoftSkillType, TechnicalSkillType } from "../../core/models/interfaces/AddTalentPage";
+import { useState, useEffect, useRef } from "react";
+import { EducationsSection, ExperiencesSection, FileInput, LanguagesSection, SoftSkillsSection, TechSkillsSection } from "../../core/components";
+import {
+    AddEducation,
+    AddExperience,
+    AddLanguage,
+    AddSoftSkill,
+    AddTechSkill,
+    initialEducation,
+    initialExperience,
+    initialLanguage,
+    initialSoftSkill,
+    initialTechnicalSkill,
+} from "../../core/models";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useParamContext } from "../../core/context/ParamsContext";
+import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
+import { Utils } from "../../core/utilities/utils";
+import { enqueueSnackbar } from "notistack";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
-    const [technicalSkills, setTechnicalSkills] = useState<TechnicalSkillType[]>([{ techSkill: '', skillYears: '' }]);
-    const [softSkills, setSoftSkills] = useState<SoftSkillType[]>([{ name: '' }]);
-    const [experiences, setExperiences] = useState<ExperienceType[]>([{ entityName: '', area: '', description: '', startYear: '', endYear: '' }]);
-    const [educations, setEducations] = useState<EducationType[]>([{ entityName: '', carrer: '', degree: '', startYear: '', endYear: '' }])
-    const [languages, setLanguages] = useState<LanguageType[]>([{ language: 0, level: 0 }])
+    const { paramsByMaestro, fetchParams } = useParamContext();
+    const countryCode = useRef<HTMLParagraphElement>(null);
+
+    const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
+    const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([{ ...initialSoftSkill }]);
+    const [experiences, setExperiences] = useState<AddExperience[]>([{ ...initialExperience }]);
+    const [educations, setEducations] = useState<AddEducation[]>([{ ...initialEducation }]);
+    const [languages, setLanguages] = useState<AddLanguage[]>([{ ...initialLanguage }]);
+
+    const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+    const [selectedCity, setSelectedCity] = useState<number | null>(null);
+    const [selectedCountryPhone, setSelectedCountryPhone] = useState<number | null>(null);
+    const [cvFile, setCvFile] = useState<File | null>(null);
+    const [fotoFile, setFotoFile] = useState<File | null>(null);
+
+    const paises = paramsByMaestro[12] || [];
+    const ciudades = paramsByMaestro[13] || [];
+    const monedas = paramsByMaestro[2] || [];
+    const habilidadesTecnicas = paramsByMaestro[19] || [];
+    const habilidadesBlandas = paramsByMaestro[20] || [];
+    const idiomas = paramsByMaestro[15] || [];
+    const nivelesIdioma = paramsByMaestro[16] || [];
+
+    const ciudadesFiltradas = selectedCountry
+        ? ciudades.filter((ciudad) => ciudad.num2 === selectedCountry)
+        : [];
+
+    useEffect(() => {
+        if (
+            !paramsByMaestro[12] ||
+            !paramsByMaestro[13] ||
+            !paramsByMaestro[2] ||
+            !paramsByMaestro[19] ||
+            !paramsByMaestro[20] ||
+            !paramsByMaestro[15] ||
+            !paramsByMaestro[16]
+        ) {
+            fetchParams("12,13,2,19,20,15,16");
+        }
+    }, [fetchParams, paramsByMaestro]);
 
     const onGoBackClick = () => navigate(-1);
 
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm<AddTalentType>({
+        resolver: zodResolver(AddTalentSchema),
+        mode: "onChange",
+    });
+
+    const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
+        // Validación manual
+        if (!data.cv[0] || !(data.cv[0] instanceof File)) {
+            console.error("El CV es requerido");
+            return;
+        }
+        if (!data.cv[0].name.endsWith(".pdf")) {
+            console.error("El CV debe ser un archivo PDF");
+            return;
+        }
+
+        // Validación manual
+        if (!data.foto[0] || !(data.foto[0] instanceof File)) {
+            console.error("La foto es requerida");
+            return;
+        }
+        if (!data.foto[0].name.endsWith(".png") && !data.foto[0].name.endsWith(".jpg")) {
+            console.error("La foto debe ser un archivo PNG o JPG");
+            return;
+        }
+
+        const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
+        const phone = countryCode.current + ' ' + telefono;
+
+        const cleanExperiencias = experiencias.map((exp) => ({
+            ...exp,
+            flActualidad: exp.flActualidad ? 1 : 0,
+        }));
+
+        const cleanEducaciones = educaciones.map((edu) => ({
+            ...edu,
+            flActualidad: edu.flActualidad ? 1 : 0,
+        }));
+
+        try {
+            const cvBase64 = await Utils.fileToBase64(cvFile!);
+            const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+
+            const cleanData = {
+                telefono: phone,
+                ...filterData,
+                experiencias: cleanExperiencias,
+                educaciones: cleanEducaciones,
+                cvArchivo: {
+                    stringB64: cvBase64,
+                    nombre: cvFile?.name,
+                    extension: cvFile?.name.split('.').pop(),
+                    idTipo: 1
+                },
+                fotoArchivo: {
+                    stringB64: fotoBase64,
+                    nombre: fotoFile?.name,
+                    extension: fotoFile?.name.split('.').pop(),
+                    idTipo: 2
+                },
+            };
+
+            console.log("Datos del formulario:", cleanData);
+        } catch (error) {
+            enqueueSnackbar("error al cargar archivos", { variant: 'warning' });
+        }
+    };
+
     // Tech skills
     const handleAddSkill = () => {
-        setTechnicalSkills([...technicalSkills, { techSkill: '', skillYears: '' }]);
+        setTechnicalSkills([...technicalSkills, { ...initialTechnicalSkill }]);
     };
 
     const handleRemoveSkill = (index: number) => {
@@ -24,7 +144,7 @@ export const AddTalent = () => {
         setTechnicalSkills(newSkills);
     };
 
-    const handleSkillChange = (index: number, field: keyof TechnicalSkillType, value: string) => {
+    const handleSkillChange = (index: number, field: keyof AddTechSkill, value: number) => {
         const newSkills = [...technicalSkills];
         newSkills[index][field] = value;
         setTechnicalSkills(newSkills);
@@ -32,7 +152,7 @@ export const AddTalent = () => {
 
     // Soft skills
     const handleAddSoftSkill = () => {
-        setSoftSkills([...softSkills, { name: '' }]);
+        setSoftSkills([...softSkills, { ...initialSoftSkill }]);
     };
 
     const handleRemoveSoftSkill = (index: number) => {
@@ -40,7 +160,7 @@ export const AddTalent = () => {
         setSoftSkills(newSkills);
     };
 
-    const handleSoftSkillChange = (index: number, field: keyof SoftSkillType, value: string) => {
+    const handleSoftSkillChange = (index: number, field: keyof AddSoftSkill, value: number) => {
         const newSkills = [...softSkills];
         newSkills[index][field] = value;
         setSoftSkills(newSkills);
@@ -48,7 +168,7 @@ export const AddTalent = () => {
 
     // Experiences
     const handleAddExperience = () => {
-        setExperiences([...experiences, { entityName: '', area: '', description: '', startYear: '', endYear: '' }]);
+        setExperiences([...experiences, { ...initialExperience }]);
     };
 
     const handleRemoveExperience = (index: number) => {
@@ -56,15 +176,25 @@ export const AddTalent = () => {
         setExperiences(newExperiences);
     };
 
-    const handleExperienceChange = (index: number, field: keyof ExperienceType, value: string) => {
+    const handleExperienceChange = (index: number, field: keyof AddExperience, value: string | boolean) => {
         const newExperiences = [...experiences];
-        newExperiences[index][field] = value;
+
+        if (field === 'empresa' || field === 'puesto' || field === 'funciones' || field === 'fechaInicio' || field === 'fechaFin') {
+            if (typeof value === 'string') {
+                newExperiences[index][field] = value;
+            }
+        } else if (field === 'flActualidad') {
+            if (typeof value === 'boolean') {
+                newExperiences[index][field] = value;
+            }
+        }
+
         setExperiences(newExperiences);
     };
 
     // Education
     const handleAddEducation = () => {
-        setEducations([...educations, { entityName: '', carrer: '', degree: '', startYear: '', endYear: '' }]);
+        setEducations([...educations, { ...initialEducation }]);
     };
 
     const handleRemoveEducation = (index: number) => {
@@ -72,15 +202,25 @@ export const AddTalent = () => {
         setEducations(newEducations);
     };
 
-    const handleEducationChange = (index: number, field: keyof EducationType, value: string) => {
+    const handleEducationChange = (index: number, field: keyof AddEducation, value: string | boolean) => {
         const newEducations = [...educations];
-        newEducations[index][field] = value;
+
+        if (field === 'institucion' || field === 'carrera' || field === 'grado' || field === 'fechaInicio' || field === 'fechaFin') {
+            if (typeof value === 'string') {
+                newEducations[index][field] = value;
+            }
+        } else if (field === 'flActualidad') {
+            if (typeof value === 'boolean') {
+                newEducations[index][field] = value;
+            }
+        }
+
         setEducations(newEducations);
     };
 
     // Language
     const handleAddLanguage = () => {
-        setLanguages([...languages, { language: 0, level: 0 }]);
+        setLanguages([...languages, { ...initialLanguage }]);
     };
 
     const handleRemoveLanguage = (index: number) => {
@@ -88,11 +228,38 @@ export const AddTalent = () => {
         setLanguages(newLanguage);
     };
 
-    const handleLanguageChange = (index: number, field: keyof LanguageType, value: number) => {
+    const handleLanguageChange = (index: number, field: keyof AddLanguage, value: number) => {
         const newLanguage = [...languages];
         newLanguage[index][field] = value;
         setLanguages(newLanguage);
     };
+
+    const handleStarChange = (index: number, star: number) => {
+        const newLanguages = [...languages];
+
+        if (newLanguages[index].estrellas === star) {
+            newLanguages[index].estrellas = 0;
+        } else {
+            newLanguages[index].estrellas = star;
+        }
+
+        setLanguages(newLanguages);
+    };
+
+    useEffect(() => {
+        setValue("idiomas", languages);
+    }, [languages, setValue]);
+
+    // file
+    const handleFileChange = (field: keyof AddTalentType, file: File | null) => {
+        if (field === "cv") {
+            setCvFile(file);
+        } else if (field === "foto") {
+            setFotoFile(file);
+        }
+    };
+
+    console.log(errors);
 
     return (
         <>
@@ -101,416 +268,258 @@ export const AddTalent = () => {
                 <div className="p-8 flex justify-center max-h-screen">
                     {/* form container */}
                     <div className="rounded-lg border flex flex-col shadow-lg w-[40rem] h-[50rem] overflow-y-auto relative">
-                        {/* title */}
-                        <div className="flex p-4 bg-white fixed w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
-                            <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
-                                <h2 className="font-semibold text-xl">Nuevo Talento</h2>
-                                <h3 className="text-sm">Ingresa datos del talento.</h3>
-                            </div>
-                            <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
-                                <button
-                                    type="button"
-                                    onClick={onGoBackClick}
-                                    className="rounded-lg text-base text-[#3b82f6] bg-transparent border border-[#3b82f6] hover:bg-[#f5f9ff]">
-                                    Volver
-                                </button>
-                                <button
-                                    type="button"
-                                    className="rounded-lg text-white text-base bg-[#009695] hover:bg-[#2d8d8d]">
-                                    Guardar
-                                </button>
-                            </div>
-                        </div>
                         {/* form */}
-                        <form className="px-8 mt-28">
-                            {/* files */}
-                            <div>
-                                <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
-                                <div className="rounded-lg overflow-hidden max-w-xl my-4">
-                                    <div className="w-full">
-                                        <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200">
-                                            <div className="absolute flex flex-col items-center">
-                                                <img
-                                                    alt="File Icon"
-                                                    className="mb-3 w-8 h-8"
-                                                    src="/assets/ic_upload.svg"
-                                                />
-                                                <span className="block text-[#0b85c3] font-normal mt-1">
-                                                    Sube un archivo
-                                                </span>
-                                            </div>
-
-                                            <input
-                                                type="file"
-                                                name="cert-file"
-                                                accept=".pdf"
-                                                className="h-full w-full opacity-0 cursor-pointer"
-                                            />
-                                        </div>
-                                    </div>
+                        <form className="relative" onSubmit={handleSubmit(onSubmit)}>
+                            {/* title */}
+                            <div className="flex p-4 bg-white fixed w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
+                                <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
+                                    <h2 className="font-semibold text-xl">Nuevo Talento</h2>
+                                    <h3 className="text-sm">Ingresa datos del talento.</h3>
                                 </div>
-                                <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
-                                <div className="rounded-lg overflow-hidden max-w-xl my-4">
-                                    <div className="w-full">
-                                        <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200">
-                                            <div className="absolute flex flex-col items-center">
-                                                <img
-                                                    alt="File Icon"
-                                                    className="mb-3 w-8 h-8"
-                                                    src="/assets/ic_upload.svg"
-                                                />
-                                                <span className="block text-[#0b85c3] font-normal mt-1">
-                                                    Sube un archivo
-                                                </span>
-                                            </div>
-
-                                            <input
-                                                type="file"
-                                                name="cert-file"
-                                                accept=".pdf"
-                                                className="h-full w-full opacity-0 cursor-pointer"
-                                            />
-                                        </div>
-                                    </div>
+                                <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
+                                    <button
+                                        type="button"
+                                        onClick={onGoBackClick}
+                                        className="rounded-lg text-base text-[#3b82f6] bg-transparent border border-[#3b82f6] hover:bg-[#f5f9ff]">
+                                        Volver
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="rounded-lg text-white text-base bg-[#009695] hover:bg-[#2d8d8d]">
+                                        Guardar
+                                    </button>
                                 </div>
                             </div>
-                            {/* Data */}
-                            <div className="*:mb-4">
-                                <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="name" className="text-[#636d7c] text-sm px-1">Nombres</label>
-                                    <input type="text" name="name" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Nombres" />
+                            <div className="px-8 mt-28">
+                                {/* files */}
+                                <div>
+                                    <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
+                                    <FileInput
+                                        register={register}
+                                        errors={errors}
+                                        name="cv"
+                                        initialText="Sube un archivo"
+                                        acceptedTypes=".pdf"
+                                        onChange={(file) => handleFileChange("cv", file)}
+                                    />
+                                    <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+                                    <FileInput
+                                        register={register}
+                                        errors={errors}
+                                        name="foto"
+                                        initialText="Sube una foto"
+                                        acceptedTypes=".png, .jpg"
+                                        onChange={(file) => handleFileChange("foto", file)}
+                                    />
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="lastname-f" className="text-[#636d7c] text-sm px-1">Apellido paterno</label>
-                                    <input type="text" name="lastname-f" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido paterno" />
+                                {/* Data */}
+                                <div className="*:mb-4">
+                                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="name" className="text-[#636d7c] text-sm px-1">Nombres</label>
+                                        <input {...register("nombres")} id="name" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Nombres" />
+                                        {errors.nombres && <p className="text-red-400 text-sm">{errors.nombres.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="lastname-f" className="text-[#636d7c] text-sm px-1">Apellido paterno</label>
+                                        <input {...register("apellidoPaterno")} id="lastname-f" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido paterno" />
+                                        {errors.apellidoPaterno && <p className="text-red-400 text-sm">{errors.apellidoPaterno.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="lastname-s" className="text-[#636d7c] text-sm px-1">Apellido materno</label>
+                                        <input {...register("apellidoMaterno")} id="lastname-s" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido materno" />
+                                        {errors.apellidoMaterno && <p className="text-red-400 text-sm">{errors.apellidoMaterno.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="countrycode" className="text-[#636d7c] text-sm px-1">Número de Celular</label>
+                                        <select
+                                            id="countrycode"
+                                            value={selectedCountryPhone || ""}
+                                            {...register("codigoPais", { valueAsNumber: true })}
+                                            onChange={(e) => setSelectedCountryPhone(Number(e.target.value))}
+                                            className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                            <option value={0}>Seleccione un país</option>
+                                            {paises.map((pais) => (
+                                                <option key={pais.idParametro} value={pais.num1}>
+                                                    {pais.string1}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.codigoPais && <p className="text-red-400 text-sm">{errors.codigoPais.message}</p>}
+                                        <div className="flex">
+                                            <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center">
+                                                {selectedCountryPhone ? `${paises.find((p) => p.num1 === selectedCountryPhone)?.string3 || "00"}` : "+00"}
+                                            </p>
+                                            <input {...register("telefono")} id="phone" type="text" className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]" />
+                                        </div>
+                                        {errors.telefono && <p className="text-red-400 text-sm">{errors.telefono.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="email" className="text-[#636d7c] text-sm px-1">Correo electrónico</label>
+                                        <input {...register("email")} type="email" id="email" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Correo electrónico" />
+                                        {errors.email && <p className="text-red-400 text-sm">{errors.email.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="description" className="text-[#636d7c] text-sm px-1">Descripción</label>
+                                        <textarea {...register("descripcion")} id="description" className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Descripción"></textarea>
+                                        {errors.descripcion && <p className="text-red-400 text-sm">{errors.descripcion.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="puestoAnt" className="text-[#636d7c] text-sm px-1">Puesto actual</label>
+                                        <input {...register("puesto")} id="puestoAnt" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Puesto actual" />
+                                        {errors.puesto && <p className="text-red-400 text-sm">{errors.puesto.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="availability" className="text-[#636d7c] text-sm px-1">Disponibilidad</label>
+                                        <input {...register("disponibilidad")} id="availability" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Disponibilidad" />
+                                        {errors.disponibilidad && <p className="text-red-400 text-sm">{errors.disponibilidad.message}</p>}
+                                    </div>
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="lastname-s" className="text-[#636d7c] text-sm px-1">Apellido materno</label>
-                                    <input type="text" name="lastname-s" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido materno" />
+                                {/* Location */}
+                                <div className="*:mb-4">
+                                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Locación</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="country" className="text-[#636d7c] text-sm px-1">País</label>
+                                        <select
+                                            id="country"
+                                            value={selectedCountry || ""}
+                                            {...register("idPais", { valueAsNumber: true })}
+                                            onChange={(e) => setSelectedCountry(Number(e.target.value))}
+                                            className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer">
+                                            <option value={0}>Seleccione un país</option>
+                                            {paises.map((pais) => (
+                                                <option key={pais.idParametro} value={pais.num1}>
+                                                    {pais.string1}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.idPais && <p className="text-red-400 text-sm">{errors.idPais.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label htmlFor="city" className="text-[#636d7c] text-sm px-1">Ciudad</label>
+                                        <select
+                                            id="city"
+                                            value={selectedCity || ""}
+                                            {...register("idCiudad", { valueAsNumber: true })}
+                                            onChange={(e) => setSelectedCity(Number(e.target.value))}
+                                            className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                            <option value={0}>Seleccione una ciudad</option>
+                                            {ciudadesFiltradas.map((ciudad) => (
+                                                <option key={ciudad.idParametro} value={ciudad.num1}>
+                                                    {ciudad.string1}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.idCiudad && <p className="text-red-400 text-sm">{errors.idCiudad.message}</p>}
+                                    </div>
                                 </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="phone" className="text-[#636d7c] text-sm px-1">Número de Celular</label>
-                                    <select name="country" id="country" className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                        <option value={0}>PERÚ</option>
-                                        <option value={1}>BOLIVIA</option>
+                                {/* Salary */}
+                                <div className="*:mb-4">
+                                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Banda salarial</h3>
+                                    <select
+                                        id="currency"
+                                        {...register("idMoneda", { valueAsNumber: true })}
+                                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                        <option value={0}>Seleccione una moneda</option>
+                                        {monedas.map((moneda) => (
+                                            <option key={moneda.idParametro} value={moneda.num1}>
+                                                {moneda.string1}
+                                            </option>
+                                        ))}
                                     </select>
-                                    <div className="flex">
-                                        <p className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center">+51</p>
-                                        <input type="text" name="phone" className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="email" className="text-[#636d7c] text-sm px-1">Correo electrónico</label>
-                                    <input type="email" name="email" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Correo electrónico" />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="description" className="text-[#636d7c] text-sm px-1">Descripción</label>
-                                    <textarea name="description" className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Descripción"></textarea>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="area" className="text-[#636d7c] text-sm px-1">Puesto actual</label>
-                                    <input type="text" name="area" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Puesto actual" />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="availability" className="text-[#636d7c] text-sm px-1">Disponibilidad</label>
-                                    <input type="text" name="availability" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Disponibilidad" />
-                                </div>
-                            </div>
-                            {/* Location */}
-                            <div className="*:mb-4">
-                                <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Locación</h3>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="phone" className="text-[#636d7c] text-sm px-1">País</label>
-                                    <select name="country" id="country" className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer">
-                                        <option value={0}>PERÚ</option>
-                                        <option value={1}>BOLIVIA</option>
-                                    </select>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="phone" className="text-[#636d7c] text-sm px-1">Ciudad</label>
-                                    <select name="country" id="country" className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                        <option value={0}>Lima</option>
-                                        <option value={1}>Arequipa</option>
-                                    </select>
-                                </div>
-                            </div>
-                            {/* Salary */}
-                            <div className="*:mb-4">
-                                <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Banda salarial</h3>
-                                <select name="country" id="country" className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                    <option value={0}>Nuevo Sol</option>
-                                    <option value={1}>Dólar Americano</option>
-                                </select>
-                                <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
-                                <div className="flex w-full gap-8">
-                                    <div className="flex flex-col w-1/2">
-                                        <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                        <input type="number" name="initRxH" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                    <div className="flex flex-col w-1/2">
-                                        <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                        <input type="number" name="endtRxH" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                </div>
-                                <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
-                                <div className="flex w-full gap-8">
-                                    <div className="flex flex-col w-1/2">
-                                        <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                        <input type="number" name="initPlanilla" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                    <div className="flex flex-col w-1/2">
-                                        <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                        <input type="number" name="endPlanilla" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Tech skills */}
-                            <DynamicSection title="Habilidades técnicas" onAdd={handleAddSkill} onRemove={handleRemoveSkill}>
-                                {technicalSkills.map((skill, index) => (
-                                    <div key={index}>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="techSkill" className="text-[#71717A] text-sm px-1">Habilidad técnica</label>
-                                            <input
-                                                type="text"
-                                                name="techSkill"
-                                                value={skill.techSkill}
-                                                onChange={(e) => handleSkillChange(index, 'techSkill', e.target.value)}
-                                                placeholder="Ingrese su habilidad técnica"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                    {errors.idMoneda && <p className="text-red-400 text-sm">{errors.idMoneda.message}</p>}
+                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
+                                    <div className="flex w-full gap-8">
+                                        <div className="flex flex-col w-1/2">
+                                            <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
+                                            <input {...register("montoInicialRxH", { valueAsNumber: true })} id="initRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.montoInicialRxH && <p className="text-red-400 text-sm">{errors.montoInicialRxH.message}</p>}
                                         </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="skillYears" className="text-[#71717A] text-sm px-1">Años de experiencia</label>
-                                            <input
-                                                type="text"
-                                                name="skillYears"
-                                                value={skill.skillYears}
-                                                onChange={(e) => handleSkillChange(index, 'skillYears', e.target.value)}
-                                                placeholder="Nro. años"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                        <div className="flex flex-col w-1/2">
+                                            <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
+                                            <input {...register("montoFinalRxH", { valueAsNumber: true })} id="endRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.montoFinalRxH && <p className="text-red-400 text-sm">{errors.montoFinalRxH.message}</p>}
                                         </div>
                                     </div>
-                                ))}
-                            </DynamicSection>
-                            {/* Soft skills */}
-                            <DynamicSection title="Habilidades blandas" onAdd={handleAddSoftSkill} onRemove={handleRemoveSoftSkill}>
-                                {softSkills.map((skill, index) => (
-                                    <div className="flex flex-col my-2" key={index}>
-                                        <label htmlFor="softSkill" className="text-[#71717A] text-sm px-1">Habilidad blanda</label>
-                                        <input
-                                            type="text"
-                                            name="softSkill"
-                                            value={skill.name}
-                                            onChange={(e) => handleSoftSkillChange(index, 'name', e.target.value)}
-                                            placeholder="Ingrese su habilidad blanda"
-                                            className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                    </div>
-                                ))}
-                            </DynamicSection>
-                            {/* Experience */}
-                            <DynamicSection title="Experiencias laborales" onAdd={handleAddExperience} onRemove={handleRemoveExperience}>
-                                {experiences.map((experience, index) => (
-                                    <div key={index}>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="companyName" className="text-[#71717A] text-sm px-1">Empresa</label>
-                                            <input
-                                                type="text"
-                                                id="companyName"
-                                                name="companyName"
-                                                value={experience.entityName}
-                                                onChange={(e) => handleExperienceChange(index, 'entityName', e.target.value)}
-                                                placeholder="Nombre de la empresa"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-
-                                            <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                                                <input type="checkbox" name="currentCompany" id="currentCompany" className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                                                <label htmlFor="currentCompany" className="cursor-pointer text-[#3f3f46] text-sm">Aquí en Fractal</label>
-                                            </div>
+                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
+                                    <div className="flex w-full gap-8">
+                                        <div className="flex flex-col w-1/2">
+                                            <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
+                                            <input {...register("montoInicialPlanilla", { valueAsNumber: true })} id="initPlanilla" type="tenumberxt" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.montoInicialPlanilla && <p className="text-red-400 text-sm">{errors.montoInicialPlanilla.message}</p>}
                                         </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="area" className="text-[#71717A] text-sm px-1">Puesto</label>
-                                            <input
-                                                type="text"
-                                                id="area"
-                                                name="area"
-                                                placeholder="Puesto"
-                                                value={experience.area}
-                                                onChange={(e) => handleExperienceChange(index, 'area', e.target.value)}
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="flex flex-col w-1/2">
-                                                <label htmlFor="initDate" className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
-                                                <input
-                                                    id="initDate"
-                                                    type="month"
-                                                    name="initDate"
-                                                    value={experience.startYear}
-                                                    onChange={(e) => handleExperienceChange(index, 'startYear', e.target.value)}
-                                                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                                <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                                                    <input type="checkbox" name="currentDate" id="currentDate" className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                                                    <label htmlFor="currentDate" className="cursor-pointer text-[#3f3f46] text-sm">Hasta la actualidad</label>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col w-1/2">
-                                                <label htmlFor="endDate" className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
-                                                <input
-                                                    id="endDate"
-                                                    type="month"
-                                                    name="endDate"
-                                                    value={experience.endYear}
-                                                    onChange={(e) => handleExperienceChange(index, 'endYear', e.target.value)}
-                                                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="job" className="text-[#71717A] text-sm px-1">Funciones</label>
-                                            <textarea
-                                                id="job"
-                                                name="job"
-                                                value={experience.description}
-                                                onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
-                                                placeholder="Digitar funciones"
-                                                className="h-24 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                                            </textarea>
+                                        <div className="flex flex-col w-1/2">
+                                            <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
+                                            <input {...register("montoFinalPlanilla", { valueAsNumber: true })} id="endPlanilla" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.montoFinalPlanilla && <p className="text-red-400 text-sm">{errors.montoFinalPlanilla.message}</p>}
                                         </div>
                                     </div>
-                                ))}
-                            </DynamicSection>
-                            {/* Education */}
-                            <DynamicSection title="Experiencias educativas" onAdd={handleAddEducation} onRemove={handleRemoveEducation}>
-                                {educations.map((education, index) => (
-                                    <div key={index}>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="entity" className="text-[#71717A] text-sm px-1">Institución</label>
-                                            <input
-                                                type="text"
-                                                id="entity"
-                                                name="entity"
-                                                value={education.entityName}
-                                                onChange={(e) => handleEducationChange(index, 'entityName', e.target.value)}
-                                                placeholder="Nombre de la institución"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                                                <input type="checkbox" name="currentEntity" id="currentEntity" className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                                                <label htmlFor="currentEntity" className="cursor-pointer text-[#3f3f46] text-sm">Aquí en Fractal</label>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="major" className="text-[#71717A] text-sm px-1">Carrera</label>
-                                            <input
-                                                id="major"
-                                                type="text"
-                                                name="major"
-                                                value={education.carrer}
-                                                onChange={(e) => handleEducationChange(index, 'carrer', e.target.value)}
-                                                placeholder="Carrera"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                        </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="degree" className="text-[#71717A] text-sm px-1">Grado</label>
-                                            <input
-                                                id="degree"
-                                                type="text"
-                                                name="degree"
-                                                value={education.degree}
-                                                onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
-                                                placeholder="Grado"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="flex flex-col w-1/2">
-                                                <label htmlFor="initDateEducation" className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
-                                                <input
-                                                    type="month"
-                                                    id="initDateEducation"
-                                                    value={education.startYear}
-                                                    onChange={(e) => handleEducationChange(index, 'startYear', e.target.value)}
-                                                    name="initDateEducation"
-                                                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                                <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                                                    <input type="checkbox" name="currentDate" id="currentDate" className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                                                    <label htmlFor="currentDate" className="cursor-pointer text-[#3f3f46] text-sm">Hasta la actualidad</label>
-                                                </div>
-                                            </div>
-                                            <div className="flex flex-col w-1/2">
-                                                <label htmlFor="endDateEducation" className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
-                                                <input
-                                                    type="month"
-                                                    id="endDateEducation"
-                                                    value={education.endYear}
-                                                    onChange={(e) => handleEducationChange(index, 'endYear', e.target.value)}
-                                                    name="endDateEducation"
-                                                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </DynamicSection>
-                            {/* Languages */}
-                            <DynamicSection title="Idiomas" onAdd={handleAddLanguage} onRemove={handleRemoveLanguage}>
-                                {languages.map((language, index) => (
-                                    <div key={index}>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="language" className="text-[#71717A] text-sm px-1">Idioma</label>
-                                            <select
-                                                id="language"
-                                                name="language"
-                                                value={language.language}
-                                                onChange={(e) => handleLanguageChange(index, 'language', Number(e.target.value))}
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                                                <option value={0}>Nombre del idioma</option>
-                                                <option value={1}>Español</option>
-                                                <option value={2}>Inglés</option>
-                                                <option value={3}>Francés</option>
-                                            </select>
-                                        </div>
-                                        <div className="flex flex-col my-2">
-                                            <label htmlFor="proficiency" className="text-[#71717A] text-sm px-1">Nivel</label>
-                                            <select
-                                                id="proficiency"
-                                                name="proficiency"
-                                                value={language.level}
-                                                onChange={(e) => handleLanguageChange(index, 'level', Number(e.target.value))}
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                                                <option value={0}>Nivel del idioma</option>
-                                                <option value={1}>Básico</option>
-                                                <option value={2}>Intermedio</option>
-                                                <option value={3}>Avanzado</option>
-                                                <option value={4}>Nativo</option>
-                                            </select>
-                                        </div>
-                                        <div id="rating-container" className="flex items-center my-6 gap-2 *:cursor-pointer">
-                                            <div className="star" data-index="1">
-                                                <img src="/assets/ic_outline_star.svg" alt="Star 1" className="star-icon w-6 h-6" />
-                                            </div>
-                                            <div className="star" data-index="2">
-                                                <img src="/assets/ic_outline_star.svg" alt="Star 2" className="star-icon w-6 h-6" />
-                                            </div>
-                                            <div className="star" data-index="3">
-                                                <img src="/assets/ic_outline_star.svg" alt="Star 3" className="star-icon w-6 h-6" />
-                                            </div>
-                                            <div className="star" data-index="4">
-                                                <img src="/assets/ic_outline_star.svg" alt="Star 4" className="star-icon w-6 h-6" />
-                                            </div>
-                                            <div className="star" data-index="5">
-                                                <img src="/assets/ic_outline_star.svg" alt="Star 5" className="star-icon w-6 h-6" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </DynamicSection>
-                            {/* Social media */}
-                            <div className="*:mb-4">
-                                <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Medios sociales</h3>
-                                <div className="flex flex-col my-2">
-                                    <label htmlFor="linkedin" className="text-[#71717A] text-sm px-1">LinkedIn</label>
-                                    <input type="text" name="linkedin" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                 </div>
-                                <div className="flex flex-col my-2">
-                                    <label htmlFor="github" className="text-[#71717A] text-sm px-1">Github</label>
-                                    <input type="text" name="github" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                {/* Tech skills */}
+                                <TechSkillsSection
+                                    register={register}
+                                    errors={errors}
+                                    fields={technicalSkills}
+                                    habilidadesTecnicas={habilidadesTecnicas}
+                                    onAdd={handleAddSkill}
+                                    onRemove={handleRemoveSkill}
+                                    handleChange={handleSkillChange}
+                                />
+                                {/* Soft skills */}
+                                <SoftSkillsSection
+                                    register={register}
+                                    errors={errors}
+                                    fields={softSkills}
+                                    habilidadesBlandas={habilidadesBlandas}
+                                    onAdd={handleAddSoftSkill}
+                                    onRemove={handleRemoveSoftSkill}
+                                    handleChange={handleSoftSkillChange}
+                                />
+                                {/* Experience */}
+                                <ExperiencesSection
+                                    register={register}
+                                    errors={errors}
+                                    fields={experiences}
+                                    setValue={setValue}
+                                    onAdd={handleAddExperience}
+                                    onRemove={handleRemoveExperience}
+                                    handleChange={handleExperienceChange}
+                                />
+                                {/* Education */}
+                                <EducationsSection
+                                    register={register}
+                                    errors={errors}
+                                    fields={educations}
+                                    setValue={setValue}
+                                    onAdd={handleAddEducation}
+                                    onRemove={handleRemoveEducation}
+                                    handleChange={handleEducationChange}
+                                />
+                                {/* Languages */}
+                                <LanguagesSection
+                                    register={register}
+                                    errors={errors}
+                                    fields={languages}
+                                    onAdd={handleAddLanguage}
+                                    onRemove={handleRemoveLanguage}
+                                    handleChange={handleLanguageChange}
+                                    handleStarChange={handleStarChange}
+                                    idiomas={idiomas}
+                                    nivelesIdioma={nivelesIdioma}
+                                />
+                                {/* Social media */}
+                                <div className="*:mb-4">
+                                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Medios sociales</h3>
+                                    <div className="flex flex-col my-2">
+                                        <label htmlFor="linkedin" className="text-[#71717A] text-sm px-1">LinkedIn</label>
+                                        <input {...register("linkedin")} id="linkedin" type="text" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                        {errors.linkedin && <p className="text-red-400 text-sm">{errors.linkedin.message}</p>}
+                                    </div>
+                                    <div className="flex flex-col my-2">
+                                        <label htmlFor="github" className="text-[#71717A] text-sm px-1">Github</label>
+                                        <input {...register("github")} id="github" type="text" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                        {errors.github && <p className="text-red-400 text-sm">{errors.github.message}</p>}
+                                    </div>
                                 </div>
                             </div>
                         </form>
