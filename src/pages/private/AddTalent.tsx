@@ -23,7 +23,7 @@ import { enqueueSnackbar } from "notistack";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
-    const { paramsByMaestro, fetchParams } = useParamContext();
+    const { paramsByMaestro, fetchParams, loading: loadingParams } = useParamContext();
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
@@ -53,18 +53,12 @@ export const AddTalent = () => {
         : [];
 
     useEffect(() => {
-        if (
-            !paramsByMaestro[12] ||
-            !paramsByMaestro[13] ||
-            !paramsByMaestro[2] ||
-            !paramsByMaestro[19] ||
-            !paramsByMaestro[20] ||
-            !paramsByMaestro[15] ||
-            !paramsByMaestro[16]
-        ) {
-            fetchParams("12,13,2,19,20,15,16");
+        const requiredParams = [12, 13, 2, 19, 20, 15, 16];
+
+        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
+            fetchParams(requiredParams.join(","));
         }
-    }, [fetchParams, paramsByMaestro]);
+    }, [fetchParams, loadingParams, paramsByMaestro]);
 
     const onGoBackClick = () => navigate(-1);
 
@@ -98,7 +92,7 @@ export const AddTalent = () => {
         }
 
         const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
-        const phone = countryCode.current + ' ' + telefono;
+        const phone = countryCode.current?.textContent + ' ' + telefono;
 
         const cleanExperiencias = experiencias.map((exp) => ({
             ...exp,
@@ -122,13 +116,13 @@ export const AddTalent = () => {
                 cvArchivo: {
                     stringB64: cvBase64,
                     nombre: Utils.getFileNameWithoutExtension(cvFile?.name),
-                    extension: ".pdf",
+                    extension: "pdf",
                     idTipo: 1
                 },
                 fotoArchivo: {
                     stringB64: fotoBase64,
                     nombre: Utils.getFileNameWithoutExtension(fotoFile?.name),
-                    extension: `.${Utils.detectarFormatoDesdeBase64(fotoBase64)}`,
+                    extension: Utils.detectarFormatoDesdeBase64(fotoBase64),
                     idTipo: 2
                 },
             };

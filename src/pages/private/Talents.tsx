@@ -106,10 +106,10 @@ export const Talents = () => {
     }, []);
 
     useEffect(() => {
-        if (!paramsByMaestro[19] || !paramsByMaestro[16]) {
+        if ((!paramsByMaestro[19] || !paramsByMaestro[16]) && !loadingParams) {
             fetchParams("19,16");
         }
-    }, [fetchParams, paramsByMaestro]);
+    }, [fetchParams, loadingParams, paramsByMaestro]);
 
     useEffect(() => {
         fetchFavourites(null);
