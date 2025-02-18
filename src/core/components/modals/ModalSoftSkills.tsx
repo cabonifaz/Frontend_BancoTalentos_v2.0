@@ -1,17 +1,84 @@
+import { enqueueSnackbar } from "notistack";
+import { useRef, useState } from "react";
+import { useModal } from "../../context/ModalContext";
+import { useParamContext } from "../../context/ParamsContext";
+import { useApi } from "../../hooks/useApi";
+import { BaseResponse } from "../../models";
+import { TalentSoftSkillParams } from "../../models/params/TalentUpdateParams";
+import { addTalentSoftSkill } from "../../services/apiService";
+import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
+import { Loading } from "../ui/Loading";
+import { validateSkill } from "../../utilities/validation";
 
-export const ModalSoftSkills = () => {
+interface Props {
+    idTalento?: number;
+    onUpdate?: () => void;
+}
+
+export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const { paramsByMaestro } = useParamContext();
+    const { closeModal } = useModal();
+    const abilityRef = useRef<HTMLSelectElement>(null);
+
+    const habilidadesBlandas = paramsByMaestro[20] || [];
+
+    const { loading, fetch: addData } = useApi<BaseResponse, TalentSoftSkillParams>(addTalentSoftSkill, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => {
+            handleResponse(response, enqueueSnackbar);
+
+            if (response.data.idMensaje === 2) {
+                if (onUpdate) onUpdate();
+                closeModal("modalSoftSkills");
+                enqueueSnackbar("Actualizado", { variant: 'success' });
+            }
+        },
+    });
+
+    const handleOnConfirm = () => {
+        setErrors({});
+        const newErrors: { [key: string]: string } = {};
+        if (abilityRef.current && idTalento) {
+            const ability = Number(abilityRef.current.value);
+
+            const skillValidation = validateSkill(ability);
+            if (!skillValidation.isValid) {
+                newErrors.skill = skillValidation.message || "Error de validación.";
+            }
+
+            if (Object.keys(newErrors).length > 0) {
+                setErrors(newErrors);
+                return;
+            }
+
+            addData({
+                idTalento: idTalento,
+                idHabilidad: ability,
+            });
+        }
+    }
+
     return (
-        <Modal id="modalSoftSkills" title="Agregar habilidad blanda" confirmationLabel="Agregar">
+        <Modal id="modalSoftSkills" title="Agregar habilidad blanda" confirmationLabel="Agregar" onConfirm={handleOnConfirm}>
+            {loading && (<Loading opacity="opacity-60" />)}
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">Agrega tu nueva habilidad blanda</h3>
                 <div className="flex flex-col my-2">
                     <label htmlFor="softSkill" className="text-[#37404c] text-base my-2">Habilidad blanda</label>
-                    <input
-                        type="text"
-                        name="softSkill"
-                        placeholder="Ingrese su habilidad blanda"
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                    <select
+                        id="softSkill"
+                        ref={abilityRef}
+                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        <option value={0}>Seleccione una habilidad</option>
+                        {habilidadesBlandas.map((habilidad) => (
+                            <option key={habilidad.idParametro} value={habilidad.num1}>
+                                {habilidad.string1}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.skill && <p className="text-red-500 text-sm mt-2">{errors.skill}</p>}
                 </div>
             </div>
         </Modal>

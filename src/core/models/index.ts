@@ -12,6 +12,7 @@ export * from './interfaces/Favourite';
 export * from './interfaces/TalentFile';
 export * from './interfaces/InitValues';
 export * from './interfaces/DynamicSectionProps';
+export * from './params/AddTalentParams';
 export * from './response/LoginResponse';
 export * from './response/BaseResponse';
 export * from './response/ParamsResponse';

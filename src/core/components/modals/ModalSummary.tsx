@@ -1,17 +1,78 @@
+import { useRef, useState } from "react";
 import { Modal } from "./Modal";
+import { TalentDescriptionParams } from "../../models/params/TalentUpdateParams";
+import { updateTalentDescription } from "../../services/apiService";
+import { BaseResponse } from "../../models";
+import { enqueueSnackbar } from "notistack";
+import { useApi } from "../../hooks/useApi";
+import { handleError, handleResponse } from "../../utilities/errorHandler";
+import { useModal } from "../../context/ModalContext";
+import { Loading } from "../ui/Loading";
+import { validateText } from "../../utilities/validation";
 
-export const ModalSummary = () => {
+interface Props {
+    idTalento?: number;
+    description?: string;
+    onUpdate?: () => void;
+}
+
+export const ModalSummary = ({ idTalento, description, onUpdate }: Props) => {
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const { closeModal } = useModal();
+    const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+    const { loading, fetch: updateData } = useApi<BaseResponse, TalentDescriptionParams>(updateTalentDescription, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => {
+            handleResponse(response, enqueueSnackbar);
+
+            if (response.data.idMensaje === 2) {
+                if (onUpdate) onUpdate();
+                closeModal("modalSummary");
+                enqueueSnackbar("Actualizado", { variant: 'success' });
+            }
+        },
+    });
+
+    const handleOnConfirm = () => {
+        setErrors({});
+        const newErrors: { [key: string]: string } = {};
+        if (descriptionRef.current && idTalento) {
+            const description = descriptionRef.current.value;
+
+            const textValidation = validateText(description);
+            if (!textValidation.isValid) {
+                newErrors.description = textValidation.message || "Error de validación.";
+            }
+
+            if (Object.keys(newErrors).length > 0) {
+                setErrors(newErrors);
+                return;
+            }
+
+            updateData({
+                idTalento: idTalento,
+                descripcion: description
+            });
+        }
+    }
+
     return (
-        <Modal id="modalSummary" title="Edita tu resumen profesional" confirmationLabel="Editar">
+        <Modal id="modalSummary" title="Edita tu resumen profesional" confirmationLabel="Editar" onConfirm={handleOnConfirm}>
+            {loading && (<Loading opacity="opacity-60" />)}
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">¿Tiempo para un nuevo resumen?. Edítelo</h3>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="summary" className="text-[#37404c] text-base my-2">Resumen profesional</label>
+                    <label htmlFor="description" className="text-[#37404c] text-base my-2">Resumen profesional</label>
                     <textarea
-                        name="summary"
-                        id="summary"
-                        className="h-44 p-3 resize-none border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        name="description"
+                        id="description"
+                        ref={descriptionRef}
+                        defaultValue={description}
+                        className="h-44 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
                     </textarea>
+
+                    {errors.description && <p className="text-red-500 text-sm mt-2">{errors.description}</p>}
                 </div>
             </div>
         </Modal>

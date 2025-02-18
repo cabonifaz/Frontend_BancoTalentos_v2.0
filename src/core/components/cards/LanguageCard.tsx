@@ -3,9 +3,10 @@ import { Utils } from "../../utilities/utils";
 
 interface Props {
     data: Language;
+    onEdit: () => void;
 }
 
-export const LanguageCard = ({ data }: Props) => {
+export const LanguageCard = ({ data, onEdit }: Props) => {
     return (
         <div className="flex items-center justify-between rounded-md my-1 px-6 sm:px-12 py-4 bg-[#f4f4f5] w-full">
             <div className="flex gap-6 sm:gap-0 items-center">
@@ -22,6 +23,7 @@ export const LanguageCard = ({ data }: Props) => {
             <div>
                 <button
                     type="button"
+                    onClick={onEdit}
                     className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12">
                     <img src="/assets/ic_edit.svg" alt="edit icon" className="w-6 h-6 opacity-40 hover:opacity-100" />
                 </button>

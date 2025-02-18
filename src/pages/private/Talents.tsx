@@ -7,7 +7,7 @@ import { getTalent, getTalents, getUserFavourites } from "../../core/services/ap
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
-import { FavouritesResponse, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
+import { Education, Experience, FavouritesResponse, Feedback, Language, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
 import {
     Pagination,
     TalentCard,
@@ -35,6 +35,10 @@ export const Talents = () => {
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const experienceRef = useRef<Experience | null>(null);
+    const educationRef = useRef<Education | null>(null);
+    const languageRef = useRef<Language | null>(null);
+    const feedbackRef = useRef<Feedback | null>(null);
     const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
     const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<number | null>(null);
     const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
@@ -106,8 +110,10 @@ export const Talents = () => {
     }, []);
 
     useEffect(() => {
-        if ((!paramsByMaestro[19] || !paramsByMaestro[16]) && !loadingParams) {
-            fetchParams("19,16");
+        const requiredParams = [12, 13, 2, 19, 20, 15, 16];
+
+        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
+            fetchParams(requiredParams.join(","));
         }
     }, [fetchParams, loadingParams, paramsByMaestro]);
 
@@ -128,12 +134,25 @@ export const Talents = () => {
 
     }, [fetchTalentDets, talent?.idTalento])
 
+    const handleOpenModal = <T,>(modalId: string, ref: React.MutableRefObject<T | null>, itemToEdit?: T) => {
+        ref.current = itemToEdit || null;
+        openModal(modalId);
+    };
+
     if (loadingParams || loadingFavourites) return <Loading />;
 
     return (
         <div className="relative">
             <Dashboard>
-                <ModalsForTalentsPage cvData={talentDets?.cv} />
+                <ModalsForTalentsPage
+                    talent={talent || undefined}
+                    talentDet={talentDets || undefined}
+                    experienceRef={experienceRef}
+                    educationRef={educationRef}
+                    languageRef={languageRef}
+                    feedbackRef={feedbackRef}
+                    fetchTalentDets={fetchTalentDets}
+                />
                 <div className="py-3 px-4 2xl:px-[155px] overflow-x-hidden">
                     {/* Options section */}
                     <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
@@ -292,7 +311,7 @@ export const Talents = () => {
                                                             <div className="flex gap-2 my-2">
                                                                 {Utils.getStars(talent.estrellas)}
                                                             </div>
-                                                            {talent.estrellas <= 0 && (<p className="text-sm text-[#71717A]">0 feedbacks</p>)}
+                                                            {talent.estrellas <= 0 && (<p className="text-sm text-[#71717A] hidden lg:block">0 feedbacks</p>)}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -329,31 +348,24 @@ export const Talents = () => {
                                                 </div>
                                             </div>
                                             {/* File upload */}
-                                            <div className="flex flex-col sm:flex-row items-center w-full justify-between gap-4">
-                                                <p className="text-[#609af8] text-justify"> Sube tu certificado, diploma o algún archivo que respalde tus aptitudes. </p>
-                                                <div className="rounded-lg overflow-hidden max-w-xl my-4 sm:my-0">
-                                                    <div className="w-full sm:py-12">
-                                                        <div className="relative h-32 rounded-lg bg-gray-50 flex justify-center items-center hover:bg-gray-100">
-                                                            <div className="absolute flex flex-col items-center">
-                                                                <img
-                                                                    alt="File Icon"
-                                                                    className="mb-3 w-8 h-8"
-                                                                    src="/assets/ic_upload.svg"
-                                                                />
-                                                                <span className="block text-[#0b85c3] font-normal mt-1">
-                                                                    Sube un archivo
-                                                                </span>
-                                                            </div>
-
-                                                            <input
-                                                                type="file"
-                                                                name="cert-file"
-                                                                accept=".pdf"
-                                                                className="h-full w-full opacity-0 cursor-pointer"
-                                                            />
-                                                        </div>
+                                            <div className="flex flex-col md:flex-row items-center w-full justify-between gap-4 my-8">
+                                                <p className="text-[#609af8] text-justify flex-grow">Sube tu certificado o diploma que respalde tus aptitudes.</p>
+                                                <button
+                                                    type="button"
+                                                    className="rounded-lg overflow-hidden my-8 py-6 px-8 sm:my-0 bg-gray-50 hover:bg-gray-100 flex-grow"
+                                                    onClick={() => openModal("modalUploadCert")}
+                                                >
+                                                    <div className="flex flex-col items-center">
+                                                        <img
+                                                            alt="File Icon"
+                                                            className="mb-3 w-8 h-8"
+                                                            src="/assets/ic_upload.svg"
+                                                        />
+                                                        <span className="block text-[#0b85c3] font-normal mt-1">
+                                                            Sube un archivo
+                                                        </span>
                                                     </div>
-                                                </div>
+                                                </button>
                                             </div>
                                             {/* Skills */}
                                             <div className="flex flex-col sm:flex-row w-full">
@@ -370,8 +382,8 @@ export const Talents = () => {
                                                         </button>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {(talentDets?.habilidadesTecnicas || []).map((item) => (
-                                                            <p className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
+                                                        {(talentDets?.habilidadesTecnicas || []).map((item, index) => (
+                                                            <p key={index} className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -388,8 +400,8 @@ export const Talents = () => {
                                                         </button>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {(talentDets?.habilidadesBlandas || []).map((item) => (
-                                                            <p className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
+                                                        {(talentDets?.habilidadesBlandas || []).map((item, index) => (
+                                                            <p key={index} className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -428,14 +440,14 @@ export const Talents = () => {
                                                     Experiencia
                                                     <button
                                                         type="button"
-                                                        onClick={() => openModal("modalExperience")}
+                                                        onClick={() => handleOpenModal("modalExperience", experienceRef)}
                                                         className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
                                                         <img src="/assets/ic_add_dark.svg" alt="add exp tech" className="w-5 h-5" />
                                                     </button>
                                                 </h2>
                                                 <div className="flex flex-col">
-                                                    {(talentDets?.experiencias || []).map((item) => (
-                                                        <ExperienceCard data={item} />
+                                                    {(talentDets?.experiencias || []).map((item, index) => (
+                                                        <ExperienceCard key={index} data={item} onEdit={() => handleOpenModal("modalExperience", experienceRef, item)} />
                                                     ))}
                                                 </div>
                                             </div>
@@ -445,14 +457,14 @@ export const Talents = () => {
                                                     Educación
                                                     <button
                                                         type="button"
-                                                        onClick={() => openModal("modalEducation")}
+                                                        onClick={() => handleOpenModal("modalEducation", educationRef)}
                                                         className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
                                                         <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
                                                     </button>
                                                 </h2>
                                                 <div className="flex flex-col">
-                                                    {(talentDets?.educaciones || []).map((item) => (
-                                                        <EducationCard data={item} />
+                                                    {(talentDets?.educaciones || []).map((item, index) => (
+                                                        <EducationCard key={index} data={item} onEdit={() => handleOpenModal("modalEducation", educationRef, item)} />
                                                     ))}
                                                 </div>
                                             </div>
@@ -462,14 +474,14 @@ export const Talents = () => {
                                                     Idiomas
                                                     <button
                                                         type="button"
-                                                        onClick={() => openModal("modalLanguage")}
+                                                        onClick={() => handleOpenModal("modalLanguage", languageRef)}
                                                         className="text-[#52525B] rounded-full p-1 hover:shadow-inner">
                                                         <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
                                                     </button>
                                                 </h2>
                                                 <div className="flex flex-col">
-                                                    {(talentDets?.idiomas || []).map((item) => (
-                                                        <LanguageCard data={item} />
+                                                    {(talentDets?.idiomas || []).map((item, index) => (
+                                                        <LanguageCard key={index} data={item} onEdit={() => handleOpenModal("modalLanguage", languageRef, item)} />
                                                     ))}
                                                 </div>
                                             </div>
@@ -479,13 +491,13 @@ export const Talents = () => {
                                                     Feedback
                                                 </h2>
                                                 <div className="flex flex-col">
-                                                    {(talentDets?.feedback || []).map((item) => (
-                                                        <FeedbackCard data={item} />
+                                                    {(talentDets?.feedback || []).map((item, index) => (
+                                                        <FeedbackCard key={index} data={item} onEdit={() => handleOpenModal("modalFeedback", feedbackRef, item)} />
                                                     ))}
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => openModal("modalFeedback")}
+                                                    onClick={() => handleOpenModal("modalFeedback", feedbackRef)}
                                                     className="text-[#52525B] text-sm rounded-lg my-2 p-2 hover:text-[#27272A] hover:shadow-[0px_0px_4px_4px_rgba(0,0,0,0.05)] flex items-center gap-2 w-fit">
                                                     <img src="/assets/ic_add_dark.svg" alt="add skill soft" className="w-5 h-5" />
                                                     Dar nuevo feedback

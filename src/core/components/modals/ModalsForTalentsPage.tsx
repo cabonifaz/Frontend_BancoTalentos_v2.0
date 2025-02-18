@@ -1,4 +1,4 @@
-import { TalentFile } from "../../models";
+import { Education, Experience, Feedback, Language, Talent, TalentResponse } from "../../models";
 import { ModalAvailability } from "./ModalAvailability";
 import { ModalContact } from "./ModalContact";
 import { ModalEditPhoto } from "./ModalEditPhoto";
@@ -12,29 +12,123 @@ import { ModalSocialMedia } from "./ModalSocialMedia";
 import { ModalSoftSkills } from "./ModalSoftSkills";
 import { ModalSummary } from "./ModalSummary";
 import { ModalTechSkills } from "./ModalTechSkills";
+import { ModalUploadCert } from "./ModalUploadCert";
 import { ModalUploadResume } from "./ModalUploadResume";
 
 interface Props {
-    cvData?: TalentFile;
+    talent?: Talent;
+    talentDet?: TalentResponse;
+    experienceRef: React.MutableRefObject<Experience | null>;
+    educationRef: React.MutableRefObject<Education | null>;
+    languageRef: React.MutableRefObject<Language | null>;
+    feedbackRef: React.MutableRefObject<Feedback | null>;
+    fetchTalentDets: (id: number) => void;
 }
 
-export const ModalsForTalentsPage = ({ cvData }: Props) => {
+export const ModalsForTalentsPage = ({
+    talent,
+    talentDet,
+    fetchTalentDets,
+    experienceRef,
+    educationRef,
+    languageRef,
+    feedbackRef,
+}: Props) => {
+
+    const handleUpdate = () => {
+        if (talent && talent?.idTalento) {
+            fetchTalentDets(talent.idTalento);
+        }
+    };
+
     return (
         <>
-            <ModalResume cvData={cvData} />
-            <ModalAvailability />
-            <ModalContact />
-            <ModalEditPhoto />
-            <ModalEducation />
-            <ModalExperience />
-            <ModalFeedback />
-            <ModalLanguage />
-            <ModalSalary />
-            <ModalSocialMedia />
-            <ModalSoftSkills />
-            <ModalSummary />
-            <ModalTechSkills />
-            <ModalUploadResume />
+            <ModalResume
+                cvData={talentDet?.cv}
+            />
+            <ModalContact
+                idTalento={talent?.idTalento}
+                email={talentDet?.email}
+                phone={talentDet?.celular}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalSocialMedia
+                idTalento={talent?.idTalento}
+                linkedin={talentDet?.linkedin}
+                github={talentDet?.github}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalEditPhoto
+                idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalUploadResume
+                idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalSalary
+                idTalento={talent?.idTalento}
+                idMoneda={talentDet?.idMoneda}
+                initPlan={talent?.montoInicialPlanilla}
+                endPlan={talent?.montoFinalPlanilla}
+                initRxH={talent?.montoInicialRxH}
+                endRxH={talent?.montoFinalRxH}
+            />
+
+            <ModalUploadCert
+                idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalTechSkills
+                idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalSoftSkills
+                idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalSummary
+                idTalento={talent?.idTalento}
+                description={talentDet?.descripcion}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalAvailability
+                idTalento={talent?.idTalento}
+                availability={talentDet?.disponibilidad}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalExperience
+                idTalento={talent?.idTalento}
+                experienceRef={experienceRef}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalEducation
+                idTalento={talent?.idTalento}
+                educationRef={educationRef}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalLanguage
+                idTalento={talent?.idTalento}
+                languageRef={languageRef}
+                onUpdate={handleUpdate}
+            />
+
+            <ModalFeedback
+                idTalento={talent?.idTalento}
+                feedbackRef={feedbackRef}
+                onUpdate={handleUpdate}
+            />
         </>
     );
 }

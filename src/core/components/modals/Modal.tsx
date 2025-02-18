@@ -8,10 +8,11 @@ interface Props {
     showButtonOptions?: boolean;
     cancellationLabel?: string;
     confirmationLabel?: string;
+    onConfirm?: () => void;
     children: ReactNode;
 }
 
-export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel = "Cancelar", confirmationLabel = "Aceptar", children }: Props) => {
+export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel = "Cancelar", confirmationLabel = "Aceptar", onConfirm, children }: Props) => {
     const { isModalOpen, closeModal } = useModal();
     const modalRoot = document.getElementById("modal");
 
@@ -43,6 +44,7 @@ export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel =
                     </button>
                     <button
                         type="button"
+                        onClick={onConfirm}
                         className="flex bg-[#009695] text-white items-center rounded-lg h-12 w-1/2 font-semibold hover:bg-[#007d7c]">
                         <img src="/assets/ic_check.svg" alt="icon check" className="w-5 h-5 invert-[1]" />
                         <p className="mx-auto">{confirmationLabel}</p>

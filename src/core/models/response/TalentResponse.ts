@@ -9,6 +9,7 @@ export interface TalentResponse {
     descripcion: string;
     disponibilidad: string;
     idColeccion: number;
+    idMoneda: number;
     cv: TalentFile;
     habilidadesTecnicas: TechnicalSkill[];
     habilidadesBlandas: SoftSkill[];

@@ -1,13 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import { useState, useEffect, useRef } from "react";
-import { EducationsSection, ExperiencesSection, FileInput, LanguagesSection, SoftSkillsSection, TechSkillsSection } from "../../core/components";
+import { EducationsSection, ExperiencesSection, FileInput, LanguagesSection, Loading, SoftSkillsSection, TechSkillsSection } from "../../core/components";
 import {
     AddEducation,
     AddExperience,
     AddLanguage,
     AddSoftSkill,
+    AddTalentParams,
     AddTechSkill,
+    BaseResponse,
     initialEducation,
     initialExperience,
     initialLanguage,
@@ -20,10 +22,14 @@ import { useParamContext } from "../../core/context/ParamsContext";
 import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
 import { Utils } from "../../core/utilities/utils";
 import { enqueueSnackbar } from "notistack";
+import { useApi } from "../../core/hooks/useApi";
+import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import { addTalent } from "../../core/services/apiService";
+import { ARCHIVO_IMAGEN, ARCHIVO_PDF, DOCUMENTO_CV, DOCUMENTO_FOTO_PERFIL } from "../../core/utilities/constants";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
-    const { paramsByMaestro, fetchParams, loading: loadingParams } = useParamContext();
+    const { paramsByMaestro } = useParamContext();
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
@@ -52,13 +58,13 @@ export const AddTalent = () => {
         ? ciudades.filter((ciudad) => ciudad.num2 === selectedCountry)
         : [];
 
-    useEffect(() => {
-        const requiredParams = [12, 13, 2, 19, 20, 15, 16];
-
-        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
-            fetchParams(requiredParams.join(","));
-        }
-    }, [fetchParams, loadingParams, paramsByMaestro]);
+    const {
+        loading: loadingAddTalent,
+        fetch: postTalent,
+    } = useApi<BaseResponse, AddTalentParams>(addTalent, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+    });
 
     const onGoBackClick = () => navigate(-1);
 
@@ -92,7 +98,7 @@ export const AddTalent = () => {
         }
 
         const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
-        const phone = countryCode.current?.textContent + ' ' + telefono;
+        const phone = countryCode.current?.textContent + ' ' + telefono.trim();
 
         const cleanExperiencias = experiencias.map((exp) => ({
             ...exp,
@@ -108,26 +114,28 @@ export const AddTalent = () => {
             const cvBase64 = await Utils.fileToBase64(cvFile!);
             const fotoBase64 = await Utils.fileToBase64(fotoFile!);
 
-            const cleanData = {
+            const cleanData: AddTalentParams = {
                 telefono: phone,
                 ...filterData,
                 experiencias: cleanExperiencias,
                 educaciones: cleanEducaciones,
                 cvArchivo: {
                     stringB64: cvBase64,
-                    nombre: Utils.getFileNameWithoutExtension(cvFile?.name),
-                    extension: "pdf",
-                    idTipo: 1
+                    nombreArchivo: Utils.getFileNameWithoutExtension(cvFile?.name),
+                    extensionArchivo: "pdf",
+                    idTipoArchivo: ARCHIVO_PDF,
+                    idTipoDocumento: DOCUMENTO_CV,
                 },
                 fotoArchivo: {
                     stringB64: fotoBase64,
-                    nombre: Utils.getFileNameWithoutExtension(fotoFile?.name),
-                    extension: Utils.detectarFormatoDesdeBase64(fotoBase64),
-                    idTipo: 2
+                    nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
+                    extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+                    idTipoArchivo: ARCHIVO_IMAGEN,
+                    idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
                 },
             };
 
-            console.log("Datos del formulario:", cleanData);
+            postTalent(cleanData);
         } catch (error) {
             enqueueSnackbar("error al cargar archivos", { variant: 'warning' });
         }
@@ -261,6 +269,7 @@ export const AddTalent = () => {
     return (
         <>
             <Dashboard>
+                {loadingAddTalent && (<Loading opacity="opacity-50" />)}
                 {/* main container */}
                 <div className="p-8 flex justify-center max-h-screen">
                     {/* form container */}

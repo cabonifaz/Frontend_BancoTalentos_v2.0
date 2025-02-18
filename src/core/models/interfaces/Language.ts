@@ -8,3 +8,8 @@ export interface Language {
 }
 
 export type AddLanguage = Omit<Language, 'idTalentoIdioma' | 'nombreIdioma' | 'nivelIdioma'>;
+
+export interface AddOrUpdateLanguageParams extends Omit<Language, 'idTalentoIdioma' | 'nombreIdioma' | 'nivelIdioma'> {
+    idTalentoIdioma?: number;
+    idTalento: number;
+}

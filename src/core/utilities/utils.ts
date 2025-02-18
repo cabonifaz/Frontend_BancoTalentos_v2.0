@@ -156,4 +156,11 @@ export class Utils {
 
         return parts.slice(0, -1).join('.');
     };
+
+    static formatDateForMonthInput = (date: string | undefined) => {
+        if (!date || date === undefined) return "";
+
+        const [, month, year] = date.split("-");
+        return `${year}-${month}`;
+    };
 }
