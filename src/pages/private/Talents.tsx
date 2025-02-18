@@ -319,7 +319,7 @@ export const Talents = () => {
                                                 <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end sm:h-28 my-4 sm:my-0">
                                                     {/* CV */}
                                                     <OptionsButton
-                                                        options={["CV", "CV Fractal"]}
+                                                        options={["CV"]}
                                                         onSelect={() => openModal('modalCv')}
                                                         buttonLabel="Ver CV"
                                                         buttonStyle="w-36 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"

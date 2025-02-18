@@ -19,6 +19,7 @@ export * from './response/ParamsResponse';
 export * from './response/TalentsResponse';
 export * from './response/FavouritesResponse';
 export * from './response/TalentResponse';
+export * from './response/FileResponse';
 export * from './params/LoginParams';
 export * from './params/TalentsParams';
 export * from './schemas/LoginFormSchema';
