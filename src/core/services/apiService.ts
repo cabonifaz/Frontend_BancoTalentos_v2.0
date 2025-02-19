@@ -36,8 +36,8 @@ export const updateTalentProfilePhoto = (data: talentUpdate.TalentProfilePhotoPa
     return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
 }
 
-export const getCvFile = (data: string): Promise<AxiosResponse<models.FileResponse>> => {
-    return axiosInstance.get(`/bdt/talent/file?filePath=${data}`);
+export const getCvFile = (data: number): Promise<AxiosResponse<models.FileResponse>> => {
+    return axiosInstance.get(`/bdt/talent/file?fileId=${data}`);
 }
 
 export const updateTalentCv = (data: talentUpdate.TalentCvParams): Promise<AxiosResponse<models.BaseResponse>> => {

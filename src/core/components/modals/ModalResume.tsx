@@ -14,13 +14,13 @@ interface Props {
 export const ModalResume = ({ cvData }: Props) => {
     const { openModal, closeModal } = useModal();
 
-    const { loading, fetch } = useApi<FileResponse, string>(getCvFile, {
+    const { loading, fetch } = useApi<FileResponse, number>(getCvFile, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => {
             handleResponse(response, enqueueSnackbar);
 
             if (response.data.result.idMensaje === 2) {
-                const archivoB64 = response.data.archivoB64;
+                const archivoB64 = response.data.archivo;
                 const byteCharacters = atob(archivoB64);
                 const byteNumbers = new Array(byteCharacters.length);
 
@@ -44,10 +44,8 @@ export const ModalResume = ({ cvData }: Props) => {
     }
 
     const openFile = () => {
-        if (cvData?.rutaArchivo) {
-            fetch(cvData.rutaArchivo);
-        } else {
-            enqueueSnackbar("Archivo no encontrado", { variant: 'warning' });
+        if (cvData?.idArchivo) {
+            fetch(cvData.idArchivo);
         }
     }
 

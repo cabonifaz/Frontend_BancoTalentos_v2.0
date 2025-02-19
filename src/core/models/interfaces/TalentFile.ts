@@ -1,7 +1,6 @@
 export interface TalentFile {
     idArchivo: number;
     nombreArchivo: string;
-    rutaArchivo: string;
     tipoArchivo: string;
     tipoDocumento: string;
 }
