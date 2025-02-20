@@ -64,7 +64,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion }:
                 type="button"
                 onClick={() => openModal("modalFavourite")}
                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0">
-                <img src={localIsFavourited === 1 ? "/assets/ic_fill_heart.svg" : "/assets/ic_outline_heart.svg"} alt="icon favourite" className="h-5 w-5" />
+                <img src={localIsFavourited === 1 || idTalentoColeccion !== 0 ? "/assets/ic_fill_heart.svg" : "/assets/ic_outline_heart.svg"} alt="icon favourite" className="h-5 w-5" />
             </button>
             <Modal id="modalFavourite" title="Añadir a" showButtonOptions={false} width="small">
                 <div className="flex flex-col gap-2">
