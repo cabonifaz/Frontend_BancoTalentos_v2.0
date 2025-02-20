@@ -69,7 +69,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion }:
             <Modal id="modalFavourite" title="Añadir a" showButtonOptions={false} width="small">
                 <div className="flex flex-col gap-2">
                     <ul className="flex flex-col gap-2 my-4">
-                        {favourites.map((fav) => (
+                        {favourites && favourites.length > 0 && favourites.map((fav) => (
                             <li key={fav.nombreColeccion} className="flex items-center w-fit *:cursor-pointer">
                                 <input
                                     type="radio"
@@ -79,7 +79,9 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion }:
                                     onChange={(e) => handleFavourited(e, fav.idColeccion)}
                                     className="h-5 w-5"
                                 />
-                                <label htmlFor={`fav-${fav.idColeccion}`} className="text-lg ps-4">{fav.nombreColeccion}</label>
+                                <label htmlFor={`fav-${fav.idColeccion}`} className="text-lg ps-4">
+                                    {fav.nombreColeccion}
+                                </label>
                             </li>
                         ))}
                     </ul>

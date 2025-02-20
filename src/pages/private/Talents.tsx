@@ -202,7 +202,7 @@ export const Talents = () => {
                                     name="favoritos"
                                     label="Favoritos"
                                     options={
-                                        favouritesData.map((favourite) => ({
+                                        favouritesData?.map((favourite) => ({
                                             label: favourite.nombreColeccion,
                                             value: favourite.idColeccion.toString(),
                                         })) ?? []
