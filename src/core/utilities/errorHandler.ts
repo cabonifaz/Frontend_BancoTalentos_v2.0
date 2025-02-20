@@ -12,8 +12,8 @@ export const handleResponse = (
     response: AxiosResponse,
     enqueueSnackbar: (message: SnackbarMessage, options?: OptionsObject) => void
 ) => {
-    const code = response.data.result.idMensaje;
-    const message = response.data.result.mensaje;
+    const code = response.data.result?.idMensaje ?? response.data.idMensaje;
+    const message = response.data.result?.mensaje ?? response.data.mensaje;
 
     switch (code) {
         case 1: enqueueSnackbar(message, { variant: 'warning' }); break;

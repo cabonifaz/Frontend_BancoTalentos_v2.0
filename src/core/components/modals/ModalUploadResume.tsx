@@ -13,11 +13,12 @@ import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
 
 interface Props {
-    idTalento?: number
+    idTalento?: number;
+    idArchivo?: number;
     onUpdate?: () => void;
 }
 
-export const ModalUploadResume = ({ idTalento, onUpdate }: Props) => {
+export const ModalUploadResume = ({ idTalento, onUpdate, idArchivo }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const cvRef = useRef<HTMLInputElement>(null);
@@ -43,7 +44,7 @@ export const ModalUploadResume = ({ idTalento, onUpdate }: Props) => {
     };
 
     const handleOnConfirm = async () => {
-        if (cvRef.current && cvRef.current.files && idTalento) {
+        if (cvRef.current && cvRef.current.files && idTalento && idArchivo) {
             const cv = cvRef.current.files[0];
             const validation = validateFile(cv, ['pdf']);
 
@@ -56,6 +57,7 @@ export const ModalUploadResume = ({ idTalento, onUpdate }: Props) => {
 
             updateData({
                 idTalento: idTalento, cvArchivo: {
+                    idArchivo: idArchivo,
                     stringB64: cvB64,
                     nombreArchivo: Utils.getFileNameWithoutExtension(cv.name),
                     extensionArchivo: "pdf",

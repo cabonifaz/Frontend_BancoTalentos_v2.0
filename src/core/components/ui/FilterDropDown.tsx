@@ -77,7 +77,7 @@ export const FilterDropDown = ({
                 <OutsideClickHandler onOutsideClick={onToggle}>
                     <div className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-20 absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col`}>
                         <div className={`border border-gray-300 rounded-lg mb-2 p-2 ${optionsType === "checkbox" ? "block" : "hidden"}`}>
-                            <ul className="list-none text-[#312e81] flex gap-1 flex-wrap min-h-12">
+                            <ul className="list-none text-[#312e81] flex gap-1 flex-wrap min-h-8">
                                 {selectedValues.map((value, index) => (
                                     <li className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full" key={index}>
                                         <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">

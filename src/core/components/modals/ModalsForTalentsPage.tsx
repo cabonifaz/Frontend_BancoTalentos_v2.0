@@ -67,6 +67,7 @@ export const ModalsForTalentsPage = ({
 
             <ModalUploadResume
                 idTalento={talent?.idTalento}
+                idArchivo={talentDet?.cv?.idArchivo}
                 onUpdate={handleUpdate}
             />
 

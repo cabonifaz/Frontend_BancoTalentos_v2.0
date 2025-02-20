@@ -5,11 +5,12 @@ import { useModal } from "../../context/ModalContext";
 import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
 import { TalentCertParams } from "../../models/params/TalentUpdateParams";
-import { updateTalentCert } from "../../services/apiService";
+import { uploadTalentCert } from "../../services/apiService";
 import { ARCHIVO_PDF, DOCUMENTO_CERT_DIP } from "../../utilities/constants";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Utils } from "../../utilities/utils";
 import { Loading } from "../ui/Loading";
+import { validateFile } from "../../utilities/validation";
 
 interface Props {
     idTalento?: number
@@ -18,10 +19,11 @@ interface Props {
 
 export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const certRef = useRef<HTMLInputElement>(null);
     const { closeModal } = useModal();
 
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentCertParams>(updateTalentCert, {
+    const { loading, fetch: updateData } = useApi<BaseResponse, TalentCertParams>(uploadTalentCert, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => {
             handleResponse(response, enqueueSnackbar);
@@ -37,11 +39,19 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null;
         setFileName(file ? file.name : null);
+        setError(null);
     };
 
     const handleOnConfirm = async () => {
         if (certRef.current && certRef.current.files && idTalento) {
             const cert = certRef.current.files[0];
+            const validation = validateFile(cert, ['pdf']);
+
+            if (!validation.isValid) {
+                setError(validation.message || "Error de validación.");
+                return;
+            }
+
             const certB64 = await Utils.fileToBase64(cert);
 
             updateData({
@@ -83,6 +93,7 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
                                 className="h-full w-full opacity-0 cursor-pointer"
                             />
                         </div>
+                        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
                     </div>
                 </div>
             </div>

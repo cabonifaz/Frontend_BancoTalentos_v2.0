@@ -9,6 +9,11 @@ export const loginApp = ({ username, password }: models.LoginParams): Promise<Ax
     return axiosInstanceNoToken.post("/bdt/auth/login", { username, password });
 }
 
+// user
+export const createNewFavList = (data: { collectionName: string }): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/user/addFavourite", { collectionName: data.collectionName });
+}
+
 // talents
 export const getTalents = (params: models.TalentParams): Promise<AxiosResponse<models.TalentsResponse>> => {
     const queryString = Utils.buildQueryString(params);
@@ -22,6 +27,10 @@ export const getTalent = (talentId: number): Promise<AxiosResponse<models.Talent
 
 export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.BaseResponse>> => {
     return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+}
+
+export const addTalentToFav = (data: { idTalento: number, idColeccion: number }): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/bdt/talent/addToFavourite", { idColeccion: data.idColeccion, idTalento: data.idTalento });
 }
 
 export const updateTalentContact = (data: talentUpdate.TalentContactParams): Promise<AxiosResponse<models.BaseResponse>> => {
@@ -44,7 +53,7 @@ export const updateTalentCv = (data: talentUpdate.TalentCvParams): Promise<Axios
     return axiosInstance.post("", { data }); // change
 }
 
-export const updateTalentCert = (data: talentUpdate.TalentCertParams): Promise<AxiosResponse<models.BaseResponse>> => {
+export const uploadTalentCert = (data: talentUpdate.TalentCertParams): Promise<AxiosResponse<models.BaseResponse>> => {
     return axiosInstance.post("", { data }); // change
 }
 

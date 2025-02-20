@@ -3,11 +3,11 @@ import { Utils } from "../../core/utilities/utils";
 import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { useNavigate } from "react-router-dom";
-import { getTalent, getTalents, getUserFavourites } from "../../core/services/apiService";
+import { getTalent, getTalents } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
-import { Education, Experience, FavouritesResponse, Feedback, Language, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
+import { Education, Experience, Feedback, Language, Talent, TalentParams, TalentResponse, TalentsResponse } from "../../core/models";
 import {
     Pagination,
     TalentCard,
@@ -24,6 +24,7 @@ import {
     TalentDetailsSkeleton
 } from '../../core/components';
 import { useParamContext } from "../../core/context/ParamsContext";
+import { useFavouritesContext } from "../../core/context/FavouritesContext";
 
 export const Talents = () => {
     const navigate = useNavigate();
@@ -44,15 +45,7 @@ export const Talents = () => {
     const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
 
     const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
-
-    const {
-        loading: loadingFavourites,
-        data: favouritesData,
-        fetch: fetchFavourites,
-    } = useApi<FavouritesResponse, null>(getUserFavourites, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
-    });
+    const { favourites: favouritesData, fetchFavourites } = useFavouritesContext();
 
     const {
         loading: loadingTalents,
@@ -118,7 +111,7 @@ export const Talents = () => {
     }, [fetchParams, loadingParams, paramsByMaestro]);
 
     useEffect(() => {
-        fetchFavourites(null);
+        fetchFavourites();
     }, [fetchFavourites]);
 
     useEffect(() => {
@@ -139,7 +132,7 @@ export const Talents = () => {
         openModal(modalId);
     };
 
-    if (loadingParams || loadingFavourites) return <Loading />;
+    if (loadingParams) return <Loading />;
 
     return (
         <div className="relative">
@@ -209,7 +202,7 @@ export const Talents = () => {
                                     name="favoritos"
                                     label="Favoritos"
                                     options={
-                                        favouritesData?.userFavList?.map((favourite) => ({
+                                        favouritesData.map((favourite) => ({
                                             label: favourite.nombreColeccion,
                                             value: favourite.idColeccion.toString(),
                                         })) ?? []
@@ -286,7 +279,11 @@ export const Talents = () => {
                                                     <div className="flex flex-col">
                                                         <div className="flex gap-2 items-center w-fit">
                                                             <p className="text-base text-wrap">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
-                                                            <FavouriteButton isFavourited={talent.esFavorito} />
+                                                            <FavouriteButton
+                                                                idTalento={talent.idTalento}
+                                                                isFavourited={talent.esFavorito}
+                                                                idTalentoColeccion={talentDets?.idColeccion || 0}
+                                                            />
                                                         </div>
                                                         <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
                                                             <img src="/assets/ic_location.svg" alt="location icon" className="h-5 w-5" />

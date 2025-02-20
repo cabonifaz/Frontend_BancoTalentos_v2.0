@@ -8,12 +8,14 @@ interface Props {
     showButtonOptions?: boolean;
     cancellationLabel?: string;
     confirmationLabel?: string;
+    width?: 'small';
     onConfirm?: () => void;
     children: ReactNode;
 }
 
-export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel = "Cancelar", confirmationLabel = "Aceptar", onConfirm, children }: Props) => {
+export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel = "Cancelar", confirmationLabel = "Aceptar", width, onConfirm, children }: Props) => {
     const { isModalOpen, closeModal } = useModal();
+    const divWidth = width === 'small' ? `w-[50vw] md:w-[30vw] lg:w-[20vw]` : "w-[80vw] lg:w-[50vw]";
     const modalRoot = document.getElementById("modal");
 
     const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -26,7 +28,7 @@ export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel =
 
     return createPortal(
         <div className="absolute top-0 left-0 bg-[#00000048] w-full h-screen flex flex-col items-center justify-center z-20" onClick={() => closeModal(id)}>
-            <div className="bg-white rounded-lg p-6 flex flex-col w-[80vw] lg:w-[50vw]" onClick={handleContentClick}>
+            <div className={`bg-white rounded-lg p-6 flex flex-col ${divWidth}`} onClick={handleContentClick}>
                 <div className="flex items-center justify-between">
                     <h2 className="font-semibold text-base text-[#52525B]">{title}</h2>
                     <button className="flex items-center hover:bg-gray-100 rounded-full" onClick={() => closeModal(id)}>
