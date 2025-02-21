@@ -4,15 +4,16 @@ export interface Experience {
     puesto: string;
     funciones: string;
     fechaInicio: string;
+    diferenciaAnios: number;
     fechaFin: string;
     flActualidad: boolean;
 }
 
-export interface AddExperience extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa'> {
+export interface AddExperience extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa' | 'diferenciaAnios'> {
     empresa: string;
 }
 
-export interface AddOrUpdateExperienceParams extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa'> {
+export interface AddOrUpdateExperienceParams extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa' | 'diferenciaAnios'> {
     idExperiencia?: number;
     idTalento: number;
     empresa: string;

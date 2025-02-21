@@ -1,5 +1,4 @@
 import { Education } from "../../models/interfaces/Education";
-import { Utils } from "../../utilities/utils";
 
 interface Props {
     data: Education;
@@ -7,16 +6,18 @@ interface Props {
 }
 
 export const EducationCard = ({ data, onEdit }: Props) => {
-    const { month: initMonth, year: initYear } = Utils.splitDateAsNumbers(data.fechaInicio || "");
-    const { month: endMonth, year: endYear } = Utils.splitDateAsNumbers(data.fechaFin || "");
-
     return (
         <div className="flex items-center justify-between rounded-md my-1 px-2 sm:px-12 py-4 bg-[#f4f4f5] w-full">
             <div className="flex gap-2 sm:gap-12 items-center">
                 <img src="/assets/ic_no_image.svg" alt="Foto Perfil Talento" className="w-16 h-16 rounded-full border" />
                 <div className="flex flex-col gap-2">
                     <h2 className="text-[#27272A] text-base">{data.nombreInstitucion}</h2>
-                    <p className="text-[#71717A] text-sm flex flex-col">{data.carrera} <span>{`${initMonth}/${initYear} - ${endMonth}/${endYear}`}</span></p>
+                    <p className="text-[#71717A] text-sm flex flex-col">
+                        {data.carrera}
+                        <span>
+                            {`${data?.fechaInicio ? data?.fechaInicio : ""} - ${data?.fechaFin ? data?.fechaFin : ""}`}
+                        </span>
+                    </p>
                 </div>
             </div>
 
