@@ -395,7 +395,9 @@ export const Talents = () => {
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {(talentDets?.habilidadesTecnicas || []).map((item, index) => (
-                                                            <p key={index} className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">{item.nombreHabilidad}</p>
+                                                            <p key={index} className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">
+                                                                {`${item.nombreHabilidad} - (${item.aniosExperiencia})`}
+                                                            </p>
                                                         ))}
                                                     </div>
                                                 </div>
