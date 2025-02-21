@@ -14,6 +14,7 @@ interface UseApiOptions<T, P> {
 interface UseApiResult<T, P> {
     loading: boolean;
     data: Data<T>;
+    setData: React.Dispatch<React.SetStateAction<Data<T>>>;
     error: CustomError;
     fetch: (params: P) => Promise<AxiosResponse<T>>;
 }
@@ -72,5 +73,5 @@ export const useApi = <T, P>(apiCall: (param: P) => Promise<AxiosResponse<T>>, o
         };
     }, [fetch, memoizedOptions?.autoFetch, memoizedOptions?.params]);
 
-    return { loading, data, error, fetch };
+    return { loading, data, setData, error, fetch };
 };

@@ -50,6 +50,7 @@ export const Talents = () => {
     const {
         loading: loadingTalents,
         data: talentsData,
+        setData: setTalentsData,
         fetch: fetchTalents,
     } = useApi<TalentsResponse, TalentParams>(getTalents, {
         onError: (error) => handleError(error, enqueueSnackbar),
@@ -85,6 +86,19 @@ export const Talents = () => {
             idTalentCollection: selectedFavourites || undefined,
         });
     }
+
+    const handleToggleFavorito = (id: number) => {
+        if (!talentsData) return;
+
+        const updatedTalents = talentsData?.talents.map(talento =>
+            talento.idTalento === id ? { ...talento, esFavorito: talento.esFavorito === 1 ? 0 : 1 } : talento
+        );
+
+        setTalentsData({
+            ...talentsData,
+            talents: updatedTalents,
+        });
+    };
 
     useEffect(() => {
         const handleResize = () => {
@@ -282,6 +296,7 @@ export const Talents = () => {
                                                             <FavouriteButton
                                                                 idTalento={talent.idTalento}
                                                                 isFavourited={talent.esFavorito}
+                                                                onToggleFavorito={handleToggleFavorito}
                                                                 idTalentoColeccion={talentDets?.idColeccion || 0}
                                                             />
                                                         </div>

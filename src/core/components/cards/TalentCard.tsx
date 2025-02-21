@@ -8,7 +8,6 @@ interface Props {
 
 export const TalentCard = ({ talent, selectTalent }: Props) => {
     return (
-        // #c7eeea teal
         <div
             onClick={() => selectTalent(talent)}
             className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer relative">

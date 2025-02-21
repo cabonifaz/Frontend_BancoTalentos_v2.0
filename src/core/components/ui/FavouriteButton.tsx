@@ -9,9 +9,10 @@ interface Props {
     idTalento: number;
     isFavourited: number;
     idTalentoColeccion: number;
+    onToggleFavorito: (idTalento: number) => void;
 }
 
-export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion }: Props) => {
+export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, onToggleFavorito }: Props) => {
     const { openModal, closeModal } = useModal();
     const { favourites, addToFavourites, createFavouriteList, addToFavLoading } = useFavouritesContext();
     const favNameRef = useRef<HTMLInputElement>(null);
@@ -32,6 +33,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion }:
 
             if (response?.idMensaje === 2) {
                 setLocalIsFavourited(1);
+                onToggleFavorito(idTalento);
             }
         }
     };
