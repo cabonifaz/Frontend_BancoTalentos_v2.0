@@ -26,7 +26,7 @@ export const getTalent = (talentId: number): Promise<AxiosResponse<models.Talent
 }
 
 export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const addTalentToFav = (data: { idTalento: number, idColeccion: number }): Promise<AxiosResponse<models.BaseResponse>> => {
@@ -34,15 +34,15 @@ export const addTalentToFav = (data: { idTalento: number, idColeccion: number })
 }
 
 export const updateTalentContact = (data: talentUpdate.TalentContactParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const updateTalentSocialMedia = (data: talentUpdate.TalentSocialMediaParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const updateTalentProfilePhoto = (data: talentUpdate.TalentProfilePhotoParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const getCvFile = (data: number): Promise<AxiosResponse<models.FileResponse>> => {
@@ -50,67 +50,67 @@ export const getCvFile = (data: number): Promise<AxiosResponse<models.FileRespon
 }
 
 export const updateTalentCv = (data: talentUpdate.TalentCvParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("", { data }); // change
+    return axiosInstance.post("", data); // change
 }
 
 export const uploadTalentCert = (data: talentUpdate.TalentCertParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("", { data }); // change
+    return axiosInstance.post("", data); // change
 }
 
 export const updateTalentSalary = (data: talentUpdate.TalentSalaryParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const addTalentTechSkill = (data: talentUpdate.TalentTechSkillParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addTechAbility", { data });
+    return axiosInstance.post("/bdt/talent/addTechAbility", data);
 }
 
 export const addTalentSoftSkill = (data: talentUpdate.TalentSoftSkillParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addSoftAbility", { data });
+    return axiosInstance.post("/bdt/talent/addSoftAbility", data);
 }
 
 export const updateTalentDescription = (data: talentUpdate.TalentDescriptionParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const updateTalentAvailability = (data: talentUpdate.TalentAvailabilityParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 // experience
 export const addOrUpdateTalentExperience = (data: models.AddOrUpdateExperienceParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateExperience", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateExperience", data);
 }
 
 export const deleteTalenteExperience = (idExperience: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteExperience", { idExperience });
+    return axiosInstance.post("/bdt/talent/deleteExperience", idExperience);
 }
 
 // education
 export const addOrUpdateTalentEducation = (data: models.AddOrUpdateEducationParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateEducation", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateEducation", data);
 }
 
 export const deleteTalenteEducation = (idEducation: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteEducation", { idEducation });
+    return axiosInstance.post("/bdt/talent/deleteEducation", idEducation);
 }
 
 // language
 export const addOrUpdateTalentLanguage = (data: models.AddOrUpdateLanguageParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateLanguage", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateLanguage", data);
 }
 
 export const deleteTalenteLanguage = (idLanguage: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteLanguage", { idLanguage });
+    return axiosInstance.post("/bdt/talent/deleteLanguage", idLanguage);
 }
 
 // feedback
 export const addOrUpdateTalentFeedback = (data: models.AddOrUpdateFeedbackParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateFeedback", { data });
+    return axiosInstance.post("/bdt/talent/addOrUpdateFeedback", data);
 }
 
 export const deleteTalenteFeedback = (idFeedback: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteFeedback", { idFeedback });
+    return axiosInstance.post("/bdt/talent/deleteFeedback", idFeedback);
 }
 
 // params
