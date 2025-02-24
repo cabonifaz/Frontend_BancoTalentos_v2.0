@@ -28,7 +28,7 @@ export interface AddTalentParams {
         puesto: string;
         funciones: string;
         fechaInicio: string;
-        fechaFin?: string;
+        fechaFin?: string | null;
         flActualidad: number;
     }[];
     educaciones: {
@@ -36,7 +36,7 @@ export interface AddTalentParams {
         carrera: string;
         grado: string;
         fechaInicio: string;
-        fechaFin?: string;
+        fechaFin?: string | null;
         flActualidad: number;
     }[];
     idiomas: {

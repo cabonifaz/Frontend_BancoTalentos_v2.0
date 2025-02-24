@@ -103,11 +103,13 @@ export const AddTalent = () => {
         const cleanExperiencias = experiencias.map((exp) => ({
             ...exp,
             flActualidad: exp.flActualidad ? 1 : 0,
+            fechaFin: exp.flActualidad ? null : exp.fechaFin,
         }));
 
         const cleanEducaciones = educaciones.map((edu) => ({
             ...edu,
             flActualidad: edu.flActualidad ? 1 : 0,
+            fechaFin: edu.flActualidad ? null : edu.fechaFin,
         }));
 
         try {
