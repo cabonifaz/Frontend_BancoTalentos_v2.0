@@ -15,7 +15,7 @@ export const ExperienceCard = ({ data, onEdit }: Props) => {
                     <p className="text-[#71717A] text-sm flex ">
                         {data.puesto}
                         <span className="ms-6">
-                            {`${data?.fechaInicio ? data?.fechaInicio : ""} - ${data?.fechaFin ? data?.fechaFin : ""} | ${data?.diferenciaAnios !== null ? `${data?.diferenciaAnios} años` : ""}`}
+                            {`${data?.fechaInicio ? data?.fechaInicio : ""} - ${data?.fechaFin ? data?.fechaFin : ""} | ${data?.tiempo ? data?.tiempo : ""}`}
                         </span>
                     </p>
                 </div>
