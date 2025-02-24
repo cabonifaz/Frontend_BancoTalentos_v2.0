@@ -136,7 +136,6 @@ export const AddTalent = () => {
                     idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
                 },
             };
-            console.log(cleanData);
 
             postTalent(cleanData);
         } catch (error) {
