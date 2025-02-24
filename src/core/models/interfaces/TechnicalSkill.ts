@@ -3,6 +3,7 @@ export interface TechnicalSkill {
     aniosExperiencia: number;
 }
 
-export interface AddTechSkill extends Omit<TechnicalSkill, 'nombreHabilidad'> {
+export interface AddTechSkill {
     idHabilidad: number;
+    anios: number;
 }

@@ -86,7 +86,7 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
                             </div>
                             <input
                                 type="file"
-                                name="user-photo"
+                                name="cert"
                                 ref={certRef}
                                 accept=".pdf"
                                 onChange={handleFileChange}

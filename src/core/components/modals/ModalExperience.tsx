@@ -175,7 +175,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
                         <input
-                            type="month"
+                            type="date"
                             name="initDate"
                             id="initDate"
                             value={fechaInicio}
@@ -195,7 +195,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
                         <input
-                            type="month"
+                            type="date"
                             name="endDate"
                             id="endDate"
                             value={fechaFin}

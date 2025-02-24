@@ -94,7 +94,7 @@ export const ExperiencesSection = ({ register, errors, fields, setValue, onAdd, 
                             <label htmlFor={`initDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
                             <input
                                 id={`initDate-${index}`}
-                                type="month"
+                                type="date"
                                 {...register(`experiencias.${index}.fechaInicio`)}
                                 value={experience.fechaInicio}
                                 onChange={(e) => handleChange(index, 'fechaInicio', e.target.value)}
@@ -119,7 +119,7 @@ export const ExperiencesSection = ({ register, errors, fields, setValue, onAdd, 
                             <label htmlFor={`endDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
                             <input
                                 id={`endDate-${index}`}
-                                type="month"
+                                type="date"
                                 {...register(`experiencias.${index}.fechaFin`)}
                                 value={experience.fechaFin}
                                 disabled={currentDates[index]}

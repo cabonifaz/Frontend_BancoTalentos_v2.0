@@ -2,7 +2,7 @@ import { AddEducation, AddExperience, AddLanguage, AddSoftSkill, AddTechSkill } 
 
 export const initialTechnicalSkill: AddTechSkill = {
     idHabilidad: 0,
-    aniosExperiencia: 0
+    anios: 0
 };
 
 export const initialSoftSkill: AddSoftSkill = {

@@ -189,7 +189,7 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initDateEducation" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
                         <input
-                            type="month"
+                            type="date"
                             name="initDateEducation"
                             id="initDateEducation"
                             value={fechaInicio}
@@ -209,7 +209,7 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endDateEducation" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
                         <input
-                            type="month"
+                            type="date"
                             name="endDateEducation"
                             id="endDateEducation"
                             value={fechaFin}

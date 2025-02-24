@@ -22,7 +22,7 @@ export const AddTalentSchema = z.object({
     habilidadesTecnicas: z.array(
         z.object({
             idHabilidad: z.number().min(1, "Seleccione una habilidad técnica"),
-            aniosExperiencia: z.number().min(0, "Los años de experiencia son requeridos"),
+            anios: z.number().min(0, "Los años de experiencia son requeridos"),
         })
     ),
     habilidadesBlandas: z.array(

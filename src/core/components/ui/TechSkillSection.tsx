@@ -36,16 +36,16 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                         <label htmlFor="skillYears" className="text-[#71717A] text-sm px-1">Años de experiencia</label>
                         <input
                             id="skillYears"
-                            {...register(`habilidadesTecnicas.${index}.aniosExperiencia`, { valueAsNumber: true })}
+                            {...register(`habilidadesTecnicas.${index}.anios`, { valueAsNumber: true })}
                             type="text"
-                            value={skill.aniosExperiencia}
+                            value={skill.anios}
                             onFocus={(e) => e.target.select()}
-                            onChange={(e) => handleChange(index, 'aniosExperiencia', Number(e.target.value))}
+                            onChange={(e) => handleChange(index, 'anios', Number(e.target.value))}
                             placeholder="Nro. años"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                        {errors.habilidadesTecnicas?.[index]?.aniosExperiencia && (
-                            <p className="text-red-400 text-sm">{errors.habilidadesTecnicas[index]?.aniosExperiencia?.message}</p>
+                        {errors.habilidadesTecnicas?.[index]?.anios && (
+                            <p className="text-red-400 text-sm">{errors.habilidadesTecnicas[index]?.anios?.message}</p>
                         )}
                     </div>
                 </div>

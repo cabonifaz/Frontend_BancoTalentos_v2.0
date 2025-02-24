@@ -109,7 +109,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         <div className="flex flex-col w-1/2">
                             <label htmlFor={`initDateEducation-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
                             <input
-                                type="month"
+                                type="date"
                                 id={`initDateEducation-${index}`}
                                 {...register(`educaciones.${index}.fechaInicio`)}
                                 value={education.fechaInicio}
@@ -134,7 +134,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         <div className="flex flex-col w-1/2">
                             <label htmlFor={`endDateEducation-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
                             <input
-                                type="month"
+                                type="date"
                                 id={`endDateEducation-${index}`}
                                 disabled={currentDates[index]}
                                 {...register(`educaciones.${index}.fechaFin`)}
