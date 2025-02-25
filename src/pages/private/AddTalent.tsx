@@ -466,12 +466,22 @@ export const AddTalent = () => {
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                            <input {...register("montoInicialRxH", { valueAsNumber: true })} id="initRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            <input
+                                                {...register("montoInicialRxH", { valueAsNumber: true })}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                id="initRxH"
+                                                type="number"
+                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoInicialRxH && <p className="text-red-400 text-sm">{errors.montoInicialRxH.message}</p>}
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                            <input {...register("montoFinalRxH", { valueAsNumber: true })} id="endRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            <input
+                                                {...register("montoFinalRxH", { valueAsNumber: true })}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                id="endRxH"
+                                                type="number"
+                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoFinalRxH && <p className="text-red-400 text-sm">{errors.montoFinalRxH.message}</p>}
                                         </div>
                                     </div>
@@ -479,12 +489,22 @@ export const AddTalent = () => {
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                            <input {...register("montoInicialPlanilla", { valueAsNumber: true })} id="initPlanilla" type="tenumberxt" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            <input
+                                                {...register("montoInicialPlanilla", { valueAsNumber: true })}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                id="initPlanilla"
+                                                type="tenumberxt"
+                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoInicialPlanilla && <p className="text-red-400 text-sm">{errors.montoInicialPlanilla.message}</p>}
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                            <input {...register("montoFinalPlanilla", { valueAsNumber: true })} id="endPlanilla" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            <input
+                                                {...register("montoFinalPlanilla", { valueAsNumber: true })}
+                                                onWheel={(e) => e.currentTarget.blur()}
+                                                id="endPlanilla"
+                                                type="number"
+                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoFinalPlanilla && <p className="text-red-400 text-sm">{errors.montoFinalPlanilla.message}</p>}
                                         </div>
                                     </div>

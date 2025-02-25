@@ -40,6 +40,7 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                             type="text"
                             value={skill.anios}
                             onFocus={(e) => e.target.select()}
+                            onWheel={(e) => e.currentTarget.blur()}
                             onChange={(e) => handleChange(index, 'anios', Number(e.target.value))}
                             placeholder="Nro. años"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
