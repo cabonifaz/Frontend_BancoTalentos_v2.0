@@ -14,7 +14,7 @@ interface Props {
     idTalento?: number
     email?: string;
     phone?: string;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalContact = ({ idTalento, email, phone, onUpdate }: Props) => {
@@ -26,15 +26,7 @@ export const ModalContact = ({ idTalento, email, phone, onUpdate }: Props) => {
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentContactParams>(updateTalentContact, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalContact");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const copyToClipboard = (text: string) => {
@@ -69,7 +61,14 @@ export const ModalContact = ({ idTalento, email, phone, onUpdate }: Props) => {
                 return;
             }
 
-            updateData({ idTalento: idTalento, telefono: phone, email: email });
+            updateData({ idTalento: idTalento, telefono: phone, email: email })
+                .then((response) => {
+                    if (response.data.idMensaje === 2) {
+                        if (onUpdate) onUpdate(idTalento);
+                        closeModal("modalContact");
+                        enqueueSnackbar("Actualizado", { variant: 'success' });
+                    }
+                });
         }
     }
 

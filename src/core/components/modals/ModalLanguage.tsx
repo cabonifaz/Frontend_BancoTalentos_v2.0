@@ -13,7 +13,7 @@ import { validateSelect, validateStars } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     languageRef: React.MutableRefObject<Language | null>;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
@@ -39,28 +39,12 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateLanguageParams>(addOrUpdateTalentLanguage, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalLanguage");
-                enqueueSnackbar("Guardado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteLanguage, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalLanguage");
-                enqueueSnackbar("Eliminado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -104,13 +88,25 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
                 }
             }
 
-            addOrUpdateData(data);
+            addOrUpdateData(data).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalLanguage");
+                    enqueueSnackbar("Guardado", { variant: 'success' });
+                }
+            });
         }
     }
 
     const handleOnDelete = () => {
-        if (languageRef.current) {
-            deleteData(languageRef.current.idTalentoIdioma);
+        if (languageRef.current && idTalento) {
+            deleteData(languageRef.current.idTalentoIdioma).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalLanguage");
+                    enqueueSnackbar("Eliminado", { variant: 'success' });
+                }
+            });
         }
     }
 

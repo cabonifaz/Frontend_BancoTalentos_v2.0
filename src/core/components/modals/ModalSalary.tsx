@@ -4,7 +4,7 @@ import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
 import { useApi } from "../../hooks/useApi";
 import { TalentSalaryParams } from "../../models/params/TalentUpdateParams";
-import { BaseResponse } from "../../models";
+import { BaseResponse, Talent } from "../../models";
 import { enqueueSnackbar } from "notistack";
 import { updateTalentSalary } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
@@ -14,14 +14,15 @@ import { validateCurrency, validateSalary } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     idMoneda?: number;
+    moneda?: string;
     initPlan?: number;
     endPlan?: number;
     initRxH?: number;
     endRxH?: number;
-    onUpdate?: () => void;
+    updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-export const ModalSalary = ({ idTalento, idMoneda, initPlan, endPlan, initRxH, endRxH, onUpdate }: Props) => {
+export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, initRxH, endRxH, updateTalentList }: Props) => {
     const { paramsByMaestro } = useParamContext();
     const { closeModal } = useModal();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -33,15 +34,7 @@ export const ModalSalary = ({ idTalento, idMoneda, initPlan, endPlan, initRxH, e
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentSalaryParams>(updateTalentSalary, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalSalary");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar)
     });
 
     const monedas = paramsByMaestro[2] || [];
@@ -93,7 +86,29 @@ export const ModalSalary = ({ idTalento, idMoneda, initPlan, endPlan, initRxH, e
                 montoFinalPlanilla: endPlanilla,
                 montoInicialRxH: initRxH,
                 montoFinalRxH: endRxH
-            });
+            }).then(
+                (response) => {
+                    if (response.data.idMensaje === 2) {
+                        closeModal("modalSalary");
+                        enqueueSnackbar("Actualizado", { variant: 'success' });
+                        if (idTalento && updateTalentList && currencyRef.current) {
+                            const selectedIndex = currencyRef.current.selectedIndex;
+                            const selectedOption = currencyRef.current.options[selectedIndex];
+
+                            updateTalentList(
+                                idTalento,
+                                {
+                                    moneda: selectedOption.getAttribute('data-code') ?? moneda,
+                                    montoInicialPlanilla: initPlanRef.current?.value ? Number(initPlanRef.current.value) : initPlan,
+                                    montoFinalPlanilla: endPlanRef.current?.value ? Number(endPlanRef.current.value) : endPlan,
+                                    montoInicialRxH: initRxHRef.current?.value ? Number(initRxHRef.current.value) : initRxH,
+                                    montoFinalRxH: endRxHRef.current?.value ? Number(endRxHRef.current.value) : endRxH
+                                }
+                            );
+                        }
+                    }
+                }
+            );
         }
     }
 
@@ -109,7 +124,7 @@ export const ModalSalary = ({ idTalento, idMoneda, initPlan, endPlan, initRxH, e
                     className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
                     <option value={0}>Seleccione una moneda</option>
                     {monedas.map((moneda) => (
-                        <option key={moneda.idParametro} value={moneda.num1}>
+                        <option key={moneda.idParametro} value={moneda.num1} data-code={moneda.num1 === 3 ? moneda.string2 : moneda.string3}>
                             {moneda.string1}
                         </option>
                     ))}
@@ -119,26 +134,49 @@ export const ModalSalary = ({ idTalento, idMoneda, initPlan, endPlan, initRxH, e
                 <div className="flex w-full gap-8">
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initRxH" className="text-[#71717A] text-sm my-2">Monto inicial</label>
-                        <input type="number" ref={initPlanRef} defaultValue={initPlan} name="initRxH" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                        {errors.initPlan && <p className="text-red-500 text-sm mt-2">{errors.initPlan}</p>}
+                        <input
+                            type="number"
+                            ref={initRxHRef}
+                            defaultValue={initRxH}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            name="initRxH"
+                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        {errors.initRxH && <p className="text-red-500 text-sm mt-2">{errors.initRxH}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endRxH" className="text-[#71717A] text-sm my-2">Monto final</label>
-                        <input type="number" ref={endPlanRef} defaultValue={endPlan} name="endtRxH" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                        {errors.endPlan && <p className="text-red-500 text-sm mt-2">{errors.endPlan}</p>}
+                        <input
+                            type="number"
+                            ref={endRxHRef}
+                            defaultValue={endRxH}
+                            name="endtRxH"
+                            onWheel={(e) => e.currentTarget.blur()}
+                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        {errors.endRxH && <p className="text-red-500 text-sm mt-2">{errors.endRxH}</p>}
                     </div>
                 </div>
                 <h3 className="w-full mb-2 mt-6">Monto por planilla</h3>
                 <div className="flex w-full gap-8">
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initPlanilla" className="text-[#71717A] text-sm my-2">Monto inicial</label>
-                        <input type="number" ref={initRxHRef} defaultValue={initRxH} name="initPlanilla" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                        {errors.initRxH && <p className="text-red-500 text-sm mt-2">{errors.initRxH}</p>}
+                        <input
+                            type="number"
+                            ref={initPlanRef}
+                            defaultValue={initPlan}
+                            onWheel={(e) => e.currentTarget.blur()}
+                            name="initPlanilla" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        {errors.initPlan && <p className="text-red-500 text-sm mt-2">{errors.initPlan}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endPlanilla" className="text-[#71717A] text-sm my-2">Monto final</label>
-                        <input type="number" ref={endRxHRef} defaultValue={endRxH} name="endPlanilla" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                        {errors.endRxH && <p className="text-red-500 text-sm mt-2">{errors.endRxH}</p>}
+                        <input
+                            type="number"
+                            ref={endPlanRef}
+                            defaultValue={endPlan}
+                            name="endPlanilla"
+                            onWheel={(e) => e.currentTarget.blur()}
+                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        {errors.endPlan && <p className="text-red-500 text-sm mt-2">{errors.endPlan}</p>}
                     </div>
                 </div>
             </div>

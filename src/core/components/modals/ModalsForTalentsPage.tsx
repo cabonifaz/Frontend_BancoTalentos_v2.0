@@ -23,6 +23,7 @@ interface Props {
     languageRef: React.MutableRefObject<Language | null>;
     feedbackRef: React.MutableRefObject<Feedback | null>;
     fetchTalentDets: (id: number) => void;
+    updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
 export const ModalsForTalentsPage = ({
@@ -33,19 +34,17 @@ export const ModalsForTalentsPage = ({
     educationRef,
     languageRef,
     feedbackRef,
+    updateTalentList
 }: Props) => {
 
-    const handleUpdate = () => {
-        if (talent && talent?.idTalento) {
-            fetchTalentDets(talent.idTalento);
-        }
-    };
+    const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
 
     return (
         <>
             <ModalResume
                 cvData={talentDet?.cv}
             />
+
             <ModalContact
                 idTalento={talent?.idTalento}
                 email={talentDet?.email}
@@ -62,13 +61,11 @@ export const ModalsForTalentsPage = ({
 
             <ModalEditPhoto
                 idTalento={talent?.idTalento}
-                onUpdate={handleUpdate}
             />
 
             <ModalUploadResume
                 idTalento={talent?.idTalento}
                 idArchivo={talentDet?.cv?.idArchivo}
-                onUpdate={handleUpdate}
             />
 
             <ModalSalary
@@ -78,11 +75,11 @@ export const ModalsForTalentsPage = ({
                 endPlan={talent?.montoFinalPlanilla}
                 initRxH={talent?.montoInicialRxH}
                 endRxH={talent?.montoFinalRxH}
+                updateTalentList={updateTalentList}
             />
 
             <ModalUploadCert
                 idTalento={talent?.idTalento}
-                onUpdate={handleUpdate}
             />
 
             <ModalTechSkills

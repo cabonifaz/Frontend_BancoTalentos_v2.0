@@ -160,7 +160,7 @@ export class Utils {
     static formatDateForMonthInput = (date: string | undefined) => {
         if (!date || date === undefined) return "";
 
-        const [, month, year] = date.split("-");
-        return `${year}-${month}`;
+        const [month, year] = date.split("/");
+        return `${year}-${month}-01`;
     };
 }

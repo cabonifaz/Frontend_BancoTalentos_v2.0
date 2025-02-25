@@ -6,7 +6,8 @@ export interface Feedback {
     estrellas: number;
 }
 
-export interface AddOrUpdateFeedbackParams extends Omit<Feedback, 'editable' | 'idFeedback' | 'usuario'> {
+export interface AddOrUpdateFeedbackParams extends Omit<Feedback, 'editable' | 'idFeedback' | 'usuario' | 'descripcion'> {
     idFeedback?: number;
     idTalento: number;
+    feedback: string;
 }

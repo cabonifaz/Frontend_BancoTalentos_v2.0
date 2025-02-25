@@ -4,12 +4,13 @@ import { useFavouritesContext } from "../../context/FavouritesContext";
 import { Modal } from "../modals/Modal";
 import { validateText } from "../../utilities/validation";
 import { Loading } from "./Loading";
+import { Talent } from "../../models";
 
 interface Props {
     idTalento: number;
     isFavourited: number;
     idTalentoColeccion: number;
-    onToggleFavorito: (idTalento: number) => void;
+    onToggleFavorito: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
 export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, onToggleFavorito }: Props) => {
@@ -33,7 +34,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, o
 
             if (response?.idMensaje === 2) {
                 setLocalIsFavourited(1);
-                onToggleFavorito(idTalento);
+                onToggleFavorito(idTalento, { esFavorito: 1 });
             }
         }
     };

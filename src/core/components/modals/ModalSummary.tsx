@@ -13,7 +13,7 @@ import { validateText } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     description?: string;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalSummary = ({ idTalento, description, onUpdate }: Props) => {
@@ -23,15 +23,7 @@ export const ModalSummary = ({ idTalento, description, onUpdate }: Props) => {
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentDescriptionParams>(updateTalentDescription, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalSummary");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -53,6 +45,12 @@ export const ModalSummary = ({ idTalento, description, onUpdate }: Props) => {
             updateData({
                 idTalento: idTalento,
                 descripcion: description
+            }).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalSummary");
+                    enqueueSnackbar("Actualizado", { variant: 'success' });
+                }
             });
         }
     }

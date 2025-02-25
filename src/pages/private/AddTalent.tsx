@@ -297,13 +297,13 @@ export const AddTalent = () => {
             <Dashboard>
                 {loadingAddTalent && (<Loading opacity="opacity-50" />)}
                 {/* main container */}
-                <div className="md:p-8 flex justify-center max-h-screen">
+                <div className="md:px-8 md:pt-8 flex justify-center max-h-screen">
                     {/* form container */}
-                    <div className="rounded-lg border flex flex-col shadow-lg w-full md:w-[40rem] md:h-[50rem] overflow-y-auto relative">
+                    <div className="rounded-lg border flex flex-col shadow-lg">
                         {/* form */}
-                        <form className="relative" onSubmit={handleSubmit(onSubmit)}>
+                        <form className="" onSubmit={handleSubmit(onSubmit)}>
                             {/* title */}
-                            <div className="flex p-4 bg-white fixed w-full md:w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
+                            <div className="flex p-4 bg-white w-full md:w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
                                 <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
                                     <h2 className="font-semibold text-xl">Nuevo Talento</h2>
                                     <h3 className="text-sm">Ingresa datos del talento.</h3>
@@ -322,7 +322,7 @@ export const AddTalent = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="px-8 mt-28">
+                            <div className="px-8 overflow-y-auto w-full md:w-[40rem] md:h-[70vh]">
                                 {/* files */}
                                 <div>
                                     <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>

@@ -13,7 +13,7 @@ import { validateSkill, validateYears } from "../../utilities/validation";
 
 interface Props {
     idTalento?: number;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
@@ -27,15 +27,7 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
 
     const { loading, fetch: addData } = useApi<BaseResponse, TalentTechSkillParams>(addTalentTechSkill, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalTechSkills");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -64,6 +56,13 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
                 idTalento: idTalento,
                 idHabilidad: ability,
                 anios: anios
+            }).then((response) => {
+                if (response.data.idMensaje === 2) {
+
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalTechSkills");
+                    enqueueSnackbar("Actualizado", { variant: 'success' });
+                }
             });
         }
     }

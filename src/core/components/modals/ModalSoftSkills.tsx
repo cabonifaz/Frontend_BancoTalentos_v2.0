@@ -13,7 +13,7 @@ import { validateSkill } from "../../utilities/validation";
 
 interface Props {
     idTalento?: number;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
@@ -26,15 +26,7 @@ export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
 
     const { loading, fetch: addData } = useApi<BaseResponse, TalentSoftSkillParams>(addTalentSoftSkill, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalSoftSkills");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -56,6 +48,12 @@ export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
             addData({
                 idTalento: idTalento,
                 idHabilidad: ability,
+            }).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalSoftSkills");
+                    enqueueSnackbar("Actualizado", { variant: 'success' });
+                }
             });
         }
     }

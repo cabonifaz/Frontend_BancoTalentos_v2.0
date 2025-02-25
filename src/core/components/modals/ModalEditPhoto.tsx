@@ -6,7 +6,6 @@ import { enqueueSnackbar } from "notistack";
 import { BaseResponse } from "../../models";
 import { updateTalentSocialMedia } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
-import { useModal } from "../../context/ModalContext";
 import { Utils } from "../../utilities/utils";
 import { ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "../../utilities/constants";
 import { Loading } from "../ui/Loading";
@@ -14,26 +13,16 @@ import { validateFile } from "../../utilities/validation";
 
 interface Props {
     idTalento?: number
-    onUpdate?: () => void;
 }
 
-export const ModalEditPhoto = ({ idTalento, onUpdate }: Props) => {
+export const ModalEditPhoto = ({ idTalento }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const photoRef = useRef<HTMLInputElement>(null);
-    const { closeModal } = useModal();
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentProfilePhotoParams>(updateTalentSocialMedia, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalEditPhoto");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -13,7 +13,7 @@ import { validateDates, validateText } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     experienceRef: React.MutableRefObject<Experience | null>;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) => {
@@ -30,29 +30,32 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateExperienceParams>(addOrUpdateTalentExperience, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalExperience");
-                enqueueSnackbar("Guardado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteExperience, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalExperience");
-                enqueueSnackbar("Eliminado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
+
+    useEffect(() => {
+        if (experienceRef.current) {
+            setEmpresa(experienceRef.current.nombreEmpresa || "");
+            setPuesto(experienceRef.current.puesto || "");
+            setFechaInicio(Utils.formatDateForMonthInput(experienceRef.current.fechaInicio) || "");
+            setFechaFin(Utils.formatDateForMonthInput(experienceRef.current.fechaFin) || "");
+            setFunciones(experienceRef.current.funciones || "");
+            setDateCheck(experienceRef.current.flActualidad || false);
+        } else {
+            setEmpresa("");
+            setPuesto("");
+            setFechaInicio("");
+            setFechaFin("");
+            setFunciones("");
+            setDateCheck(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [experienceRef.current]);
 
     useEffect(() => {
         if (empresaCheck) {
@@ -105,7 +108,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 funciones: funciones,
                 fechaInicio: fechaInicio,
                 fechaFin: fechaFin,
-                flActualidad: dateCheck,
+                flActualidad: dateCheck ? 1 : 0,
             };
 
             if (isEditing && experienceRef.current) {
@@ -115,13 +118,25 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 };
             }
 
-            addOrUpdateData(data);
+            addOrUpdateData(data).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalExperience");
+                    enqueueSnackbar("Guardado", { variant: 'success' });
+                }
+            });
         }
     };
 
     const handleOnDelete = () => {
-        if (experienceRef.current) {
-            deleteData(experienceRef.current.idExperiencia);
+        if (experienceRef.current && idTalento) {
+            deleteData(experienceRef.current.idExperiencia).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalExperience");
+                    enqueueSnackbar("Eliminado", { variant: 'success' });
+                }
+            });
         }
     };
 
@@ -173,7 +188,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
+                        <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Fecha de inicio</label>
                         <input
                             type="date"
                             name="initDate"
@@ -193,7 +208,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                         </div>
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
+                        <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Fecha de fin</label>
                         <input
                             type="date"
                             name="endDate"

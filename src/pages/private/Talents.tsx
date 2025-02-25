@@ -87,17 +87,19 @@ export const Talents = () => {
         });
     }
 
-    const handleToggleFavorito = (id: number) => {
+    const handleTalentUpdate = (id: number, fields: Partial<Talent>) => {
         if (!talentsData) return;
 
         const updatedTalents = talentsData?.talents.map(talento =>
-            talento.idTalento === id ? { ...talento, esFavorito: talento.esFavorito === 1 ? 0 : 1 } : talento
+            talento.idTalento === id ? { ...talento, ...fields } : talento
         );
 
         setTalentsData({
             ...talentsData,
             talents: updatedTalents,
         });
+
+        setTalent(updatedTalents.find(talento => talento.idTalento === id) || null);
     };
 
     useEffect(() => {
@@ -159,6 +161,7 @@ export const Talents = () => {
                     languageRef={languageRef}
                     feedbackRef={feedbackRef}
                     fetchTalentDets={fetchTalentDets}
+                    updateTalentList={handleTalentUpdate}
                 />
                 <div className="py-3 px-4 2xl:px-[155px] overflow-x-hidden">
                     {/* Options section */}
@@ -296,7 +299,7 @@ export const Talents = () => {
                                                             <FavouriteButton
                                                                 idTalento={talent.idTalento}
                                                                 isFavourited={talent.esFavorito}
-                                                                onToggleFavorito={handleToggleFavorito}
+                                                                onToggleFavorito={handleTalentUpdate}
                                                                 idTalentoColeccion={talentDets?.idColeccion || 0}
                                                             />
                                                         </div>

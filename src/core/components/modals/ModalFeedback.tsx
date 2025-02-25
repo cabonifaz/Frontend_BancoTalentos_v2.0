@@ -12,7 +12,7 @@ import { validateText } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     feedbackRef: React.MutableRefObject<Feedback | null>;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
@@ -33,28 +33,12 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateFeedbackParams>(addOrUpdateTalentFeedback, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalFeedback");
-                enqueueSnackbar("Guardado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteFeedback, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalFeedback");
-                enqueueSnackbar("Eliminado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -75,7 +59,7 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
 
             let data: AddOrUpdateFeedbackParams = {
                 idTalento: idTalento,
-                descripcion: descripcion,
+                feedback: descripcion,
                 estrellas: stars,
             }
 
@@ -86,13 +70,25 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
                 }
             }
 
-            addOrUpdateData(data);
+            addOrUpdateData(data).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalFeedback");
+                    enqueueSnackbar("Guardado", { variant: 'success' });
+                }
+            });
         }
     }
 
     const handleOnDelete = () => {
-        if (feedbackRef.current) {
-            deleteData(feedbackRef.current.idFeedback);
+        if (feedbackRef.current && idTalento) {
+            deleteData(feedbackRef.current.idFeedback).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalFeedback");
+                    enqueueSnackbar("Eliminado", { variant: 'success' });
+                }
+            });
         }
     }
 

@@ -12,8 +12,9 @@ export interface AddEducation extends Omit<Education, 'idEducacion' | 'nombreIns
     institucion: string;
 }
 
-export interface AddOrUpdateEducationParams extends Omit<Education, 'idEducacion' | 'nombreInstitucion'> {
-    idEducacion?: number;
+export interface AddOrUpdateEducationParams extends Omit<Education, 'idEducacion' | 'nombreInstitucion' | 'flActualidad'> {
+    idTalentoEducacion?: number;
     idTalento: number;
     institucion: string;
+    flActualidad: 1 | 0;
 }

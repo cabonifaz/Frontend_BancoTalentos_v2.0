@@ -13,7 +13,7 @@ import { validateDates, validateText } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     educationRef: React.MutableRefObject<Education | null>;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => {
@@ -30,29 +30,32 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateEducationParams>(addOrUpdateTalentEducation, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalEducation");
-                enqueueSnackbar("Guardado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteEducation, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalEducation");
-                enqueueSnackbar("Eliminado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
+
+    useEffect(() => {
+        if (educationRef.current) {
+            setInstitucion(educationRef.current.nombreInstitucion || "");
+            setCarrera(educationRef.current.carrera || "");
+            setGrado(educationRef.current.grado || "");
+            setFechaInicio(Utils.formatDateForMonthInput(educationRef.current.fechaInicio) || "");
+            setFechaFin(Utils.formatDateForMonthInput(educationRef.current.fechaFin) || "");
+            setDateCheck(educationRef.current.flActualidad || false);
+        } else {
+            setInstitucion("");
+            setCarrera("");
+            setGrado("");
+            setFechaInicio("");
+            setFechaFin("");
+            setDateCheck(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [educationRef.current]);
 
     useEffect(() => {
         if (institucionCheck) {
@@ -105,23 +108,35 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                 grado: grado,
                 fechaInicio: fechaInicio,
                 fechaFin: fechaFin,
-                flActualidad: dateCheck,
+                flActualidad: dateCheck ? 1 : 0,
             };
 
             if (isEditing && educationRef.current) {
                 data = {
-                    idEducacion: educationRef.current.idEducacion,
+                    idTalentoEducacion: educationRef.current.idEducacion,
                     ...data
                 };
             }
 
-            addOrUpdateData(data);
+            addOrUpdateData(data).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalEducation");
+                    enqueueSnackbar("Guardado", { variant: 'success' });
+                }
+            });
         }
     };
 
     const handleOnDelete = () => {
-        if (educationRef.current) {
-            deleteData(educationRef.current.idEducacion);
+        if (educationRef.current && idTalento) {
+            deleteData(educationRef.current.idEducacion).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalEducation");
+                    enqueueSnackbar("Eliminado", { variant: 'success' });
+                }
+            });
         }
     };
 

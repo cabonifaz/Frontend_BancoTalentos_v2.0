@@ -13,8 +13,9 @@ export interface AddExperience extends Omit<Experience, 'idExperiencia' | 'nombr
     empresa: string;
 }
 
-export interface AddOrUpdateExperienceParams extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa' | 'tiempo'> {
+export interface AddOrUpdateExperienceParams extends Omit<Experience, 'idExperiencia' | 'nombreEmpresa' | 'tiempo' | 'flActualidad'> {
     idExperiencia?: number;
     idTalento: number;
     empresa: string;
+    flActualidad: 1 | 0;
 }

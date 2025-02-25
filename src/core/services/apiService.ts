@@ -42,7 +42,7 @@ export const updateTalentSocialMedia = (data: talentUpdate.TalentSocialMediaPara
 }
 
 export const updateTalentProfilePhoto = (data: talentUpdate.TalentProfilePhotoParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
+    return axiosInstance.post("", data); // change
 }
 
 export const getCvFile = (data: number): Promise<AxiosResponse<models.FileResponse>> => {
@@ -82,8 +82,8 @@ export const addOrUpdateTalentExperience = (data: models.AddOrUpdateExperiencePa
     return axiosInstance.post("/bdt/talent/addOrUpdateExperience", data);
 }
 
-export const deleteTalenteExperience = (idExperience: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteExperience", idExperience);
+export const deleteTalenteExperience = (idExperiencia: number): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/bdt/talent/deleteExperience", { id: idExperiencia });
 }
 
 // education
@@ -91,8 +91,8 @@ export const addOrUpdateTalentEducation = (data: models.AddOrUpdateEducationPara
     return axiosInstance.post("/bdt/talent/addOrUpdateEducation", data);
 }
 
-export const deleteTalenteEducation = (idEducation: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteEducation", idEducation);
+export const deleteTalenteEducation = (idEducacion: number): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/bdt/talent/deleteEducation", { id: idEducacion });
 }
 
 // language
@@ -100,8 +100,8 @@ export const addOrUpdateTalentLanguage = (data: models.AddOrUpdateLanguageParams
     return axiosInstance.post("/bdt/talent/addOrUpdateLanguage", data);
 }
 
-export const deleteTalenteLanguage = (idLanguage: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteLanguage", idLanguage);
+export const deleteTalenteLanguage = (idIdioma: number): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/bdt/talent/deleteLanguage", { id: idIdioma });
 }
 
 // feedback
@@ -110,7 +110,7 @@ export const addOrUpdateTalentFeedback = (data: models.AddOrUpdateFeedbackParams
 }
 
 export const deleteTalenteFeedback = (idFeedback: number): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/deleteFeedback", idFeedback);
+    return axiosInstance.post("/bdt/talent/deleteFeedback", { id: idFeedback });
 }
 
 // params

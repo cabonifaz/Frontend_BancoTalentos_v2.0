@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../context/ModalContext";
 import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
 import { TalentCvParams } from "../../models/params/TalentUpdateParams";
@@ -15,26 +14,16 @@ import { validateFile } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     idArchivo?: number;
-    onUpdate?: () => void;
 }
 
-export const ModalUploadResume = ({ idTalento, onUpdate, idArchivo }: Props) => {
+export const ModalUploadResume = ({ idTalento, idArchivo }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const cvRef = useRef<HTMLInputElement>(null);
-    const { closeModal } = useModal();
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentCvParams>(updateTalentCv, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalUploadResume");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

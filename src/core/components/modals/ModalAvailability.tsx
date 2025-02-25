@@ -13,7 +13,7 @@ import { validateText } from "../../utilities/validation";
 interface Props {
     idTalento?: number;
     availability?: string;
-    onUpdate?: () => void;
+    onUpdate?: (idTalento: number) => void;
 }
 
 export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) => {
@@ -23,15 +23,7 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentAvailabilityParams>(updateTalentAvailability, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.idMensaje === 2) {
-                if (onUpdate) onUpdate();
-                closeModal("modalAvailability");
-                enqueueSnackbar("Actualizado", { variant: 'success' });
-            }
-        },
+        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
     });
 
     const handleOnConfirm = () => {
@@ -53,6 +45,12 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
             updateData({
                 idTalento: idTalento,
                 disponibilidad: disponibilidad
+            }).then((response) => {
+                if (response.data.idMensaje === 2) {
+                    if (onUpdate) onUpdate(idTalento);
+                    closeModal("modalAvailability");
+                    enqueueSnackbar("Actualizado", { variant: 'success' });
+                }
             });
         }
     }
