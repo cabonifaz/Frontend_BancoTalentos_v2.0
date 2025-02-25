@@ -63,12 +63,36 @@ export const AddTalent = () => {
         fetch: postTalent,
     } = useApi<BaseResponse, AddTalentParams>(addTalent, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => {
+            handleResponse(response, enqueueSnackbar)
+
+            if (response.data.idMensaje === 2) {
+                enqueueSnackbar(response.data.mensaje, { variant: 'success' });
+
+                reset();
+
+                // Restablecer las secciones dinámicas
+                setTechnicalSkills([{ ...initialTechnicalSkill }]);
+                setSoftSkills([{ ...initialSoftSkill }]);
+                setExperiences([{ ...initialExperience }]);
+                setEducations([{ ...initialEducation }]);
+                setLanguages([{ ...initialLanguage }]);
+
+                // Restablecer los archivos
+                setCvFile(null);
+                setFotoFile(null);
+
+                // Restablecer los países y ciudades seleccionados
+                setSelectedCountry(0);
+                setSelectedCity(0);
+                setSelectedCountryPhone(0);
+            }
+        },
     });
 
     const onGoBackClick = () => navigate(-1);
 
-    const { register, handleSubmit, setValue, formState: { errors } } = useForm<AddTalentType>({
+    const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<AddTalentType>({
         resolver: zodResolver(AddTalentSchema),
         mode: "onChange",
     });
@@ -273,13 +297,13 @@ export const AddTalent = () => {
             <Dashboard>
                 {loadingAddTalent && (<Loading opacity="opacity-50" />)}
                 {/* main container */}
-                <div className="p-8 flex justify-center max-h-screen">
+                <div className="md:p-8 flex justify-center max-h-screen">
                     {/* form container */}
-                    <div className="rounded-lg border flex flex-col shadow-lg w-[40rem] h-[50rem] overflow-y-auto relative">
+                    <div className="rounded-lg border flex flex-col shadow-lg w-full md:w-[40rem] md:h-[50rem] overflow-y-auto relative">
                         {/* form */}
                         <form className="relative" onSubmit={handleSubmit(onSubmit)}>
                             {/* title */}
-                            <div className="flex p-4 bg-white fixed w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
+                            <div className="flex p-4 bg-white fixed w-full md:w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
                                 <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
                                     <h2 className="font-semibold text-xl">Nuevo Talento</h2>
                                     <h3 className="text-sm">Ingresa datos del talento.</h3>
@@ -439,26 +463,26 @@ export const AddTalent = () => {
                                     </select>
                                     {errors.idMoneda && <p className="text-red-400 text-sm">{errors.idMoneda.message}</p>}
                                     <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
-                                    <div className="flex w-full gap-8">
-                                        <div className="flex flex-col w-1/2">
+                                    <div className="flex flex-col sm:flex-row w-full gap-8">
+                                        <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
                                             <input {...register("montoInicialRxH", { valueAsNumber: true })} id="initRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoInicialRxH && <p className="text-red-400 text-sm">{errors.montoInicialRxH.message}</p>}
                                         </div>
-                                        <div className="flex flex-col w-1/2">
+                                        <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
                                             <input {...register("montoFinalRxH", { valueAsNumber: true })} id="endRxH" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoFinalRxH && <p className="text-red-400 text-sm">{errors.montoFinalRxH.message}</p>}
                                         </div>
                                     </div>
                                     <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
-                                    <div className="flex w-full gap-8">
-                                        <div className="flex flex-col w-1/2">
+                                    <div className="flex flex-col sm:flex-row w-full gap-8">
+                                        <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
                                             <input {...register("montoInicialPlanilla", { valueAsNumber: true })} id="initPlanilla" type="tenumberxt" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoInicialPlanilla && <p className="text-red-400 text-sm">{errors.montoInicialPlanilla.message}</p>}
                                         </div>
-                                        <div className="flex flex-col w-1/2">
+                                        <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
                                             <input {...register("montoFinalPlanilla", { valueAsNumber: true })} id="endPlanilla" type="number" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
                                             {errors.montoFinalPlanilla && <p className="text-red-400 text-sm">{errors.montoFinalPlanilla.message}</p>}

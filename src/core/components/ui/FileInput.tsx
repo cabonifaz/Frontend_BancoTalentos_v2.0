@@ -19,7 +19,7 @@ export const FileInput = ({ register, errors, name, initialText, acceptedTypes, 
     };
 
     return (
-        <div className="rounded-lg overflow-hidden max-w-xl my-4">
+        <div className="rounded-lg overflow-hidden my-4">
             <div className="w-full">
                 <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200">
                     <div className="absolute flex flex-col items-center">
