@@ -25,7 +25,7 @@ export const ModalSocialMedia = ({ idTalento, linkedin, github, onUpdate }: Prop
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentSocialMediaParams>(updateTalentSocialMedia, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleOnConfirm = () => {
@@ -55,7 +55,6 @@ export const ModalSocialMedia = ({ idTalento, linkedin, github, onUpdate }: Prop
                     if (response.data.idMensaje === 2) {
                         if (onUpdate) onUpdate(idTalento);
                         closeModal("modalSocialMedia");
-                        enqueueSnackbar("Actualizado", { variant: 'success' });
                     }
                 });
         }

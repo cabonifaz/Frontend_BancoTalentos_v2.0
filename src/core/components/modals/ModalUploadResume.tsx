@@ -10,20 +10,23 @@ import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Utils } from "../../utilities/utils";
 import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
+import { useModal } from "../../context/ModalContext";
 
 interface Props {
     idTalento?: number;
     idArchivo?: number;
+    onUpdate: (idTalento: number) => void;
 }
 
-export const ModalUploadResume = ({ idTalento, idArchivo }: Props) => {
+export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const cvRef = useRef<HTMLInputElement>(null);
+    const { closeModal } = useModal();
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentCvParams>(updateTalentCv, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,13 +48,17 @@ export const ModalUploadResume = ({ idTalento, idArchivo }: Props) => {
             const cvB64 = await Utils.fileToBase64(cv);
 
             updateData({
-                idTalento: idTalento, cvArchivo: {
-                    idArchivo: idArchivo,
-                    stringB64: cvB64,
-                    nombreArchivo: Utils.getFileNameWithoutExtension(cv.name),
-                    extensionArchivo: "pdf",
-                    idTipoArchivo: ARCHIVO_PDF,
-                    idTipoDocumento: DOCUMENTO_CV,
+                idTalento: idTalento,
+                idArchivo: idArchivo,
+                string64: cvB64,
+                nombreArchivo: Utils.getFileNameWithoutExtension(cv.name),
+                extensionArchivo: "pdf",
+                idTipoArchivo: ARCHIVO_PDF,
+                idTipoDocumento: DOCUMENTO_CV,
+            }).then((response) => {
+                if (response.data.idMensaje === 2 && idTalento) {
+                    closeModal("modalUploadResume");
+                    onUpdate(idTalento);
                 }
             });
         }

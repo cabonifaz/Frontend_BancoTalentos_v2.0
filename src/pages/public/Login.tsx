@@ -17,7 +17,7 @@ export const Login = () => {
     const { loading, fetch } = useApi<LoginResponse, LoginParams>(loginApp, {
         onError: (error) => { handleError(error, enqueueSnackbar); },
         onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
+            handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar });
 
             if (response.data.result.idMensaje === 2) {
                 localStorage.setItem("token", response.data.token);

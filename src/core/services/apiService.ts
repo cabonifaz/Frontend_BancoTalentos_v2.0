@@ -42,7 +42,7 @@ export const updateTalentSocialMedia = (data: talentUpdate.TalentSocialMediaPara
 }
 
 export const updateTalentProfilePhoto = (data: talentUpdate.TalentProfilePhotoParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("", data); // change
+    return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
 export const getCvFile = (data: number): Promise<AxiosResponse<models.FileResponse>> => {
@@ -50,11 +50,11 @@ export const getCvFile = (data: number): Promise<AxiosResponse<models.FileRespon
 }
 
 export const updateTalentCv = (data: talentUpdate.TalentCvParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("", data); // change
+    return axiosInstance.post("/bdt/talent/updateTalentFile", data);
 }
 
 export const uploadTalentCert = (data: talentUpdate.TalentCertParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("", data); // change
+    return axiosInstance.post("/bdt/talent/uploadTalentFile", data);
 }
 
 export const updateTalentSalary = (data: talentUpdate.TalentSalaryParams): Promise<AxiosResponse<models.BaseResponse>> => {

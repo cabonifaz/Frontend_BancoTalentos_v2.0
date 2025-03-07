@@ -10,19 +10,22 @@ import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Utils } from "../../utilities/utils";
 import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
+import { useModal } from "../../context/ModalContext";
 
 interface Props {
     idTalento?: number
+    onUpdate: (idTalento: number) => void;
 }
 
-export const ModalUploadCert = ({ idTalento }: Props) => {
+export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const certRef = useRef<HTMLInputElement>(null);
+    const { closeModal } = useModal();
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentCertParams>(uploadTalentCert, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +53,11 @@ export const ModalUploadCert = ({ idTalento }: Props) => {
                     extensionArchivo: "pdf",
                     idTipoArchivo: ARCHIVO_PDF,
                     idTipoDocumento: DOCUMENTO_CERT_DIP,
+                }
+            }).then((response) => {
+                if (response.data.idMensaje === 2 && idTalento) {
+                    closeModal("modalUploadCert");
+                    onUpdate(idTalento);
                 }
             });
         }

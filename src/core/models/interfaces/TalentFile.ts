@@ -2,7 +2,7 @@ export interface TalentFile {
     idArchivo: number;
     nombreArchivo: string;
     tipoArchivo: string;
-    tipoDocumento: string;
+    idTipoDocumento: number;
 }
 
 export interface AddTalentFile {

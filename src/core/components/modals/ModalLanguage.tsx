@@ -39,12 +39,12 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateLanguageParams>(addOrUpdateTalentLanguage, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteLanguage, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleOnConfirm = () => {
@@ -92,7 +92,6 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalLanguage");
-                    enqueueSnackbar("Guardado", { variant: 'success' });
                 }
             });
         }
@@ -104,7 +103,6 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalLanguage");
-                    enqueueSnackbar("Eliminado", { variant: 'success' });
                 }
             });
         }

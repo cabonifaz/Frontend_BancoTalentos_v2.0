@@ -26,7 +26,7 @@ export const ModalContact = ({ idTalento, email, phone, onUpdate }: Props) => {
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentContactParams>(updateTalentContact, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const copyToClipboard = (text: string) => {
@@ -66,7 +66,6 @@ export const ModalContact = ({ idTalento, email, phone, onUpdate }: Props) => {
                     if (response.data.idMensaje === 2) {
                         if (onUpdate) onUpdate(idTalento);
                         closeModal("modalContact");
-                        enqueueSnackbar("Actualizado", { variant: 'success' });
                     }
                 });
         }

@@ -54,7 +54,7 @@ export const Talents = () => {
         fetch: fetchTalents,
     } = useApi<TalentsResponse, TalentParams>(getTalents, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const {
@@ -63,7 +63,7 @@ export const Talents = () => {
         fetch: fetchTalentDets,
     } = useApi<TalentResponse, number>(getTalent, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
@@ -87,6 +87,9 @@ export const Talents = () => {
         });
     }
 
+    // update local data on success tanlent update
+    // when data doesn't come in fetchTalent
+    // updates in details and list
     const handleTalentUpdate = (id: number, fields: Partial<Talent>) => {
         if (!talentsData) return;
 

@@ -14,14 +14,12 @@ export interface TalentProfilePhotoParams extends Pick<AddTalentParams, "fotoArc
 
 export interface TalentCvParams {
     idTalento: number;
-    cvArchivo: {
-        idArchivo: number;
-        stringB64: string;
-        nombreArchivo: string;
-        extensionArchivo: string;
-        idTipoArchivo: number;
-        idTipoDocumento: number;
-    }
+    idArchivo: number;
+    string64: string;
+    nombreArchivo: string;
+    extensionArchivo: string;
+    idTipoArchivo: number;
+    idTipoDocumento: number;
 }
 
 export interface TalentSalaryParams extends Pick<AddTalentParams, "montoInicialPlanilla" | "montoFinalPlanilla" | "montoInicialRxH" | "montoFinalRxH" | "idMoneda"> {

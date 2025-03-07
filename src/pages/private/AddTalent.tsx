@@ -64,11 +64,9 @@ export const AddTalent = () => {
     } = useApi<BaseResponse, AddTalentParams>(addTalent, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar)
+            handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar })
 
             if (response.data.idMensaje === 2) {
-                enqueueSnackbar(response.data.mensaje, { variant: 'success' });
-
                 reset();
 
                 // Restablecer las secciones dinámicas

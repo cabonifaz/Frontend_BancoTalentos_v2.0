@@ -6,6 +6,7 @@ import { getCvFile } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
+import { Utils } from "../../utilities/utils";
 
 interface Props {
     cvData?: TalentFile;
@@ -16,26 +17,7 @@ export const ModalResume = ({ cvData }: Props) => {
 
     const { loading, fetch } = useApi<FileResponse, number>(getCvFile, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
-
-            if (response.data.result.idMensaje === 2) {
-                const archivoB64 = response.data.archivo;
-                const byteCharacters = atob(archivoB64);
-                const byteNumbers = new Array(byteCharacters.length);
-
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: "application/pdf" });
-                const url = URL.createObjectURL(blob);
-
-                window.open(url, "_blank");
-                URL.revokeObjectURL(url);
-            }
-        },
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const replaceResumeFile = () => {
@@ -45,7 +27,12 @@ export const ModalResume = ({ cvData }: Props) => {
 
     const openFile = () => {
         if (cvData?.idArchivo) {
-            fetch(cvData.idArchivo);
+            fetch(cvData.idArchivo).then((response) => {
+                if (response.data.result.idMensaje === 2) {
+                    const archivoB64 = response.data.archivo;
+                    Utils.openPdfDocument(archivoB64);
+                }
+            });
         }
     }
 

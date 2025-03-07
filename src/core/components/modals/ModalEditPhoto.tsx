@@ -3,26 +3,29 @@ import { Modal } from "./Modal";
 import { useApi } from "../../hooks/useApi";
 import { TalentProfilePhotoParams } from "../../models/params/TalentUpdateParams";
 import { enqueueSnackbar } from "notistack";
-import { BaseResponse } from "../../models";
-import { updateTalentSocialMedia } from "../../services/apiService";
+import { BaseResponse, Talent } from "../../models";
+import { updateTalentProfilePhoto } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Utils } from "../../utilities/utils";
 import { ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "../../utilities/constants";
 import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
+import { useModal } from "../../context/ModalContext";
 
 interface Props {
-    idTalento?: number
+    idTalento?: number;
+    updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-export const ModalEditPhoto = ({ idTalento }: Props) => {
+export const ModalEditPhoto = ({ idTalento, updateTalentList }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const photoRef = useRef<HTMLInputElement>(null);
+    const { closeModal } = useModal();
 
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentProfilePhotoParams>(updateTalentSocialMedia, {
+    const { loading, fetch: updateData } = useApi<BaseResponse, TalentProfilePhotoParams>(updateTalentProfilePhoto, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +53,11 @@ export const ModalEditPhoto = ({ idTalento }: Props) => {
                     extensionArchivo: Utils.detectarFormatoDesdeBase64(photoB64),
                     idTipoArchivo: ARCHIVO_IMAGEN,
                     idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+                }
+            }).then((response) => {
+                if (response.data.idMensaje === 2 && updateTalentList && idTalento) {
+                    closeModal("modalEditPhoto");
+                    updateTalentList(idTalento, { imagen: photoB64 });
                 }
             });
         }

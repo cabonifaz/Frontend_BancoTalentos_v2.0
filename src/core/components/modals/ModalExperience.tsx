@@ -30,12 +30,12 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateExperienceParams>(addOrUpdateTalentExperience, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteExperience, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     useEffect(() => {
@@ -122,7 +122,6 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalExperience");
-                    enqueueSnackbar("Guardado", { variant: 'success' });
                 }
             });
         }
@@ -134,7 +133,6 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalExperience");
-                    enqueueSnackbar("Eliminado", { variant: 'success' });
                 }
             });
         }

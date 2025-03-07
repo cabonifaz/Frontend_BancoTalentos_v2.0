@@ -34,7 +34,7 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentSalaryParams>(updateTalentSalary, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar)
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar })
     });
 
     const monedas = paramsByMaestro[2] || [];
@@ -90,7 +90,6 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
                 (response) => {
                     if (response.data.idMensaje === 2) {
                         closeModal("modalSalary");
-                        enqueueSnackbar("Actualizado", { variant: 'success' });
                         if (idTalento && updateTalentList && currencyRef.current) {
                             const selectedIndex = currencyRef.current.selectedIndex;
                             const selectedOption = currencyRef.current.options[selectedIndex];

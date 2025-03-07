@@ -1,4 +1,5 @@
 import { Education, Experience, Feedback, Language, Talent, TalentResponse } from "../../models";
+import { DOCUMENTO_CV } from "../../utilities/constants";
 import { ModalAvailability } from "./ModalAvailability";
 import { ModalContact } from "./ModalContact";
 import { ModalEditPhoto } from "./ModalEditPhoto";
@@ -42,7 +43,7 @@ export const ModalsForTalentsPage = ({
     return (
         <>
             <ModalResume
-                cvData={talentDet?.cv}
+                cvData={talentDet?.files.find((file) => file.idTipoDocumento === DOCUMENTO_CV)}
             />
 
             <ModalContact
@@ -61,11 +62,13 @@ export const ModalsForTalentsPage = ({
 
             <ModalEditPhoto
                 idTalento={talent?.idTalento}
+                updateTalentList={updateTalentList}
             />
 
             <ModalUploadResume
                 idTalento={talent?.idTalento}
-                idArchivo={talentDet?.cv?.idArchivo}
+                idArchivo={talentDet?.files.find((file) => file.idTipoDocumento === DOCUMENTO_CV)?.idArchivo}
+                onUpdate={handleUpdate}
             />
 
             <ModalSalary
@@ -80,6 +83,7 @@ export const ModalsForTalentsPage = ({
 
             <ModalUploadCert
                 idTalento={talent?.idTalento}
+                onUpdate={handleUpdate}
             />
 
             <ModalTechSkills

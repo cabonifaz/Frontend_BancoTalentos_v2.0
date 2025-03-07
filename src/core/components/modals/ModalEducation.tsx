@@ -30,12 +30,12 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateEducationParams>(addOrUpdateTalentEducation, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteEducation, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     useEffect(() => {
@@ -122,7 +122,6 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalEducation");
-                    enqueueSnackbar("Guardado", { variant: 'success' });
                 }
             });
         }
@@ -134,7 +133,6 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalEducation");
-                    enqueueSnackbar("Eliminado", { variant: 'success' });
                 }
             });
         }

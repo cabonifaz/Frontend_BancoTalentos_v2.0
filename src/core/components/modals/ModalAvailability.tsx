@@ -23,7 +23,7 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentAvailabilityParams>(updateTalentAvailability, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleOnConfirm = () => {
@@ -49,7 +49,6 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalAvailability");
-                    enqueueSnackbar("Actualizado", { variant: 'success' });
                 }
             });
         }

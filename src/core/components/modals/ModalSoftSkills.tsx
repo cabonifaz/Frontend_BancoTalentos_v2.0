@@ -26,7 +26,7 @@ export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
 
     const { loading, fetch: addData } = useApi<BaseResponse, TalentSoftSkillParams>(addTalentSoftSkill, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleOnConfirm = () => {
@@ -52,7 +52,6 @@ export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalSoftSkills");
-                    enqueueSnackbar("Actualizado", { variant: 'success' });
                 }
             });
         }

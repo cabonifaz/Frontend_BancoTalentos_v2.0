@@ -33,12 +33,12 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
 
     const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateFeedbackParams>(addOrUpdateTalentFeedback, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteFeedback, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse(response, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
     const handleOnConfirm = () => {
@@ -74,7 +74,6 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalFeedback");
-                    enqueueSnackbar("Guardado", { variant: 'success' });
                 }
             });
         }
@@ -86,7 +85,6 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
                 if (response.data.idMensaje === 2) {
                     if (onUpdate) onUpdate(idTalento);
                     closeModal("modalFeedback");
-                    enqueueSnackbar("Eliminado", { variant: 'success' });
                 }
             });
         }

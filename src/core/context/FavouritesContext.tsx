@@ -21,32 +21,28 @@ export const FavouritesProvider = ({ children }: { children: ReactNode }) => {
     const [favourites, setFavourites] = useState<Favourite[]>([]);
     const { enqueueSnackbar } = useSnackbar();
 
+    // gets the collection a user owns
     const { loading: fetchFavLoading, fetch: fetchFavouritesApi } = useApi<FavouritesResponse, null>(getUserFavourites, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => {
             if (response.data.result.idMensaje === 2) {
                 setFavourites(response.data.userFavList);
-            } else {
-                console.error("Error en la respuesta de la API:", response.data.result.mensaje);
             }
         },
     });
 
+    // adds a talent to a favourite collection
     const { fetch: addToFavApi } = useApi<BaseResponse, { idTalento: number; idColeccion: number }>(addTalentToFav, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            if (response.data.idMensaje === 2) {
-                enqueueSnackbar("Talento añadido a favoritos", { variant: "success" });
-            }
-        },
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
+    // creates a new favourite collection
     const { loading: addToFavLoading, fetch: createFavListApi } = useApi<BaseResponse, { collectionName: string }>(createNewFavList, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => {
-            handleResponse(response, enqueueSnackbar);
+            handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar });
             if (response.data.idMensaje === 2) {
-                enqueueSnackbar("Lista de favoritos creada", { variant: "success" });
                 fetchFavourites(); // Refresh the favourites list after creating a new list
             }
         },
