@@ -47,13 +47,12 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
             const certB64 = await Utils.fileToBase64(cert);
 
             updateData({
-                idTalento: idTalento, certArchivo: {
-                    stringB64: certB64,
-                    nombreArchivo: Utils.getFileNameWithoutExtension(cert.name),
-                    extensionArchivo: "pdf",
-                    idTipoArchivo: ARCHIVO_PDF,
-                    idTipoDocumento: DOCUMENTO_CERT_DIP,
-                }
+                idTalento: idTalento,
+                nombreArchivo: Utils.getFileNameWithoutExtension(cert.name),
+                extensionArchivo: "pdf",
+                idTipoArchivo: ARCHIVO_PDF,
+                idTipoDocumento: DOCUMENTO_CERT_DIP,
+                string64: certB64,
             }).then((response) => {
                 if (response.data.idMensaje === 2 && idTalento) {
                     closeModal("modalUploadCert");

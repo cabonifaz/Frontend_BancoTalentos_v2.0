@@ -50,7 +50,7 @@ export const getCvFile = (data: number): Promise<AxiosResponse<models.FileRespon
 }
 
 export const updateTalentCv = (data: talentUpdate.TalentCvParams): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/bdt/talent/updateTalentFile", data);
+    return axiosInstance.post("/bdt/talent/updateCvFile", data); // cv file only
 }
 
 export const uploadTalentCert = (data: talentUpdate.TalentCertParams): Promise<AxiosResponse<models.BaseResponse>> => {

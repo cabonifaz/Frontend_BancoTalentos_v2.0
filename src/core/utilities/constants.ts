@@ -3,4 +3,4 @@ export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
-export const DOCUMENTO_CERT_DIP = 3;
+export const DOCUMENTO_CERT_DIP = 99;

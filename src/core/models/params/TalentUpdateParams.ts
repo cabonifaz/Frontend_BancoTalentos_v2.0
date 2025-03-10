@@ -28,13 +28,11 @@ export interface TalentSalaryParams extends Pick<AddTalentParams, "montoInicialP
 
 export interface TalentCertParams {
     idTalento: number;
-    certArchivo: {
-        stringB64: string;
-        nombreArchivo: string;
-        extensionArchivo: string;
-        idTipoArchivo: number;
-        idTipoDocumento: number;
-    };
+    nombreArchivo: string;
+    extensionArchivo: string;
+    idTipoArchivo: number;
+    idTipoDocumento: number
+    string64: string;
 }
 
 export interface TalentTechSkillParams {
