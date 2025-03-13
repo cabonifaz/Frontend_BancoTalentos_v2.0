@@ -139,6 +139,7 @@ export const AddTalent = () => {
             const fotoBase64 = await Utils.fileToBase64(fotoFile!);
 
             const cleanData: AddTalentParams = {
+                dni: data?.dni || null,
                 telefono: phone,
                 ...filterData,
                 experiencias: cleanExperiencias,

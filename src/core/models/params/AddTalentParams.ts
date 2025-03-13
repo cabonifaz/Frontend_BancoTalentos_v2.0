@@ -1,4 +1,5 @@
 export interface AddTalentParams {
+    dni: string | null;
     telefono: string;
     nombres: string;
     apellidoPaterno: string;
