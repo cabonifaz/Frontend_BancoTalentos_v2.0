@@ -75,17 +75,20 @@ export const Talents = () => {
         setTalentPanelVisible((prev) => !prev);
     };
 
-    const handleSearch = () => {
+    const handleSearch = (englishLevel?: number | null, favourites?: number | null) => {
         const searchValue = searchInputRef.current?.value || "";
+
+        const finalEnglishLevel = englishLevel !== undefined ? englishLevel : selectedEnglishLevel;
+        const finalFavourites = favourites !== undefined ? favourites : selectedFavourites;
 
         fetchTalents({
             nPag: 1,
             search: searchValue,
             techAbilities: selectedSkills.join(","),
-            idEnglishLevel: selectedEnglishLevel || undefined,
-            idTalentCollection: selectedFavourites || undefined,
+            idEnglishLevel: finalEnglishLevel || undefined,
+            idTalentCollection: finalFavourites || undefined,
         });
-    }
+    };
 
     // update local data on success tanlent update
     // when data doesn't come in fetchTalent
@@ -149,6 +152,18 @@ export const Talents = () => {
     const handleOpenModal = <T,>(modalId: string, ref: React.MutableRefObject<T | null>, itemToEdit?: T) => {
         ref.current = itemToEdit || null;
         openModal(modalId);
+    };
+
+    const handleEnglishLevelChangeFilter = (selectedValues: string[]) => {
+        const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
+        setSelectedEnglishLevel(newValue);
+        handleSearch(newValue, undefined);
+    };
+
+    const handleFavouritesChangeFilter = (selectedValues: string[]) => {
+        const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
+        setSelectedFavourites(newValue);
+        handleSearch(undefined, newValue);
     };
 
     if (loadingParams) return <Loading />;
@@ -215,7 +230,7 @@ export const Talents = () => {
                                     isOpen={openDropdown === 1}
                                     onToggle={() => setOpenDropdown(openDropdown === 1 ? null : 1)}
                                     selectedValues={selectedEnglishLevel ? [selectedEnglishLevel.toString()] : []}
-                                    onChange={(selectedValues) => setSelectedEnglishLevel(selectedValues[0] ? Number(selectedValues[0]) : null)}
+                                    onChange={handleEnglishLevelChangeFilter}
                                 />
 
                                 <FilterDropDown
@@ -233,7 +248,7 @@ export const Talents = () => {
                                     isOpen={openDropdown === 2}
                                     onToggle={() => setOpenDropdown(openDropdown === 2 ? null : 2)}
                                     selectedValues={selectedFavourites ? [selectedFavourites.toString()] : []}
-                                    onChange={(selectedValues) => setSelectedFavourites(selectedValues[0] ? Number(selectedValues[0]) : null)}
+                                    onChange={handleFavouritesChangeFilter}
                                 />
                             </div>
                             {/* Search */}
@@ -242,7 +257,7 @@ export const Talents = () => {
                                     <img src="/assets/ic_search.svg" alt="search icon" className="absolute top-2 left-3" />
                                     <input type="text" ref={searchInputRef} placeholder="Buscar por talento o puesto" className="text-sm w-full rounded-full ps-10 pe-4 border-2 focus:outline-none focus:border-[#4F46E5]" />
                                 </div>
-                                <button type="button" onClick={handleSearch} className="bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white py-2 px-4 font-normal text-normal">Buscar</button>
+                                <button type="button" onClick={() => handleSearch()} className="bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white py-2 px-4 font-normal text-normal">Buscar</button>
                             </div>
                         </div>
                     </div>

@@ -30,9 +30,33 @@ export const FilterDropDown = ({
     selectedValues,
     onChange,
 }: Props) => {
+    const handleInputClick = (event: React.MouseEvent, value: string) => {
+        event.stopPropagation();
+
+        if (optionsType === "radio") {
+            if (selectedValues.includes(value)) {
+                event.preventDefault();
+
+                onChange([]);
+                setTimeout(() => {
+                    const inputElement = document.querySelector(`input[option-value="${value}"]`) as HTMLInputElement;
+                    if (inputElement) {
+                        inputElement.checked = false;
+                    }
+                }, 0);
+            } else {
+                onChange([value]);
+            }
+        } else if (optionsType === "checkbox") {
+            const newSelectedValues = selectedValues.includes(value)
+                ? selectedValues.filter((v) => v !== value)
+                : [...selectedValues, value];
+            onChange(newSelectedValues);
+        }
+    };
+
     const handleOptionClick = (index: number) => {
         const inputElement = document.getElementById(`${name}-${index}`) as HTMLInputElement;
-
         if (!inputElement) return;
 
         const value = inputElement.getAttribute("option-value") || "";
@@ -47,7 +71,7 @@ export const FilterDropDown = ({
             return;
         }
 
-        if (inputElement.checked) {
+        if (selectedValues.includes(value)) {
             inputElement.checked = false;
             onChange([]);
         } else {
@@ -100,7 +124,9 @@ export const FilterDropDown = ({
                                     type={optionsType}
                                     id={`${name}-${index}`}
                                     option-value={option.value}
-                                    defaultChecked={selectedValues.includes(option.value)}
+                                    checked={selectedValues.includes(option.value)}
+                                    onClick={(e) => handleInputClick(e, option.value)}
+                                    readOnly
                                     className="cursor-pointer h-4 w-4 accent-[#4f46e5]"
                                 />
                                 <p className="flex items-center cursor-pointer text-sm my-2">
