@@ -22,7 +22,7 @@ export const getTalents = (params: models.TalentParams): Promise<AxiosResponse<m
 }
 
 export const getTalent = (talentId: number): Promise<AxiosResponse<models.TalentResponse>> => {
-    return axiosInstance.get(`/bdt/talent/data?talentId=${talentId}`);
+    return axiosInstance.get(`/bdt/talent/data?talentId=${talentId}&loadExtraInfo=true`);
 }
 
 export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.BaseResponse>> => {

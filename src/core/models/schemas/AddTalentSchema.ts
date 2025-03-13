@@ -1,6 +1,18 @@
 import { z } from "zod";
 
 export const AddTalentSchema = z.object({
+    dni: z
+        .string()
+        .optional()
+        .refine(
+            (value) => {
+                if (!value) return true;
+                return /^\d{8}$/.test(value);
+            },
+            {
+                message: "El DNI debe tener exactamente 8 dígitos",
+            }
+        ),
     nombres: z.string().min(1, "El nombre es requerido"),
     apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
     apellidoMaterno: z.string().min(1, "El apellido materno es requerido"),
