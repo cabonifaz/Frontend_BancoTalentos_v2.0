@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { useApi } from "../hooks/useApi";
-import { getUserFavourites, addTalentToFav, createNewFavList } from "../services/apiService";
+import { getUserFavourites, addTalentToFav, createNewFavList, removeTalentFromFav } from "../services/apiService";
 import { handleError, handleResponse } from "../utilities/errorHandler";
 import { useSnackbar } from "notistack";
 import { BaseResponse, Favourite, FavouritesResponse } from "../models";
@@ -11,7 +11,7 @@ interface FavouritesContextType {
     addToFavLoading: boolean;
     fetchFavourites: () => Promise<void>;
     addToFavourites: (idTalento: number, idColeccion: number) => Promise<BaseResponse>;
-    removeFromFavourites: (idTalento: number) => Promise<void>;
+    removeFromFavourites: (idTalento: number, idColeccion: number) => Promise<BaseResponse>;
     createFavouriteList: (nombreColeccion: string) => Promise<void>;
 }
 
@@ -37,6 +37,12 @@ export const FavouritesProvider = ({ children }: { children: ReactNode }) => {
         onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
+    // removes a talent from a favourite collection
+    const { fetch: removeFromFavApi } = useApi<BaseResponse, { idTalento: number; idColeccion: number }>(removeTalentFromFav, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
+    });
+
     // creates a new favourite collection
     const { loading: addToFavLoading, fetch: createFavListApi } = useApi<BaseResponse, { collectionName: string }>(createNewFavList, {
         onError: (error) => handleError(error, enqueueSnackbar),
@@ -57,9 +63,10 @@ export const FavouritesProvider = ({ children }: { children: ReactNode }) => {
         return response.data;
     }, [addToFavApi]);
 
-    const removeFromFavourites = useCallback(async (idTalento: number) => {
-        // Implement logic to remove from favourites if needed
-    }, []);
+    const removeFromFavourites = useCallback(async (idTalento: number, idColeccion: number): Promise<BaseResponse> => {
+        const response = await removeFromFavApi({ idTalento, idColeccion });
+        return response.data;
+    }, [removeFromFavApi]);
 
     const createFavouriteList = useCallback(async (collectionName: string) => {
         await createFavListApi({ collectionName });

@@ -9,32 +9,51 @@ import { Talent } from "../../models";
 interface Props {
     idTalento: number;
     isFavourited: number;
-    idTalentoColeccion: number;
+    idTalentoColecciones: number[];
     onToggleFavorito: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, onToggleFavorito }: Props) => {
+export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones, onToggleFavorito }: Props) => {
     const { openModal, closeModal } = useModal();
-    const { favourites, addToFavourites, createFavouriteList, addToFavLoading } = useFavouritesContext();
+    const { favourites, addToFavourites, removeFromFavourites, createFavouriteList, addToFavLoading } = useFavouritesContext();
     const favNameRef = useRef<HTMLInputElement>(null);
     const [error, setError] = useState<string | null>(null);
-    const [selectedColeccion, setSelectedColeccion] = useState<number | null>(idTalentoColeccion);
+    const [selectedColecciones, setSelectedColecciones] = useState<number[]>(idTalentoColecciones);
     const [localIsFavourited, setLocalIsFavourited] = useState(isFavourited);
 
     useEffect(() => {
-        setSelectedColeccion(idTalentoColeccion);
-    }, [idTalentoColeccion]);
+        setSelectedColecciones(idTalentoColecciones);
+    }, [idTalentoColecciones]);
 
     const handleFavourited = async (e: ChangeEvent<HTMLInputElement>, idColeccion: number) => {
         if (!idTalento) return;
 
         if (e.target.checked) {
-            setSelectedColeccion(idColeccion);
+            // Agregar a la colección
             const response = await addToFavourites(idTalento, idColeccion);
 
             if (response?.idMensaje === 2) {
+                const newSelectedColecciones = [...selectedColecciones, idColeccion];
+                setSelectedColecciones(newSelectedColecciones);
                 setLocalIsFavourited(1);
                 onToggleFavorito(idTalento, { esFavorito: 1 });
+            } else {
+                e.target.checked = false;
+            }
+        } else {
+            // Eliminar de la colección
+            const response = await removeFromFavourites(idTalento, idColeccion);
+
+            if (response?.idMensaje === 2) {
+                const newSelectedColecciones = selectedColecciones.filter(id => id !== idColeccion);
+                setSelectedColecciones(newSelectedColecciones);
+
+                if (newSelectedColecciones.length === 0) {
+                    setLocalIsFavourited(0);
+                    onToggleFavorito(idTalento, { esFavorito: 0 });
+                }
+            } else {
+                e.target.checked = true;
             }
         }
     };
@@ -61,13 +80,15 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, o
         }
     };
 
+    const isInAnyCollection = selectedColecciones.length > 0;
+
     return (
         <>
             <button
                 type="button"
                 onClick={() => openModal("modalFavourite")}
                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0">
-                <img src={localIsFavourited === 1 || idTalentoColeccion !== 0 ? "/assets/ic_fill_heart.svg" : "/assets/ic_outline_heart.svg"} alt="icon favourite" className="h-5 w-5" />
+                <img src={localIsFavourited === 1 || isInAnyCollection ? "/assets/ic_fill_heart.svg" : "/assets/ic_outline_heart.svg"} alt="icon favourite" className="h-5 w-5" />
             </button>
             <Modal id="modalFavourite" title="Añadir a" showButtonOptions={false} width="small">
                 <div className="flex flex-col gap-2">
@@ -75,10 +96,10 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColeccion, o
                         {favourites && favourites.length > 0 && favourites.map((fav) => (
                             <li key={fav.nombreColeccion} className="flex items-center w-fit *:cursor-pointer">
                                 <input
-                                    type="radio"
+                                    type="checkbox"
                                     id={`fav-${fav.idColeccion}`}
                                     name="favourite-list"
-                                    checked={fav.idColeccion === selectedColeccion}
+                                    checked={selectedColecciones.includes(fav.idColeccion)}
                                     onChange={(e) => handleFavourited(e, fav.idColeccion)}
                                     className="h-5 w-5"
                                 />

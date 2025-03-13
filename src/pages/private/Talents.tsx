@@ -318,7 +318,7 @@ export const Talents = () => {
                                                                 idTalento={talent.idTalento}
                                                                 isFavourited={talent.esFavorito}
                                                                 onToggleFavorito={handleTalentUpdate}
-                                                                idTalentoColeccion={talentDets?.idColeccion || 0}
+                                                                idTalentoColecciones={talentDets?.idColeccion || []}
                                                             />
                                                         </div>
                                                         <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">

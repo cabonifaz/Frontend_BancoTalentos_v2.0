@@ -33,6 +33,10 @@ export const addTalentToFav = (data: { idTalento: number, idColeccion: number })
     return axiosInstance.post("/bdt/talent/addToFavourite", { idColeccion: data.idColeccion, idTalento: data.idTalento });
 }
 
+export const removeTalentFromFav = (data: { idTalento: number, idColeccion: number }): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstance.post("/bdt/talent/addToFavourite", { idColeccion: data.idColeccion, idTalento: data.idTalento });
+}
+
 export const updateTalentContact = (data: talentUpdate.TalentContactParams): Promise<AxiosResponse<models.BaseResponse>> => {
     return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }

@@ -8,7 +8,7 @@ export interface TalentResponse {
     github: string;
     descripcion: string;
     disponibilidad: string;
-    idColeccion: number;
+    idColeccion: number[];
     idMoneda: number;
     files: TalentFile[];
     habilidadesTecnicas: TechnicalSkill[];
