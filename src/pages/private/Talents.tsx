@@ -352,12 +352,16 @@ export const Talents = () => {
                                                             Contactar
                                                         </button>
                                                         <div className="flex gap-4 justify-center items-end">
-                                                            <a href="/#">
-                                                                <img src="/assets/ic_github.svg" alt="icon github" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
-                                                            </a>
-                                                            <a href="/#">
-                                                                <img src="/assets/ic_linkedin.svg" alt="icon linkedin" className="h-8 w-8 opacity-40 hover:opacity-80" />
-                                                            </a>
+                                                            <div className={`${talentDets?.github === "" || talentDets?.github === undefined ? "pointer-events-none" : ""}`}>
+                                                                <a href={talentDets?.github} target="_blank" rel="noreferrer">
+                                                                    <img src="/assets/ic_github.svg" alt="icon github" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
+                                                                </a>
+                                                            </div>
+                                                            <div className={`${talentDets?.linkedin === "" || talentDets?.linkedin === undefined ? "pointer-events-none" : ""}`}>
+                                                                <a href={talentDets?.linkedin} target="_blank" rel="noreferrer">
+                                                                    <img src="/assets/ic_linkedin.svg" alt="icon linkedin" className="h-8 w-8 opacity-40 hover:opacity-80" />
+                                                                </a>
+                                                            </div>
                                                             <button type="button" onClick={() => openModal("modalSocialMedia")}>
                                                                 <img src="/assets/ic_edit.svg" alt="icon edit" className="h-6 w-6 mb-1 opacity-40 hover:opacity-80" />
                                                             </button>

@@ -36,12 +36,12 @@ export const ModalSocialMedia = ({ idTalento, linkedin, github, onUpdate }: Prop
             const githubURL = githubRef.current.value.trim();
 
             const linkedinValidation = validateLinkedInURL(linkedinURL);
-            if (!linkedinValidation.isValid) {
+            if (linkedinURL !== "" && !linkedinValidation.isValid) {
                 newErrors.linkedin = linkedinValidation.message || "Error de validación.";
             }
 
             const githubValidation = validateGitHubURL(githubURL);
-            if (!githubValidation.isValid) {
+            if (githubURL !== "" && !githubValidation.isValid) {
                 newErrors.github = githubValidation.message || "Error de validación.";
             }
 
