@@ -2,6 +2,12 @@ import { createElement, ReactNode } from "react";
 
 type fileNameType = string | undefined | null;
 
+enum TipoArchivo {
+    PDF = 1,
+    WORD = 2,
+    EXCEL = 3,
+}
+
 export class Utils {
     static getStars = (rating: number): ReactNode[] => {
 
@@ -179,4 +185,34 @@ export class Utils {
         window.open(url, "_blank");
         URL.revokeObjectURL(url);
     }
+
+    static getFileNameAndExtension = (fileName: fileNameType): { nombreArchivo: string; extensionArchivo: string } => {
+        if (!fileName) return { nombreArchivo: "", extensionArchivo: "" };
+
+        const lastDotIndex = fileName.lastIndexOf('.');
+
+        if (lastDotIndex === -1) {
+            return { nombreArchivo: fileName, extensionArchivo: "" };
+        }
+
+        const nombreArchivo = fileName.slice(0, lastDotIndex);
+        const extensionArchivo = fileName.slice(lastDotIndex + 1);
+
+        return { nombreArchivo, extensionArchivo };
+    };
+
+    static getTipoArchivoId = (extension: string): number => {
+        switch (extension.toLowerCase()) {
+            case "pdf":
+                return TipoArchivo.PDF;
+            case "doc":
+            case "docx":
+                return TipoArchivo.WORD;
+            case "xls":
+            case "xlsx":
+                return TipoArchivo.EXCEL;
+            default:
+                throw new Error(`Tipo de archivo no soportado: ${extension}`);
+        }
+    };
 }

@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { axiosInstance, axiosInstanceNoToken } from "./axiosService";
+import { axiosInstance, axiosInstanceFMI, axiosInstanceNoToken } from "./axiosService";
 import { Utils } from "../utilities/utils";
 import * as talentUpdate from "../models/params/TalentUpdateParams";
 import * as models from "../models";
@@ -126,3 +126,28 @@ export const getParams = (paramIDs: string): Promise<AxiosResponse<models.Params
 export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResponse>> => {
     return axiosInstance.get("/user/getFavourites");
 };
+
+// requirements
+export const getClients = (): Promise<AxiosResponse<models.ClientListResponse>> => {
+    return axiosInstanceFMI.get("/fmi/client/list");
+}
+
+export const getRequirements = (params: models.ReqListParams): Promise<AxiosResponse<models.RequerimientosResponse>> => {
+    return axiosInstanceFMI.get(`/fmi/requirement/list?${Utils.buildQueryString(params)}`);
+}
+
+export const getRequirementById = (id: number): Promise<AxiosResponse<models.RequirementResponse>> => {
+    return axiosInstanceFMI.get(`/fmi/requirement/data?idRequerimiento=${id}&showfiles=true`);
+}
+
+export const updateRequirement = (data: models.UpdateReqParams): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstanceFMI.post("/fmi/requirement/update", data);
+}
+
+export const deleteReqFile = (id: number): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstanceFMI.delete(`/fmi/requirement/file/remove?idRqFile=${id}`);
+}
+
+export const addReqFiles = (data: models.AddReqFilesParams): Promise<AxiosResponse<models.BaseResponse>> => {
+    return axiosInstanceFMI.post("/fmi/requirement/file/save", data);
+}

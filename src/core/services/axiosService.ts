@@ -1,9 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { Utils } from "../utilities/utils";
-import { BASE_URL } from "../utilities/constants";
+import { BASE_URL, BASE_URL_FMI } from "../utilities/constants";
 
-let axiosInstance: AxiosInstance;
-let axiosInstanceNoToken: AxiosInstance;
+let axiosInstance: AxiosInstance; // BDT
+let axiosInstanceNoToken: AxiosInstance; // BDT
+let axiosInstanceFMI: AxiosInstance; // FMI
 
 const createAxios = (baseURL: string): AxiosInstance => {
     return axios.create({ baseURL });
@@ -38,15 +39,17 @@ const setupInterceptors = (instance: AxiosInstance, configToken: boolean = false
 }
 
 export const initAxios = () => {
-    if (!axiosInstance || !axiosInstanceNoToken) {
+    if (!axiosInstance || !axiosInstanceNoToken || !axiosInstanceFMI) {
         axiosInstance = createAxios(BASE_URL);
         axiosInstanceNoToken = createAxios(BASE_URL);
+        axiosInstanceFMI = createAxios(BASE_URL_FMI);
 
         setupInterceptors(axiosInstance, true);
+        setupInterceptors(axiosInstanceFMI, true);
         setupInterceptors(axiosInstanceNoToken);
     }
 
-    return { axiosInstance, axiosInstanceNoToken };
+    return { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI };
 }
 
-export { axiosInstance, axiosInstanceNoToken };
+export { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI };

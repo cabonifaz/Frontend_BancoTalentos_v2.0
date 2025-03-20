@@ -15,7 +15,7 @@ interface HandleResponseProps {
 }
 
 export const handleResponse = ({ response, showSuccessMessage, enqueueSnackbar }: HandleResponseProps) => {
-    const code = response.data.result?.idMensaje ?? response.data.idMensaje;
+    const code = response.data.result?.idMensaje ?? response.data.idMensaje ?? response.data.idTipoMensaje;
     const message = response.data.result?.mensaje ?? response.data.mensaje;
 
     switch (code) {

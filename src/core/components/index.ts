@@ -20,4 +20,7 @@ export * from "./ui/SoftSkillSection";
 export * from "./ui/ExperienceSection";
 export * from "./ui/EducationSection";
 export * from "./ui/LanguageSection";
+export * from "./ui/DateFilter";
+export * from "./ui/ModalDetallesRQ";
+export * from "./ui/Tabs";
 export * from "./modals/ModalsForTalentsPage";
