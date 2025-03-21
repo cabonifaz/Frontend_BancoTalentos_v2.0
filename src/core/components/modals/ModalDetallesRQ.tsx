@@ -1,6 +1,4 @@
-import { Tabs } from './Tabs';
 import { format } from 'date-fns';
-import { Loading } from './Loading';
 import { useEffect, useState } from "react";
 import { useApi } from '../../hooks/useApi';
 import { enqueueSnackbar } from 'notistack';
@@ -11,6 +9,8 @@ import { Client } from '../../models/interfaces/Client';
 import { handleError, handleResponse } from '../../utilities/errorHandler';
 import { addReqFiles, deleteReqFile, getRequirementById, updateRequirement } from '../../services/apiService';
 import { addFilesSchema, AddFilesSchemaType, AddReqFilesParams, BaseResponse, newRQSchema, newRQSchemaType, Param, RequirementItem, RequirementResponse, UpdateReqParams } from '../../models';
+import { Tabs } from '../ui/Tabs';
+import { Loading } from '../ui/Loading';
 
 interface Archivo {
     idRequerimientoArchivo: number;

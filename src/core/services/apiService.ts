@@ -127,6 +127,8 @@ export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResp
     return axiosInstance.get("/user/getFavourites");
 };
 
+// FMI ENDPOINTS
+
 // requirements
 export const getClients = (): Promise<AxiosResponse<models.ClientListResponse>> => {
     return axiosInstanceFMI.get("/fmi/client/list");
@@ -150,4 +152,9 @@ export const deleteReqFile = (id: number): Promise<AxiosResponse<models.BaseResp
 
 export const addReqFiles = (data: models.AddReqFilesParams): Promise<AxiosResponse<models.BaseResponse>> => {
     return axiosInstanceFMI.post("/fmi/requirement/file/save", data);
+}
+
+// Talento FMI
+export const saveTalentFMI = (data: models.SaveTalentFMIParams): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+    return axiosInstanceFMI.post("/fmi/talent/save", data);
 }

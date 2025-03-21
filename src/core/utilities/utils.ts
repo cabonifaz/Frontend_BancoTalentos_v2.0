@@ -215,4 +215,9 @@ export class Utils {
                 throw new Error(`Tipo de archivo no soportado: ${extension}`);
         }
     };
+
+    static formatDateToDMY = (dateString: string): string => {
+        if (!dateString) return "";
+        return dateString.split("-").reverse().join("-");
+    };
 }

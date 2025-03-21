@@ -9,6 +9,7 @@ import { getClients, getRequirements } from "../../core/services/apiService";
 import { enqueueSnackbar } from "notistack";
 import { format } from 'date-fns';
 import { Dashboard } from "./Dashboard";
+import { useNavigate } from "react-router-dom";
 
 interface SearchProps {
     idCliente: number | null;
@@ -18,7 +19,7 @@ interface SearchProps {
 }
 
 export const Requirements = () => {
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const RequerimientoRef = useRef<HTMLInputElement>(null);
     const hasFetchedClients = useRef(false);
     const hasFetchedReqs = useRef(false);
@@ -147,7 +148,7 @@ export const Requirements = () => {
     }
 
     const handleAsignarClick = (idRequerimiento: number) => {
-        // navigate('/dashboard/tableAsignarTalento', { state: { idRequerimiento } });
+        navigate('/dashboard/tableAsignarTalento', { state: { idRequerimiento } });
     };
 
     return (
