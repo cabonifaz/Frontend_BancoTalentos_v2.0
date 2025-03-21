@@ -139,7 +139,7 @@ export const getRequirements = (params: models.ReqListParams): Promise<AxiosResp
 }
 
 export const getRequirementById = (id: number): Promise<AxiosResponse<models.RequirementResponse>> => {
-    return axiosInstanceFMI.get(`/fmi/requirement/data?idRequerimiento=${id}&showfiles=true`);
+    return axiosInstanceFMI.get(`/fmi/requirement/data?idRequerimiento=${id}&showfiles=false`);
 }
 
 export const updateRequirement = (data: models.UpdateReqParams): Promise<AxiosResponse<models.BaseResponse>> => {

@@ -164,7 +164,7 @@ export const Requirements = () => {
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-col lg:flex-row gap-4">
                                 <div className="flex-1">
-                                    <label htmlFor="requerimiento" className="block text-sm font-medium text-gray-700">Requerimiento</label>
+                                    <label htmlFor="requerimiento" className="block text-sm font-medium text-gray-700">Buscar Requerimiento</label>
                                     <input
                                         type="text"
                                         name="requerimiento"

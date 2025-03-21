@@ -28,7 +28,7 @@ export const DateFilter = ({ label, onDateSelected }: Props) => {
             <button
                 type="button"
                 onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className={`whitespace-nowrap transition-all duration-300 py-2 px-4 rounded-lg border text-sm ${selectedDate
+                className={`whitespace-nowrap transition-all duration-300 py-2 px-4 rounded-full border text-sm ${selectedDate
                     ? "bg-slate-700 text-white"
                     : "bg-white hover:bg-slate-700 hover:text-white"
                     }`}
