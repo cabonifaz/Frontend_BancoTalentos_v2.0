@@ -5,3 +5,7 @@ export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
 export const DOCUMENTO_CERT_DIP = 99;
+
+// RQ STATE
+export const ESTADO_ASIGNADO = 1;
+export const ESTADO_ATENDIDO = 2;

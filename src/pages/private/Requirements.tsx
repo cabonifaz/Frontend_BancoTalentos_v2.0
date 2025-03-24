@@ -10,6 +10,7 @@ import { enqueueSnackbar } from "notistack";
 import { format } from 'date-fns';
 import { Dashboard } from "./Dashboard";
 import { useNavigate } from "react-router-dom";
+import { ESTADO_ATENDIDO } from "../../core/utilities/constants";
 
 interface SearchProps {
     idCliente: number | null;
@@ -155,7 +156,7 @@ export const Requirements = () => {
         <>
             {(loadingClientes || loadingParams || loadingReqs) && (<Loading opacity="opacity-60" />)}
             <Dashboard>
-                <div className="p-4">
+                <div className="p-4 mx-4 xl:mx-36">
                     <h2 className="text-2xl font-semibold mb-4 flex gap-2">
                         Requerimientos
                     </h2>
@@ -245,7 +246,8 @@ export const Requirements = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 <button
                                                     onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                    className="bg-blue-500 text-white rounded-lg px-3 py-1 mr-2 hover:bg-blue-600 transition duration-200">
+                                                    disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                    className={`text-white rounded-lg px-3 py-1 mr-2  transition duration-200 ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}>
                                                     Asignar
                                                 </button>
                                                 <button
