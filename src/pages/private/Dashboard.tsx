@@ -35,6 +35,10 @@ export const Dashboard = ({ children }: Props) => {
         navigate("/dashboard/talentos");
     }
 
+    const handleGenerateCodeClick = () => {
+        navigate("/dashboard/generarEnlaceRequerimiento");
+    }
+
     if (redirect) return <Navigate to={"/login"} replace />
 
     return (
@@ -42,7 +46,7 @@ export const Dashboard = ({ children }: Props) => {
             <nav className="flex flex-row px-4 lg:px-36 justify-between items-center h-[85px] py-3 shadow-lg">
                 {/* Logo */}
                 <div>
-                    <img src="/assets/fractal-logo.png" alt="Logo Fractal" className="h-12 cursor-pointer" onClick={goHome} />
+                    <img src="/assets/fractal-logo-BDT.png" alt="Logo Fractal" className="h-12 cursor-pointer" onClick={goHome} />
                 </div>
                 {/* User info */}
                 <div className="relative">
@@ -63,6 +67,10 @@ export const Dashboard = ({ children }: Props) => {
                                 <button type="button" onClick={handleRequirementsClick} className="flex p-2 gap-2 items-center w-full rounded-lg hover:bg-gray-100">
                                     <img src="/assets/ic_requirements_bdt.svg" alt="icon req" className="w-5 h-5" />
                                     <p>Requerimientos</p>
+                                </button>
+                                <button type="button" onClick={handleGenerateCodeClick} className="flex p-2 gap-2 items-center w-full rounded-lg hover:bg-gray-100 text-nowrap">
+                                    <img src="/assets/ic_generate_link_bdt.svg" alt="icon req" className="w-5 h-5" />
+                                    <p>Generar enlace</p>
                                 </button>
                                 <button type="button" onClick={logout} className="flex p-2 gap-2 items-center w-full rounded-lg hover:bg-gray-100">
                                     <img src="/assets/ic_logout.svg" alt="icon logout" className="w-5 h-5" />

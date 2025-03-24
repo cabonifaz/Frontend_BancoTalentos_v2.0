@@ -37,3 +37,4 @@ export * from './schemas/LoginFormSchema';
 export * from './schemas/NewRQSchema';
 export * from './schemas/AddFileSchema';
 export * from './schemas/DataFormSchema';
+export * from './schemas/AddPostulanteSchema';

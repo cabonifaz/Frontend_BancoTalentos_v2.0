@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { axiosInstance, axiosInstanceFMI, axiosInstanceNoToken } from "./axiosService";
 import { Utils } from "../utilities/utils";
 import * as talentUpdate from "../models/params/TalentUpdateParams";
@@ -126,6 +126,17 @@ export const getParams = (paramIDs: string): Promise<AxiosResponse<models.Params
 export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResponse>> => {
     return axiosInstance.get("/user/getFavourites");
 };
+
+// postulantes
+export const addPostulanteService = (data: models.AddPostulanteType): Promise<AxiosResponse<models.BaseResponse>> => {
+    const token = localStorage.getItem("tempToken") || "";
+
+    return axiosInstanceNoToken.post("/bdt/test/savePostulante", data, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
 
 // FMI ENDPOINTS
 

@@ -19,13 +19,13 @@ interface Props {
 const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled, word_wrap = false, isTable = false }: Props) => {
     return (
         <>
-            <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row"}`}>
-            <label 
-                htmlFor={name} 
-                className={`${word_wrap ? "w-[9rem]" : isTable ? "" : "min-w-[9rem]"}`}
+            <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row gap-2"}`}>
+                <label
+                    htmlFor={name}
+                    className={`${word_wrap ? "w-[9rem]" : isTable ? "" : "min-w-[9rem]"}`}
                 >
-                {label}
-            </label>
+                    {label}
+                </label>
                 <div className="flex-[2]">
                     <Controller
                         name={name}
@@ -38,7 +38,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                                     {...field}
                                     onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
                                     disabled={disabled}
-                                    className={`${type === 'number' ? "max-md:w-[50px]": "w-full"} outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
+                                    className={`${type === 'number' ? "max-md:w-[50px]" : "w-full"} outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
                                 {isPasswordField &&
                                     <button
                                         type="button"
@@ -56,7 +56,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                         }
                     />
 
-                    {error && <p className="text-red-400 bg-transparent text-xs">{error.message}</p>}
+                    {error && <p className="text-red-400 bg-transparent text-xs mt-2">{error.message}</p>}
                 </div>
             </div>
         </>

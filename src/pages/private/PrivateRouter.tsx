@@ -5,6 +5,7 @@ import { RoutesWithNotFound } from "../../core/components";
 import { Requirements } from "./Requirements";
 import TalentTable from "./PantallaAsignarTalento";
 import PantallaDatos from "./PantallaDatos";
+import PantallaGenerarEnlaceRequerimiento from "./PantallaGenerarEnlaceRequerimiento";
 
 export const PrivateRouter = () => {
     return (
@@ -14,6 +15,7 @@ export const PrivateRouter = () => {
             <Route path="/nuevo-talento" element={<AddTalent />} />
             <Route path="/requerimientos" element={<Requirements />} />
             <Route path="/tableAsignarTalento" element={<TalentTable />} />
+            <Route path="/generarEnlaceRequerimiento" element={<PantallaGenerarEnlaceRequerimiento />} />
             <Route path="/formDatos" element={<PantallaDatos />} />
         </RoutesWithNotFound>
     );

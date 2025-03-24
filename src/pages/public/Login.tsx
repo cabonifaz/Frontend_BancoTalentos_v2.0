@@ -44,7 +44,7 @@ export const Login = () => {
             <section className="flex-1 flex flex-col items-center justify-center">
                 <form onSubmit={handleSubmit(login)} className="flex flex-col w-3/4 p-4">
                     <div className="*:mb-4">
-                        <img src="/assets/fractal-logo.png" alt="Fractal Banco Talentos" />
+                        <img src="/assets/fractal-logo-BDT.png" alt="Fractal Banco Talentos" />
                         <h2 className="font-bold text-lg mt-8">Inicio de sesión</h2>
                         <h3>Inicia sesión</h3>
                     </div>
