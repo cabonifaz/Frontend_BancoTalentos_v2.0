@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { axiosInstanceFMI } from '../../core/services/axiosService';
 import { axiosInstance } from '../../core/services/axiosService';
 import { Dashboard } from './Dashboard';
+import { ESTADO_ASIGNADO } from '../../core/utilities/constants';
 
 type RequerimientoType = {
   idRequerimiento: number;
@@ -20,7 +21,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   const fetchRequirements = async (term = '') => {
     try {
       setIsLoading(true);
-      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?codigoRQ=${term}`);
+      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?codigoRQ=${term}&estado=${ESTADO_ASIGNADO}`);
       if (response.data.idTipoMensaje === 2) {
         setRequirementsList(response.data.requerimientos);
       }
@@ -139,8 +140,8 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
               onClick={handleGenerateLink}
               disabled={selectedRequirements.length === 0 || isLoading}
               className={`px-4 py-2 rounded-lg transition-colors w-fit ${selectedRequirements.length === 0 || isLoading
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
                 }`}
             >
               Generar enlace
@@ -247,8 +248,8 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                           onClick={() => !isSelected && handleSelectRequirement(req)}
                           disabled={isSelected}
                           className={`px-4 py-2 rounded ${isSelected
-                              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                             }`}
                         >
                           {isSelected ? 'Seleccionado' : 'Seleccionar'}
