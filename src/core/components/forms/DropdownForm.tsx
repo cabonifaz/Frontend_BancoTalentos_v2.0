@@ -10,10 +10,10 @@ interface Props {
     flex?: boolean;
 }
 
-const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false  }: Props) => {
+const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false }: Props) => {
     return (
         <>
-            <div className={`${flex ? "flex-1" : "flex flex-1"}`}>
+            <div className={`${flex ? "flex-1" : "flex flex-1 gap-2"}`}>
                 {label && <label htmlFor={name} className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}>{label}</label>}
                 <div className={`${label ? "flex-[1.95]" : "basis-80"} `}>
                     <Controller
@@ -24,7 +24,7 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                                 id={name}
                                 {...field}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
-                                className={`w-full ring-1 outline-none px-2 ring-slate-400 rounded-lg h-10 ${error ? "ring-red-500" : ""}`}
+                                className="w-full ring-1 outline-none px-2 ring-slate-400 rounded-lg h-10"
                             >
                                 <option value={0}>Elige una opción</option>
                                 {options.map((option) => (

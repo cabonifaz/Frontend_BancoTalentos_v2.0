@@ -14,9 +14,10 @@ interface Props {
     disabled?: boolean;
     word_wrap?: boolean;
     isTable?: boolean;
+    required: boolean;
 }
 
-const InputForm = ({ name, control, label, type, isWide, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled, word_wrap = false, isTable = false }: Props) => {
+const InputForm = ({ name, control, label, type, required, orientation, passwordVisible, togglePasswordVisibility, isPasswordField, error, disabled, word_wrap = false, isTable = false }: Props) => {
     return (
         <>
             <div className={`flex ${orientation === "vertical" ? "flex-col" : "flex-row gap-2"}`}>
@@ -24,7 +25,7 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                     htmlFor={name}
                     className={`${word_wrap ? "w-[9rem]" : isTable ? "" : "min-w-[9rem]"}`}
                 >
-                    {label}
+                    {label}{required && <span className="text-red-400">*</span>}
                 </label>
                 <div className="flex-[2]">
                     <Controller
@@ -37,6 +38,8 @@ const InputForm = ({ name, control, label, type, isWide, orientation, passwordVi
                                     type={type ? type : "text"}
                                     {...field}
                                     onChange={(e) => type === 'number' ? field.onChange(Number(e.target.value)) : field.onChange(e.target.value)}
+                                    onFocus={(e) => type === 'number' ? e.target.select() : field.onChange(e.target.value)}
+                                    min={type === 'number' ? 0 : undefined}
                                     disabled={disabled}
                                     className={`${type === 'number' ? "max-md:w-[50px]" : "w-full"} outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 ${error ? " ring-red-400" : ""}`} />
                                 {isPasswordField &&

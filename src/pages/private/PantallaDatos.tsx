@@ -104,26 +104,26 @@ const PantallaDatos = () => {
                         <BackButton backClicked={goBack} />
                         Datos Personales
                     </h3>
-                    <InputForm name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                    <InputForm name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                    <InputForm name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
-                    <InputForm name="telefono" control={control} label="Contacto" error={errors.telefono} />
-                    <InputForm name="dni" control={control} label="DNI" type="text" error={errors.dni} />
-                    <InputForm name="email" control={control} label="Correo personal" error={errors.email} />
+                    <InputForm required={true} name="nombres" control={control} label="Nombres" error={errors.nombres} />
+                    <InputForm required={true} name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
+                    <InputForm required={true} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
+                    <InputForm required={true} name="telefono" control={control} label="Contacto" error={errors.telefono} />
+                    <InputForm required={true} name="dni" control={control} label="DNI" type="text" error={errors.dni} />
+                    <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
 
                     <FormRow>
-                        <InputForm name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
+                        <InputForm required={true} name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
                         <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                             flex={true}
                         />
                     </FormRow>
 
-                    <InputForm name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} />
-                    <InputForm name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
+                    <InputForm required={true} name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} />
+                    <InputForm required={true} name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
 
                     <FormRow>
-                        <InputForm name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
+                        <InputForm required={true} name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
                         <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                             flex={true}
@@ -133,7 +133,7 @@ const PantallaDatos = () => {
                     <DropdownForm name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
                         options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
                     />
-                    <InputForm name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
+                    <InputForm required={true} name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
 
                     {/* Form options */}
                     <div className="flex justify-center gap-4">
