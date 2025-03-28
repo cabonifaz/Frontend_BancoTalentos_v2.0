@@ -145,11 +145,11 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                 <h3 className="text-[#71717A] text-sm mt-6">Describe y agrega tu nueva experiencia educativa.</h3>
                 {isEditing && (
                     <button type="button" onClick={handleOnDelete} className="absolute -right-2 top-6 rounded-lg hover:bg-red-50 w-10 h-10">
-                        <img src="/assets/ic_delete.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
+                        <img src="/assets/ic_delete_bdt.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
                     </button>
                 )}
                 <div className="flex flex-col my-2">
-                    <label htmlFor="institucion" className="text-[#37404c] text-base my-2">Institución</label>
+                    <label htmlFor="institucion" className="input-label">Institución</label>
                     <input
                         type="text"
                         id="institucion"
@@ -158,7 +158,7 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                         onChange={(e) => setInstitucion(e.target.value)}
                         placeholder="Nombre de la institución"
                         disabled={institucionCheck}
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
 
                     {errors.institucion && <p className="text-red-500 text-sm mt-2">{errors.institucion}</p>}
                     <div className="px-1 flex items-center gap-2 mt-2 w-fit">
@@ -168,12 +168,12 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                             checked={institucionCheck}
                             onChange={(e) => setInstitucionCheck(e.target.checked)}
                             id="currentEntity"
-                            className="accent-[#4F46E5] h-5 w-5 cursor-pointer" />
-                        <label htmlFor="currentEntity" className="cursor-pointer text-[#3f3f46] text-base">Aquí en Fractal</label>
+                            className="input-checkbox" />
+                        <label htmlFor="currentEntity" className="cursor-pointer input-label">Aquí en Fractal</label>
                     </div>
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="carrera" className="text-[#37404c] text-base my-2">Carrera</label>
+                    <label htmlFor="carrera" className="input-label">Carrera</label>
                     <input
                         type="text"
                         id="carrera"
@@ -181,12 +181,12 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                         value={carrera}
                         onChange={(e) => setCarrera(e.target.value)}
                         placeholder="Carrera"
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
 
                     {errors.carrera && <p className="text-red-500 text-sm mt-2">{errors.carrera}</p>}
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="grado" className="text-[#37404c] text-base my-2">Grado</label>
+                    <label htmlFor="grado" className="input-label">Grado</label>
                     <input
                         type="text"
                         id="grado"
@@ -194,20 +194,20 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                         value={grado}
                         onChange={(e) => setGrado(e.target.value)}
                         placeholder="Grado"
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
 
                     {errors.grado && <p className="text-red-500 text-sm mt-2">{errors.grado}</p>}
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDateEducation" className="text-[#37404c] text-base my-2">Mes y año de inicio</label>
+                        <label htmlFor="initDateEducation" className="input-label">Mes y año de inicio</label>
                         <input
                             type="date"
                             name="initDateEducation"
                             id="initDateEducation"
                             value={fechaInicio}
                             onChange={(e) => setFechaInicio(e.target.value)}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                         <div className="px-1 flex items-center gap-2 mt-2 w-fit">
                             <input
                                 type="checkbox"
@@ -215,12 +215,12 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                                 checked={dateCheck}
                                 onChange={(e) => setDateCheck(e.target.checked)}
                                 id="currentDate"
-                                className="accent-[#4F46E5] h-5 w-5 cursor-pointer" />
-                            <label htmlFor="currentDate" className="cursor-pointer text-[#3f3f46] text-base">Hasta la actualidad</label>
+                                className="input-checkbox" />
+                            <label htmlFor="currentDate" className="cursor-pointer input-label">Hasta la actualidad</label>
                         </div>
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDateEducation" className="text-[#37404c] text-base my-2">Mes y año de fin</label>
+                        <label htmlFor="endDateEducation" className="input-label">Mes y año de fin</label>
                         <input
                             type="date"
                             name="endDateEducation"
@@ -228,7 +228,7 @@ export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => 
                             value={fechaFin}
                             onChange={(e) => setFechaFin(e.target.value)}
                             disabled={dateCheck}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                     </div>
                 </div>
                 {errors.fechasEdu && <p className="text-red-500 text-sm mt-2">{errors.fechasEdu}</p>}

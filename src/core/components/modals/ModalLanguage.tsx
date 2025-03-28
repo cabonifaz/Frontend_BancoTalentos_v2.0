@@ -124,17 +124,17 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
                 <h3 className="text-[#71717A] text-sm mt-6">Agregar un nuevo idioma aprendido.</h3>
                 {isEditing && (
                     <button type="button" onClick={handleOnDelete} className="absolute -right-2 top-6 rounded-lg hover:bg-red-50 w-10 h-10">
-                        <img src="/assets/ic_delete.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
+                        <img src="/assets/ic_delete_bdt.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
                     </button>
                 )}
                 <div className="flex flex-col my-2">
-                    <label htmlFor="language" className="text-[#37404c] text-base my-2">Idioma</label>
+                    <label htmlFor="language" className="input-label">Idioma</label>
                     <select
                         id="language"
                         name="language"
                         ref={idIdiomaRef}
                         defaultValue={languageRef.current?.idIdioma || 0}
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input">
                         <option value={0}>Nombre del idioma</option>
                         {idiomas.map((idioma) => (
                             <option key={idioma.idParametro} value={idioma.num1}>
@@ -145,13 +145,13 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
                     {errors.idioma && <p className="text-red-500 text-sm mt-2">{errors.idioma}</p>}
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="proficiency" className="text-[#37404c] text-base my-2">Nivel</label>
+                    <label htmlFor="proficiency" className="input-label">Nivel</label>
                     <select
                         id="proficiency"
                         name="proficiency"
                         ref={idNivelRef}
                         defaultValue={languageRef.current?.idNivel || 0}
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input">
                         <option value={0}>Nivel del idioma</option>
                         {nivelesIdioma.map((nivel) => (
                             <option key={nivel.idParametro} value={nivel.num1}>

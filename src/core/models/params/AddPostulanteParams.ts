@@ -1,17 +1,16 @@
-export interface SaveTalentFMIParams {
+export interface AddPostulanteParams {
     idTalento: number;
-    APELLIDO_PATERNO: string;
     nombres: string;
     apellidoPaterno: string;
     apellidoMaterno: string;
     telefono: string;
     dni: string;
     email: string;
-    tiempoContrato: number | null;
+    tiempoContrato: number;
     idTiempoContrato: number;
     fechaInicioLabores: string;
     cargo: string;
-    remuneracion: number | null;
+    remuneracion: number;
     idMoneda: number;
     idModalidad: number;
     ubicacion: string;

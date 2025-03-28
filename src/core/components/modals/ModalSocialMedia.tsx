@@ -66,13 +66,13 @@ export const ModalSocialMedia = ({ idTalento, linkedin, github, onUpdate }: Prop
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">Agrega y muestra tus medios sociales</h3>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="linkedin" className="text-[#37404c] text-base my-2">LinkedIn</label>
-                    <input type="text" name="linkedin" ref={linkedinRef} defaultValue={linkedin} className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                    <label htmlFor="linkedin" className="input-label">LinkedIn</label>
+                    <input type="text" name="linkedin" ref={linkedinRef} defaultValue={linkedin} className="input" />
                     {errors.linkedin && <p className="text-red-500 text-sm mt-2">{errors.linkedin}</p>}
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="github" className="text-[#37404c] text-base my-2">Github</label>
-                    <input type="text" name="github" ref={githubRef} defaultValue={github} className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                    <label htmlFor="github" className="input-label">Github</label>
+                    <input type="text" name="github" ref={githubRef} defaultValue={github} className="input" />
                     {errors.github && <p className="text-red-500 text-sm mt-2">{errors.github}</p>}
                 </div>
             </div>

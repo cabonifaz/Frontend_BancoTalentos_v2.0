@@ -67,7 +67,7 @@ export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
                     <select
                         id="softSkill"
                         ref={abilityRef}
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input">
                         <option value={0}>Seleccione una habilidad</option>
                         {habilidadesBlandas.map((habilidad) => (
                             <option key={habilidad.idParametro} value={habilidad.num1}>

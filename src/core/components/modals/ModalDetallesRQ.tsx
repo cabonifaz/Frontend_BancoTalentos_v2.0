@@ -96,14 +96,14 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                         {loadingReq ? (<p className="text-gray-500 text-center">Cargando Requerimiento...</p>) : (
                                             <form className="flex flex-col flex-1 mt-8">
                                                 {/* Campos del formulario */}
-                                                <div className="space-y-4 flex-1">
+                                                <div className="space-y-4 flex-1 px-4">
                                                     {/* Cliente */}
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Cliente:</label>
                                                         <select
                                                             {...register("idCliente")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 input"
                                                         >
                                                             <option value="">Elige un cliente</option>
                                                             {clientes.map((cliente) => (
@@ -123,7 +123,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <input
                                                             {...register("codigoRQ")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 input"
                                                         />
                                                     </div>
                                                     {errors.codigoRQ && (
@@ -136,7 +136,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <input
                                                             type="date"
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                            className="w-2/3 input"
                                                         />
                                                     </div>
                                                     {errors.fechaSolicitud && (
@@ -149,7 +149,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <textarea
                                                             {...register("descripcion")}
                                                             disabled={!isEditing}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                            className="w-2/3 input resize-none"
                                                         />
                                                     </div>
                                                     {errors.descripcion && (

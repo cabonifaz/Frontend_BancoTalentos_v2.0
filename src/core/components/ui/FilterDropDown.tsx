@@ -101,9 +101,9 @@ export const FilterDropDown = <T extends BaseOption>({
             <button
                 type="button"
                 onClick={onToggle}
-                className={`whitespace-nowrap transition-all duration-300 py-2 px-4 rounded-full border text-sm ${selectedValues.length > 0
-                    ? "bg-slate-700 text-white"
-                    : "bg-white hover:bg-slate-700 hover:text-white"
+                className={`filter ${selectedValues.length > 0
+                    ? "btn-filter-active"
+                    : "btn-filter"
                     }`}
             >
                 <div className="flex items-center justify-between gap-2">

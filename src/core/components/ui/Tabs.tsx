@@ -20,9 +20,9 @@ export const Tabs = ({ tabs }: TabsProps) => {
                     <button
                         key={index}
                         onClick={() => setActiveTab(index)}
-                        className={`px-4 py-2 text-sm font-medium ${activeTab === index
-                            ? "text-blue-500 border-b-2 border-blue-500"
-                            : "text-gray-500 hover:text-gray-700"
+                        className={`tab ${activeTab === index
+                            ? "tab-active"
+                            : "tab-inactive"
                             }`}
                     >
                         {tab.label}

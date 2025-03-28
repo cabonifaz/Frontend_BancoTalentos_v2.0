@@ -188,9 +188,9 @@ export const Talents = () => {
                             <button
                                 type="button"
                                 onClick={goToAddTalent}
-                                className="w-full xl:w-fit flex items-center whitespace-nowrap gap-1 py-2 px-3 border border-[#3b82f6] hover:bg-blue-50 text-sm font-normal text-[#3b82f6] text-center rounded-lg">
+                                className="w-full xl:w-fit flex items-center whitespace-nowrap gap-1 btn btn-outline-blue">
                                 <img src="/assets/ic_add.svg" alt="add talent icon" />
-                                <span>Nuevo Talento</span>
+                                <span> Nuevo Talento</span>
                             </button>
                             <p className="text-sm text-[#71717A] hidden xl:block">{`${talentsData?.total || 0} resultados encontrados`}</p>
                         </div>
@@ -254,10 +254,11 @@ export const Talents = () => {
                             {/* Search */}
                             <div className="flex items-center justify-between w-full gap-4">
                                 <div className="flex relative h-10 w-11/12">
-                                    <img src="/assets/ic_search.svg" alt="search icon" className="absolute top-2 left-3" />
-                                    <input type="text" ref={searchInputRef} placeholder="Buscar por talento o puesto" className="text-sm w-full rounded-full ps-10 pe-4 border-2 focus:outline-none focus:border-[#4F46E5]" />
+                                    <img src="/assets/ic_search.svg" alt="search icon" className="absolute top-2 left-1 rounded-lg" />
+
+                                    <input type="text" name="search" ref={searchInputRef} placeholder="Buscar por talento o puesto" className="input-search-container" />
                                 </div>
-                                <button type="button" onClick={() => handleSearch()} className="bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white py-2 px-4 font-normal text-normal">Buscar</button>
+                                <button type="button" onClick={() => handleSearch()} className="btn btn-primary">Buscar</button>
                             </div>
                         </div>
                     </div>
@@ -355,7 +356,7 @@ export const Talents = () => {
                                                         options={["CV"]}
                                                         onSelect={() => openModal('modalCv')}
                                                         buttonLabel="Ver CV"
-                                                        buttonStyle="w-36 py-2 px-4 bg-white text-[#3b82f6] rounded-lg focus:outline-none hover:bg-[#f5f9ff]"
+                                                        buttonStyle="btn btn-text"
                                                     />
                                                     {/* Contact */}
                                                     <div className="flex flex-col gap-4">
@@ -386,7 +387,7 @@ export const Talents = () => {
                                             </div>
                                             {/* File upload */}
                                             <div className="flex flex-col md:flex-row items-center w-full justify-between gap-4 my-8">
-                                                <p className="text-[#609af8] text-justify flex-grow">Sube tu certificado o diploma que respalde tus aptitudes.</p>
+                                                <p className="text-[var(--color-blue)] text-justify flex-grow">Sube tu certificado o diploma que respalde tus aptitudes.</p>
                                                 <button
                                                     type="button"
                                                     className="rounded-lg overflow-hidden my-8 py-6 px-8 sm:my-0 bg-gray-50 hover:bg-gray-100 flex-grow"
@@ -398,7 +399,7 @@ export const Talents = () => {
                                                             className="mb-3 w-8 h-8"
                                                             src="/assets/ic_upload.svg"
                                                         />
-                                                        <span className="block text-[#0b85c3] font-normal mt-1">
+                                                        <span className="block text-[var(--color-blue)] font-normal mt-1">
                                                             Sube un archivo
                                                         </span>
                                                     </div>
@@ -420,7 +421,7 @@ export const Talents = () => {
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {(talentDets?.habilidadesTecnicas || []).map((item, index) => (
-                                                            <p key={index} className="text-[#0b85c3] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">
+                                                            <p key={index} className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1">
                                                                 {`${item.nombreHabilidad} ${item?.aniosExperiencia ? ` - (${item.aniosExperiencia})` : ""}`}
                                                             </p>
                                                         ))}

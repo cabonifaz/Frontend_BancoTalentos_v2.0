@@ -1,5 +1,5 @@
 import { AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import { axiosInstance, axiosInstanceFMI, axiosInstanceNoToken } from "./axiosService";
+import { axiosInstance, axiosInstanceFMI, axiosInstanceNoToken, axiosInstanceNoTokenFMI } from "./axiosService";
 import { Utils } from "../utilities/utils";
 import * as talentUpdate from "../models/params/TalentUpdateParams";
 import * as models from "../models";
@@ -25,7 +25,17 @@ export const getTalent = (talentId: number): Promise<AxiosResponse<models.Talent
     return axiosInstance.get(`/bdt/talent/data?talentId=${talentId}&loadExtraInfo=true`);
 }
 
-export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.BaseResponse>> => {
+export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+    const authToken = localStorage.getItem("authToken") || "";
+
+    if (authToken !== "" && authToken !== null) {
+        return axiosInstanceNoToken.post("/bdt/talent/addOrUpdateTalent", data, {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+    }
+
     return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 
@@ -127,17 +137,6 @@ export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResp
     return axiosInstance.get("/user/getFavourites");
 };
 
-// postulantes
-export const addPostulanteService = (data: models.AddPostulanteType): Promise<AxiosResponse<models.BaseResponse>> => {
-    const token = localStorage.getItem("tempToken") || "";
-
-    return axiosInstanceNoToken.post("/bdt/test/savePostulante", data, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-}
-
 // FMI ENDPOINTS
 
 // requirements
@@ -168,4 +167,15 @@ export const addReqFiles = (data: models.AddReqFilesParams): Promise<AxiosRespon
 // Talento FMI
 export const saveTalentFMI = (data: models.SaveTalentFMIParams): Promise<AxiosResponse<models.BaseResponseFMI>> => {
     return axiosInstanceFMI.post("/fmi/talent/save", data);
+}
+
+// postulantes
+export const addPostulanteService = (data: models.AddPostulanteParams): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+    const token = localStorage.getItem("tempToken") || "";
+
+    return axiosInstanceNoTokenFMI.post("/fmi/postulant/register", data, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
 }

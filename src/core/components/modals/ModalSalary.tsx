@@ -115,12 +115,14 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
         <Modal id="modalSalary" title="Modifica to banda salarial" confirmationLabel="Editar" onConfirm={handleOnConfirm}>
             {loading && (<Loading opacity="opacity-60" />)}
             <div>
-                <h3 className="text-[#71717A] text-sm mt-6">Agrega el rango de tus espectativas salariales.</h3>
+                <h3 className="text-[#71717A] text-sm my-6">Agrega el rango de tus espectativas salariales.</h3>
+                <label htmlFor="currency" className="input-label">Moneda</label>
                 <select
                     id="currency"
                     ref={currencyRef}
+                    name="currency"
                     defaultValue={idMoneda || 0}
-                    className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                    className="input w-full">
                     <option value={0}>Seleccione una moneda</option>
                     {monedas.map((moneda) => (
                         <option key={moneda.idParametro} value={moneda.num1} data-code={moneda.num1 === 3 ? moneda.string2 : moneda.string3}>
@@ -132,49 +134,57 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
                 <h3 className="w-full my-2">Monto por RXH</h3>
                 <div className="flex w-full gap-8">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initRxH" className="text-[#71717A] text-sm my-2">Monto inicial</label>
+                        <label htmlFor="initRxH" className="input-label">Monto inicial</label>
                         <input
                             type="number"
                             ref={initRxHRef}
                             defaultValue={initRxH}
                             onWheel={(e) => e.currentTarget.blur()}
+                            onFocus={(e) => e.currentTarget.select()}
+                            min={0}
                             name="initRxH"
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                         {errors.initRxH && <p className="text-red-500 text-sm mt-2">{errors.initRxH}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endRxH" className="text-[#71717A] text-sm my-2">Monto final</label>
+                        <label htmlFor="endRxH" className="input-label">Monto final</label>
                         <input
                             type="number"
                             ref={endRxHRef}
                             defaultValue={endRxH}
                             name="endtRxH"
+                            onFocus={(e) => e.currentTarget.select()}
+                            min={0}
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                         {errors.endRxH && <p className="text-red-500 text-sm mt-2">{errors.endRxH}</p>}
                     </div>
                 </div>
                 <h3 className="w-full mb-2 mt-6">Monto por planilla</h3>
                 <div className="flex w-full gap-8">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initPlanilla" className="text-[#71717A] text-sm my-2">Monto inicial</label>
+                        <label htmlFor="initPlanilla" className="input-label">Monto inicial</label>
                         <input
                             type="number"
                             ref={initPlanRef}
                             defaultValue={initPlan}
                             onWheel={(e) => e.currentTarget.blur()}
-                            name="initPlanilla" className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            onFocus={(e) => e.currentTarget.select()}
+                            min={0}
+                            name="initPlanilla" className="input" />
                         {errors.initPlan && <p className="text-red-500 text-sm mt-2">{errors.initPlan}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endPlanilla" className="text-[#71717A] text-sm my-2">Monto final</label>
+                        <label htmlFor="endPlanilla" className="input-label">Monto final</label>
                         <input
                             type="number"
                             ref={endPlanRef}
                             defaultValue={endPlan}
                             name="endPlanilla"
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            onFocus={(e) => e.currentTarget.select()}
+                            min={0}
+                            className="input" />
                         {errors.endPlan && <p className="text-red-500 text-sm mt-2">{errors.endPlan}</p>}
                     </div>
                 </div>

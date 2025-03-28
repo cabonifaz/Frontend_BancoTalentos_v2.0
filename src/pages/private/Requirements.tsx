@@ -93,14 +93,16 @@ export const Requirements = () => {
     };
 
     const handleDateSelected = (date: Date | null) => {
+        let searchDate = null;
         if (date !== null) {
-            const searchDate = format(new Date(date), 'yyyy/MM/dd')
+            searchDate = format(new Date(date), 'yyyy/MM/dd')
             setSelectedDate(searchDate);
-            executeSearch({
-                estado: selectedEstado,
-                fechaSolicitud: date ? searchDate : null,
-            });
         }
+
+        executeSearch({
+            estado: selectedEstado,
+            fechaSolicitud: date ? searchDate : null,
+        });
     };
 
     const executeSearch = useCallback((overrides: { estado?: number | null; fechaSolicitud?: string | null; idCliente?: number | null } = {}) => {
@@ -171,7 +173,7 @@ export const Requirements = () => {
                                         name="requerimiento"
                                         id="requerimiento"
                                         ref={RequerimientoRef}
-                                        className="mt-1 block w-full rounded-md border border-zinc-300 shadow-sm focus:outline-none sm:text-sm px-4 py-2"
+                                        className="input w-full"
                                     />
                                 </div>
                             </div>
@@ -206,7 +208,7 @@ export const Requirements = () => {
                                 <button
                                     type="button"
                                     onClick={handleSearch}
-                                    className="bg-zinc-600 rounded-lg px-4 py-2 text-white hover:bg-zinc-700 transition duration-200">
+                                    className="btn btn-primary">
                                     Buscar
                                 </button>
                             </div>
@@ -247,12 +249,12 @@ export const Requirements = () => {
                                                 <button
                                                     onClick={() => handleAsignarClick(req.idRequerimiento)}
                                                     disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                    className={`text-white rounded-lg px-3 py-1 mr-2  transition duration-200 ${req.idEstado === ESTADO_ATENDIDO ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}>
+                                                    className={`btn ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
                                                     Asignar
                                                 </button>
                                                 <button
                                                     onClick={() => openDetallesRQModal(req)}
-                                                    className="bg-[#009688] text-white rounded-lg px-3 py-1 hover:bg-[#359c92] transition duration-200">
+                                                    className="btn btn-primary">
                                                     Detalles
                                                 </button>
                                             </td>

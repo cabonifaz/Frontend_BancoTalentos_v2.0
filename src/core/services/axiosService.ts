@@ -5,6 +5,7 @@ import { BASE_URL, BASE_URL_FMI } from "../utilities/constants";
 let axiosInstance: AxiosInstance; // BDT
 let axiosInstanceNoToken: AxiosInstance; // BDT
 let axiosInstanceFMI: AxiosInstance; // FMI
+let axiosInstanceNoTokenFMI: AxiosInstance // FMI
 
 const createAxios = (baseURL: string): AxiosInstance => {
     return axios.create({ baseURL });
@@ -43,13 +44,15 @@ export const initAxios = () => {
         axiosInstance = createAxios(BASE_URL);
         axiosInstanceNoToken = createAxios(BASE_URL);
         axiosInstanceFMI = createAxios(BASE_URL_FMI);
+        axiosInstanceNoTokenFMI = createAxios(BASE_URL_FMI);
 
         setupInterceptors(axiosInstance, true);
-        setupInterceptors(axiosInstanceFMI, true);
         setupInterceptors(axiosInstanceNoToken);
+        setupInterceptors(axiosInstanceFMI, true);
+        setupInterceptors(axiosInstanceNoTokenFMI);
     }
 
-    return { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI };
+    return { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI, axiosInstanceNoTokenFMI };
 }
 
-export { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI };
+export { axiosInstance, axiosInstanceNoToken, axiosInstanceFMI, axiosInstanceNoTokenFMI };

@@ -48,8 +48,6 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   };
 
   const handleGenerateLink = async () => {
-    if (selectedRequirements.length === 0) return;
-
     try {
       setIsLoading(true);
       const response = await axiosInstance.post('/bdt/link/generate', {
@@ -90,7 +88,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleAddRequirement}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="btn btn-blue"
             >
               Agregar Requerimiento
             </button>
@@ -115,7 +113,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                       <td className="py-3 px-4 whitespace-nowrap">
                         <button
                           onClick={() => handleRemoveRequirement(req.idRequerimiento)}
-                          className="px-3 py-1 bg-red-600 text-white hover:bg-red-700 text-xs rounded transition-colors"
+                          className="btn btn-red"
                         >
                           Remover
                         </button>
@@ -138,11 +136,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
           <div className="flex flex-col gap-4 mt-4">
             <button
               onClick={handleGenerateLink}
-              disabled={selectedRequirements.length === 0 || isLoading}
-              className={`px-4 py-2 rounded-lg transition-colors w-fit ${selectedRequirements.length === 0 || isLoading
-                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
+              className="btn btn-primary w-fit"
             >
               Generar enlace
             </button>
@@ -154,11 +148,11 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                     type="text"
                     value={generatedLink}
                     readOnly
-                    className="w-full px-4 py-2 border rounded-lg pr-10 bg-gray-50"
+                    className="w-full input"
                   />
                   <button
                     onClick={handleCopyToClipboard}
-                    className="absolute right-2 p-2 rounded-md transition-colors group-hover:bg-gray-100"
+                    className="absolute right-2 p-2 rounded-md transition-colors bg-white group-hover:bg-gray-100"
                     aria-label="Copiar enlace"
                   >
                     {isCopied ? (
@@ -224,7 +218,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                   </div>
                   <button
                     onClick={() => fetchRequirements(requirementSearchTerm)}
-                    className="ml-2 px-4 py-2 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+                    className="btn btn-primary"
                   >
                     Buscar
                   </button>
@@ -247,9 +241,9 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                         <button
                           onClick={() => !isSelected && handleSelectRequirement(req)}
                           disabled={isSelected}
-                          className={`px-4 py-2 rounded ${isSelected
-                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                          className={`btn ${isSelected
+                            ? 'btn-disabled'
+                            : 'btn-blue'
                             }`}
                         >
                           {isSelected ? 'Seleccionado' : 'Seleccionar'}

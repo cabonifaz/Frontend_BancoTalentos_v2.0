@@ -77,10 +77,10 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
       <button
         onClick={() => onUpdate(talento)}
         disabled={(talento.estado?.toUpperCase() !== 'OBSERVADO' && talento.idEstado !== 2) || disabled}
-        className={`px-3 py-1 ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
-          ? 'bg-blue-600 text-white hover:bg-blue-700'
-          : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-          } text-xs rounded transition-colors`}
+        className={`btn ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
+          ? 'btn-blue'
+          : 'btn-disabled'
+          } text-sm`}
       >
         Actualizar
       </button>
@@ -88,8 +88,7 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
       <button
         onClick={() => onRemove(talento.idTalento)}
         disabled={disabled}
-        className={`px-3 py-1 ${disabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-red-700'
-          } text-xs rounded transition-colors`}
+        className={`btn ${disabled ? 'btn-disabled' : 'btn-red'} text-sm`}
       >
         Remover
       </button>
@@ -112,9 +111,9 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, i
     <button
       onClick={() => onSelect(talent)}
       disabled={isSelected}
-      className={`px-4 py-2 rounded ${isSelected
-        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-        : 'bg-blue-600 text-white hover:bg-blue-700'
+      className={`btn ${isSelected
+        ? 'btn-disabled'
+        : 'btn-blue'
         }`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
@@ -189,7 +188,7 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </div>
             <button
               onClick={handleSearchSubmit}
-              className="ml-2 px-4 py-2 bg-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition-colors"
+              className="ml-2 btn btn-primary"
             >
               Buscar
             </button>
@@ -239,13 +238,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+            className="btn btn-outline-gray"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="btn btn-blue"
           >
             Confirmar
           </button>
@@ -592,9 +591,9 @@ const TalentTable: React.FC = () => {
                 handleSearch('');
               }}
               disabled={buttonsDisabled}
-              className={`px-4 py-2 rounded-lg transition-colors ${buttonsDisabled
-                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              className={`btn ${buttonsDisabled
+                ? 'btn-disabled'
+                : 'btn-blue'
                 }`}
             >
               Agregar Talento
@@ -607,10 +606,10 @@ const TalentTable: React.FC = () => {
                 !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
                 selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
               }
-              className={`px-4 py-2 rounded-lg transition-colors ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
+              className={`btn ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
                 selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
+                ? 'btn-disabled'
+                : 'btn-primary'
                 }`}
             >
               Finalizar

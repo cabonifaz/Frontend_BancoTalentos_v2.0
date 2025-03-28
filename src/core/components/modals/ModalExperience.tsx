@@ -145,11 +145,11 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                 <h3 className="text-[#71717A] text-sm mt-6">Describe tu nueva experiencia laboral.</h3>
                 {isEditing && (
                     <button type="button" onClick={handleOnDelete} className="absolute -right-2 top-6 rounded-lg hover:bg-red-50 w-10 h-10">
-                        <img src="/assets/ic_delete.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
+                        <img src="/assets/ic_delete_bdt.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
                     </button>
                 )}
                 <div className="flex flex-col my-2">
-                    <label htmlFor="companyName" className="text-[#37404c] text-base my-2">Empresa</label>
+                    <label htmlFor="companyName" className="input-label">Empresa</label>
                     <input
                         type="text"
                         id="companyName"
@@ -158,7 +158,7 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                         onChange={(e) => setEmpresa(e.target.value)}
                         placeholder="Nombre de la empresa"
                         disabled={empresaCheck}
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
                     {errors.empresa && <p className="text-red-500 text-sm mt-2">{errors.empresa}</p>}
 
                     <div className="px-1 flex items-center gap-2 mt-2 w-fit">
@@ -168,12 +168,12 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                             checked={empresaCheck}
                             onChange={(e) => setEmpresaCheck(e.target.checked)}
                             id="currentCompany"
-                            className="accent-[#4F46E5] h-5 w-5 cursor-pointer" />
-                        <label htmlFor="currentCompany" className="cursor-pointer text-[#3f3f46] text-base">Aquí en Fractal</label>
+                            className="input-checkbox" />
+                        <label htmlFor="currentCompany" className="cursor-pointer input-label">Aquí en Fractal</label>
                     </div>
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="puesto" className="text-[#37404c] text-base my-2">Puesto</label>
+                    <label htmlFor="puesto" className="input-label">Puesto</label>
                     <input
                         type="text"
                         id="puesto"
@@ -181,19 +181,19 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                         value={puesto}
                         onChange={(e) => setPuesto(e.target.value)}
                         placeholder="Puesto"
-                        className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
                     {errors.puesto && <p className="text-red-500 text-sm mt-2">{errors.puesto}</p>}
                 </div>
                 <div className="flex gap-4">
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDate" className="text-[#37404c] text-base my-2">Fecha de inicio</label>
+                        <label htmlFor="initDate" className="input-label">Fecha de inicio</label>
                         <input
                             type="date"
                             name="initDate"
                             id="initDate"
                             value={fechaInicio}
                             onChange={(e) => setFechaInicio(e.target.value)}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                         <div className="px-1 flex items-center gap-2 mt-2 w-fit">
                             <input
                                 type="checkbox"
@@ -201,12 +201,12 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                                 onChange={(e) => setDateCheck(e.target.checked)}
                                 name="currentDate"
                                 id="currentDate"
-                                className="accent-[#4F46E5] h-5 w-5 cursor-pointer" />
-                            <label htmlFor="currentDate" className="cursor-pointer text-[#3f3f46] text-base">Hasta la actualidad</label>
+                                className="input-checkbox" />
+                            <label htmlFor="currentDate" className="cursor-pointer input-label">Hasta la actualidad</label>
                         </div>
                     </div>
                     <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDate" className="text-[#37404c] text-base my-2">Fecha de fin</label>
+                        <label htmlFor="endDate" className="text-[#37404c] input-label">Fecha de fin</label>
                         <input
                             type="date"
                             name="endDate"
@@ -214,19 +214,19 @@ export const ModalExperience = ({ idTalento, onUpdate, experienceRef }: Props) =
                             value={fechaFin}
                             onChange={(e) => setFechaFin(e.target.value)}
                             disabled={dateCheck}
-                            className="h-12 p-3 border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                            className="input" />
                     </div>
                 </div>
                 {errors.fechas && <p className="text-red-500 text-sm mt-2">{errors.fechas}</p>}
                 <div className="flex flex-col my-2">
-                    <label htmlFor="funciones" className="text-[#37404c] text-base my-2">Funciones</label>
+                    <label htmlFor="funciones" className="input-label">Funciones</label>
                     <textarea
                         name="funciones"
                         id="funciones"
                         value={funciones}
                         onChange={(e) => setFunciones(e.target.value)}
                         placeholder="Digitar funciones"
-                        className="h-44 p-3 resize-none border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input resize-none">
                     </textarea>
                     {errors.funciones && <p className="text-red-500 text-sm mt-2">{errors.funciones}</p>}
                 </div>

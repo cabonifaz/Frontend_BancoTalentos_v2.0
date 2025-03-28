@@ -1,6 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { Utils } from "../core/utilities/utils";
 
 interface Props {
     onFailNavigateTo: string;
@@ -39,7 +40,10 @@ export const TokenPageGuard = ({ onFailNavigateTo }: Props) => {
             const currentTime = Math.floor(Date.now() / 1000);
 
             if (decodedToken.exp && decodedToken.exp > currentTime) {
+                const authToken = Utils.decodeJwt(tempToken).authToken;
+
                 localStorage.setItem("tempToken", tempToken);
+                localStorage.setItem("authToken", authToken);
                 return;
             }
 

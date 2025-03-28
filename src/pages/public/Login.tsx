@@ -66,14 +66,14 @@ export const Login = () => {
                         <button
                             type="button"
                             onClick={togglePasswordVisibility}
-                            className="absolute right-2 top-9 h-6 w-6 text-gray-500" >
+                            className="absolute right-2 bottom-7 h-6 w-6 text-gray-500" >
                             {passwordVisible
                                 ? (<img src="/assets/ic_show_pass.svg" alt="show pass" />)
                                 : (<img src="/assets/ic_hide_pass.svg" alt="hide pass" />)
                             }
                         </button>
                     </div>
-                    <button type="submit" className="bg-[#009688] text-white focus:outline-none rounded-lg py-2 my-2">
+                    <button type="submit" className="btn btn-primary">
                         Iniciar sesión
                     </button>
                 </form>

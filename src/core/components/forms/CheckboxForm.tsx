@@ -25,13 +25,13 @@ const CheckboxForm = ({ name, control, label, value, defaultChecked, error, grou
                                 <input
                                     type="checkbox"
                                     id={`${group}-${value}`}
-                                    className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    className="input-checkbox"
                                     value={value}
                                     checked={field.value === value}
                                     onChange={() => field.onChange(value)}
                                     onBlur={field.onBlur}
                                 />
-                                <label htmlFor={`${group}-${value}`} className="ml-2 block text-sm font-medium text-gray-700">
+                                <label htmlFor={`${group}-${value}`} className="input-label">
                                     {label}
                                 </label>
                             </>
@@ -43,12 +43,12 @@ const CheckboxForm = ({ name, control, label, value, defaultChecked, error, grou
                             <input
                                 type="checkbox"
                                 id={`${name}-${value || label}`}
-                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                className="input-checkbox"
                                 checked={field.value}
                                 onChange={(e) => field.onChange(e.target.checked)}
                                 onBlur={field.onBlur}
                             />
-                            <label htmlFor={`${name}-${value || label}`} className="ml-2 block text-sm font-medium text-gray-700">
+                            <label htmlFor={`${name}-${value || label}`} className="input-label">
                                 {label}
                             </label>
                         </>

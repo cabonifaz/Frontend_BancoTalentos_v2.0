@@ -71,11 +71,11 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">Agrega tu nueva experiencia técnica</h3>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="techSkill" className="text-[#71717A] text-sm px-1">Habilidad técnica</label>
+                    <label htmlFor="techSkill" className="input-label">Habilidad técnica</label>
                     <select
                         id="techSkill"
                         ref={abilityRef}
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input">
                         <option value={0}>Seleccione una habilidad</option>
                         {habilidadesTecnicas.map((habilidad) => (
                             <option key={habilidad.idParametro} value={habilidad.num1}>
@@ -86,14 +86,15 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
                     {errors.skill && <p className="text-red-500 text-sm mt-2">{errors.skill}</p>}
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="skillYears" className="text-[#71717A] text-sm px-1">Años de experiencia</label>
+                    <label htmlFor="skillYears" className="input-label">Años de experiencia</label>
                     <input
                         id="skillYears"
                         type="number"
                         ref={aniosRef}
                         onFocus={(e) => e.target.select()}
+                        min={0}
                         placeholder="Nro. años"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
 
                     {errors.years && <p className="text-red-500 text-sm mt-2">{errors.years}</p>}
                 </div>

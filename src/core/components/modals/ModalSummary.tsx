@@ -60,13 +60,13 @@ export const ModalSummary = ({ idTalento, description, onUpdate }: Props) => {
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">¿Tiempo para un nuevo resumen?. Edítelo</h3>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="description" className="text-[#37404c] text-base my-2">Resumen profesional</label>
+                    <label htmlFor="description" className="input-label">Resumen profesional</label>
                     <textarea
                         name="description"
                         id="description"
                         ref={descriptionRef}
                         defaultValue={description}
-                        className="h-44 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input resize-none">
                     </textarea>
 
                     {errors.description && <p className="text-red-500 text-sm mt-2">{errors.description}</p>}

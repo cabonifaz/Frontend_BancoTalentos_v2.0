@@ -15,7 +15,7 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
         <>
             <div className={`${flex ? "flex-1" : "flex flex-1 gap-2"}`}>
                 {label && <label htmlFor={name} className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}>{label}</label>}
-                <div className={`${label ? "flex-[1.95]" : "basis-80"} `}>
+                <div className={`${label ? "flex-[2]" : "basis-80"} `}>
                     <Controller
                         name={name}
                         control={control}
@@ -24,7 +24,7 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                                 id={name}
                                 {...field}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
-                                className="w-full ring-1 outline-none px-2 ring-slate-400 rounded-lg h-10"
+                                className="input w-full h-12"
                             >
                                 <option value={0}>Elige una opción</option>
                                 {options.map((option) => (
@@ -35,7 +35,7 @@ const DropdownForm = ({ name, control, label, options, error, word_wrap = false,
                             </select>
                         )}
                     />
-                    {error && <p className="text-red-400 bg-transparent text-xs">{error.message}</p>}
+                    {error && <p className="text-red-400 bg-transparent text-xs mt-2">{error.message}</p>}
                 </div>
             </div>
         </>

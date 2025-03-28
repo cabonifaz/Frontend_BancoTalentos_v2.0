@@ -106,7 +106,7 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
                 <h3 className="text-[#71717A] text-sm mt-6">Agrega un nuevo puntaje y agrega un comentario.</h3>
                 {isEditing && (
                     <button type="button" onClick={handleOnDelete} className="absolute -right-2 top-6 rounded-lg hover:bg-red-50 w-10 h-10">
-                        <img src="/assets/ic_delete.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
+                        <img src="/assets/ic_delete_bdt.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
                     </button>
                 )}
                 <div id="rating-container" className="flex items-center my-6 gap-2 *:cursor-pointer">
@@ -124,14 +124,14 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
                     ))}
                 </div>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="feedback" className="text-[#37404c] text-base my-2">Feedback</label>
+                    <label htmlFor="feedback" className="input-label">Feedback</label>
                     <textarea
                         name="feedback"
                         id="feedback"
                         ref={descriptionRef}
                         defaultValue={feedbackRef.current?.descripcion}
                         placeholder="Agrega un comentario"
-                        className="h-44 p-3 resize-none border-gray-300 border-2 rounded-lg focus:outline-none focus:border-[#4F46E5]">
+                        className="input resize-none">
                     </textarea>
                     {errors.descripcion && <p className="text-red-500 text-sm mt-2">{errors.descripcion}</p>}
                 </div>

@@ -60,7 +60,7 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">¿Tiempo de nueva disponibilidad?. Edítela</h3>
                 <div className="flex flex-col my-2">
-                    <label htmlFor="availability" className="text-[#37404c] text-base my-2">Disponibilidad</label>
+                    <label htmlFor="availability" className="input-label">Disponibilidad</label>
                     <input
                         type="text"
                         id="availability"
@@ -68,7 +68,7 @@ export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) 
                         ref={availabilityRef}
                         defaultValue={availability}
                         placeholder="Disponibilidad"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                        className="input" />
 
                     {errors.availability && <p className="text-red-500 text-sm mt-2">{errors.availability}</p>}
                 </div>

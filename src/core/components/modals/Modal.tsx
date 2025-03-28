@@ -40,14 +40,14 @@ export const Modal = ({ id, title, showButtonOptions = true, cancellationLabel =
                     <button
                         type="button"
                         onClick={() => closeModal(id)}
-                        className="flex border border-[#64748B] text-[#64748B] items-center rounded-lg h-12 w-1/2 font-semibold hover:bg-gray-50">
+                        className="flex items-center w-1/2 font-semibold btn btn-outline-gray">
                         <img src="/assets/ic_close_x.svg" alt="icon cancel" className="w-4 h-4" />
                         <p className="mx-auto">{cancellationLabel}</p>
                     </button>
                     <button
                         type="button"
                         onClick={onConfirm}
-                        className="flex bg-[#009695] text-white items-center rounded-lg h-12 w-1/2 font-semibold hover:bg-[#007d7c]">
+                        className="flex items-center w-1/2 font-semibold btn btn-primary">
                         <img src="/assets/ic_check.svg" alt="icon check" className="w-5 h-5 invert-[1]" />
                         <p className="mx-auto">{confirmationLabel}</p>
                     </button>

@@ -1,11 +1,11 @@
 import { useForm } from "react-hook-form";
 import { DropdownForm, FormRow, InputForm } from "../../core/components/forms";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddPostulanteSchema, AddPostulanteType, BaseResponse } from "../../core/models";
+import { AddPostulanteParams, AddPostulanteSchema, AddPostulanteType, AddTalentParams, BaseResponseFMI, InsertUpdateResponse } from "../../core/models";
 import { useApi } from "../../core/hooks/useApi";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { enqueueSnackbar } from "notistack";
-import { addPostulanteService } from "../../core/services/apiService";
+import { addPostulanteService, addTalent } from "../../core/services/apiService";
 import { Loading } from "../../core/components";
 import { useEffect, useRef } from "react";
 import { useParamContext } from "../../core/context/ParamsContext";
@@ -14,9 +14,14 @@ export const FormPostulante = () => {
     const registerRef = useRef(false);
     const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
 
-    const { loading: loadingAddPostulante, fetch: addPostulante, } = useApi<BaseResponse, AddPostulanteType>(addPostulanteService, {
+    const { loading: loadingAddPostulante, fetch: addPostulante, } = useApi<BaseResponseFMI, AddPostulanteParams>(addPostulanteService, {
         onError: (error) => handleError(error, enqueueSnackbar),
         onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
+    });
+
+    const { loading: loadingAddTalent, fetch: addNewTalent, } = useApi<InsertUpdateResponse, AddTalentParams>(addTalent, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
     });
 
     useEffect(() => {
@@ -39,7 +44,7 @@ export const FormPostulante = () => {
             apellidoPaterno: "",
             apellidoMaterno: "",
             dni: "",
-            celular: "",
+            telefono: "",
             email: "",
             disponibilidad: "",
             tiempoContrato: 0,
@@ -54,21 +59,56 @@ export const FormPostulante = () => {
     });
 
     const onSubmit = (data: AddPostulanteType) => {
-        // addPostulante(data).then((response) => {
-        //     if (response.data.idMensaje === 2) {
-        //         localStorage.removeItem("tempToken");
-        //         registerRef.current = true;
-        //         reset();
-        //     }
-        // });
+        const alreadyRegistered = registerRef.current;
 
-        console.log(data);
+        if (alreadyRegistered) return;
 
+        const talentData: any = {
+            dni: data.dni,
+            nombres: data.nombres,
+            apellidoPaterno: data.apellidoPaterno,
+            apellidoMaterno: data.apellidoMaterno,
+            email: data.email,
+            telefono: data.telefono,
+            disponibilidad: data.disponibilidad,
+            puesto: data.cargo,
+            idMoneda: data.idMoneda,
+        };
+
+        if (data.idModalidad === 1) { // RxH
+            talentData.montoInicialRxH = data.remuneracion;
+            talentData.montoFinalRxH = data.remuneracion;
+        } else if (data.idModalidad === 2) { // Planilla
+            talentData.montoInicialPlanilla = data.remuneracion;
+            talentData.montoFinalPlanilla = data.remuneracion;
+        }
+
+        addNewTalent(talentData).then((response) => {
+            // on success register postulante in FMI
+            if (response.data.idMensaje === 2) {
+                const idTalent = response.data.idNuevo;
+                const { disponibilidad, ...cleanData } = data;
+
+                if (idTalent) {
+                    addPostulante({
+                        idTalento: idTalent,
+                        ...cleanData
+                    }).then((response) => {
+                        if (response.data.idTipoMensaje === 2) {
+                            localStorage.removeItem("tempToken");
+                            localStorage.removeItem("authToken");
+                            registerRef.current = true;
+                            reset();
+                        }
+                    });
+                }
+            }
+        });
     };
 
     return (
         <>
-            {loadingAddPostulante && <Loading opacity="opacity-60" />}
+            {(loadingAddPostulante || loadingAddTalent) && <Loading opacity="opacity-60" />}
             <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center">
                 {/* Background geometric elements */}
                 <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#FAAB34]/10"></div>
@@ -93,8 +133,8 @@ export const FormPostulante = () => {
                                 <InputForm required={true} name="nombres" control={control} label="Nombres" error={errors.nombres} />
                                 <InputForm required={true} name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
                                 <InputForm required={true} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
-                                <InputForm required={true} name="dni" control={control} label="DNI" type="text" error={errors.dni} />
-                                <InputForm required={true} name="celular" control={control} label="Celular" error={errors.celular} />
+                                <InputForm required={true} word_wrap={true} name="dni" control={control} label="Documento de Identidad" type="text" error={errors.dni} />
+                                <InputForm required={true} name="telefono" control={control} label="Celular" error={errors.telefono} />
                                 <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
                                 <InputForm required={true} name="disponibilidad" control={control} label="Disponibilidad" error={errors.disponibilidad} />
                                 <FormRow>
@@ -125,7 +165,7 @@ export const FormPostulante = () => {
                                         disabled={!isDirty || !isValid || registerRef.current}
                                         className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
                                         ${(!isDirty || !isValid)
-                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                ? 'btn-disabled'
                                                 : 'bg-[#0B85C3] hover:bg-[#0a7ab4] shadow-md hover:shadow-lg'}`}
                                     >
                                         Registrarse
