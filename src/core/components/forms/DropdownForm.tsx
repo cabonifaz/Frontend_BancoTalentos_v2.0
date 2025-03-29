@@ -8,13 +8,14 @@ interface Props {
     error?: FieldError;
     word_wrap?: boolean;
     flex?: boolean;
+    required: boolean;
 }
 
-const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false }: Props) => {
+const DropdownForm = ({ name, control, label, options, error, word_wrap = false, flex = false, required }: Props) => {
     return (
         <>
-            <div className={`${flex ? "flex-1" : "flex flex-1 gap-2"}`}>
-                {label && <label htmlFor={name} className={`${word_wrap ? "w-[9rem]" : "min-w-[9rem]"}`}>{label}</label>}
+            <div className={`${flex ? "flex-1" : "flex flex-1 gap-4"}`}>
+                {label && <label htmlFor={name} className={`${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}>{label}{required && <span className="text-red-400">*</span>}</label>}
                 <div className={`${label ? "flex-[2]" : "basis-80"} `}>
                     <Controller
                         name={name}

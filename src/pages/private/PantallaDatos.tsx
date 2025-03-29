@@ -113,7 +113,7 @@ const PantallaDatos = () => {
 
                     <FormRow>
                         <InputForm required={true} name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
-                        <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
+                        <DropdownForm required={true} name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                             flex={true}
                         />
@@ -124,13 +124,13 @@ const PantallaDatos = () => {
 
                     <FormRow>
                         <InputForm required={true} name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
-                        <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
+                        <DropdownForm required={true} name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                             flex={true}
                         />
                     </FormRow>
 
-                    <DropdownForm name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
+                    <DropdownForm required={true} name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
                         options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
                     />
                     <InputForm required={true} name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />

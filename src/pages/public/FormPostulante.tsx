@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { DropdownForm, FormRow, InputForm } from "../../core/components/forms";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddPostulanteParams, AddPostulanteSchema, AddPostulanteType, AddTalentParams, BaseResponseFMI, InsertUpdateResponse } from "../../core/models";
@@ -55,6 +55,7 @@ export const FormPostulante = () => {
             idMoneda: 0,
             idModalidad: 0,
             ubicacion: "",
+            tieneEquipo: undefined,
         }
     });
 
@@ -115,7 +116,7 @@ export const FormPostulante = () => {
                 <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#0B85C3]/10 rounded-lg rotate-12"></div>
                 <div className="absolute top-1/4 -right-16 w-32 h-32 bg-[#FAAB34]/10 rotate-45"></div>
 
-                <div className="relative max-w-2xl w-full mx-auto">
+                <div className="relative max-w-3xl w-full mx-auto">
                     {/* Form container with integrated bottom border */}
                     <div className="relative pb-2">
                         <div className="border border-gray-200 border-b-0 rounded-t-lg shadow-sm p-8 bg-white relative z-10">
@@ -138,8 +139,8 @@ export const FormPostulante = () => {
                                 <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
                                 <InputForm required={true} name="disponibilidad" control={control} label="Disponibilidad" error={errors.disponibilidad} />
                                 <FormRow>
-                                    <InputForm required={true} name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
-                                    <DropdownForm name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
+                                    <InputForm required={true} name="tiempoContrato" regex={/^\d*$/} control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
+                                    <DropdownForm required={true} name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                                         options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                                         flex={true}
                                     />
@@ -147,17 +148,54 @@ export const FormPostulante = () => {
                                 <InputForm required={true} name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} />
                                 <InputForm required={true} name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
                                 <FormRow>
-                                    <InputForm required={true} name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
-                                    <DropdownForm name="idMoneda" control={control} error={errors.idMoneda}
+                                    <InputForm required={true} name="remuneracion" regex={/^\d*(\.\d{0,2})?$/} control={control} label="Remuneración" type="number" error={errors.remuneracion} />
+                                    <DropdownForm required={true} name="idMoneda" control={control} error={errors.idMoneda}
                                         options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                                         flex={true}
                                     />
                                 </FormRow>
 
-                                <DropdownForm name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
+                                <DropdownForm required={true} name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
                                     options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
                                 />
                                 <InputForm required={true} name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
+
+
+                                <Controller
+                                    name="tieneEquipo"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="flex gap-6">
+                                            <label className="text-wrap max-w-[11rem]">
+                                                ¿Cuenta con equipo? <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="flex items-center gap-6">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        checked={field.value === true}
+                                                        onChange={() => field.onChange(true)}
+                                                    />
+                                                    <span className="ml-2 text-gray-700">Sí</span>
+                                                </label>
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        checked={field.value === false}
+                                                        onChange={() => field.onChange(false)}
+                                                    />
+                                                    <span className="ml-2 text-gray-700">No</span>
+                                                </label>
+                                            </div>
+                                            {errors.tieneEquipo && (
+                                                <p className="text-sm text-red-600 mt-2">{errors.tieneEquipo.message}</p>
+                                            )}
+                                        </div>
+                                    )}
+                                />
+
 
                                 <div className="pt-4">
                                     <button
@@ -166,7 +204,7 @@ export const FormPostulante = () => {
                                         className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
                                         ${(!isDirty || !isValid)
                                                 ? 'btn-disabled'
-                                                : 'bg-[#0B85C3] hover:bg-[#0a7ab4] shadow-md hover:shadow-lg'}`}
+                                                : 'btn-blue'}`}
                                     >
                                         Registrarse
                                     </button>
