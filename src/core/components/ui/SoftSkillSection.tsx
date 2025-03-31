@@ -12,7 +12,7 @@ export const SoftSkillsSection = ({ register, errors, fields, habilidadesBlandas
         <DynamicSection title="Habilidades blandas" onAdd={onAdd} onRemove={onRemove}>
             {fields.map((skill, index) => (
                 <div className="flex flex-col my-2" key={index}>
-                    <label htmlFor="softSkill" className="text-[#71717A] text-sm px-1">Habilidad blanda</label>
+                    <label htmlFor="softSkill" className="text-[#71717A] text-sm px-1">Habilidad blanda<span className="text-red-400">*</span></label>
                     <select
                         id="softSkill"
                         {...register(`habilidadesBlandas.${index}.idHabilidad`, { valueAsNumber: true })}

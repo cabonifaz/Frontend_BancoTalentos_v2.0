@@ -16,7 +16,7 @@ export const LanguagesSection = ({ register, errors, fields, idiomas, nivelesIdi
             {fields.map((language, index) => (
                 <div key={index}>
                     <div className="flex flex-col my-2">
-                        <label htmlFor="language" className="text-[#71717A] text-sm px-1">Idioma</label>
+                        <label htmlFor="language" className="text-[#71717A] text-sm px-1">Idioma<span className="text-red-400">*</span></label>
                         <select
                             id="language"
                             {...register(`idiomas.${index}.idIdioma`, { valueAsNumber: true })}
@@ -35,7 +35,7 @@ export const LanguagesSection = ({ register, errors, fields, idiomas, nivelesIdi
                         )}
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor="proficiency" className="text-[#71717A] text-sm px-1">Nivel</label>
+                        <label htmlFor="proficiency" className="text-[#71717A] text-sm px-1">Nivel<span className="text-red-400">*</span></label>
                         <select
                             id="proficiency"
                             {...register(`idiomas.${index}.idNivel`, { valueAsNumber: true })}

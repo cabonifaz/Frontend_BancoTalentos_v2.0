@@ -49,7 +49,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
             {fields.map((education, index) => (
                 <div key={index}>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`institucion-${index}`} className="text-[#71717A] text-sm px-1">Institución</label>
+                        <label htmlFor={`institucion-${index}`} className="text-[#71717A] text-sm px-1">Institución<span className="text-red-400">*</span></label>
                         <input
                             type="text"
                             id={`institucion-${index}`}
@@ -75,7 +75,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         </div>
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`carrera-${index}`} className="text-[#71717A] text-sm px-1">Carrera</label>
+                        <label htmlFor={`carrera-${index}`} className="text-[#71717A] text-sm px-1">Carrera<span className="text-red-400">*</span></label>
                         <input
                             id={`carrera-${index}`}
                             type="text"
@@ -91,7 +91,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
 
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`grado-${index}`} className="text-[#71717A] text-sm px-1">Grado</label>
+                        <label htmlFor={`grado-${index}`} className="text-[#71717A] text-sm px-1">Grado<span className="text-red-400">*</span></label>
                         <input
                             id={`grado-${index}`}
                             type="text"
@@ -107,7 +107,7 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                     </div>
                     <div className="flex gap-4">
                         <div className="flex flex-col w-1/2">
-                            <label htmlFor={`initDateEducation-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
+                            <label htmlFor={`initDateEducation-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio<span className="text-red-400">*</span></label>
                             <input
                                 type="date"
                                 id={`initDateEducation-${index}`}

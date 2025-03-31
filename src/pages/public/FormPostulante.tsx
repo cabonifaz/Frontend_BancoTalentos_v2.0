@@ -1,110 +1,326 @@
-import { Controller, useForm } from "react-hook-form";
-import { DropdownForm, FormRow, InputForm } from "../../core/components/forms";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { AddPostulanteParams, AddPostulanteSchema, AddPostulanteType, AddTalentParams, BaseResponseFMI, InsertUpdateResponse } from "../../core/models";
-import { useApi } from "../../core/hooks/useApi";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
-import { enqueueSnackbar } from "notistack";
-import { addPostulanteService, addTalent } from "../../core/services/apiService";
-import { Loading } from "../../core/components";
-import { useEffect, useRef } from "react";
 import { useParamContext } from "../../core/context/ParamsContext";
+import { useEffect, useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { enqueueSnackbar } from "notistack";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { isDirty, isValid } from "zod";
+import { Loading, EducationsSection, ExperiencesSection, FileInput, LanguagesSection, SoftSkillsSection, TechSkillsSection } from "../../core/components";
+import { useApi } from "../../core/hooks/useApi";
+import { AddTechSkill, initialTechnicalSkill, AddSoftSkill, initialSoftSkill, AddExperience, initialExperience, AddEducation, initialEducation, AddLanguage, initialLanguage, AddTalentParams, BaseResponseFMI, AddPostulanteParams, InsertUpdateResponse, AddPostulanteSchema, AddPostulanteType } from "../../core/models";
+import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
+import { addPostulanteService, addTalent } from "../../core/services/apiService";
+import { ARCHIVO_PDF, DOCUMENTO_CV, ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "../../core/utilities/constants";
+import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import { Utils } from "../../core/utilities/utils";
+import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const FormPostulante = () => {
     const registerRef = useRef(false);
     const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
+    const countryCode = useRef<HTMLParagraphElement>(null);
 
-    const { loading: loadingAddPostulante, fetch: addPostulante, } = useApi<BaseResponseFMI, AddPostulanteParams>(addPostulanteService, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
-    });
+    const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
+    const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([{ ...initialSoftSkill }]);
+    const [experiences, setExperiences] = useState<AddExperience[]>([{ ...initialExperience }]);
+    const [educations, setEducations] = useState<AddEducation[]>([{ ...initialEducation }]);
+    const [languages, setLanguages] = useState<AddLanguage[]>([{ ...initialLanguage }]);
 
-    const { loading: loadingAddTalent, fetch: addNewTalent, } = useApi<InsertUpdateResponse, AddTalentParams>(addTalent, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
-    });
+    const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
+    const [selectedCity, setSelectedCity] = useState<number | null>(null);
+    const [selectedCountryPhone, setSelectedCountryPhone] = useState<number | null>(null);
+    const [cvFile, setCvFile] = useState<File | null>(null);
+    const [fotoFile, setFotoFile] = useState<File | null>(null);
+    const [cvFileErrors, setCvFileErrors] = useState("");
+    const [fotoFileErrors, setFotoFileErrors] = useState("");
 
     useEffect(() => {
-        const requiredParams = [5, 2, 3];
+        const requiredParams = [2, 12, 13, 15, 16, 19, 20];
 
         if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
             fetchParams(requiredParams.join(","));
         }
     }, [fetchParams, loadingParams, paramsByMaestro]);
 
-    const timeValues = paramsByMaestro[5];
-    const currencyValues = paramsByMaestro[2];
-    const modalityValues = paramsByMaestro[3];
+    const monedas = paramsByMaestro[2] || [];
+    const paises = paramsByMaestro[12] || [];
+    const ciudades = paramsByMaestro[13] || [];
+    const idiomas = paramsByMaestro[15] || [];
+    const nivelesIdioma = paramsByMaestro[16] || [];
+    const habilidadesTecnicas = paramsByMaestro[19] || [];
+    const habilidadesBlandas = paramsByMaestro[20] || [];
 
-    const { control, handleSubmit, formState: { errors, isDirty, isValid }, reset } = useForm<AddPostulanteType>({
-        resolver: zodResolver(AddPostulanteSchema),
-        mode: "onTouched",
-        defaultValues: {
-            nombres: "",
-            apellidoPaterno: "",
-            apellidoMaterno: "",
-            dni: "",
-            telefono: "",
-            email: "",
-            disponibilidad: "",
-            tiempoContrato: 0,
-            idTiempoContrato: 0,
-            fechaInicioLabores: "",
-            cargo: "",
-            remuneracion: 0,
-            idMoneda: 0,
-            idModalidad: 0,
-            ubicacion: "",
-            tieneEquipo: undefined,
-        }
+    const ciudadesFiltradas = selectedCountry
+        ? ciudades.filter((ciudad) => ciudad.num2 === selectedCountry)
+        : [];
+
+    const { loading: loadingAddPostulante, fetch: addPostulante, } = useApi<BaseResponseFMI, AddPostulanteParams>(addPostulanteService, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
-    const onSubmit = (data: AddPostulanteType) => {
-        const alreadyRegistered = registerRef.current;
+    const {
+        loading: loadingAddTalent,
+        fetch: postTalent,
+    } = useApi<InsertUpdateResponse, AddTalentParams>(addTalent, {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => {
+            handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar })
 
-        if (alreadyRegistered) return;
+            if (response.data.idMensaje === 2) {
+                reset();
 
-        const talentData: any = {
-            dni: data.dni,
-            nombres: data.nombres,
-            apellidoPaterno: data.apellidoPaterno,
-            apellidoMaterno: data.apellidoMaterno,
-            email: data.email,
-            telefono: data.telefono,
-            disponibilidad: data.disponibilidad,
-            puesto: data.cargo,
-            idMoneda: data.idMoneda,
-        };
+                // Restablecer las secciones dinámicas
+                setTechnicalSkills([{ ...initialTechnicalSkill }]);
+                setSoftSkills([{ ...initialSoftSkill }]);
+                setExperiences([{ ...initialExperience }]);
+                setEducations([{ ...initialEducation }]);
+                setLanguages([{ ...initialLanguage }]);
 
-        if (data.idModalidad === 1) { // RxH
-            talentData.montoInicialRxH = data.remuneracion;
-            talentData.montoFinalRxH = data.remuneracion;
-        } else if (data.idModalidad === 2) { // Planilla
-            talentData.montoInicialPlanilla = data.remuneracion;
-            talentData.montoFinalPlanilla = data.remuneracion;
+                // Restablecer los archivos
+                setCvFile(null);
+                setFotoFile(null);
+
+                // Restablecer los países y ciudades seleccionados
+                setSelectedCountry(0);
+                setSelectedCity(0);
+                setSelectedCountryPhone(0);
+            }
+        },
+    });
+
+    const { register, handleSubmit, setValue, control, formState: { errors }, reset } = useForm<AddTalentType>({
+        resolver: zodResolver(AddTalentSchema),
+        mode: "onTouched",
+    });
+
+    const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
+        setCvFileErrors("");
+        setFotoFileErrors("");
+
+        // Validación manual
+        if (!data.cv[0] || !(data.cv[0] instanceof File)) {
+            setCvFileErrors("El CV es requerido");
+            return;
+        }
+        if (!data.cv[0].name.endsWith(".pdf")) {
+            setCvFileErrors("El CV debe ser un archivo PDF");
+            return;
         }
 
-        addNewTalent(talentData).then((response) => {
-            // on success register postulante in FMI
-            if (response.data.idMensaje === 2) {
-                const idTalent = response.data.idNuevo;
-                const { disponibilidad, ...cleanData } = data;
+        // Validación manual
+        if (!data.foto[0] || !(data.foto[0] instanceof File)) {
+            setFotoFileErrors("La foto es requerida");
+            return;
+        }
+        if (!data.foto[0].name.endsWith(".png") && !data.foto[0].name.endsWith(".jpeg")) {
+            setFotoFileErrors("La foto debe ser un archivo PNG o JPEG");
+            return;
+        }
 
-                if (idTalent) {
-                    addPostulante({
-                        idTalento: idTalent,
-                        ...cleanData
-                    }).then((response) => {
-                        if (response.data.idTipoMensaje === 2) {
-                            localStorage.removeItem("tempToken");
-                            localStorage.removeItem("authToken");
-                            registerRef.current = true;
-                            reset();
-                        }
-                    });
+        const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
+        const phone = countryCode.current?.textContent + ' ' + telefono.trim();
+
+        const cleanExperiencias = experiencias.map((exp) => ({
+            ...exp,
+            flActualidad: exp.flActualidad ? 1 : 0,
+            fechaFin: exp.flActualidad ? null : exp.fechaFin,
+        }));
+
+        const cleanEducaciones = educaciones.map((edu) => ({
+            ...edu,
+            flActualidad: edu.flActualidad ? 1 : 0,
+            fechaFin: edu.flActualidad ? null : edu.fechaFin,
+        }));
+
+        try {
+            const cvBase64 = await Utils.fileToBase64(cvFile!);
+            const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+
+            const cleanData: AddTalentParams = {
+                dni: data?.dni || null,
+                telefono: phone,
+                ...filterData,
+                experiencias: cleanExperiencias,
+                educaciones: cleanEducaciones,
+                cvArchivo: {
+                    stringB64: cvBase64,
+                    nombreArchivo: Utils.getFileNameWithoutExtension(cvFile?.name),
+                    extensionArchivo: "pdf",
+                    idTipoArchivo: ARCHIVO_PDF,
+                    idTipoDocumento: DOCUMENTO_CV,
+                },
+                fotoArchivo: {
+                    stringB64: fotoBase64,
+                    nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
+                    extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+                    idTipoArchivo: ARCHIVO_IMAGEN,
+                    idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+                },
+            };
+
+            // Save talent data in BDT
+            postTalent(cleanData).then((response) => {
+                // on success register postulante in FMI
+                if (response.data.idMensaje === 2) {
+                    const idTalent = response.data.idNuevo;
+                    const ubicacion = `${paises.find((item) => item.num1 === data.idPais)?.string1}, ${ciudades.find((item) => item.num1 === data.idCiudad)?.string1}`;
+
+                    if (idTalent) {
+                        addPostulante({
+                            idTalento: idTalent,
+                            nombres: data.nombres,
+                            apellidoPaterno: data.apellidoPaterno,
+                            apellidoMaterno: data.apellidoMaterno,
+                            telefono: data.telefono,
+                            dni: data?.dni || "",
+                            email: data.email,
+                            tiempoContrato: null,
+                            idTiempoContrato: null,
+                            fechaInicioLabores: null,
+                            cargo: data.puesto,
+                            remuneracion: null,
+                            idMoneda: data.idMoneda,
+                            idModalidad: null,
+                            ubicacion: ubicacion,
+                        }).then((response) => {
+                            if (response.data.idTipoMensaje === 2) {
+                                localStorage.removeItem("tempToken");
+                                localStorage.removeItem("authToken");
+                                registerRef.current = true;
+                                reset();
+                            }
+                        });
+                    }
                 }
+            });
+        } catch (error) {
+            enqueueSnackbar("error al cargar archivos", { variant: 'warning' });
+        }
+    };
+
+    // Tech skills
+    const handleAddSkill = () => {
+        setTechnicalSkills([...technicalSkills, { ...initialTechnicalSkill }]);
+    };
+
+    const handleRemoveSkill = (index: number) => {
+        const newSkills = technicalSkills.filter((_, i) => i !== index);
+        setTechnicalSkills(newSkills);
+    };
+
+    const handleSkillChange = (index: number, field: keyof AddTechSkill, value: number) => {
+        const newSkills = [...technicalSkills];
+        newSkills[index][field] = value;
+        setTechnicalSkills(newSkills);
+    };
+
+    // Soft skills
+    const handleAddSoftSkill = () => {
+        setSoftSkills([...softSkills, { ...initialSoftSkill }]);
+    };
+
+    const handleRemoveSoftSkill = (index: number) => {
+        const newSkills = softSkills.filter((_, i) => i !== index);
+        setSoftSkills(newSkills);
+    };
+
+    const handleSoftSkillChange = (index: number, field: keyof AddSoftSkill, value: number) => {
+        const newSkills = [...softSkills];
+        newSkills[index][field] = value;
+        setSoftSkills(newSkills);
+    };
+
+    // Experiences
+    const handleAddExperience = () => {
+        setExperiences([...experiences, { ...initialExperience }]);
+    };
+
+    const handleRemoveExperience = (index: number) => {
+        const newExperiences = experiences.filter((_, i) => i !== index);
+        setExperiences(newExperiences);
+    };
+
+    const handleExperienceChange = (index: number, field: keyof AddExperience, value: string | boolean) => {
+        const newExperiences = [...experiences];
+
+        if (field === 'empresa' || field === 'puesto' || field === 'funciones' || field === 'fechaInicio' || field === 'fechaFin') {
+            if (typeof value === 'string') {
+                newExperiences[index][field] = value;
             }
-        });
+        } else if (field === 'flActualidad') {
+            if (typeof value === 'boolean') {
+                newExperiences[index][field] = value;
+            }
+        }
+
+        setExperiences(newExperiences);
+    };
+
+    // Education
+    const handleAddEducation = () => {
+        setEducations([...educations, { ...initialEducation }]);
+    };
+
+    const handleRemoveEducation = (index: number) => {
+        const newEducations = educations.filter((_, i) => i !== index);
+        setEducations(newEducations);
+    };
+
+    const handleEducationChange = (index: number, field: keyof AddEducation, value: string | boolean) => {
+        const newEducations = [...educations];
+
+        if (field === 'institucion' || field === 'carrera' || field === 'grado' || field === 'fechaInicio' || field === 'fechaFin') {
+            if (typeof value === 'string') {
+                newEducations[index][field] = value;
+            }
+        } else if (field === 'flActualidad') {
+            if (typeof value === 'boolean') {
+                newEducations[index][field] = value;
+            }
+        }
+
+        setEducations(newEducations);
+    };
+
+    // Language
+    const handleAddLanguage = () => {
+        setLanguages([...languages, { ...initialLanguage }]);
+    };
+
+    const handleRemoveLanguage = (index: number) => {
+        const newLanguage = languages.filter((_, i) => i !== index);
+        setLanguages(newLanguage);
+    };
+
+    const handleLanguageChange = (index: number, field: keyof AddLanguage, value: number) => {
+        const newLanguage = [...languages];
+        newLanguage[index][field] = value;
+        setLanguages(newLanguage);
+    };
+
+    const handleStarChange = (index: number, star: number) => {
+        const newLanguages = [...languages];
+
+        if (newLanguages[index].estrellas === star) {
+            newLanguages[index].estrellas = 0;
+        } else {
+            newLanguages[index].estrellas = star;
+        }
+
+        setLanguages(newLanguages);
+    };
+
+    useEffect(() => {
+        setValue("idiomas", languages);
+    }, [languages, setValue]);
+
+    // file
+    const handleFileChange = (field: keyof AddTalentType, file: File | null) => {
+        if (field === "cv") {
+            setCvFile(file);
+        } else if (field === "foto") {
+            setFotoFile(file);
+        }
     };
 
     return (
@@ -130,84 +346,289 @@ export const FormPostulante = () => {
 
                             <p className="text-center text-gray-600 mb-8">Complete sus datos personales para postular</p>
 
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                                <InputForm required={true} name="nombres" control={control} label="Nombres" error={errors.nombres} />
-                                <InputForm required={true} name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                                <InputForm required={true} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
-                                <InputForm required={true} word_wrap={true} name="dni" control={control} label="Documento de Identidad" type="text" error={errors.dni} />
-                                <InputForm required={true} name="telefono" control={control} label="Celular" error={errors.telefono} />
-                                <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
-                                <InputForm required={true} name="disponibilidad" control={control} label="Disponibilidad" error={errors.disponibilidad} />
-                                <FormRow>
-                                    <InputForm required={true} name="tiempoContrato" regex={/^\d*$/} control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
-                                    <DropdownForm required={true} name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
-                                        options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
-                                        flex={true}
-                                    />
-                                </FormRow>
-                                <InputForm required={true} name="fechaInicioLabores" control={control} label="Inicio de labores" type="date" error={errors.fechaInicioLabores} />
-                                <InputForm required={true} name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
-                                <FormRow>
-                                    <InputForm required={true} name="remuneracion" regex={/^\d*(\.\d{0,2})?$/} control={control} label="Remuneración" type="number" error={errors.remuneracion} />
-                                    <DropdownForm required={true} name="idMoneda" control={control} error={errors.idMoneda}
-                                        options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
-                                        flex={true}
-                                    />
-                                </FormRow>
-
-                                <DropdownForm required={true} name="idModalidad" control={control} label="Modalidad" error={errors.idModalidad}
-                                    options={modalityValues?.map((modality) => ({ value: modality.num1, label: modality.string1 })) || []}
-                                />
-                                <InputForm required={true} name="ubicacion" control={control} label="Ubicación" error={errors.ubicacion} />
-
-
-                                <Controller
-                                    name="tieneEquipo"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <div className="flex gap-6">
-                                            <label className="text-wrap max-w-[11rem]">
-                                                ¿Cuenta con equipo? <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="flex items-center gap-6">
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
-                                                        checked={field.value === true}
-                                                        onChange={() => field.onChange(true)}
-                                                    />
-                                                    <span className="ml-2 text-gray-700">Sí</span>
-                                                </label>
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="radio"
-                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
-                                                        checked={field.value === false}
-                                                        onChange={() => field.onChange(false)}
-                                                    />
-                                                    <span className="ml-2 text-gray-700">No</span>
-                                                </label>
-                                            </div>
-                                            {errors.tieneEquipo && (
-                                                <p className="text-sm text-red-600 mt-2">{errors.tieneEquipo.message}</p>
-                                            )}
+                            <form className="" onSubmit={handleSubmit(onSubmit)}>
+                                <div className="px-8 overflow-y-auto w-full md:h-[70vh]">
+                                    {/* files */}
+                                    <div>
+                                        <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
+                                        <FileInput
+                                            register={register}
+                                            errors={errors}
+                                            name="cv"
+                                            initialText="Sube un archivo"
+                                            acceptedTypes=".pdf"
+                                            onChange={(file) => handleFileChange("cv", file)}
+                                        />
+                                        {cvFileErrors !== "" && (<p className="text-red-400 text-sm">{cvFileErrors}</p>)}
+                                        <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+                                        <FileInput
+                                            register={register}
+                                            errors={errors}
+                                            name="foto"
+                                            initialText="Sube una foto"
+                                            acceptedTypes=".png, .jpeg"
+                                            onChange={(file) => handleFileChange("foto", file)}
+                                        />
+                                        {fotoFileErrors !== "" && (<p className="text-red-400 text-sm">{fotoFileErrors}</p>)}
+                                    </div>
+                                    {/* Data */}
+                                    <div className="*:mb-4">
+                                        <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Documento de identidad<span className="text-red-400">*</span></label>
+                                            <input {...register("dni")} id="dni" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Documento de identidad" />
+                                            {errors.dni && <p className="text-red-400 text-sm">{errors.dni.message}</p>}
                                         </div>
-                                    )}
-                                />
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="name" className="text-[#636d7c] text-sm px-1">Nombres<span className="text-red-400">*</span></label>
+                                            <input {...register("nombres")} id="name" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Nombres" />
+                                            {errors.nombres && <p className="text-red-400 text-sm">{errors.nombres.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="lastname-f" className="text-[#636d7c] text-sm px-1">Apellido paterno<span className="text-red-400">*</span></label>
+                                            <input {...register("apellidoPaterno")} id="lastname-f" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido paterno" />
+                                            {errors.apellidoPaterno && <p className="text-red-400 text-sm">{errors.apellidoPaterno.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="lastname-s" className="text-[#636d7c] text-sm px-1">Apellido materno<span className="text-red-400">*</span></label>
+                                            <input {...register("apellidoMaterno")} id="lastname-s" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido materno" />
+                                            {errors.apellidoMaterno && <p className="text-red-400 text-sm">{errors.apellidoMaterno.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="countrycode" className="text-[#636d7c] text-sm px-1">Número de Celular<span className="text-red-400">*</span></label>
+                                            <select
+                                                id="countrycode"
+                                                value={selectedCountryPhone || ""}
+                                                {...register("codigoPais", { valueAsNumber: true })}
+                                                onChange={(e) => setSelectedCountryPhone(Number(e.target.value))}
+                                                className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                                <option value={0}>Seleccione un país</option>
+                                                {paises.map((pais) => (
+                                                    <option key={pais.idParametro} value={pais.num1}>
+                                                        {pais.string1}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.codigoPais && <p className="text-red-400 text-sm">{errors.codigoPais.message}</p>}
+                                            <div className="flex">
+                                                <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center">
+                                                    {selectedCountryPhone ? `${paises.find((p) => p.num1 === selectedCountryPhone)?.string3 || "00"}` : "+00"}
+                                                </p>
+                                                <input {...register("telefono")} id="phone" type="text" className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]" />
+                                            </div>
+                                            {errors.telefono && <p className="text-red-400 text-sm">{errors.telefono.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="email" className="text-[#636d7c] text-sm px-1">Correo electrónico<span className="text-red-400">*</span></label>
+                                            <input {...register("email")} type="email" id="email" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Correo electrónico" />
+                                            {errors.email && <p className="text-red-400 text-sm">{errors.email.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="description" className="text-[#636d7c] text-sm px-1">Descripción<span className="text-red-400">*</span></label>
+                                            <textarea {...register("descripcion")} id="description" className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Descripción"></textarea>
+                                            {errors.descripcion && <p className="text-red-400 text-sm">{errors.descripcion.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="puestoAnt" className="text-[#636d7c] text-sm px-1">Puesto actual<span className="text-red-400">*</span></label>
+                                            <input {...register("puesto")} id="puestoAnt" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Puesto actual" />
+                                            {errors.puesto && <p className="text-red-400 text-sm">{errors.puesto.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="availability" className="text-[#636d7c] text-sm px-1">Disponibilidad<span className="text-red-400">*</span></label>
+                                            <input {...register("disponibilidad")} id="availability" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Disponibilidad" />
+                                            {errors.disponibilidad && <p className="text-red-400 text-sm">{errors.disponibilidad.message}</p>}
+                                        </div>
+                                    </div>
+                                    {/* Location */}
+                                    <div className="*:mb-4">
+                                        <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Locación</h3>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="country" className="text-[#636d7c] text-sm px-1">País<span className="text-red-400">*</span></label>
+                                            <select
+                                                id="country"
+                                                value={selectedCountry || ""}
+                                                {...register("idPais", { valueAsNumber: true })}
+                                                onChange={(e) => setSelectedCountry(Number(e.target.value))}
+                                                className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer">
+                                                <option value={0}>Seleccione un país</option>
+                                                {paises.map((pais) => (
+                                                    <option key={pais.idParametro} value={pais.num1}>
+                                                        {pais.string1}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.idPais && <p className="text-red-400 text-sm">{errors.idPais.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <label htmlFor="city" className="text-[#636d7c] text-sm px-1">Ciudad<span className="text-red-400">*</span></label>
+                                            <select
+                                                id="city"
+                                                value={selectedCity || ""}
+                                                {...register("idCiudad", { valueAsNumber: true })}
+                                                onChange={(e) => setSelectedCity(Number(e.target.value))}
+                                                className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                                <option value={0}>Seleccione una ciudad</option>
+                                                {ciudadesFiltradas.map((ciudad) => (
+                                                    <option key={ciudad.idParametro} value={ciudad.num1}>
+                                                        {ciudad.string1}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.idCiudad && <p className="text-red-400 text-sm">{errors.idCiudad.message}</p>}
+                                        </div>
+                                    </div>
+                                    {/* Salary */}
+                                    <div className="*:mb-4">
+                                        <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Banda salarial</h3>
+                                        <select
+                                            id="currency"
+                                            {...register("idMoneda", { valueAsNumber: true })}
+                                            className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                            <option value={0}>Seleccione una moneda</option>
+                                            {monedas.map((moneda) => (
+                                                <option key={moneda.idParametro} value={moneda.num1}>
+                                                    {moneda.string1}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.idMoneda && <p className="text-red-400 text-sm">{errors.idMoneda.message}</p>}
+                                        <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
+                                        <div className="flex flex-col sm:flex-row w-full gap-8">
+                                            <div className="flex flex-col sm:w-1/2">
+                                                <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-400">*</span></label>
+                                                <NumberInput register={register} name="montoInicialRxH" error={errors.montoInicialRxH?.message} />
+                                            </div>
+                                            <div className="flex flex-col sm:w-1/2">
+                                                <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-400">*</span></label>
+                                                <NumberInput register={register} name="montoFinalRxH" error={errors.montoFinalRxH?.message} />
+                                            </div>
+                                        </div>
+                                        <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
+                                        <div className="flex flex-col sm:flex-row w-full gap-8">
+                                            <div className="flex flex-col sm:w-1/2">
+                                                <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-400">*</span></label>
+                                                <NumberInput register={register} name="montoInicialPlanilla" error={errors.montoInicialPlanilla?.message} />
+                                            </div>
+                                            <div className="flex flex-col sm:w-1/2">
+                                                <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-400">*</span></label>
+                                                <NumberInput register={register} name="montoFinalPlanilla" error={errors.montoFinalPlanilla?.message} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Tech skills */}
+                                    <TechSkillsSection
+                                        register={register}
+                                        errors={errors}
+                                        fields={technicalSkills}
+                                        habilidadesTecnicas={habilidadesTecnicas}
+                                        onAdd={handleAddSkill}
+                                        onRemove={handleRemoveSkill}
+                                        handleChange={handleSkillChange}
+                                    />
+                                    {/* Soft skills */}
+                                    <SoftSkillsSection
+                                        register={register}
+                                        errors={errors}
+                                        fields={softSkills}
+                                        habilidadesBlandas={habilidadesBlandas}
+                                        onAdd={handleAddSoftSkill}
+                                        onRemove={handleRemoveSoftSkill}
+                                        handleChange={handleSoftSkillChange}
+                                    />
+                                    {/* Experience */}
+                                    <ExperiencesSection
+                                        register={register}
+                                        errors={errors}
+                                        fields={experiences}
+                                        setValue={setValue}
+                                        onAdd={handleAddExperience}
+                                        onRemove={handleRemoveExperience}
+                                        handleChange={handleExperienceChange}
+                                    />
+                                    {/* Education */}
+                                    <EducationsSection
+                                        register={register}
+                                        errors={errors}
+                                        fields={educations}
+                                        setValue={setValue}
+                                        onAdd={handleAddEducation}
+                                        onRemove={handleRemoveEducation}
+                                        handleChange={handleEducationChange}
+                                    />
+                                    {/* Languages */}
+                                    <LanguagesSection
+                                        register={register}
+                                        errors={errors}
+                                        fields={languages}
+                                        onAdd={handleAddLanguage}
+                                        onRemove={handleRemoveLanguage}
+                                        handleChange={handleLanguageChange}
+                                        handleStarChange={handleStarChange}
+                                        idiomas={idiomas}
+                                        nivelesIdioma={nivelesIdioma}
+                                    />
+                                    {/* Social media */}
+                                    <div className="*:mb-4">
+                                        <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Medios sociales</h3>
+                                        <div className="flex flex-col my-2">
+                                            <label htmlFor="linkedin" className="text-[#71717A] text-sm px-1">LinkedIn</label>
+                                            <input {...register("linkedin")} id="linkedin" type="text" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.linkedin && <p className="text-red-400 text-sm">{errors.linkedin.message}</p>}
+                                        </div>
+                                        <div className="flex flex-col my-2">
+                                            <label htmlFor="github" className="text-[#71717A] text-sm px-1">Github</label>
+                                            <input {...register("github")} id="github" type="text" className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+                                            {errors.github && <p className="text-red-400 text-sm">{errors.github.message}</p>}
+                                        </div>
+                                    </div>
 
+                                    <Controller
+                                        name="tieneEquipo"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <div className="flex flex-col gap-2 my-4">
+                                                <label className="text-wrap max-w-[11rem]">
+                                                    ¿Cuenta con equipo?<span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="flex items-center gap-6">
+                                                    <label className="flex items-center cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
+                                                            checked={field.value === true}
+                                                            onChange={() => field.onChange(true)}
+                                                        />
+                                                        <span className="ml-2 text-gray-700">Sí</span>
+                                                    </label>
+                                                    <label className="flex items-center cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
+                                                            checked={field.value === false}
+                                                            onChange={() => field.onChange(false)}
+                                                        />
+                                                        <span className="ml-2 text-gray-700">No</span>
+                                                    </label>
+                                                </div>
+                                                {errors.tieneEquipo && (
+                                                    <p className="text-sm text-red-600 mt-2">{errors.tieneEquipo.message}</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    />
 
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={!isDirty || !isValid || registerRef.current}
-                                        className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
-                                        ${(!isDirty || !isValid)
-                                                ? 'btn-disabled'
-                                                : 'btn-blue'}`}
-                                    >
-                                        Registrarse
-                                    </button>
+                                    <div className="pt-4">
+                                        <button
+                                            type="submit"
+                                            disabled={!isDirty || !isValid || registerRef.current}
+                                            className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
+                                        ${(!isDirty || !isValid || registerRef.current)
+                                                    ? 'btn-disabled'
+                                                    : 'btn-blue'}`}
+                                        >
+                                            Registrarse
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>

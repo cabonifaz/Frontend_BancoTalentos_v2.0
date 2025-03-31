@@ -4,6 +4,7 @@ import { axiosInstanceFMI } from '../../core/services/axiosService';
 import BackButton from '../../core/components/ui/BackButton';
 import Toast from '../../core/components/ui/Toast';
 import { Dashboard } from './Dashboard';
+import { ESTADO_ATENDIDO } from '../../core/utilities/constants';
 
 // Types
 type TalentoType = {
@@ -27,7 +28,8 @@ type RequerimientoType = {
   codigoRQ: string;
   fechaSolicitud: string;
   descripcion: string;
-  estado: number;
+  idEstado: number;
+  estado: string;
   vacantes: number;
   idRequerimiento?: number;
 };
@@ -44,6 +46,7 @@ const TableHeader: React.FC = () => (
       <th className="py-3 px-4 text-left font-semibold">Email</th>
       <th className="py-3 px-4 text-left font-semibold">Situación</th>
       <th className="py-3 px-4 text-left font-semibold">Estado</th>
+      <th className="py-3 px-4 text-left font-semibold">Confirmado</th>
       <th className="py-3 px-4 text-left font-semibold">Acciones</th>
     </tr>
   </thead>
@@ -72,6 +75,9 @@ const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabl
         }`}>
         {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
       </span>
+    </td>
+    <td className="py-3 px-4 whitespace-nowrap text-center">
+      <input type="checkbox" name="talentoConfirmado" id="talentoConfirmado" className="input-checkbox" />
     </td>
     <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
       <button
@@ -265,10 +271,7 @@ const TalentTable: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [requerimiento, setRequerimiento] = useState<RequerimientoType | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const [dateFormatted, setDateFormatted] = useState('');
-  const [selectedTalent, setSelectedTalent] = useState<TalentoType | null>(null);
-  const [isTalent, setIsTalent] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Función para mostrar el toast
@@ -282,93 +285,51 @@ const TalentTable: React.FC = () => {
   };
 
   // Fetch requerimiento data
-  useEffect(() => {
-    const fetchRequerimiento = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstanceFMI.get(
-          `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
-        );
-
-        // const response = await axios.get(
-        //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
-        // );
-
-        if (response.data.idTipoMensaje === 2) {
-          setRequerimiento(response.data.requerimiento);
-
-          // Format date
-          if (response.data.requerimiento.fechaSolicitud) {
-            const date = new Date(response.data.requerimiento.fechaSolicitud);
-            setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
-          }
-
-          // Add this section: Initialize selectedTalents with lstRqTalento if available
-          if (response.data.requerimiento.lstRqTalento && response.data.requerimiento.lstRqTalento.length > 0) {
-            const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
-              idTalento: talent.idTalento,
-              nombres: talent.nombresTalento,
-              apellidos: talent.apellidosTalento,
-              dni: talent.dni,
-              telefono: talent.celular,
-              celular: talent.celular,
-              email: talent.email,
-              estado: talent.estado,
-              idEstado: talent.idEstado,
-              situacion: talent.situacion,
-              idSituacion: talent.idSituacion
-            }));
-
-            setSelectedTalents(formattedTalents);
-            formattedTalents.length > 0 ? setIsTalent(true) : setIsTalent(false);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching requerimiento:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRequerimiento();
-  }, [idRequerimiento]);
-
-  // Función para buscar y cargar detalles de un talento específico
-  const fetchTalentDetails = async (idTalento: number) => {
+  const fetchRequerimiento = async () => {
     try {
       setIsLoading(true);
       const response = await axiosInstanceFMI.get(
-        `/fmi/requirement/talents/data?idTalento=${idTalento}`
+        `/fmi/requirement/data?idRequerimiento=${idRequerimiento}&showfiles=false`
       );
 
       if (response.data.idTipoMensaje === 2) {
-        const talent = response.data.talento;
-        // Actualizar los datos en la lista de talentos seleccionados
-        setSelectedTalents(prev => prev.map(t =>
-          t.idTalento === idTalento ?
-            {
-              ...t,
-              nombres: talent.nombres,
-              apellidos: talent.apellidos,
-              dni: talent.dni,
-              celular: talent.celular,
-              email: talent.email,
-              idSituacion: talent.idSituacion,
-              situacion: talent.situacion,
-              idEstado: talent.idEstado,
-              estado: talent.estado
-            } : t
-        ));
+        setRequerimiento(response.data.requerimiento);
 
-        // Guardar el talento seleccionado para posible uso posterior
-        setSelectedTalent(talent);
+        // Format date
+        if (response.data.requerimiento.fechaSolicitud) {
+          const date = new Date(response.data.requerimiento.fechaSolicitud);
+          setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+        }
+
+        // Add this section: Initialize selectedTalents with lstRqTalento if available
+        if (response.data.requerimiento.lstRqTalento && response.data.requerimiento.lstRqTalento.length > 0) {
+          const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
+            idTalento: talent.idTalento,
+            nombres: talent.nombresTalento,
+            apellidos: talent.apellidosTalento,
+            dni: talent.dni,
+            telefono: talent.celular,
+            celular: talent.celular,
+            email: talent.email,
+            estado: talent.estado,
+            idEstado: talent.idEstado,
+            situacion: talent.situacion,
+            idSituacion: talent.idSituacion
+          }));
+
+          setSelectedTalents(formattedTalents);
+        }
       }
     } catch (error) {
-      console.error('Error fetching talent details:', error);
+      console.error('Error fetching requerimiento:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRequerimiento();
+  }, [idRequerimiento]);
 
   const handleSearch = async (term: string) => {
 
@@ -377,9 +338,6 @@ const TalentTable: React.FC = () => {
       const response = await axiosInstanceFMI.get(
         `/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
       );
-      // const response = await axios.get(
-      //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/talent/requirement/list?nPag=1&busqueda=${term}`
-      // );
 
       if (response.data.idTipoMensaje === 2) {
         // Format the talent data to match our expected format
@@ -411,10 +369,6 @@ const TalentTable: React.FC = () => {
       const response = await axiosInstanceFMI.get(
         `/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
       );
-
-      // const response = await apiClientWithToken.get(
-      //   `https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
-      // );
 
       if (response.data.idTipoMensaje === 2) {
         const talentDetails = response.data.talento;
@@ -500,17 +454,12 @@ const TalentTable: React.FC = () => {
       setIsConfirmModalOpen(true);
     } else {
       showToast('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.', 'error');
-      // alert('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.');
     }
   };
 
   const handleFinalize = async () => {
     try {
       setIsLoading(true);
-      // if (!selectedTalents.some(talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2)) {
-      //   alert('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.');
-      //   return;
-      // }
 
       // Format the data for the API
       const talentos = selectedTalents.map(talent => ({
@@ -534,15 +483,10 @@ const TalentTable: React.FC = () => {
         payload
       );
 
-      // const response = await axios.post(
-      //   'https://autfmibackendstaging-axf5cac2b3c0g0f0.brazilsouth-01.azurewebsites.net/fmi/requirement/talents/save',
-      //   payload
-      // );
-
       if (response.data && response.data.idTipoMensaje === 2) {
-        setSavedSuccessfully(true);
         setIsConfirmModalOpen(false);
         showToast(response.data.mensaje, 'success');
+        fetchRequerimiento();
       } else {
         showToast('Error al guardar los datos: ' + response.data.mensaje, 'error');
       }
@@ -557,7 +501,7 @@ const TalentTable: React.FC = () => {
   const goBack = () => navigate(-1);
 
   // Determine if buttons should be disabled
-  const buttonsDisabled = savedSuccessfully || isTalent;
+  const buttonsDisabled = false;
 
   return (
     <Dashboard>
@@ -576,7 +520,7 @@ const TalentTable: React.FC = () => {
               <p className="text-sm text-gray-600"><span className="font-medium">Cliente:</span> {requerimiento?.cliente || 'Cargando...'}</p>
               <p className="text-sm text-gray-600"><span className="font-medium">Rq:</span> {requerimiento?.codigoRQ || 'Cargando...'}</p>
               <p className="text-sm text-gray-600"><span className="font-medium">Fecha Solicitud:</span> {dateFormatted || 'Cargando...'}</p>
-              <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado === 1 ? 'Asignado' : 'Pendiente'}</p>
+              <p className="text-sm text-gray-600"><span className="font-medium">Estado:</span> {requerimiento?.estado || 'Cargando...'}</p>
               <p className="text-sm text-gray-600"><span className="font-medium">Vacantes:</span> {requerimiento?.vacantes || 'Cargando...'}</p>
             </div>
           </div>

@@ -96,6 +96,7 @@ const InputForm = ({
                                 value={field.value ?? ''}
                                 onChange={(e) => handleChange(e.target.value, field.onChange)}
                                 disabled={disabled}
+                                onWheel={(e) => e.currentTarget.blur()}
                                 className={`${type === 'number' ? "max-md:w-[50px]" : "w-full"} input`}
                                 inputMode={type === 'number' ? 'decimal' : undefined}
                             />

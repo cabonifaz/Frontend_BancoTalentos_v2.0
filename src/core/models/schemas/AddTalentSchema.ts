@@ -7,10 +7,10 @@ export const AddTalentSchema = z.object({
         .refine(
             (value) => {
                 if (!value) return true;
-                return /^\d{8}$/.test(value);
+                return /^\d{1,30}$/.test(value);
             },
             {
-                message: "El DNI debe tener exactamente 8 dígitos",
+                message: "El documento de identidad debe tener como máximo 30 dígitos",
             }
         ),
     nombres: z.string().min(1, "El nombre es requerido"),
@@ -26,10 +26,22 @@ export const AddTalentSchema = z.object({
     puesto: z.string().min(1, "El puesto es requerido"),
     idPais: z.number().min(1, "Seleccione un país"),
     idCiudad: z.number().min(1, "Seleccione una ciudad"),
-    montoInicialPlanilla: z.number().min(1, "El monto inicial es requerido"),
-    montoFinalPlanilla: z.number().min(1, "El monto final es requerido"),
-    montoInicialRxH: z.number().min(1, "El monto inicial es requerido"),
-    montoFinalRxH: z.number().min(1, "El monto final es requerido"),
+    montoInicialPlanilla: z.number({
+        required_error: "El monto inicial planilla es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto inicial es requerido"),
+    montoFinalPlanilla: z.number({
+        required_error: "El monto final planilla es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto final es requerido"),
+    montoInicialRxH: z.number({
+        required_error: "El monto inicial RxH es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto inicial es requerido"),
+    montoFinalRxH: z.number({
+        required_error: "El monto final RxH es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto final es requerido"),
     idMoneda: z.number().min(1, "Seleccione una moneda"),
     habilidadesTecnicas: z.array(
         z.object({
@@ -87,6 +99,9 @@ export const AddTalentSchema = z.object({
     ),
     cv: z.any(),
     foto: z.any(),
+    tieneEquipo: z.boolean({
+        required_error: "Debe seleccionar si cuenta con equipo",
+    }),
 });
 
 export type AddTalentType = z.infer<typeof AddTalentSchema>;

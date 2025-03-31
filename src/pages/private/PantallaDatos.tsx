@@ -112,7 +112,7 @@ const PantallaDatos = () => {
                     <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
 
                     <FormRow>
-                        <InputForm required={true} name="tiempoContrato" control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
+                        <InputForm required={true} name="tiempoContrato" regex={/^\d*$/} control={control} label="Tiempo contrato" type="number" error={errors.tiempoContrato} />
                         <DropdownForm required={true} name="idTiempoContrato" control={control} error={errors.idTiempoContrato}
                             options={timeValues?.map((time) => ({ value: time.num1, label: time.string1 })) || []}
                             flex={true}
@@ -123,7 +123,7 @@ const PantallaDatos = () => {
                     <InputForm required={true} name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />
 
                     <FormRow>
-                        <InputForm required={true} name="remuneracion" control={control} label="Remuneración" type="number" error={errors.remuneracion} />
+                        <InputForm required={true} name="remuneracion" regex={/^\d*(\.\d{0,2})?$/} control={control} label="Remuneración" type="number" error={errors.remuneracion} />
                         <DropdownForm required={true} name="idMoneda" control={control} error={errors.idMoneda}
                             options={currencyValues?.map((currency) => ({ value: currency.num1, label: currency.string1 })) || []}
                             flex={true}

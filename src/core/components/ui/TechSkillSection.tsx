@@ -13,7 +13,7 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
             {fields.map((skill, index) => (
                 <div key={index}>
                     <div className="flex flex-col my-2">
-                        <label htmlFor="techSkill" className="text-[#71717A] text-sm px-1">Habilidad técnica</label>
+                        <label htmlFor="techSkill" className="text-[#71717A] text-sm px-1">Habilidad técnica<span className="text-red-400">*</span></label>
                         <select
                             id="techSkill"
                             {...register(`habilidadesTecnicas.${index}.idHabilidad`, { valueAsNumber: true })}
@@ -33,7 +33,7 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                         )}
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor="skillYears" className="text-[#71717A] text-sm px-1">Años de experiencia</label>
+                        <label htmlFor="skillYears" className="text-[#71717A] text-sm px-1">Años de experiencia<span className="text-red-400">*</span></label>
                         <input
                             id="skillYears"
                             {...register(`habilidadesTecnicas.${index}.anios`, { valueAsNumber: true })}

@@ -16,7 +16,7 @@ import {
     initialSoftSkill,
     initialTechnicalSkill,
 } from "../../core/models";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useParamContext } from "../../core/context/ParamsContext";
 import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
@@ -26,6 +26,7 @@ import { useApi } from "../../core/hooks/useApi";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { addTalent } from "../../core/services/apiService";
 import { ARCHIVO_IMAGEN, ARCHIVO_PDF, DOCUMENTO_CV, DOCUMENTO_FOTO_PERFIL } from "../../core/utilities/constants";
+import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
@@ -90,9 +91,9 @@ export const AddTalent = () => {
 
     const onGoBackClick = () => navigate(-1);
 
-    const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<AddTalentType>({
+    const { control, register, handleSubmit, setValue, formState: { errors }, reset } = useForm<AddTalentType>({
         resolver: zodResolver(AddTalentSchema),
-        mode: "onChange",
+        mode: "onTouched",
     });
 
     const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
@@ -470,46 +471,22 @@ export const AddTalent = () => {
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                            <input
-                                                {...register("montoInicialRxH", { valueAsNumber: true })}
-                                                onWheel={(e) => e.currentTarget.blur()}
-                                                id="initRxH"
-                                                type="number"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            {errors.montoInicialRxH && <p className="text-red-400 text-sm">{errors.montoInicialRxH.message}</p>}
+                                            <NumberInput register={register} name="montoInicialRxH" error={errors.montoInicialRxH?.message} />
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                            <input
-                                                {...register("montoFinalRxH", { valueAsNumber: true })}
-                                                onWheel={(e) => e.currentTarget.blur()}
-                                                id="endRxH"
-                                                type="number"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            {errors.montoFinalRxH && <p className="text-red-400 text-sm">{errors.montoFinalRxH.message}</p>}
+                                            <NumberInput register={register} name="montoFinalRxH" error={errors.montoFinalRxH?.message} />
                                         </div>
                                     </div>
                                     <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
-                                            <input
-                                                {...register("montoInicialPlanilla", { valueAsNumber: true })}
-                                                onWheel={(e) => e.currentTarget.blur()}
-                                                id="initPlanilla"
-                                                type="tenumberxt"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            {errors.montoInicialPlanilla && <p className="text-red-400 text-sm">{errors.montoInicialPlanilla.message}</p>}
+                                            <NumberInput register={register} name="montoInicialPlanilla" error={errors.montoInicialPlanilla?.message} />
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
-                                            <input
-                                                {...register("montoFinalPlanilla", { valueAsNumber: true })}
-                                                onWheel={(e) => e.currentTarget.blur()}
-                                                id="endPlanilla"
-                                                type="number"
-                                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
-                                            {errors.montoFinalPlanilla && <p className="text-red-400 text-sm">{errors.montoFinalPlanilla.message}</p>}
+                                            <NumberInput register={register} name="montoFinalPlanilla" error={errors.montoFinalPlanilla?.message} />
                                         </div>
                                     </div>
                                 </div>
@@ -579,6 +556,41 @@ export const AddTalent = () => {
                                         {errors.github && <p className="text-red-400 text-sm">{errors.github.message}</p>}
                                     </div>
                                 </div>
+
+                                <Controller
+                                    name="tieneEquipo"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="flex flex-col my-4 gap-2">
+                                            <label className="text-wrap max-w-[11rem]">
+                                                ¿Cuenta con equipo? <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="flex items-center gap-6">
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        checked={field.value === true}
+                                                        onChange={() => field.onChange(true)}
+                                                    />
+                                                    <span className="ml-2 text-gray-700">Sí</span>
+                                                </label>
+                                                <label className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        checked={field.value === false}
+                                                        onChange={() => field.onChange(false)}
+                                                    />
+                                                    <span className="ml-2 text-gray-700">No</span>
+                                                </label>
+                                            </div>
+                                            {errors.tieneEquipo && (
+                                                <p className="text-sm text-red-600 mt-2">{errors.tieneEquipo.message}</p>
+                                            )}
+                                        </div>
+                                    )}
+                                />
                             </div>
                         </form>
                     </div>

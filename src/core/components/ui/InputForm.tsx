@@ -1,4 +1,3 @@
-import React from "react";
 import { Control, Controller, FieldError } from "react-hook-form";
 
 interface Props {

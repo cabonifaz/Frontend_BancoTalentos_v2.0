@@ -3,34 +3,102 @@ import { z } from "zod";
 export const AddPostulanteSchema = z.object({
     dni: z
         .string()
-        .min(1, "El documento de identidad es requerido"),
+        .optional()
+        .refine(
+            (value) => {
+                if (!value) return true;
+                return /^\d{8}$/.test(value);
+            },
+            {
+                message: "El DNI debe tener exactamente 8 dígitos",
+            }
+        ),
     nombres: z.string().min(1, "El nombre es requerido"),
     apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
     apellidoMaterno: z.string().min(1, "El apellido materno es requerido"),
     email: z.string().email("Correo electrónico inválido"),
-    telefono: z.string().min(1, "El número de celular es requerido"),
+    codigoPais: z.number().min(1, "Seleccione un país"),
+    telefono: z.string().min(1, "El número de teléfono es requerido"),
+    linkedin: z.string().optional(),
+    github: z.string().optional(),
+    descripcion: z.string().min(1, "La descripción es requerida"),
     disponibilidad: z.string().min(1, "La disponibilidad es requerida"),
-    tiempoContrato: z.number({
-        required_error: "El tiempo contrato es requerido",
-        invalid_type_error: "Solo se aceptan números enteros"
-    }).int().min(1, "no puede ser negativo").positive("no se permiten números negativos"),
-    idTiempoContrato: z.number().int().min(1, "El tiempo de contrato es requerido"),
-    fechaInicioLabores: z.string().min(1, "La fecha de inicio de labores es requerida"),
-    cargo: z.string().min(1, "La moneda es requerida"),
-    remuneracion: z.number({
-        required_error: "La remuneración es requerida",
-        invalid_type_error: ""
-    })
-        .positive("No se permiten valores negativos")
-        .refine(val => {
-            const str = val.toString();
-            return !str.includes('.') || str.split('.')[1].length <= 2;
-        }, {
-            message: "Máximo 2 decimales permitidos"
-        }),
-    idMoneda: z.number().int().min(1, "La moneda es requerida"),
-    idModalidad: z.number().int().min(1, "La modalidad es requerida"),
-    ubicacion: z.string().min(1, "La ubicación es requerida"),
+    puesto: z.string().min(1, "El puesto es requerido"),
+    idPais: z.number().min(1, "Seleccione un país"),
+    idCiudad: z.number().min(1, "Seleccione una ciudad"),
+    montoInicialPlanilla: z.number({
+        required_error: "El monto inicial planilla es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto inicial es requerido"),
+    montoFinalPlanilla: z.number({
+        required_error: "El monto final planilla es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto final es requerido"),
+    montoInicialRxH: z.number({
+        required_error: "El monto inicial RxH es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto inicial es requerido"),
+    montoFinalRxH: z.number({
+        required_error: "El monto final RxH es requerido",
+        invalid_type_error: "Solo se aceptan números"
+    }).min(1, "El monto final es requerido"),
+    idMoneda: z.number().min(1, "Seleccione una moneda"),
+    habilidadesTecnicas: z.array(
+        z.object({
+            idHabilidad: z.number().min(1, "Seleccione una habilidad técnica"),
+            anios: z.number().min(0, "Los años de experiencia son requeridos"),
+        })
+    ),
+    habilidadesBlandas: z.array(
+        z.object({
+            idHabilidad: z.number().min(1, "Seleccione una habilidad blanda"),
+        })
+    ),
+    experiencias: z.array(
+        z.object({
+            empresa: z.string().min(1, "La empresa es requerida"),
+            puesto: z.string().min(1, "El puesto es requerido"),
+            funciones: z.string().min(1, "Las funciones son requeridas"),
+            fechaInicio: z.string().min(1, "La fecha de inicio es requerida"),
+            fechaFin: z.string().optional(),
+            flActualidad: z.boolean().optional(),
+        }).refine(
+            (data) => {
+                return data.flActualidad ? data.flActualidad : !!data.fechaFin;
+            },
+            {
+                message: "La fecha de fin es requerida",
+                path: ["fechaFin"],
+            }
+        )
+    ),
+    educaciones: z.array(
+        z.object({
+            institucion: z.string().min(1, "La institución es requerida"),
+            carrera: z.string().min(1, "La carrera es requerida"),
+            grado: z.string().min(1, "El grado es requerido"),
+            fechaInicio: z.string().min(1, "La fecha de inicio es requerida"),
+            fechaFin: z.string().optional(),
+            flActualidad: z.boolean(),
+        }).refine(
+            (data) => {
+                return data.flActualidad ? data.flActualidad : !!data.fechaFin;
+            },
+            {
+                message: "La fecha de fin es requerida",
+                path: ["fechaFin"],
+            }
+        )
+    ),
+    idiomas: z.array(
+        z.object({
+            idIdioma: z.number().min(1, "Seleccione un idioma"),
+            idNivel: z.number().min(1, "Seleccione un nivel"),
+            estrellas: z.number().min(0, "Las estrellas son requeridas"),
+        })
+    ),
+    cv: z.any(),
+    foto: z.any(),
     tieneEquipo: z.boolean({
         required_error: "Debe seleccionar si cuenta con equipo",
     }),
