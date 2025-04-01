@@ -4,6 +4,8 @@ import { axiosInstanceFMI } from '../../core/services/axiosService';
 import BackButton from '../../core/components/ui/BackButton';
 import Toast from '../../core/components/ui/Toast';
 import { Dashboard } from './Dashboard';
+import { ESTADO_ATENDIDO } from '../../core/utilities/constants';
+import { Loading } from '../../core/components';
 
 // Types
 type TalentoType = {
@@ -574,16 +576,13 @@ const TalentTable: React.FC = () => {
   const goBack = () => navigate(-1);
 
   // Validaciones
-  const buttonsDisabled = false;
-  const acceptedTalentsCount = localTalents.filter(
-    t => t.estado?.toUpperCase() === 'ACEPTADO' || t.idEstado === 2
-  ).length;
-  const canFinalize = acceptedTalentsCount > 0 &&
-    acceptedTalentsCount <= (requerimiento?.vacantes || 0) &&
-    !buttonsDisabled;
+  const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
+  const acceptedTalentsCount = localTalents.filter(t => t.estado?.toUpperCase() === 'ACEPTADO' || t.idEstado === 2).length;
+  const canFinalize = acceptedTalentsCount > 0 && acceptedTalentsCount <= (requerimiento?.vacantes || 0) && !buttonsDisabled;
 
   return (
     <Dashboard>
+      {isLoading && (<Loading opacity='opacity-60' />)}
       <div className="container mx-auto p-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold flex gap-2">
