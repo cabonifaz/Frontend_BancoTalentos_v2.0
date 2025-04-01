@@ -488,7 +488,7 @@ const TalentTable: React.FC = () => {
     setLocalTalents(prev =>
       prev.map(talent =>
         talent.idTalento === talento.idTalento
-          ? { ...talent, confirmado: confirm }
+          ? { ...talent, confirmado: confirm, isFromAPI: false }
           : talent
       )
     );
