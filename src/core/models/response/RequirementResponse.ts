@@ -10,7 +10,7 @@ export interface RequirementResponse {
         codigoRQ: string;
         fechaSolicitud: string;
         descripcion: string;
-        estado: number;
+        idEstado: number;
         vacantes: number;
         lstRqTalento: ReqTalento[];
         lstRqArchivo: ReqArchivo[];

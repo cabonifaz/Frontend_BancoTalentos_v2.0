@@ -5,7 +5,7 @@ export const newRQSchema = z.object({
     codigoRQ: z.string().min(1, "El RQ es obligatorio"),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
-    estado: z.string().min(1, "El estado es obligatorio"),
+    idEstado: z.number().min(1, "El estado es obligatorio"),
     vacantes: z.number().min(1, "Debe haber al menos una vacante"),
     lstArchivos: z
         .array(

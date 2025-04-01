@@ -42,7 +42,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             idCliente: "",
             fechaSolicitud: "",
             descripcion: "",
-            estado: "pendiente",
+            idEstado: 0,
             vacantes: 0,
             lstArchivos: [],
         },
@@ -61,7 +61,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue("codigoRQ", requirementResponse.requerimiento.codigoRQ);
             setValue("fechaSolicitud", format(new Date(requirementResponse.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
             setValue("descripcion", requirementResponse.requerimiento.descripcion);
-            setValue("estado", requirementResponse.requerimiento.estado.toString());
+            setValue("idEstado", requirementResponse.requerimiento.idEstado);
             setValue("vacantes", requirementResponse.requerimiento.vacantes);
 
             const archivosFormateados = requirementResponse.requerimiento.lstRqArchivo.map((archivo) => ({
@@ -160,7 +160,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Estado:</label>
                                                         <select
-                                                            {...register("estado")}
+                                                            {...register("idEstado")}
                                                             disabled={!isEditing}
                                                             className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                         >
@@ -171,8 +171,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             ))}
                                                         </select>
                                                     </div>
-                                                    {errors.estado && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.estado.message}</p>
+                                                    {errors.idEstado && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
                                                     )}
 
                                                     {/* Vacantes */}

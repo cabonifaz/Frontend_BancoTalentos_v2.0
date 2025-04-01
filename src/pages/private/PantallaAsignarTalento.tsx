@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { axiosInstanceFMI } from '../../core/services/axiosService';
 import BackButton from '../../core/components/ui/BackButton';
 import Toast from '../../core/components/ui/Toast';
 import { Dashboard } from './Dashboard';
-import { ESTADO_ATENDIDO } from '../../core/utilities/constants';
 
 // Types
 type TalentoType = {
@@ -21,6 +20,8 @@ type TalentoType = {
   idEstado?: number;
   situacion?: string;
   idSituacion?: number;
+  confirmado?: boolean;
+  isFromAPI?: boolean; // Nueva propiedad para identificar talentos cargados desde API
 };
 
 type RequerimientoType = {
@@ -32,10 +33,11 @@ type RequerimientoType = {
   estado: string;
   vacantes: number;
   idRequerimiento?: number;
+  lstRqTalento?: any[];
 };
 
-// Components
-const TableHeader: React.FC = () => (
+// Componentes
+const TableHeader = () => (
   <thead>
     <tr className="bg-gray-100 text-gray-700 text-sm">
       <th className="py-3 px-4 text-left font-semibold">ID</th>
@@ -56,51 +58,84 @@ interface TableRowProps {
   talento: TalentoType;
   onRemove: (id: number) => void;
   onUpdate: (talento: TalentoType) => void;
+  onConfirmChange: (talento: TalentoType, confirm: boolean) => void;
   disabled: boolean;
 }
 
-const TableRow: React.FC<TableRowProps> = ({ talento, onRemove, onUpdate, disabled }) => (
-  <tr className="border-b hover:bg-gray-50">
-    <td className="py-3 px-4 whitespace-nowrap">{talento.idTalento}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.nombres}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.dni}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.telefono || talento.celular}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
-    <td className="py-3 px-4 whitespace-nowrap">{talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}</td>
-    <td className="py-3 px-4 whitespace-nowrap">
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'bg-green-100 text-green-800' :
-        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-        {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
-      </span>
-    </td>
-    <td className="py-3 px-4 whitespace-nowrap text-center">
-      <input type="checkbox" name="talentoConfirmado" id="talentoConfirmado" className="input-checkbox" />
-    </td>
-    <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
-      <button
-        onClick={() => onUpdate(talento)}
-        disabled={(talento.estado?.toUpperCase() !== 'OBSERVADO' && talento.idEstado !== 2) || disabled}
-        className={`btn ${(talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 2) && !disabled
-          ? 'btn-blue'
-          : 'btn-disabled'
-          } text-sm`}
-      >
-        Actualizar
-      </button>
+const TableRow: React.FC<TableRowProps> = ({
+  talento,
+  onRemove,
+  onUpdate,
+  onConfirmChange,
+  disabled
+}) => {
+  const isConfirmedFromAPI = talento.isFromAPI && talento.confirmado;
+  const isAceptado = talento.estado?.toUpperCase() === 'ACEPTADO' || talento.idEstado === 2;
+  const isObservado = talento.estado?.toUpperCase() === 'OBSERVADO' || talento.idEstado === 1;
 
-      <button
-        onClick={() => onRemove(talento.idTalento)}
-        disabled={disabled}
-        className={`btn ${disabled ? 'btn-disabled' : 'btn-red'} text-sm`}
-      >
-        Remover
-      </button>
-    </td>
-  </tr>
-);
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Si ya está confirmado desde API o no es ACEPTADO, no hacer nada
+    if (isConfirmedFromAPI || !isAceptado) return;
+
+    // Intentar cambiar el estado
+    const newValue = e.target.checked;
+    onConfirmChange(talento, newValue);
+
+    // Forzar el estado del checkbox si no se pudo cambiar
+    if (newValue !== talento.confirmado) {
+      e.target.checked = !!talento.confirmado;
+    }
+  };
+
+  return (
+    <tr className="border-b hover:bg-gray-50">
+      <td className="py-3 px-4 whitespace-nowrap">{talento.idTalento}</td>
+      <td className="py-3 px-4 whitespace-nowrap">{talento.nombres}</td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        {talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">{talento.dni}</td>
+      <td className="py-3 px-4 whitespace-nowrap">{talento.telefono || talento.celular}</td>
+      <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        {talento.situacion || (talento.idSituacion === 1 ? 'LIBRE' : 'OCUPADO')}
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap">
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${isAceptado ? 'bg-green-100 text-green-800' :
+          isObservado ? 'bg-yellow-100 text-yellow-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+          {(talento.estado || (talento.idEstado === 2 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
+        </span>
+      </td>
+      <td className="py-3 px-4 whitespace-nowrap text-center">
+        <input
+          type="checkbox"
+          checked={talento.confirmado || false}
+          disabled={isConfirmedFromAPI || !isAceptado}
+          onChange={handleCheckboxChange}
+          className="input-checkbox"
+        />
+      </td>
+      <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
+        <button
+          onClick={() => onUpdate(talento)}
+          disabled={disabled || isConfirmedFromAPI || !isObservado}
+          className={`btn ${!disabled && !isConfirmedFromAPI && isObservado ? 'btn-blue' : 'btn-disabled'} text-sm`}
+        >
+          Actualizar
+        </button>
+        <button
+          onClick={() => onRemove(talento.idTalento)}
+          disabled={disabled || isConfirmedFromAPI}
+          className={`btn ${disabled || isConfirmedFromAPI ? 'btn-disabled' : 'btn-red'} text-sm`}
+        >
+          Remover
+        </button>
+      </td>
+    </tr>
+  );
+};
 
 interface TalentoSelectionProps {
   talent: TalentoType;
@@ -112,15 +147,11 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, i
   <div className="flex items-center justify-between p-4 border-b">
     <div>
       <p className="font-medium">{talent.nombres} {talent.apellidoPaterno} {talent.apellidoMaterno}</p>
-      {/* <p className="text-sm text-gray-600">ID: {talent.idTalento}</p> */}
     </div>
     <button
       onClick={() => onSelect(talent)}
       disabled={isSelected}
-      className={`btn ${isSelected
-        ? 'btn-disabled'
-        : 'btn-blue'
-        }`}
+      className={`btn ${isSelected ? 'btn-disabled' : 'btn-blue'}`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
     </button>
@@ -150,15 +181,17 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
   setSearchTerm,
   isLoading
 }) => {
-
   const handleClearSearch = () => {
     setSearchTerm('');
     onSearch('');
   };
+
   const handleSearchSubmit = () => {
     onSearch(searchTerm);
   };
+
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
@@ -264,28 +297,47 @@ const TalentTable: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { idRequerimiento } = location.state || { idRequerimiento: 1 };
+  const [remainingVacancies, setRemainingVacancies] = useState(0);
+
+  // Estados
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTalents, setSelectedTalents] = useState<TalentoType[]>([]);
+  const [localTalents, setLocalTalents] = useState<TalentoType[]>([]);
   const [searchResults, setSearchResults] = useState<TalentoType[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [requerimiento, setRequerimiento] = useState<RequerimientoType | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [dateFormatted, setDateFormatted] = useState('');
-  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
 
-  // Función para mostrar el toast
-  const showToast = (message: string, type: 'success' | 'error') => {
+  const calculateRemainingVacancies = useCallback((talents: TalentoType[], req: RequerimientoType | null) => {
+    if (!req) return 0;
+
+    // Contar confirmados iniciales (desde API)
+    const initialConfirmed = talents.filter(t => t.isFromAPI && t.confirmado).length;
+    // Contar confirmados locales (no desde API)
+    const localConfirmed = talents.filter(t => !t.isFromAPI && t.confirmado).length;
+
+    return req.vacantes - initialConfirmed - localConfirmed;
+  }, []);
+
+  useEffect(() => {
+    if (requerimiento) {
+      setRemainingVacancies(calculateRemainingVacancies(localTalents, requerimiento));
+    }
+  }, [localTalents, requerimiento, calculateRemainingVacancies]);
+
+  // Mostrar y ocultar Toast
+  const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
     setToastMessage({ message, type });
   };
 
-  // Función para cerrar el toast
   const closeToast = () => {
     setToastMessage(null);
   };
 
-  // Fetch requerimiento data
-  const fetchRequerimiento = async () => {
+  // Obtener datos del requerimiento
+  const fetchRequerimiento = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await axiosInstanceFMI.get(
@@ -295,14 +347,14 @@ const TalentTable: React.FC = () => {
       if (response.data.idTipoMensaje === 2) {
         setRequerimiento(response.data.requerimiento);
 
-        // Format date
+        // Formatear fecha
         if (response.data.requerimiento.fechaSolicitud) {
           const date = new Date(response.data.requerimiento.fechaSolicitud);
           setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
         }
 
-        // Add this section: Initialize selectedTalents with lstRqTalento if available
-        if (response.data.requerimiento.lstRqTalento && response.data.requerimiento.lstRqTalento.length > 0) {
+        // Inicializar talentos desde API
+        if (response.data.requerimiento.lstRqTalento?.length > 0) {
           const formattedTalents = response.data.requerimiento.lstRqTalento.map((talent: any) => ({
             idTalento: talent.idTalento,
             nombres: talent.nombresTalento,
@@ -314,25 +366,28 @@ const TalentTable: React.FC = () => {
             estado: talent.estado,
             idEstado: talent.idEstado,
             situacion: talent.situacion,
-            idSituacion: talent.idSituacion
+            idSituacion: talent.idSituacion,
+            confirmado: talent.confirmado,
+            isFromAPI: true // Marcar como proveniente de API
           }));
 
-          setSelectedTalents(formattedTalents);
+          setLocalTalents(formattedTalents);
         }
       }
     } catch (error) {
       console.error('Error fetching requerimiento:', error);
+      showToast('Error al cargar los datos del requerimiento', 'error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [idRequerimiento]);
 
   useEffect(() => {
     fetchRequerimiento();
-  }, [idRequerimiento]);
+  }, [fetchRequerimiento]);
 
+  // Buscar talentos
   const handleSearch = async (term: string) => {
-
     try {
       setIsLoading(true);
       const response = await axiosInstanceFMI.get(
@@ -340,41 +395,40 @@ const TalentTable: React.FC = () => {
       );
 
       if (response.data.idTipoMensaje === 2) {
-        // Format the talent data to match our expected format
         const formattedTalents = response.data.talentos.map((talent: any) => ({
           idTalento: talent.idTalento,
           nombres: talent.nombres,
           apellidoPaterno: talent.apellidoPaterno,
           apellidoMaterno: talent.apellidoMaterno,
-          // Add default values for required fields
           dni: talent.dni || '',
           email: talent.email || '',
-          idEstado: 1, // Default to ACEPTADO
-          idSituacion: 1, // Default to LIBRE
+          idEstado: 1,
+          idSituacion: 1,
         }));
 
         setSearchResults(formattedTalents);
       }
     } catch (error) {
       console.error('Error searching talents:', error);
+      showToast('Error al buscar talentos', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Seleccionar talento
   const handleSelectTalent = async (talent: TalentoType) => {
-    // Primero, buscar los detalles completos del talento usando el nuevo endpoint
     try {
       setIsLoading(true);
       const response = await axiosInstanceFMI.get(
         `/fmi/requirement/talents/data?idTalento=${talent.idTalento}`
       );
 
+      let formattedTalent: TalentoType;
+
       if (response.data.idTipoMensaje === 2) {
         const talentDetails = response.data.talento;
-
-        // Format the talent data with the obtained details
-        const formattedTalent = {
+        formattedTalent = {
           idTalento: talentDetails.idTalento,
           nombres: talentDetails.nombres,
           apellidos: talentDetails.apellidos || '',
@@ -385,92 +439,110 @@ const TalentTable: React.FC = () => {
           estado: talentDetails.estado || 'OBSERVADO',
           idEstado: talentDetails.idEstado || 2,
           situacion: talentDetails.situacion || 'LIBRE',
-          idSituacion: talentDetails.idSituacion || 1
+          idSituacion: talentDetails.idSituacion || 1,
+          confirmado: talentDetails.confirmado || false
         };
-
-        setSelectedTalents(prev => [...prev, formattedTalent]);
       } else {
-        // Si no se pudo obtener detalles, usar los datos que ya tenemos
-        const formattedTalent = {
-          idTalento: talent.idTalento,
-          nombres: talent.nombres,
-          apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
-            `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
-            talent.apellidos || '',
-          dni: talent.dni || '',
-          telefono: talent.telefono || talent.celular || '',
-          celular: talent.telefono || talent.celular || '',
-          email: talent.email || '',
-          estado: talent.estado?.toUpperCase() || (talent.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO'),
-          situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
-          idEstado: talent.idEstado || 1,
-          idSituacion: talent.idSituacion || 1,
-        };
-
-        setSelectedTalents(prev => [...prev, formattedTalent]);
+        formattedTalent = formatTalentFromBasicData(talent);
       }
+
+      setLocalTalents(prev => [...prev, formattedTalent]);
     } catch (error) {
       console.error('Error fetching talent details:', error);
-
-      // En caso de error, usar los datos que ya tenemos
-      const formattedTalent = {
-        idTalento: talent.idTalento,
-        nombres: talent.nombres,
-        apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
-          `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
-          talent.apellidos || '',
-        dni: talent.dni || '',
-        telefono: talent.telefono || talent.celular || '',
-        celular: talent.telefono || talent.celular || '',
-        email: talent.email || '',
-        estado: talent.estado?.toUpperCase() || (talent.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO'),
-        situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
-        idEstado: talent.idEstado || 1,
-        idSituacion: talent.idSituacion || 1,
-      };
-
-      setSelectedTalents(prev => [...prev, formattedTalent]);
+      setLocalTalents(prev => [...prev, formatTalentFromBasicData(talent)]);
     } finally {
       setIsLoading(false);
     }
   };
 
-
-  const handleRemoveTalent = (id: number) => {
-    setSelectedTalents(prev => prev.filter(talent => talent.idTalento !== id));
+  // Formatear talento con datos básicos
+  const formatTalentFromBasicData = (talent: TalentoType): TalentoType => {
+    return {
+      idTalento: talent.idTalento,
+      nombres: talent.nombres,
+      apellidos: talent.apellidoPaterno && talent.apellidoMaterno ?
+        `${talent.apellidoPaterno} ${talent.apellidoMaterno}` :
+        talent.apellidos || '',
+      dni: talent.dni || '',
+      telefono: talent.telefono || talent.celular || '',
+      celular: talent.telefono || talent.celular || '',
+      email: talent.email || '',
+      estado: talent.estado?.toUpperCase() || (talent.idEstado === 2 ? 'ACEPTADO' : 'OBSERVADO'),
+      situacion: talent.situacion || (talent.idSituacion === 1 ? 'LIBRE' : 'OCUPADO'),
+      idEstado: talent.idEstado || 1,
+      idSituacion: talent.idSituacion || 1,
+      confirmado: talent.confirmado || false
+    };
   };
 
+  // Manejar cambios en la confirmación
+  const handleConfirmChange = (talento: TalentoType, confirm: boolean) => {
+    // Si intenta confirmar pero no hay vacantes disponibles
+    if (confirm && remainingVacancies <= 0) {
+      showToast('No hay vacantes disponibles. Ya ha cubierto todas las vacantes.', 'error');
+      return false;
+    }
+
+    setLocalTalents(prev =>
+      prev.map(talent =>
+        talent.idTalento === talento.idTalento
+          ? { ...talent, confirmado: confirm }
+          : talent
+      )
+    );
+
+    // Mostrar mensaje informativo
+    if (confirm) {
+      showToast(`Talento confirmado. Vacantes restantes: ${remainingVacancies - 1}`, 'success');
+    } else {
+      showToast(`Confirmación cancelada. Vacantes restantes: ${remainingVacancies + 1}`, 'warning');
+    }
+  };
+
+  // Remover talento
+  const handleRemoveTalent = (id: number) => {
+    setLocalTalents(prev => prev.filter(talent => talent.idTalento !== id));
+  };
+
+  // Actualizar talento
   const handleUpdateTalent = (talent: TalentoType) => {
     navigate('/dashboard/formDatos', { state: { talento: talent } });
   };
 
+  // Verificar confirmación
   const handleConfirmOpen = () => {
-    // Check if there are any ACEPTADO talents
-    const hasAcceptedTalents = selectedTalents.some(
+    const acceptedTalents = localTalents.filter(
       talent => talent.estado?.toUpperCase() === 'ACEPTADO' || talent.idEstado === 2
     );
 
-    if (hasAcceptedTalents) {
-      setIsConfirmModalOpen(true);
-    } else {
+    if (acceptedTalents.length === 0) {
       showToast('Debe seleccionar al menos un talento con estado ACEPTADO para finalizar.', 'error');
+      return;
     }
+
+    if (acceptedTalents.length > (requerimiento?.vacantes || 0)) {
+      showToast('No puede seleccionar más talentos ACEPTADOS que las vacantes disponibles.', 'error');
+      return;
+    }
+
+    setIsConfirmModalOpen(true);
   };
 
+  // Finalizar selección
   const handleFinalize = async () => {
     try {
       setIsLoading(true);
 
-      // Format the data for the API
-      const talentos = selectedTalents.map(talent => ({
+      const talentos = localTalents.map(talent => ({
         idTalento: talent.idTalento,
         nombres: talent.nombres,
         apellidos: talent.apellidos || `${talent.apellidoPaterno || ''} ${talent.apellidoMaterno || ''}`,
         dni: talent.dni,
         celular: talent.telefono || talent.celular || '',
         email: talent.email,
-        idEstado: talent.idEstado || (talent.estado === 'ACEPTADO' ? 1 : 2),
-        idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2)
+        idEstado: talent.idEstado || (talent.estado === 'ACEPTADO' ? 2 : 1),
+        idSituacion: talent.idSituacion || (talent.situacion === 'LIBRE' ? 1 : 2),
+        confirmado: talent.confirmado || false
       }));
 
       const payload = {
@@ -483,12 +555,12 @@ const TalentTable: React.FC = () => {
         payload
       );
 
-      if (response.data && response.data.idTipoMensaje === 2) {
+      if (response.data.idTipoMensaje === 2) {
         setIsConfirmModalOpen(false);
-        showToast(response.data.mensaje, 'success');
+        showToast('Operación completada con éxito', 'success');
         fetchRequerimiento();
       } else {
-        showToast('Error al guardar los datos: ' + response.data.mensaje, 'error');
+        showToast(response.data.mensaje, 'error');
       }
     } catch (error) {
       console.error('Error saving talents:', error);
@@ -498,22 +570,28 @@ const TalentTable: React.FC = () => {
     }
   };
 
+  // Navegación
   const goBack = () => navigate(-1);
 
-  // Determine if buttons should be disabled
+  // Validaciones
   const buttonsDisabled = false;
+  const acceptedTalentsCount = localTalents.filter(
+    t => t.estado?.toUpperCase() === 'ACEPTADO' || t.idEstado === 2
+  ).length;
+  const canFinalize = acceptedTalentsCount > 0 &&
+    acceptedTalentsCount <= (requerimiento?.vacantes || 0) &&
+    !buttonsDisabled;
 
   return (
     <Dashboard>
       <div className="container mx-auto p-4">
-
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />
             Módulo para búsqueda de talentos
           </h3>
 
-          {/* Cuadro de requerimientos */}
+          {/* Información del requerimiento */}
           <div className="bg-white shadow-md rounded-lg p-4 w-full">
             <div className="flex flex-col gap-2">
               <p className="text-sm text-gray-600"><span className="font-medium">Id:</span> {idRequerimiento}</p>
@@ -525,7 +603,7 @@ const TalentTable: React.FC = () => {
             </div>
           </div>
 
-          {/* Botones */}
+          {/* Acciones principales */}
           <div className="flex justify-between w-full pb-4">
             <button
               onClick={() => {
@@ -535,49 +613,40 @@ const TalentTable: React.FC = () => {
                 handleSearch('');
               }}
               disabled={buttonsDisabled}
-              className={`btn ${buttonsDisabled
-                ? 'btn-disabled'
-                : 'btn-blue'
-                }`}
+              className={`btn ${buttonsDisabled ? 'btn-disabled' : 'btn-blue'}`}
             >
               Agregar Talento
             </button>
             <button
               onClick={handleConfirmOpen}
-              disabled={
-                selectedTalents.length === 0 ||
-                buttonsDisabled ||
-                !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
-                selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-              }
-              className={`btn ${selectedTalents.length === 0 || buttonsDisabled || !selectedTalents.some(t => t.idEstado === 2 || t.estado === 'ACEPTADO') ||
-                selectedTalents.filter(t => t.idEstado === 2 || t.estado === 'ACEPTADO').length > (requerimiento?.vacantes || 0)
-                ? 'btn-disabled'
-                : 'btn-primary'
-                }`}
+              disabled={!canFinalize}
+              className={`btn ${canFinalize ? 'btn-primary' : 'btn-disabled'}`}
             >
               Finalizar
             </button>
           </div>
         </div>
 
+        {/* Tabla de talentos */}
         <div className="bg-white shadow-md rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto">
               <TableHeader />
               <tbody>
-                {selectedTalents.map(talento => (
-                  <TableRow
-                    key={talento.idTalento}
-                    talento={talento}
-                    onRemove={handleRemoveTalent}
-                    onUpdate={handleUpdateTalent}
-                    disabled={buttonsDisabled}
-                  />
-                ))}
-                {selectedTalents.length === 0 && (
+                {localTalents.length > 0 ? (
+                  localTalents.map(talento => (
+                    <TableRow
+                      key={talento.idTalento}
+                      talento={talento}
+                      onRemove={handleRemoveTalent}
+                      onUpdate={handleUpdateTalent}
+                      onConfirmChange={handleConfirmChange}
+                      disabled={buttonsDisabled}
+                    />
+                  ))
+                ) : (
                   <tr>
-                    <td colSpan={9} className="py-4 text-center text-gray-500">
+                    <td colSpan={10} className="py-4 text-center text-gray-500">
                       No hay talentos seleccionados
                     </td>
                   </tr>
@@ -587,11 +656,12 @@ const TalentTable: React.FC = () => {
           </div>
         </div>
 
+        {/* Modales */}
         <SelectionModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           availableTalents={searchResults}
-          selectedTalents={selectedTalents}
+          selectedTalents={localTalents}
           onSelectTalent={handleSelectTalent}
           onSearch={handleSearch}
           searchTerm={searchTerm}
@@ -606,6 +676,7 @@ const TalentTable: React.FC = () => {
           message="¿Está seguro que desea finalizar y guardar los talentos seleccionados?"
         />
 
+        {/* Notificaciones */}
         {toastMessage && (
           <Toast
             message={toastMessage.message}

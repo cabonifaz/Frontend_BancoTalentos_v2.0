@@ -2,12 +2,20 @@ import React, { useEffect, useState } from 'react';
 
 interface ToastProps {
   message: string;
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'warning';
   onClose: () => void;
 }
 
 const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   const [visible, setVisible] = useState(true);
+
+  const getToastBackgroundColor = (type: 'success' | 'error' | 'warning') => {
+    switch (type) {
+      case 'success': return 'bg-green-500';
+      case 'error': return 'bg-red-500';
+      case 'warning': return 'bg-orange-500';
+    }
+  }
 
   useEffect(() => {
     // Oculta el toast después de 3 segundos
@@ -23,9 +31,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
-        type === 'success' ? 'bg-green-500' : 'bg-red-500'
-      }`}
+      className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${getToastBackgroundColor(type)}`}
     >
       {message}
     </div>
