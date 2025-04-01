@@ -134,6 +134,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     <div className="flex items-center">
                                                         <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Solicitud:</label>
                                                         <input
+                                                            {...register("fechaSolicitud")}
                                                             type="date"
                                                             disabled={!isEditing}
                                                             className="w-2/3 input"

@@ -272,7 +272,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <h2 className="text-xl font-semibold mb-4">Confirmación</h2>
         <p className="mb-6">{message}</p>
@@ -522,11 +522,6 @@ const TalentTable: React.FC = () => {
       return;
     }
 
-    if (acceptedTalents.length > (requerimiento?.vacantes || 0)) {
-      showToast('No puede seleccionar más talentos ACEPTADOS que las vacantes disponibles.', 'error');
-      return;
-    }
-
     setIsConfirmModalOpen(true);
   };
 
@@ -577,8 +572,6 @@ const TalentTable: React.FC = () => {
 
   // Validaciones
   const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
-  const acceptedTalentsCount = localTalents.filter(t => t.estado?.toUpperCase() === 'ACEPTADO' || t.idEstado === 2).length;
-  const canFinalize = acceptedTalentsCount > 0 && acceptedTalentsCount <= (requerimiento?.vacantes || 0) && !buttonsDisabled;
 
   return (
     <Dashboard>
@@ -618,8 +611,8 @@ const TalentTable: React.FC = () => {
             </button>
             <button
               onClick={handleConfirmOpen}
-              disabled={!canFinalize}
-              className={`btn ${canFinalize ? 'btn-primary' : 'btn-disabled'}`}
+              disabled={buttonsDisabled}
+              className={`btn ${buttonsDisabled ? 'btn-disabled' : 'btn-primary'}`}
             >
               Finalizar
             </button>
