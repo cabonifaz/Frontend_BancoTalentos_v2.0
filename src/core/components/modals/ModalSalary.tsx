@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, ChangeEvent } from "react";
 import { useParamContext } from "../../context/ParamsContext";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
@@ -26,11 +26,14 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
     const { paramsByMaestro } = useParamContext();
     const { closeModal } = useModal();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [inputValues, setInputValues] = useState({
+        initPlan: initPlan?.toString() || '',
+        endPlan: endPlan?.toString() || '',
+        initRxH: initRxH?.toString() || '',
+        endRxH: endRxH?.toString() || ''
+    });
+
     const currencyRef = useRef<HTMLSelectElement>(null);
-    const initPlanRef = useRef<HTMLInputElement>(null);
-    const endPlanRef = useRef<HTMLInputElement>(null);
-    const initRxHRef = useRef<HTMLInputElement>(null);
-    const endRxHRef = useRef<HTMLInputElement>(null);
 
     const { loading, fetch: updateData } = useApi<BaseResponse, TalentSalaryParams>(updateTalentSalary, {
         onError: (error) => handleError(error, enqueueSnackbar),
@@ -39,15 +42,39 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
 
     const monedas = paramsByMaestro[2] || [];
 
+    const handleNumberChange = (e: ChangeEvent<HTMLInputElement>, fieldName: keyof typeof inputValues) => {
+        let inputValue = e.target.value;
+
+        if (/^(\d+\.?\d*|\.\d+)$/.test(inputValue) || inputValue === "") {
+            if (inputValue.includes('.')) {
+                const parts = inputValue.split('.');
+                if (parts[1].length > 2) {
+                    inputValue = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+            }
+
+            setInputValues(prev => ({
+                ...prev,
+                [fieldName]: inputValue
+            }));
+        } else if (inputValue === ".") {
+            setInputValues(prev => ({
+                ...prev,
+                [fieldName]: "0."
+            }));
+        }
+    };
+
     const handleOnConfirm = () => {
         setErrors({});
         const newErrors: { [key: string]: string } = {};
-        if (currencyRef.current && initPlanRef.current && idTalento && endPlanRef.current && initRxHRef.current && endRxHRef.current) {
+
+        if (currencyRef.current && idTalento) {
             const idCurrency = Number(currencyRef.current.value);
-            const initPlanilla = Number(initPlanRef.current.value);
-            const endPlanilla = Number(endPlanRef.current.value);
-            const initRxH = Number(initRxHRef.current.value);
-            const endRxH = Number(endRxHRef.current.value);
+            const initPlanilla = inputValues.initPlan ? Number(inputValues.initPlan) : 0;
+            const endPlanilla = inputValues.endPlan ? Number(inputValues.endPlan) : 0;
+            const initRxH = inputValues.initRxH ? Number(inputValues.initRxH) : 0;
+            const endRxH = inputValues.endRxH ? Number(inputValues.endRxH) : 0;
 
             const currencyValidation = validateCurrency(idCurrency);
             if (!currencyValidation.isValid) {
@@ -98,10 +125,10 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
                                 idTalento,
                                 {
                                     moneda: selectedOption.getAttribute('data-code') ?? moneda,
-                                    montoInicialPlanilla: initPlanRef.current?.value ? Number(initPlanRef.current.value) : initPlan,
-                                    montoFinalPlanilla: endPlanRef.current?.value ? Number(endPlanRef.current.value) : endPlan,
-                                    montoInicialRxH: initRxHRef.current?.value ? Number(initRxHRef.current.value) : initRxH,
-                                    montoFinalRxH: endRxHRef.current?.value ? Number(endRxHRef.current.value) : endRxH
+                                    montoInicialPlanilla: initPlanilla,
+                                    montoFinalPlanilla: endPlanilla,
+                                    montoInicialRxH: initRxH,
+                                    montoFinalRxH: endRxH
                                 }
                             );
                         }
@@ -136,27 +163,27 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initRxH" className="input-label">Monto inicial</label>
                         <input
-                            type="number"
-                            ref={initRxHRef}
-                            defaultValue={initRxH}
+                            type="text"
+                            value={inputValues.initRxH}
+                            onChange={(e) => handleNumberChange(e, 'initRxH')}
                             onWheel={(e) => e.currentTarget.blur()}
                             onFocus={(e) => e.currentTarget.select()}
-                            min={0}
                             name="initRxH"
-                            className="input" />
+                            className="input"
+                            inputMode="decimal" />
                         {errors.initRxH && <p className="text-red-500 text-sm mt-2">{errors.initRxH}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endRxH" className="input-label">Monto final</label>
                         <input
-                            type="number"
-                            ref={endRxHRef}
-                            defaultValue={endRxH}
+                            type="text"
+                            value={inputValues.endRxH}
+                            onChange={(e) => handleNumberChange(e, 'endRxH')}
                             name="endtRxH"
                             onFocus={(e) => e.currentTarget.select()}
-                            min={0}
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="input" />
+                            className="input"
+                            inputMode="decimal" />
                         {errors.endRxH && <p className="text-red-500 text-sm mt-2">{errors.endRxH}</p>}
                     </div>
                 </div>
@@ -165,26 +192,27 @@ export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, in
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="initPlanilla" className="input-label">Monto inicial</label>
                         <input
-                            type="number"
-                            ref={initPlanRef}
-                            defaultValue={initPlan}
+                            type="text"
+                            value={inputValues.initPlan}
+                            onChange={(e) => handleNumberChange(e, 'initPlan')}
                             onWheel={(e) => e.currentTarget.blur()}
                             onFocus={(e) => e.currentTarget.select()}
-                            min={0}
-                            name="initPlanilla" className="input" />
+                            name="initPlanilla"
+                            className="input"
+                            inputMode="decimal" />
                         {errors.initPlan && <p className="text-red-500 text-sm mt-2">{errors.initPlan}</p>}
                     </div>
                     <div className="flex flex-col w-1/2">
                         <label htmlFor="endPlanilla" className="input-label">Monto final</label>
                         <input
-                            type="number"
-                            ref={endPlanRef}
-                            defaultValue={endPlan}
+                            type="text"
+                            value={inputValues.endPlan}
+                            onChange={(e) => handleNumberChange(e, 'endPlan')}
                             name="endPlanilla"
                             onWheel={(e) => e.currentTarget.blur()}
                             onFocus={(e) => e.currentTarget.select()}
-                            min={0}
-                            className="input" />
+                            className="input"
+                            inputMode="decimal" />
                         {errors.endPlan && <p className="text-red-500 text-sm mt-2">{errors.endPlan}</p>}
                     </div>
                 </div>

@@ -8,7 +8,7 @@ import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
 import { Loading } from "../ui/Loading";
-import { useRef, useState } from "react";
+import { useRef, useState, ChangeEvent } from "react";
 import { validateSkill, validateYears } from "../../utilities/validation";
 
 interface Props {
@@ -18,10 +18,10 @@ interface Props {
 
 export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [yearsValue, setYearsValue] = useState<string>('');
     const { paramsByMaestro } = useParamContext();
     const { closeModal } = useModal();
     const abilityRef = useRef<HTMLSelectElement>(null);
-    const aniosRef = useRef<HTMLInputElement>(null);
 
     const habilidadesTecnicas = paramsByMaestro[19] || [];
 
@@ -30,12 +30,22 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
         onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
     });
 
+    const handleYearsChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const inputValue = e.target.value;
+        const sanitizedValue = inputValue.replace(/\D/g, '');
+
+        if (sanitizedValue === '' || /^\d+$/.test(sanitizedValue)) {
+            setYearsValue(sanitizedValue);
+        }
+    };
+
     const handleOnConfirm = () => {
         setErrors({});
         const newErrors: { [key: string]: string } = {};
-        if (abilityRef.current && aniosRef.current && idTalento) {
+
+        if (abilityRef.current && idTalento) {
             const ability = Number(abilityRef.current.value);
-            const anios = Number(aniosRef.current.value);
+            const anios = yearsValue ? Number(yearsValue) : 0;
 
             const skillValidation = validateSkill(ability);
             if (!skillValidation.isValid) {
@@ -89,10 +99,12 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
                     <label htmlFor="skillYears" className="input-label">Años de experiencia</label>
                     <input
                         id="skillYears"
-                        type="number"
-                        ref={aniosRef}
+                        type="text"
+                        value={yearsValue}
+                        onChange={handleYearsChange}
                         onFocus={(e) => e.target.select()}
-                        min={0}
+                        onWheel={(e) => e.currentTarget.blur()}
+                        inputMode="numeric"
                         placeholder="Nro. años"
                         className="input" />
 

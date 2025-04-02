@@ -93,7 +93,7 @@ export const AddTalent = () => {
 
     const { control, register, handleSubmit, setValue, formState: { errors }, reset } = useForm<AddTalentType>({
         resolver: zodResolver(AddTalentSchema),
-        mode: "onTouched",
+        mode: "onChange",
     });
 
     const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
@@ -140,7 +140,6 @@ export const AddTalent = () => {
             const fotoBase64 = await Utils.fileToBase64(fotoFile!);
 
             const cleanData: AddTalentParams = {
-                dni: data?.dni || null,
                 telefono: phone,
                 ...filterData,
                 experiencias: cleanExperiencias,
@@ -350,8 +349,8 @@ export const AddTalent = () => {
                                 <div className="*:mb-4">
                                     <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">DNI</label>
-                                        <input {...register("dni")} id="dni" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="DNI" />
+                                        <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Doc. Identidad</label>
+                                        <input {...register("dni")} id="dni" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Doc. Identidad" />
                                         {errors.dni && <p className="text-red-400 text-sm">{errors.dni.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">

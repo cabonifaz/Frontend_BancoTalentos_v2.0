@@ -6,7 +6,10 @@ export const DataFormSchema = z.object({
     apellidoPaterno: z.string().min(1, "Campo obligatorio"),
     apellidoMaterno: z.string().min(1, "Campo obligatorio"),
     telefono: z.string().min(1, "Campo obligatorio"),
-    dni: z.string().min(1, "Campo obligatorio").max(8, "DNI no válido"),
+    dni: z.string()
+        .min(1, { message: "El Doc. de identidad es requerido" })
+        .max(30, { message: "El Doc. de identidad no puede tener más de 30 caracteres" })
+        .regex(/^\d+$/, { message: "El Doc. de identidad solo puede contener números" }),
     email: z.string().min(1, "Campo obligatorio").email("Correo no válido"),
     tiempoContrato: z.number({
         required_error: "Campo obligatorio",

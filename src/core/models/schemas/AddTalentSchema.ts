@@ -1,18 +1,10 @@
 import { z } from "zod";
 
 export const AddTalentSchema = z.object({
-    dni: z
-        .string()
-        .optional()
-        .refine(
-            (value) => {
-                if (!value) return true;
-                return /^\d{1,30}$/.test(value);
-            },
-            {
-                message: "El documento de identidad debe tener como máximo 30 dígitos",
-            }
-        ),
+    dni: z.string()
+        .min(1, { message: "El Doc. de identidad es requerido" })
+        .max(30, { message: "El Doc. de identidad no puede tener más de 30 caracteres" })
+        .regex(/^\d+$/, { message: "El Doc. de identidad solo puede contener números" }),
     nombres: z.string().min(1, "El nombre es requerido"),
     apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
     apellidoMaterno: z.string().min(1, "El apellido materno es requerido"),
@@ -46,7 +38,7 @@ export const AddTalentSchema = z.object({
     habilidadesTecnicas: z.array(
         z.object({
             idHabilidad: z.number().min(1, "Seleccione una habilidad técnica"),
-            anios: z.number().min(0, "Los años de experiencia son requeridos"),
+            anios: z.number().min(1, "Los años de experiencia son requeridos"),
         })
     ),
     habilidadesBlandas: z.array(

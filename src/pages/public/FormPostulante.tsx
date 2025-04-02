@@ -90,7 +90,7 @@ export const FormPostulante = () => {
 
     const { register, handleSubmit, setValue, control, formState: { errors }, reset } = useForm<AddTalentType>({
         resolver: zodResolver(AddTalentSchema),
-        mode: "onTouched",
+        mode: "onChange",
     });
 
     const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
@@ -137,7 +137,6 @@ export const FormPostulante = () => {
             const fotoBase64 = await Utils.fileToBase64(fotoFile!);
 
             const cleanData: AddTalentParams = {
-                dni: data?.dni || null,
                 telefono: phone,
                 ...filterData,
                 experiencias: cleanExperiencias,

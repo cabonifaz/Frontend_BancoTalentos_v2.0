@@ -44,7 +44,7 @@ const PantallaDatos = () => {
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<DataFormType>({
         resolver: zodResolver(DataFormSchema),
-        mode: "onTouched",
+        mode: "onChange",
         defaultValues: {
             nombres: "",
             apellidoPaterno: "",
@@ -108,7 +108,7 @@ const PantallaDatos = () => {
                     <InputForm required={true} name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
                     <InputForm required={true} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
                     <InputForm required={true} name="telefono" control={control} label="Contacto" error={errors.telefono} />
-                    <InputForm required={true} name="dni" control={control} label="DNI" type="text" error={errors.dni} />
+                    <InputForm required={true} name="dni" control={control} label="Doc. Identidad" type="text" error={errors.dni} />
                     <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />
 
                     <FormRow>
