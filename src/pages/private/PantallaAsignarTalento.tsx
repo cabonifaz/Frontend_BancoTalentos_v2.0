@@ -45,7 +45,7 @@ const TableHeader = () => (
       <th className="py-3 px-4 text-left font-semibold">ID</th>
       <th className="py-3 px-4 text-left font-semibold">Nombres</th>
       <th className="py-3 px-4 text-left font-semibold">Apellidos</th>
-      <th className="py-3 px-4 text-left font-semibold">DNI</th>
+      <th className="py-3 px-4 text-left font-semibold">Doc. Identidad</th>
       <th className="py-3 px-4 text-left font-semibold">Cel</th>
       <th className="py-3 px-4 text-left font-semibold">Email</th>
       <th className="py-3 px-4 text-left font-semibold">Situación</th>
