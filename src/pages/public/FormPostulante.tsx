@@ -1,4 +1,4 @@
-import { useParamContext } from "../../core/context/ParamsContext";
+import { useParams } from "../../core/context/ParamsContext";
 import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
@@ -16,7 +16,7 @@ import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const FormPostulante = () => {
     const registerRef = useRef(false);
-    const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
+    const { paramsByMaestro, loading: loadingParams } = useParams("2, 12, 13, 15, 16, 19, 20");
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
@@ -32,14 +32,6 @@ export const FormPostulante = () => {
     const [fotoFile, setFotoFile] = useState<File | null>(null);
     const [cvFileErrors, setCvFileErrors] = useState("");
     const [fotoFileErrors, setFotoFileErrors] = useState("");
-
-    useEffect(() => {
-        const requiredParams = [2, 12, 13, 15, 16, 19, 20];
-
-        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
-            fetchParams(requiredParams.join(","));
-        }
-    }, [fetchParams, loadingParams, paramsByMaestro]);
 
     const monedas = paramsByMaestro[2] || [];
     const paises = paramsByMaestro[12] || [];
@@ -324,7 +316,7 @@ export const FormPostulante = () => {
 
     return (
         <>
-            {(loadingAddPostulante || loadingAddTalent) && <Loading opacity="opacity-60" />}
+            {(loadingAddPostulante || loadingAddTalent || loadingParams) && <Loading opacity="opacity-60" />}
             <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center">
                 {/* Background geometric elements */}
                 <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#FAAB34]/10"></div>

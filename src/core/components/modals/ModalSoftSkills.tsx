@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useRef, useState } from "react";
 import { useModal } from "../../context/ModalContext";
-import { useParamContext } from "../../context/ParamsContext";
+import { useParams } from "../../context/ParamsContext";
 import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
 import { TalentSoftSkillParams } from "../../models/params/TalentUpdateParams";
@@ -18,7 +18,7 @@ interface Props {
 
 export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const { paramsByMaestro } = useParamContext();
+    const { paramsByMaestro } = useParams();
     const { closeModal } = useModal();
     const abilityRef = useRef<HTMLSelectElement>(null);
 

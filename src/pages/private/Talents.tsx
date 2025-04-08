@@ -23,7 +23,7 @@ import {
     Loading,
     TalentDetailsSkeleton
 } from '../../core/components';
-import { useParamContext } from "../../core/context/ParamsContext";
+import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 
 export const Talents = () => {
@@ -44,7 +44,7 @@ export const Talents = () => {
     const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<number | null>(null);
     const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
 
-    const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
+    const { paramsByMaestro, loading: loadingParams } = useParams("12,13,2,19,20,15,16");
     const { favourites: favouritesData, fetchFavourites } = useFavouritesContext();
 
     const {
@@ -123,14 +123,6 @@ export const Talents = () => {
             window.removeEventListener("resize", handleResize);
         };
     }, []);
-
-    useEffect(() => {
-        const requiredParams = [12, 13, 2, 19, 20, 15, 16];
-
-        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
-            fetchParams(requiredParams.join(","));
-        }
-    }, [fetchParams, loadingParams, paramsByMaestro]);
 
     useEffect(() => {
         fetchFavourites();

@@ -18,7 +18,7 @@ import {
 } from "../../core/models";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParamContext } from "../../core/context/ParamsContext";
+import { useParams } from "../../core/context/ParamsContext";
 import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
 import { Utils } from "../../core/utilities/utils";
 import { enqueueSnackbar } from "notistack";
@@ -30,7 +30,7 @@ import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
-    const { paramsByMaestro } = useParamContext();
+    const { paramsByMaestro } = useParams();
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);

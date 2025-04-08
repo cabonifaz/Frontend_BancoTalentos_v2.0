@@ -1,56 +1,85 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useState, useCallback, useEffect } from "react";
+import axios from "axios";
 import { Param, ParamsResponse } from "../models";
-import { useApi } from "../hooks/useApi";
-import { getParams } from "../services/apiService";
-import { handleError } from "../utilities/errorHandler";
-import { useSnackbar } from "notistack";
+import { axiosInstance } from "../services/axiosService";
 
 interface ParamContextType {
     paramsByMaestro: Record<number, Param[]>;
     loading: boolean;
-    fetchParams: (idMaestros: string) => Promise<void>;
+    error: string | null;
+    fetchAndCacheParams: (idMaestros: string) => Promise<void>;
 }
 
 const ParamContext = createContext<ParamContextType | undefined>(undefined);
 
 export const ParamsProvider = ({ children }: { children: ReactNode }) => {
     const [paramsByMaestro, setParamsByMaestro] = useState<Record<number, Param[]>>({});
-    const { enqueueSnackbar } = useSnackbar();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [fetchedIds, setFetchedIds] = useState<Set<string>>(new Set());
 
-    const { loading, fetch: fetchParams, } = useApi<ParamsResponse, string>(getParams, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            if (response.data.result.idMensaje === 2) {
-                const groupedData = response.data.paramsList.reduce((acc, param) => {
-                    if (!acc[param.idMaestro]) {
-                        acc[param.idMaestro] = [];
-                    }
+    const fetchAndCacheParams = useCallback(async (idMaestros: string) => {
+        if (fetchedIds.has(idMaestros)) return;
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await axiosInstance.get<ParamsResponse>(
+                `/bdt/params?groupIdMaestros=${idMaestros}`
+            );
+
+            const parametros = response.data.paramsList || [];
+
+            if (response.data.result.idMensaje === 2 && parametros.length > 0) {
+                const groupedData = parametros.reduce((acc, param) => {
+                    acc[param.idMaestro] = acc[param.idMaestro] || [];
                     acc[param.idMaestro].push(param);
                     return acc;
                 }, {} as Record<number, Param[]>);
 
-                setParamsByMaestro((prev) => ({ ...prev, ...groupedData }));
+                setParamsByMaestro(prev => ({ ...prev, ...groupedData }));
+                setFetchedIds(prev => new Set(prev).add(idMaestros));
             } else {
-                console.error("Error en la respuesta de la API:", response.data.result.mensaje);
+                setError(response.data.result.mensaje);
+                setLoading(false);
             }
-        },
-    });
-
-    const fetchParamsData = async (idMaestros: string) => {
-        await fetchParams(idMaestros);
-    };
+        } catch (err) {
+            const errorMessage = axios.isAxiosError(err)
+                ? err.response?.data?.result?.mensaje || err.message
+                : 'Error desconocido';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    }, [fetchedIds]);
 
     return (
-        <ParamContext.Provider value={{ paramsByMaestro, loading, fetchParams: fetchParamsData }}>
+        <ParamContext.Provider value={{ paramsByMaestro, loading, error, fetchAndCacheParams }}>
             {children}
         </ParamContext.Provider>
     );
 };
 
-export const useParamContext = () => {
+export const useParams = (idMaestros?: string) => {
     const context = useContext(ParamContext);
+
     if (!context) {
-        throw new Error("useAppContext debe usarse dentro de un AppProvider");
+        throw new Error("useParams debe usarse dentro de un ParamsProvider");
     }
-    return context;
+
+    const { paramsByMaestro, loading, error, fetchAndCacheParams } = context;
+
+    useEffect(() => {
+        if (idMaestros) {
+            fetchAndCacheParams(idMaestros);
+        }
+    }, [idMaestros, fetchAndCacheParams]);
+
+    return {
+        paramsByMaestro,
+        loading,
+        error,
+        fetchParams: fetchAndCacheParams,
+    };
 };

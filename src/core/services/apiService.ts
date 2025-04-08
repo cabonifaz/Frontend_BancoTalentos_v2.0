@@ -127,11 +127,6 @@ export const deleteTalenteFeedback = (idFeedback: number): Promise<AxiosResponse
     return axiosInstance.post("/bdt/talent/deleteFeedback", { id: idFeedback });
 }
 
-// params
-export const getParams = (paramIDs: string): Promise<AxiosResponse<models.ParamsResponse>> => { // comma separated id's
-    return axiosInstanceNoToken.get(`/bdt/params?groupIdMaestros=${paramIDs}`);
-};
-
 // user
 export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResponse>> => {
     return axiosInstance.get("/user/getFavourites");

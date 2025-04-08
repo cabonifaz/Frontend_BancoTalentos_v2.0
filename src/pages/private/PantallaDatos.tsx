@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Loading } from "../../core/components";
 import BackButton from "../../core/components/ui/BackButton";
 import { DropdownForm, FormRow, InputForm } from "../../core/components/forms";
-import { useParamContext } from "../../core/context/ParamsContext";
+import { useParams } from "../../core/context/ParamsContext";
 import { Utils } from "../../core/utilities/utils";
 import { useApi } from "../../core/hooks/useApi";
 import { BaseResponseFMI, DataFormSchema, DataFormType, SaveTalentFMIParams, TalentoFMI } from "../../core/models";
@@ -19,7 +19,7 @@ const PantallaDatos = () => {
     const location = useLocation();
     const { talento } = location.state as { talento: TalentoFMI } || {};
 
-    const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
+    const { paramsByMaestro, loading: loadingParams } = useParams("5, 2, 3");
     const { talentoDetails, loading } = useFetchTalento(talento.idTalento); // fmi
 
     const { loading: loadingSaveTalent, fetch: saveTalent } = useApi<BaseResponseFMI, SaveTalentFMIParams>(saveTalentFMI, {
@@ -29,18 +29,9 @@ const PantallaDatos = () => {
 
     const goBack = () => navigate(-1);
 
-    useEffect(() => {
-        const requiredParams = [5, 2, 3];
-
-        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
-            fetchParams(requiredParams.join(","));
-        }
-    }, [fetchParams, loadingParams, paramsByMaestro]);
-
-    const timeValues = paramsByMaestro[5];
-    const currencyValues = paramsByMaestro[2];
-    const modalityValues = paramsByMaestro[3];
-
+    const timeValues = paramsByMaestro[5] || [];
+    const currencyValues = paramsByMaestro[2] || [];
+    const modalityValues = paramsByMaestro[3] || [];
 
     const { control, handleSubmit, formState: { errors, isDirty }, reset } = useForm<DataFormType>({
         resolver: zodResolver(DataFormSchema),

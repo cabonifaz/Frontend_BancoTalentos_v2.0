@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ReqListParams, RequerimientosResponse, RequirementItem } from "../../core/models";
-import { useParamContext } from "../../core/context/ParamsContext";
+import { useParams } from "../../core/context/ParamsContext";
 import { BaseOption, DateFilter, FilterDropDown, Loading, ModalDetallesRQ } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
@@ -32,7 +32,7 @@ export const Requirements = () => {
     const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
     const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
 
-    const { paramsByMaestro, loading: loadingParams, fetchParams } = useParamContext();
+    const { paramsByMaestro, loading: loadingParams } = useParams("24");
 
     const {
         loading: loadingClientes,
@@ -127,14 +127,6 @@ export const Requirements = () => {
             hasFetchedReqs.current = true;
         }
     }, [fetchClients, executeSearch, loadingClientes, loadingReqs]);
-
-    useEffect(() => {
-        const requiredParams = [24];
-
-        if (requiredParams.some(key => !paramsByMaestro[key]) && !loadingParams) {
-            fetchParams(requiredParams.join(","));
-        }
-    }, [fetchParams, loadingParams, paramsByMaestro]);
 
     const handleSearch = () => {
         executeSearch();

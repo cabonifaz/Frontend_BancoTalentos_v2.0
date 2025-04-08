@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../context/ModalContext";
-import { useParamContext } from "../../context/ParamsContext";
+import { useParams } from "../../context/ParamsContext";
 import { AddOrUpdateLanguageParams, BaseResponse, Language } from "../../models";
 import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
-    const { paramsByMaestro } = useParamContext();
+    const { paramsByMaestro } = useParams();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const isEditing = !!languageRef.current;
     const { closeModal, isModalOpen } = useModal();

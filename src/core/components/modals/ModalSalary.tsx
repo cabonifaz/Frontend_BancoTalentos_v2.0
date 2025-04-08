@@ -1,5 +1,5 @@
 import { useRef, useState, ChangeEvent } from "react";
-import { useParamContext } from "../../context/ParamsContext";
+import { useParams } from "../../context/ParamsContext";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
 import { useApi } from "../../hooks/useApi";
@@ -23,7 +23,7 @@ interface Props {
 }
 
 export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, initRxH, endRxH, updateTalentList }: Props) => {
-    const { paramsByMaestro } = useParamContext();
+    const { paramsByMaestro } = useParams();
     const { closeModal } = useModal();
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [inputValues, setInputValues] = useState({
