@@ -15,6 +15,7 @@ export * from './interfaces/DynamicSectionProps';
 export * from './interfaces/RequirementItem';
 export * from './interfaces/TalentoFMI';
 export * from './interfaces/TalentoDetailFMI';
+export * from './interfaces/ReqVacante';
 export * from './params/AddTalentParams';
 export * from './response/LoginResponse';
 export * from './response/BaseResponse';

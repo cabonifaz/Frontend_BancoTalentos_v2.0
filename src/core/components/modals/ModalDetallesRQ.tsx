@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApi } from '../../hooks/useApi';
 import { enqueueSnackbar } from 'notistack';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,11 +80,19 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         onClose();
     };
 
+    const totalVacantes = requirementResponse?.requerimiento.lstRqVacantes.reduce((total, vacante) => total + (vacante?.cantidad || 0), 0) || 0;
+
+    const circleClass = useMemo(() => {
+        if (totalVacantes > 99) return 'w-8 h-8 text-xs';
+        if (totalVacantes > 9) return 'w-7 h-7 text-sm';
+        return 'w-6 h-6 text-sm';
+    }, [totalVacantes]);
+
     return (
         <>
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
                 <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
-                    <button className="absolute top-4 right-4 w-6 h-6" onClick={handleCancelClick}>
+                    <button className="absolute top-4 right-4 w-6 h-6 z-50" onClick={handleCancelClick}>
                         <img src="/assets/ic_close_x.svg" alt="icon close" />
                     </button>
                     <Tabs
@@ -175,27 +183,56 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     {errors.idEstado && (
                                                         <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
                                                     )}
-
-                                                    {/* Vacantes */}
-                                                    <div className="flex items-center">
-                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Vacantes:</label>
-                                                        <input
-                                                            type="number"
-                                                            {...register("vacantes", { valueAsNumber: true })}
-                                                            onFocus={(e) => e.target.select()}
-                                                            disabled={!isEditing}
-                                                            min={0}
-                                                            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                        />
-                                                    </div>
-                                                    {errors.vacantes && (
-                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.vacantes.message}</p>
-                                                    )}
                                                 </div>
                                             </form>
                                         )}
                                     </div>
                                 ),
+                            },
+                            {
+                                label: (
+                                    <p className="flex items-center gap-2">
+                                        Vacantes
+                                        <span className={`inline-flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white ${circleClass}`}>
+                                            {totalVacantes}
+                                        </span>
+                                    </p>
+                                ),
+                                children: (
+                                    <div className="p-1">
+                                        <div className="table-container">
+                                            <div className="table-wrapper">
+                                                <table className="table">
+                                                    <thead>
+                                                        <tr className="table-header">
+                                                            <th scope="col" className="table-header-cell">ID</th>
+                                                            <th scope="col" className="table-header-cell">Perfil profesional</th>
+                                                            <th scope="col" className="table-header-cell">Cantidad</th>
+                                                            <th scope="col" className="table-header-cell"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {requirementResponse?.requerimiento.lstRqVacantes.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan={4} className="table-empty">
+                                                                    No hay vacantes disponibles.
+                                                                </td>
+                                                            </tr>
+                                                        ) : (
+                                                            requirementResponse?.requerimiento.lstRqVacantes.map((vacante) => (
+                                                                <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                    <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                    <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                    <td className="table-cell">{vacante.cantidad}</td>
+                                                                </tr>
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
                             },
                             {
                                 label: "Postulantes",
