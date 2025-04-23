@@ -249,6 +249,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Email</th>
                                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Situación</th>
                                                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
+                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Perfil</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -259,7 +260,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                             </td>
                                                         </tr>
                                                     ) : (
-                                                        requirementResponse?.requerimiento.lstRqTalento.map((talento) => (
+                                                        requirementResponse?.requerimiento?.lstRqTalento?.map((talento) => (
                                                             <tr key={talento.idTalento}>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.nombresTalento}</td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.apellidosTalento}</td>
@@ -268,13 +269,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.email}</td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.situacion}</td>
                                                                 <td className="table-cell">
-                                                                    <span className={`badge ${talento.estado?.toUpperCase() === 'ACEPTADO' ? 'badge-green' :
-                                                                        talento.estado?.toUpperCase() === 'OBSERVADO' ? 'badge-yellow' :
-                                                                            ''
-                                                                        }`}>
-                                                                        {(talento.estado || (talento.idEstado === 1 ? 'ACEPTADO' : 'OBSERVADO')).toUpperCase()}
+                                                                    <span className={`badge ${talento.idEstado === 2 ? 'badge-green' : 'badge-yellow'}`}>
+                                                                        {(talento?.estado).toUpperCase()}
                                                                     </span>
                                                                 </td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.perfil}</td>
                                                             </tr>
                                                         ))
                                                     )}

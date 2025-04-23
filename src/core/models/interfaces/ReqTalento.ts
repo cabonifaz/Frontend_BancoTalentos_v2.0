@@ -9,4 +9,6 @@ export interface ReqTalento {
     situacion: string;
     idEstado: number;
     estado: string;
+    idPerfil: number;
+    perfil: string;
 }
