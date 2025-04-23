@@ -10,7 +10,7 @@ initAxios();
 
 function App() {
   return (
-    <SnackbarProvider maxSnack={2} autoHideDuration={4000}>
+    <SnackbarProvider maxSnack={2} autoHideDuration={4000} anchorOrigin={{ vertical: 'top', horizontal: 'center', }}>
       <FavouritesProvider>
         <ParamsProvider>
           <ModalProvider>

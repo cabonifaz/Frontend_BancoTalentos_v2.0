@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { axiosInstanceFMI } from '../../core/services/axiosService';
 import { axiosInstance } from '../../core/services/axiosService';
 import { Dashboard } from './Dashboard';
 import { ESTADO_ASIGNADO } from '../../core/utilities/constants';
+import { enqueueSnackbar } from 'notistack';
 
 type RequerimientoType = {
   idRequerimiento: number;
   codigoRQ: string;
+  lstPerfiles: {
+    idPerfil: number;
+    perfil: string;
+  }[];
 };
 
 const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
@@ -17,6 +22,9 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  // Ref for each select element
+  const perfilesRef = useRef<HTMLSelectElement[]>([]);
+  // const perfilRef = React.useRef<HTMLSelectElement>(null);
 
   const fetchRequirements = async (term = '') => {
     try {
@@ -49,14 +57,28 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
 
   const handleGenerateLink = async () => {
     try {
+      const payload = {
+        lstRequerimientos: selectedRequirements.map(req => {
+          return {
+            idRQ: req.idRequerimiento,
+            idPerfil: Number(perfilesRef.current.at(req.idRequerimiento)?.value) || 0
+          };
+        })
+      };
+
+      // check if all RQ have a selected profile
+      const allSelected = payload.lstRequerimientos.every(req => req.idPerfil !== 0);
+      if (!allSelected) {
+        enqueueSnackbar('Por favor seleccione un perfil para cada requerimiento', { variant: 'warning' });
+        return;
+      }
+
       setIsLoading(true);
-      const response = await axiosInstance.post('/bdt/link/generate', {
-        lstRequerimientos: selectedRequirements.map(req => req.idRequerimiento)
-      });
+      const response = await axiosInstance.post('/bdt/link/generate', payload);
 
       if (response.data.idMensaje === 2) {
-        console.log("Link generado:", response.data.linkToken);
         setGeneratedLink(response.data.linkToken);
+        enqueueSnackbar(response.data.mensaje, { variant: 'success' });
       }
     } catch (error) {
       console.error('Error generating link:', error);
@@ -70,13 +92,31 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
       navigator.clipboard.writeText(generatedLink)
         .then(() => {
           setIsCopied(true);
-          setTimeout(() => setIsCopied(false), 2000); // Vuelve al ícono original después de 2 segundos
+          setTimeout(() => setIsCopied(false), 2000);
         })
         .catch(err => {
           console.error('Error al copiar: ', err);
         });
     }
   };
+
+  const handleRQSelect = (idRQ: number) => {
+    const selectedPerfil = perfilesRef.current.at(idRQ)?.value;
+    if (selectedPerfil) {
+      setSelectedRequirements(prev => prev.map(req => {
+        if (req.idRequerimiento === idRQ) {
+          return {
+            ...req,
+            lstPerfiles: req.lstPerfiles.map(perf => ({
+              ...perf,
+              selected: perf.idPerfil === parseInt(selectedPerfil)
+            }))
+          };
+        }
+        return req;
+      }));
+    }
+  }
 
   return (
     <Dashboard>
@@ -100,17 +140,37 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700 text-sm">
-                    <th className="py-3 px-4 text-left font-semibold">ID</th>
-                    <th className="py-3 px-4 text-left font-semibold">CODIGO RQ</th>
-                    <th className="py-3 px-4 text-left font-semibold">ACCIONES</th>
+                    <th className="py-3 px-4 text-center font-semibold">ID</th>
+                    <th className="py-3 px-4 text-center font-semibold">Código RQ</th>
+                    <th className="py-3 px-4 text-center font-semibold">Perfil</th>
+                    <th className="py-3 px-4 text-center font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedRequirements.map(req => (
+                  {selectedRequirements.map((req) => (
                     <tr key={req.idRequerimiento} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 whitespace-nowrap">{req.idRequerimiento}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">{req.codigoRQ}</td>
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.idRequerimiento}</td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.codigoRQ}</td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <select
+                          id="t-perfil"
+                          onChange={() => handleRQSelect(req.idRequerimiento)}
+                          ref={el => {
+                            if (el) perfilesRef.current[req.idRequerimiento] = el;
+                          }}
+                          defaultValue={req.lstPerfiles.length === 1 ? req.lstPerfiles[0].idPerfil : 0}
+                          className="border rounded-lg focus:outline-none cursor-pointer px-3 py-2 text-sm">
+                          <option value={0}>
+                            Seleccione un perfil
+                          </option>
+                          {req.lstPerfiles?.map((perf) => (
+                            <option key={perf.idPerfil} value={perf.idPerfil}>
+                              {perf.perfil}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleRemoveRequirement(req.idRequerimiento)}
                           className="btn btn-red"
@@ -122,7 +182,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                   ))}
                   {selectedRequirements.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-4 text-center text-gray-500">
+                      <td colSpan={4} className="py-4 text-center text-gray-500">
                         No hay requerimientos seleccionados
                       </td>
                     </tr>
