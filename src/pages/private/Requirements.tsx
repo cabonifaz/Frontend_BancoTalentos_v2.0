@@ -96,9 +96,9 @@ export const Requirements = () => {
         let searchDate = null;
         if (date !== null) {
             searchDate = format(new Date(date), 'yyyy/MM/dd')
-            setSelectedDate(searchDate);
         }
 
+        setSelectedDate(searchDate);
         executeSearch({
             estado: selectedEstado,
             fechaSolicitud: date ? searchDate : null,
@@ -146,6 +146,19 @@ export const Requirements = () => {
         navigate('/dashboard/tableAsignarTalento', { state: { idRequerimiento } });
     };
 
+    const getAlertIconPath = (idAlerta: number): string => {
+        switch (idAlerta) {
+            case 1:
+                return "/assets/ic_success.svg"; // Alerta baja
+            case 2:
+                return "/assets/ic_warning.svg"; // Alerta media
+            case 3:
+                return "/assets/ic_error.svg"; // Alerta alta
+            default:
+                return "/assets/ic_success.svg";
+        }
+    }
+
     return (
         <>
             {(loadingClientes || loadingParams || loadingReqs) && (<Loading opacity="opacity-60" />)}
@@ -169,7 +182,7 @@ export const Requirements = () => {
                                     />
                                 </div>
                             </div>
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 flex-wrap">
                                 <FilterDropDown
                                     name="cliente"
                                     label="Cliente"
@@ -194,7 +207,7 @@ export const Requirements = () => {
                                     selectedValues={selectedEstado ? [selectedEstado.toString()] : []}
                                     onChange={handleEstadoChangeFilter}
                                 />
-                                <DateFilter label="Seleccionar fecha" onDateSelected={handleDateSelected} />
+                                <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
                             </div>
                             <div className="flex justify-start">
                                 <button
@@ -208,53 +221,69 @@ export const Requirements = () => {
                     </div>
 
                     {/* Table */}
-                    <div className="bg-white rounded-lg shadow-md overflow-x-auto max-w-full">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">ID</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Cliente</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Requerimiento</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Fecha Solicitud</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Vacantes</th>
-                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {ReqsResponse?.requerimientos === undefined || ReqsResponse.requerimientos.length < 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                            No hay requerimientos disponibles.
-                                        </td>
+                    <div className="table-container">
+                        <div className="table-wrapper">
+                            <table className="table">
+                                <thead>
+                                    <tr className="table-header">
+                                        <th className="table-header-cell">ID</th>
+                                        <th className="table-header-cell">Cliente</th>
+                                        <th className="table-header-cell">Requerimiento</th>
+                                        <th className="table-header-cell">Fecha Solicitud</th>
+                                        <th className="table-header-cell">Estado</th>
+                                        <th className="table-header-cell">Vacantes</th>
+                                        <th className="table-header-cell">Acciones</th>
+                                        <th className="table-header-cell"></th>
                                     </tr>
-                                ) : (
-                                    ReqsResponse?.requerimientos.map((req) => (
-                                        <tr key={req.idRequerimiento}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.idRequerimiento}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.cliente}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.codigoRQ}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.fechaSolicitud}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.estado}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{req.vacantes}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <button
-                                                    onClick={() => handleAsignarClick(req.idRequerimiento)}
-                                                    disabled={req.idEstado === ESTADO_ATENDIDO}
-                                                    className={`btn ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
-                                                    Asignar
-                                                </button>
-                                                <button
-                                                    onClick={() => openDetallesRQModal(req)}
-                                                    className="btn btn-primary">
-                                                    Detalles
-                                                </button>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {(ReqsResponse?.requerimientos || []).length <= 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="table-empty">
+                                                No hay requerimientos disponibles.
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        ReqsResponse?.requerimientos?.map((req) => (
+                                            <tr key={req.idRequerimiento} className="table-row">
+                                                <td className="table-cell">{req.idRequerimiento}</td>
+                                                <td className="table-cell">{req.cliente}</td>
+                                                <td className="table-cell">{req.codigoRQ}</td>
+                                                <td className="table-cell">{req.fechaSolicitud}</td>
+                                                <td className="table-cell">{req.estado}</td>
+                                                <td className="table-cell">{req.vacantes}</td>
+                                                <td className="table-cell">
+                                                    <button
+                                                        onClick={() => handleAsignarClick(req.idRequerimiento)}
+                                                        disabled={req.idEstado === ESTADO_ATENDIDO}
+                                                        className={`btn btn-actions ${req.idEstado === ESTADO_ATENDIDO ? 'btn-disabled' : 'btn-blue'}`}>
+                                                        Asignar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openDetallesRQModal(req)}
+                                                        className="btn btn-actions btn-primary">
+                                                        Detalles
+                                                    </button>
+                                                </td>
+                                                <td className="table-cell">
+                                                    <div className="relative inline-block group">
+                                                        <img
+                                                            src={getAlertIconPath(req.idAlerta)}
+                                                            alt="icon estado alerta RQ"
+                                                            className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                                        />
+                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                            Vence: {req.fechaVencimiento}
+                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </Dashboard>

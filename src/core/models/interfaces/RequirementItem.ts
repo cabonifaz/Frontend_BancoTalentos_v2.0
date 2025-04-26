@@ -6,4 +6,8 @@ export interface RequirementItem {
     estado: string;
     idEstado: number;
     vacantes: number;
+    duracion: string;
+    fechaVencimiento: string;
+    modalidad: string;
+    idAlerta: number;
 }
