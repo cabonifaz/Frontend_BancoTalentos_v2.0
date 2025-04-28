@@ -266,17 +266,19 @@ export const Requirements = () => {
                                                     </button>
                                                 </td>
                                                 <td className="table-cell">
-                                                    <div className="relative inline-block group">
-                                                        <img
-                                                            src={getAlertIconPath(req.idAlerta)}
-                                                            alt="icon estado alerta RQ"
-                                                            className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                                                        />
-                                                        <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                                            Vence: {req.fechaVencimiento}
-                                                            <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                    {req?.idAlerta !== null && req?.idAlerta > 0 && (
+                                                        <div className="relative inline-block group">
+                                                            <img
+                                                                src={getAlertIconPath(req.idAlerta)}
+                                                                alt="icon estado alerta RQ"
+                                                                className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                                            />
+                                                            <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                                Vence: {req.fechaVencimiento}
+                                                                <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))
