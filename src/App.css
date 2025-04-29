@@ -114,6 +114,10 @@
   @apply accent-[var(--color-blue)] h-5 w-5 cursor-pointer;
 }
 
+.input-checkbox-readonly {
+  @apply accent-[var(--color-blue)] h-5 w-5 cursor-default;
+}
+
 .dropdown {
   @apply text-[#3f3f46] w-full border rounded-lg focus:outline-none cursor-pointer px-3 py-2;
 }

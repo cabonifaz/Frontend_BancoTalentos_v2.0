@@ -190,6 +190,85 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 ),
                             },
                             {
+                                label: "Cliente",
+                                children: (
+                                    <>
+                                        {/* Cliente */}
+                                        <div className="flex items-center">
+                                            <label className="text-sm font-medium text-gray-700">Cliente:</label>
+                                            <select
+                                                {...register("idCliente", { valueAsNumber: true })}
+                                                disabled={true}
+                                                aria-readonly={true}
+                                                className="px-3 py-2 border-none outline-none appearance-none"
+                                            >
+                                                {clientes.map((cliente) => (
+                                                    <option key={cliente.idCliente} value={cliente.idCliente}>
+                                                        {cliente.razonSocial}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        {errors.idCliente && (
+                                            <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                        )}
+
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="text-sm font-medium text-gray-700">Lista de contactos</h2>
+                                        </div>
+
+                                        <div className="mt-4 max-h-[30vh] overflow-y-auto">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th scope="col" className="table-header-cell">ID</th>
+                                                                <th scope="col" className="table-header-cell">Nombres</th>
+                                                                <th scope="col" className="table-header-cell">Apellidos</th>
+                                                                <th scope="col" className="table-header-cell">Celular</th>
+                                                                <th scope="col" className="table-header-cell">Correo</th>
+                                                                <th scope="col" className="table-header-cell">Cargo</th>
+                                                                <th scope="col" className="table-header-cell">Asignado</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {(requirementResponse?.requerimiento?.lstRqContactos || []).length <= 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={8} className="table-empty">
+                                                                        No hay contactos disponibles.
+                                                                    </td>
+                                                                </tr>
+                                                            ) : (requirementResponse?.requerimiento?.lstRqContactos?.map((contacto) => (
+                                                                <tr key={contacto.idClienteContacto} className="table-row">
+                                                                    <td className="table-cell">{contacto.idClienteContacto}</td>
+                                                                    <td className="table-cell">{contacto.nombre}</td>
+                                                                    <td className="table-cell">{contacto.apellidoPaterno + ' ' + contacto.apellidoMaterno}</td>
+                                                                    <td className="table-cell">{contacto.telefono}</td>
+                                                                    <td className="table-cell">{contacto.correo}</td>
+                                                                    <td className="table-cell">{contacto.cargo}</td>
+                                                                    <td className="table-cell">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            name="contact-asig"
+                                                                            id="contact-asig"
+                                                                            checked={contacto.asignado === 1}
+                                                                            readOnly={true}
+                                                                            className="input-checkbox-readonly"
+                                                                        />
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )
+                            },
+                            {
                                 label: (
                                     <p className="flex items-center gap-2">
                                         Vacantes

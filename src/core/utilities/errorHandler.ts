@@ -5,7 +5,7 @@ export const handleError = (
     error: Error,
     enqueueSnackbar: (message: SnackbarMessage, options?: OptionsObject) => void
 ) => {
-    enqueueSnackbar(error.message || "Error en la solicitud", { variant: 'error' });
+    enqueueSnackbar("Error en la solicitud", { variant: 'error' });
 };
 
 interface HandleResponseProps {

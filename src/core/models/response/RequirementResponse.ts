@@ -1,4 +1,5 @@
 import { ReqArchivo } from "../interfaces/ReqArchivo";
+import { ReqContacto } from "../interfaces/ReqContacto";
 import { ReqTalento } from "../interfaces/ReqTalento";
 import { ReqVacante } from "../interfaces/ReqVacante";
 
@@ -16,5 +17,6 @@ export interface RequirementResponse {
         lstRqVacantes: ReqVacante[];
         lstRqTalento: ReqTalento[];
         lstRqArchivo: ReqArchivo[];
+        lstRqContactos: ReqContacto[];
     }
 }

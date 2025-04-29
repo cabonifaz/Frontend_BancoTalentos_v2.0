@@ -164,7 +164,7 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({ talent, onSelect, i
     <button
       onClick={() => onSelect(talent, perfil, idPerfil)}
       disabled={isSelected || !isPerfilSet}
-      className={`btn ${isSelected ? 'btn-disabled' : 'btn-blue'}`}
+      className={`btn ${isSelected || !isPerfilSet ? 'btn-disabled' : 'btn-blue'}`}
     >
       {isSelected ? 'Seleccionado' : 'Seleccionar'}
     </button>
