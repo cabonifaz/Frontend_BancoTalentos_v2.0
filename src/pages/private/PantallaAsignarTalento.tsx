@@ -7,6 +7,7 @@ import { Dashboard } from './Dashboard';
 import { ESTADO_ATENDIDO } from '../../core/utilities/constants';
 import { Loading } from '../../core/components';
 import { ReqVacante } from '../../core/models';
+import { format, parseISO } from 'date-fns';
 
 // Types
 type TalentoType = {
@@ -397,8 +398,8 @@ const TalentTable: React.FC = () => {
 
         // Formatear fecha
         if (response.data.requerimiento.fechaSolicitud) {
-          const date = new Date(response.data.requerimiento.fechaSolicitud);
-          setDateFormatted(date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+          const date = response.data.requerimiento.fechaSolicitud;
+          setDateFormatted(format(parseISO(date), 'dd/MM/yyyy'));
         }
 
         // Inicializar talentos desde API

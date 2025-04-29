@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useEffect, useMemo, useState } from "react";
 import { useApi } from '../../hooks/useApi';
 import { enqueueSnackbar } from 'notistack';
@@ -59,8 +59,8 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
         if (requirementResponse?.requerimiento) {
             setValue("idCliente", requirementResponse.requerimiento.idCliente.toString());
             setValue("codigoRQ", requirementResponse.requerimiento.codigoRQ);
-            setValue("fechaSolicitud", format(new Date(requirementResponse.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
-            setValue("fechaVencimiento", format(new Date(requirementResponse.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
+            setValue("fechaSolicitud", format(parseISO(requirementResponse.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
+            setValue("fechaVencimiento", format(parseISO(requirementResponse.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
             setValue("descripcion", requirementResponse.requerimiento.descripcion);
             setValue("idEstado", requirementResponse.requerimiento.idEstado);
             setValue("vacantes", requirementResponse.requerimiento.vacantes);
