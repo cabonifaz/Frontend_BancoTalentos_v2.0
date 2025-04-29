@@ -11,6 +11,7 @@ export interface RequirementResponse {
         cliente: string;
         codigoRQ: string;
         fechaSolicitud: string;
+        fechaVencimiento: string;
         descripcion: string;
         idEstado: number;
         vacantes: number;

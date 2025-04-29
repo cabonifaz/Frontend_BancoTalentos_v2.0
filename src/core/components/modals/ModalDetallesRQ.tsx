@@ -60,6 +60,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
             setValue("idCliente", requirementResponse.requerimiento.idCliente.toString());
             setValue("codigoRQ", requirementResponse.requerimiento.codigoRQ);
             setValue("fechaSolicitud", format(new Date(requirementResponse.requerimiento.fechaSolicitud), 'yyyy-MM-dd'));
+            setValue("fechaVencimiento", format(new Date(requirementResponse.requerimiento.fechaVencimiento), 'yyyy-MM-dd'));
             setValue("descripcion", requirementResponse.requerimiento.descripcion);
             setValue("idEstado", requirementResponse.requerimiento.idEstado);
             setValue("vacantes", requirementResponse.requerimiento.vacantes);
@@ -182,6 +183,20 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     </div>
                                                     {errors.idEstado && (
                                                         <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idEstado.message}</p>
+                                                    )}
+
+                                                    {/* Fecha de vencimiento */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Fecha de Vencimiento:</label>
+                                                        <input
+                                                            {...register("fechaVencimiento")}
+                                                            type="date"
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 input"
+                                                        />
+                                                    </div>
+                                                    {errors.fechaVencimiento && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.fechaVencimiento.message}</p>
                                                     )}
                                                 </div>
                                             </form>
