@@ -561,8 +561,8 @@ export const AddTalent = () => {
                                     control={control}
                                     render={({ field }) => (
                                         <div className="flex flex-col my-4 gap-2">
-                                            <label className="text-wrap max-w-[11rem]">
-                                                ¿Cuenta con equipo? <span className="text-red-500">*</span>
+                                            <label className="text-wrap max-w-[20rem]">
+                                                ¿Cuenta con equipo (PC o Laptop)? <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex items-center gap-6">
                                                 <label className="flex items-center cursor-pointer">
