@@ -3,7 +3,7 @@ export interface AddTalentParams {
     telefono?: string;
     nombres?: string;
     apellidoPaterno?: string;
-    apellidoMaterno?: string;
+    apellidoMaterno?: string | null;
     email?: string;
     linkedin?: string;
     github?: string;

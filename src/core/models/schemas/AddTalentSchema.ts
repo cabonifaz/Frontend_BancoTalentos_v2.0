@@ -7,7 +7,7 @@ export const AddTalentSchema = z.object({
         .regex(/^\d+$/, { message: "El Doc. de identidad solo puede contener números" }),
     nombres: z.string().min(1, "El nombre es requerido"),
     apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
-    apellidoMaterno: z.string().min(1, "El apellido materno es requerido"),
+    apellidoMaterno: z.string().optional().nullable(),
     email: z.string().email("Correo electrónico inválido"),
     codigoPais: z.number().min(1, "Seleccione un país"),
     telefono: z.string().min(1, "El número de teléfono es requerido"),
@@ -37,13 +37,13 @@ export const AddTalentSchema = z.object({
     idMoneda: z.number().min(1, "Seleccione una moneda"),
     habilidadesTecnicas: z.array(
         z.object({
-            idHabilidad: z.number().min(1, "Seleccione una habilidad técnica"),
-            anios: z.number().min(1, "Los años de experiencia son requeridos"),
+            idHabilidad: z.number({ invalid_type_error: "Seleccione una habilidad técnica" }).min(1, "Seleccione una habilidad técnica"),
+            anios: z.number({ invalid_type_error: "Los años de experiencia son requeridos" }).min(1, "Los años de experiencia son requeridos"),
         })
     ),
     habilidadesBlandas: z.array(
         z.object({
-            idHabilidad: z.number().min(1, "Seleccione una habilidad blanda"),
+            idHabilidad: z.number({ invalid_type_error: "Seleccione una habilidad blanda" }).min(1, "Seleccione una habilidad blanda"),
         })
     ),
     experiencias: z.array(

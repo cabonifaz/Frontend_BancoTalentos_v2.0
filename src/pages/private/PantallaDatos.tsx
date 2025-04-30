@@ -76,7 +76,16 @@ const PantallaDatos = () => {
     }, [talentoDetails, reset]);
 
     const saveData: SubmitHandler<DataFormType> = async (data) => {
-        saveTalent({ idTalento: talento.idTalento, APELLIDO_PATERNO: talento.apellidoPaterno, ...data }).then((response) => {
+        const { apellidoMaterno, ...cleanData } = data;
+
+        const payload: SaveTalentFMIParams = {
+            idTalento: talento.idTalento,
+            APELLIDO_PATERNO: talento.apellidoPaterno,
+            apellidoMaterno: apellidoMaterno || "",
+            ...cleanData
+        };
+
+        saveTalent(payload).then((response) => {
             if (response.data.idTipoMensaje === 2) {
                 goBack();
             }
@@ -97,7 +106,7 @@ const PantallaDatos = () => {
                     </h3>
                     <InputForm required={true} name="nombres" control={control} label="Nombres" error={errors.nombres} />
                     <InputForm required={true} name="apellidoPaterno" control={control} label="Apellido Paterno" error={errors.apellidoPaterno} />
-                    <InputForm required={true} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
+                    <InputForm required={false} name="apellidoMaterno" control={control} label="Apellido Materno" error={errors.apellidoMaterno} />
                     <InputForm required={true} name="telefono" control={control} label="Contacto" error={errors.telefono} />
                     <InputForm required={true} name="dni" control={control} label="Doc. Identidad" type="text" error={errors.dni} />
                     <InputForm required={true} name="email" control={control} label="Correo personal" error={errors.email} />

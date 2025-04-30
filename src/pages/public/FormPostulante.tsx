@@ -161,7 +161,7 @@ export const FormPostulante = () => {
                             idTalento: idTalent,
                             nombres: data.nombres,
                             apellidoPaterno: data.apellidoPaterno,
-                            apellidoMaterno: data.apellidoMaterno,
+                            apellidoMaterno: data?.apellidoMaterno || "",
                             telefono: data.telefono,
                             dni: data?.dni || "",
                             email: data.email,
@@ -381,7 +381,7 @@ export const FormPostulante = () => {
                                             {errors.apellidoPaterno && <p className="text-red-400 text-sm">{errors.apellidoPaterno.message}</p>}
                                         </div>
                                         <div className="flex flex-col gap-2">
-                                            <label htmlFor="lastname-s" className="text-[#636d7c] text-sm px-1">Apellido materno<span className="text-red-400">*</span></label>
+                                            <label htmlFor="lastname-s" className="text-[#636d7c] text-sm px-1">Apellido materno</label>
                                             <input {...register("apellidoMaterno")} id="lastname-s" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido materno" />
                                             {errors.apellidoMaterno && <p className="text-red-400 text-sm">{errors.apellidoMaterno.message}</p>}
                                         </div>

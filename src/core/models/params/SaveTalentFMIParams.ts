@@ -3,7 +3,7 @@ export interface SaveTalentFMIParams {
     APELLIDO_PATERNO: string;
     nombres: string;
     apellidoPaterno: string;
-    apellidoMaterno: string;
+    apellidoMaterno: string | null;
     telefono: string;
     dni: string;
     email: string;

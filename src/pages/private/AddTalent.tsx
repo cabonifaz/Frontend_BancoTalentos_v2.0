@@ -324,7 +324,7 @@ export const AddTalent = () => {
                             <div className="px-8 overflow-y-auto w-full md:w-[40rem] md:h-[70vh]">
                                 {/* files */}
                                 <div>
-                                    <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
+                                    <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae<span className="text-red-500">*</span></h3>
                                     <FileInput
                                         register={register}
                                         errors={errors}
@@ -334,7 +334,7 @@ export const AddTalent = () => {
                                         onChange={(file) => handleFileChange("cv", file)}
                                     />
                                     {cvFileErrors !== "" && (<p className="text-red-400 text-sm">{cvFileErrors}</p>)}
-                                    <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+                                    <h3 className="text-[#3f3f46] text-lg">Foto de perfil<span className="text-red-500">*</span></h3>
                                     <FileInput
                                         register={register}
                                         errors={errors}
@@ -349,17 +349,17 @@ export const AddTalent = () => {
                                 <div className="*:mb-4">
                                     <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Doc. Identidad</label>
+                                        <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Doc. Identidad<span className="text-red-500">*</span></label>
                                         <input {...register("dni")} id="dni" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Doc. Identidad" />
                                         {errors.dni && <p className="text-red-400 text-sm">{errors.dni.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="name" className="text-[#636d7c] text-sm px-1">Nombres</label>
+                                        <label htmlFor="name" className="text-[#636d7c] text-sm px-1">Nombres<span className="text-red-500">*</span></label>
                                         <input {...register("nombres")} id="name" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Nombres" />
                                         {errors.nombres && <p className="text-red-400 text-sm">{errors.nombres.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="lastname-f" className="text-[#636d7c] text-sm px-1">Apellido paterno</label>
+                                        <label htmlFor="lastname-f" className="text-[#636d7c] text-sm px-1">Apellido paterno<span className="text-red-500">*</span></label>
                                         <input {...register("apellidoPaterno")} id="lastname-f" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Apellido paterno" />
                                         {errors.apellidoPaterno && <p className="text-red-400 text-sm">{errors.apellidoPaterno.message}</p>}
                                     </div>
@@ -369,7 +369,7 @@ export const AddTalent = () => {
                                         {errors.apellidoMaterno && <p className="text-red-400 text-sm">{errors.apellidoMaterno.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="countrycode" className="text-[#636d7c] text-sm px-1">Número de Celular</label>
+                                        <label htmlFor="countrycode" className="text-[#636d7c] text-sm px-1">Número de Celular<span className="text-red-500">*</span></label>
                                         <select
                                             id="countrycode"
                                             value={selectedCountryPhone || ""}
@@ -393,22 +393,22 @@ export const AddTalent = () => {
                                         {errors.telefono && <p className="text-red-400 text-sm">{errors.telefono.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="email" className="text-[#636d7c] text-sm px-1">Correo electrónico</label>
+                                        <label htmlFor="email" className="text-[#636d7c] text-sm px-1">Correo electrónico<span className="text-red-500">*</span></label>
                                         <input {...register("email")} type="email" id="email" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Correo electrónico" />
                                         {errors.email && <p className="text-red-400 text-sm">{errors.email.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="description" className="text-[#636d7c] text-sm px-1">Descripción</label>
+                                        <label htmlFor="description" className="text-[#636d7c] text-sm px-1">Descripción<span className="text-red-500">*</span></label>
                                         <textarea {...register("descripcion")} id="description" className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Descripción"></textarea>
                                         {errors.descripcion && <p className="text-red-400 text-sm">{errors.descripcion.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="puestoAnt" className="text-[#636d7c] text-sm px-1">Puesto actual</label>
+                                        <label htmlFor="puestoAnt" className="text-[#636d7c] text-sm px-1">Puesto actual<span className="text-red-500">*</span></label>
                                         <input {...register("puesto")} id="puestoAnt" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Puesto actual" />
                                         {errors.puesto && <p className="text-red-400 text-sm">{errors.puesto.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="availability" className="text-[#636d7c] text-sm px-1">Disponibilidad</label>
+                                        <label htmlFor="availability" className="text-[#636d7c] text-sm px-1">Disponibilidad<span className="text-red-500">*</span></label>
                                         <input {...register("disponibilidad")} id="availability" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Disponibilidad" />
                                         {errors.disponibilidad && <p className="text-red-400 text-sm">{errors.disponibilidad.message}</p>}
                                     </div>
@@ -417,7 +417,7 @@ export const AddTalent = () => {
                                 <div className="*:mb-4">
                                     <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Locación</h3>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="country" className="text-[#636d7c] text-sm px-1">País</label>
+                                        <label htmlFor="country" className="text-[#636d7c] text-sm px-1">País<span className="text-red-500">*</span></label>
                                         <select
                                             id="country"
                                             value={selectedCountry || ""}
@@ -434,7 +434,7 @@ export const AddTalent = () => {
                                         {errors.idPais && <p className="text-red-400 text-sm">{errors.idPais.message}</p>}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <label htmlFor="city" className="text-[#636d7c] text-sm px-1">Ciudad</label>
+                                        <label htmlFor="city" className="text-[#636d7c] text-sm px-1">Ciudad<span className="text-red-500">*</span></label>
                                         <select
                                             id="city"
                                             value={selectedCity || ""}
@@ -469,22 +469,22 @@ export const AddTalent = () => {
                                     <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial</label>
+                                            <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-500">*</span></label>
                                             <NumberInput register={register} name="montoInicialRxH" error={errors.montoInicialRxH?.message} />
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final</label>
+                                            <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-500">*</span></label>
                                             <NumberInput register={register} name="montoFinalRxH" error={errors.montoFinalRxH?.message} />
                                         </div>
                                     </div>
                                     <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial</label>
+                                            <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-500">*</span></label>
                                             <NumberInput register={register} name="montoInicialPlanilla" error={errors.montoInicialPlanilla?.message} />
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final</label>
+                                            <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-500">*</span></label>
                                             <NumberInput register={register} name="montoFinalPlanilla" error={errors.montoFinalPlanilla?.message} />
                                         </div>
                                     </div>
