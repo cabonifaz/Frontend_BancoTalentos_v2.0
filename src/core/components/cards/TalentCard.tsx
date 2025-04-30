@@ -26,9 +26,9 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
                 </p>
                 <div className="text-sm text-[#71717A]">
                     <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">
-                        <p>{`RxH ${talent.moneda} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
+                        <p>{`RxH ${talent?.moneda || ""} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
                         <p className="block md:hidden xl:block">|</p>
-                        <p>{`Planilla ${talent.moneda} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                        <p>{`Planilla ${talent?.moneda || ""} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
                     </div>
                 </div>
             </div>

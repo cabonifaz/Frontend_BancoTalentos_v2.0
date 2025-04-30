@@ -73,7 +73,7 @@ export const EducationsSection = <F extends FieldValues,>({ register, errors, fi
                         </div>
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`carrera-${index}`} className="text-[#71717A] text-sm px-1">Carrera<span className="text-red-400">*</span></label>
+                        <label htmlFor={`carrera-${index}`} className="text-[#71717A] text-sm px-1">Carrera / Curso / Diplomado<span className="text-red-400">*</span></label>
                         <input
                             id={`carrera-${index}`}
                             type="text"
