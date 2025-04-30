@@ -88,7 +88,7 @@ export const AddTalentSchema = z.object({
             idNivel: z.number().min(1, "Seleccione un nivel"),
             estrellas: z.number().min(0, "Las estrellas son requeridas"),
         })
-    ),
+    ).optional().default([]),
     cv: z.any(),
     foto: z.any(),
     tieneEquipo: z.boolean({

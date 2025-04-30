@@ -12,7 +12,7 @@ interface LanguagesSectionProps<F extends FieldValues> extends DynamicSectionPro
 export const LanguagesSection = <F extends FieldValues,>({ register, errors, fields, idiomas, nivelesIdioma, onAdd, onRemove, handleChange, handleStarChange }: LanguagesSectionProps<F>) => {
 
     return (
-        <DynamicSection title="Idiomas" onAdd={onAdd} onRemove={onRemove}>
+        <DynamicSection title="Idiomas" onAdd={onAdd} onRemove={onRemove} canRemoveFirst={true}>
             {fields.map((language, index) => (
                 <div key={index}>
                     <div className="flex flex-col my-2">

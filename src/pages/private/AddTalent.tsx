@@ -37,7 +37,7 @@ export const AddTalent = () => {
     const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([{ ...initialSoftSkill }]);
     const [experiences, setExperiences] = useState<AddExperience[]>([{ ...initialExperience }]);
     const [educations, setEducations] = useState<AddEducation[]>([{ ...initialEducation }]);
-    const [languages, setLanguages] = useState<AddLanguage[]>([{ ...initialLanguage }]);
+    const [languages, setLanguages] = useState<AddLanguage[]>([]);
 
     const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
     const [selectedCity, setSelectedCity] = useState<number | null>(null);
