@@ -21,20 +21,20 @@ export const AddPostulanteSchema = z.object({
     montoInicialPlanilla: z.number({
         required_error: "El monto inicial planilla es requerido",
         invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto inicial es requerido"),
+    }).default(0).optional(),
     montoFinalPlanilla: z.number({
         required_error: "El monto final planilla es requerido",
         invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto final es requerido"),
+    }).default(0).optional(),
     montoInicialRxH: z.number({
         required_error: "El monto inicial RxH es requerido",
         invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto inicial es requerido"),
+    }).default(0).optional(),
     montoFinalRxH: z.number({
         required_error: "El monto final RxH es requerido",
         invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto final es requerido"),
-    idMoneda: z.number().min(1, "Seleccione una moneda"),
+    }).default(0).optional(),
+    idMoneda: z.number().default(0).optional().nullable(),
     habilidadesTecnicas: z.array(
         z.object({
             idHabilidad: z.number().min(1, "Seleccione una habilidad técnica"),

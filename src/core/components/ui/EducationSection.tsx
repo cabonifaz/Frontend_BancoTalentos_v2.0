@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { AddEducation, DynamicSectionProps } from "../../models";
 import { DynamicSection } from "./DynamicSection";
-import { UseFormSetValue } from "react-hook-form";
-import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { FieldValues, UseFormSetValue } from "react-hook-form";
 
-interface EducationsSectionProps extends DynamicSectionProps<AddEducation> {
-    fields: AddEducation[];
-    setValue: UseFormSetValue<AddTalentType>;
+interface EducationsSectionProps<F extends FieldValues> extends DynamicSectionProps<F, AddEducation> {
+    setValue: UseFormSetValue<F>;
     handleChange: (index: number, field: keyof AddEducation, value: string | boolean) => void;
 }
 
-export const EducationsSection = ({ register, errors, fields, setValue, onAdd, onRemove, handleChange }: EducationsSectionProps) => {
+export const EducationsSection = <F extends FieldValues,>({ register, errors, fields, setValue, onAdd, onRemove, handleChange }: EducationsSectionProps<F>) => {
     const [defaultEntities, setDefaultEntities] = useState<{ [key: number]: boolean }>({});
     const [currentDates, setCurrentDates] = useState<{ [key: number]: boolean }>({});
 
@@ -24,11 +22,11 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
 
         if (isChecked) {
             handleChange(index, 'institucion', 'Fractal');
-            setValue(`educaciones.${index}.institucion`, "Fractal");
+            setValue(`educaciones.${index}.institucion` as any, "Fractal" as any);
             return;
         }
         handleChange(index, 'institucion', '');
-        setValue(`educaciones.${index}.institucion`, "Fractal");
+        setValue(`educaciones.${index}.institucion` as any, "" as any);
     };
 
     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -53,15 +51,15 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         <input
                             type="text"
                             id={`institucion-${index}`}
-                            {...register(`educaciones.${index}.institucion`)}
+                            {...register(`educaciones.${index}.institucion` as any)}
                             value={education.institucion}
                             readOnly={defaultEntities[index]}
                             onChange={(e) => handleChange(index, 'institucion', e.target.value)}
                             placeholder="Nombre de la institución"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                        {errors.educaciones?.[index]?.institucion && (
-                            <p className="text-red-400 text-sm">{errors.educaciones[index]?.institucion?.message}</p>
+                        {(errors as any).educaciones?.[index]?.institucion && (
+                            <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.institucion?.message}</p>
                         )}
 
                         <div className="px-1 flex items-center gap-2 mt-2 w-fit">
@@ -79,14 +77,14 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         <input
                             id={`carrera-${index}`}
                             type="text"
-                            {...register(`educaciones.${index}.carrera`)}
+                            {...register(`educaciones.${index}.carrera` as any)}
                             value={education.carrera}
                             onChange={(e) => handleChange(index, 'carrera', e.target.value)}
                             placeholder="Carrera"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                        {errors.educaciones?.[index]?.carrera && (
-                            <p className="text-red-400 text-sm">{errors.educaciones[index]?.carrera?.message}</p>
+                        {(errors as any).educaciones?.[index]?.carrera && (
+                            <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.carrera?.message}</p>
                         )}
 
                     </div>
@@ -95,14 +93,14 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                         <input
                             id={`grado-${index}`}
                             type="text"
-                            {...register(`educaciones.${index}.grado`)}
+                            {...register(`educaciones.${index}.grado` as any)}
                             value={education.grado}
                             onChange={(e) => handleChange(index, 'grado', e.target.value)}
                             placeholder="Grado"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                        {errors.educaciones?.[index]?.grado && (
-                            <p className="text-red-400 text-sm">{errors.educaciones[index]?.grado?.message}</p>
+                        {(errors as any).educaciones?.[index]?.grado && (
+                            <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.grado?.message}</p>
                         )}
                     </div>
                     <div className="flex gap-4">
@@ -111,20 +109,20 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                             <input
                                 type="date"
                                 id={`initDateEducation-${index}`}
-                                {...register(`educaciones.${index}.fechaInicio`)}
+                                {...register(`educaciones.${index}.fechaInicio` as any)}
                                 value={education.fechaInicio}
                                 onChange={(e) => handleChange(index, 'fechaInicio', e.target.value)}
                                 className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                            {errors.educaciones?.[index]?.fechaInicio && (
-                                <p className="text-red-400 text-sm">{errors.educaciones[index]?.fechaInicio?.message}</p>
+                            {(errors as any).educaciones?.[index]?.fechaInicio && (
+                                <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.fechaInicio?.message}</p>
                             )}
 
                             <div className="px-1 flex items-center gap-2 mt-2 w-fit">
                                 <input
                                     type="checkbox"
                                     id={`currentDate-${index}`}
-                                    {...register(`educaciones.${index}.flActualidad`)}
+                                    {...register(`educaciones.${index}.flActualidad` as any)}
                                     checked={currentDates[index] || false}
                                     onChange={(e) => handleEndDateChange(e, index)}
                                     className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
@@ -137,13 +135,13 @@ export const EducationsSection = ({ register, errors, fields, setValue, onAdd, o
                                 type="date"
                                 id={`endDateEducation-${index}`}
                                 disabled={currentDates[index]}
-                                {...register(`educaciones.${index}.fechaFin`)}
+                                {...register(`educaciones.${index}.fechaFin` as any)}
                                 value={education.fechaFin}
                                 onChange={(e) => handleChange(index, 'fechaFin', e.target.value)}
                                 className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                            {errors.educaciones?.[index]?.fechaFin && (
-                                <p className="text-red-400 text-sm">{errors.educaciones[index]?.fechaFin?.message}</p>
+                            {(errors as any).educaciones?.[index]?.fechaFin && (
+                                <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.fechaFin?.message}</p>
                             )}
                         </div>
                     </div>

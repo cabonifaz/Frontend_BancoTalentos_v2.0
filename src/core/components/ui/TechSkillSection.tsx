@@ -1,14 +1,14 @@
+import { FieldValues } from "react-hook-form";
 import { DynamicSection } from "..";
 import { AddTechSkill, DynamicSectionProps, Param } from "../../models";
 import { ChangeEvent } from "react";
 
-interface TechSkillsSectionProps extends DynamicSectionProps<AddTechSkill> {
-    fields: AddTechSkill[];
+interface TechSkillsSectionProps<F extends FieldValues> extends DynamicSectionProps<F, AddTechSkill> {
     habilidadesTecnicas: Param[];
     handleChange: (index: number, field: keyof AddTechSkill, value: number) => void;
 }
 
-export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnicas, onAdd, onRemove, handleChange }: TechSkillsSectionProps) => {
+export const TechSkillsSection = <F extends FieldValues,>({ register, errors, fields, habilidadesTecnicas, onAdd, onRemove, handleChange }: TechSkillsSectionProps<F>) => {
     // Función para validar y manejar el cambio en años de experiencia
     const handleYearsChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
         const inputValue = e.target.value;
@@ -32,7 +32,7 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                         </label>
                         <select
                             id="techSkill"
-                            {...register(`habilidadesTecnicas.${index}.idHabilidad`, { valueAsNumber: true })}
+                            {...register(`habilidadesTecnicas.${index}.idHabilidad` as any, { valueAsNumber: true })}
                             value={skill.idHabilidad}
                             onChange={(e) => handleChange(index, 'idHabilidad', Number(e.target.value))}
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
@@ -44,8 +44,8 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                             ))}
                         </select>
 
-                        {errors.habilidadesTecnicas?.[index]?.idHabilidad && (
-                            <p className="text-red-400 text-sm">{errors.habilidadesTecnicas[index]?.idHabilidad?.message}</p>
+                        {(errors as any).habilidadesTecnicas?.[index]?.idHabilidad && (
+                            <p className="text-red-400 text-sm">{(errors as any).habilidadesTecnicas[index]?.idHabilidad?.message}</p>
                         )}
                     </div>
                     <div className="flex flex-col my-2">
@@ -54,7 +54,7 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                         </label>
                         <input
                             id="skillYears"
-                            {...register(`habilidadesTecnicas.${index}.anios`, { valueAsNumber: true })}
+                            {...register(`habilidadesTecnicas.${index}.anios` as any, { valueAsNumber: true })}
                             type="text"
                             value={skill.anios || ''}
                             onChange={(e) => handleYearsChange(e, index)}
@@ -64,8 +64,8 @@ export const TechSkillsSection = ({ register, errors, fields, habilidadesTecnica
                             placeholder="Nro. años"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
 
-                        {errors.habilidadesTecnicas?.[index]?.anios && (
-                            <p className="text-red-400 text-sm">{errors.habilidadesTecnicas[index]?.anios?.message}</p>
+                        {(errors as any).habilidadesTecnicas?.[index]?.anios && (
+                            <p className="text-red-400 text-sm">{(errors as any).habilidadesTecnicas[index]?.anios?.message}</p>
                         )}
                     </div>
                 </div>

@@ -325,7 +325,7 @@ export const AddTalent = () => {
                                 {/* files */}
                                 <div>
                                     <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae<span className="text-red-500">*</span></h3>
-                                    <FileInput
+                                    <FileInput<AddTalentType>
                                         register={register}
                                         errors={errors}
                                         name="cv"
@@ -335,7 +335,7 @@ export const AddTalent = () => {
                                     />
                                     {cvFileErrors !== "" && (<p className="text-red-400 text-sm">{cvFileErrors}</p>)}
                                     <h3 className="text-[#3f3f46] text-lg">Foto de perfil<span className="text-red-500">*</span></h3>
-                                    <FileInput
+                                    <FileInput<AddTalentType>
                                         register={register}
                                         errors={errors}
                                         name="foto"
@@ -385,7 +385,7 @@ export const AddTalent = () => {
                                         </select>
                                         {errors.codigoPais && <p className="text-red-400 text-sm">{errors.codigoPais.message}</p>}
                                         <div className="flex">
-                                            <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center">
+                                            <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24">
                                                 {selectedCountryPhone ? `${paises.find((p) => p.num1 === selectedCountryPhone)?.string3 || "00"}` : "+00"}
                                             </p>
                                             <input {...register("telefono")} id="phone" type="text" className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]" />
@@ -490,7 +490,7 @@ export const AddTalent = () => {
                                     </div>
                                 </div>
                                 {/* Tech skills */}
-                                <TechSkillsSection
+                                <TechSkillsSection<AddTalentType>
                                     register={register}
                                     errors={errors}
                                     fields={technicalSkills}
@@ -500,7 +500,7 @@ export const AddTalent = () => {
                                     handleChange={handleSkillChange}
                                 />
                                 {/* Soft skills */}
-                                <SoftSkillsSection
+                                <SoftSkillsSection<AddTalentType>
                                     register={register}
                                     errors={errors}
                                     fields={softSkills}
@@ -510,7 +510,7 @@ export const AddTalent = () => {
                                     handleChange={handleSoftSkillChange}
                                 />
                                 {/* Experience */}
-                                <ExperiencesSection
+                                <ExperiencesSection<AddTalentType>
                                     register={register}
                                     errors={errors}
                                     fields={experiences}
@@ -520,7 +520,7 @@ export const AddTalent = () => {
                                     handleChange={handleExperienceChange}
                                 />
                                 {/* Education */}
-                                <EducationsSection
+                                <EducationsSection<AddTalentType>
                                     register={register}
                                     errors={errors}
                                     fields={educations}
@@ -530,7 +530,7 @@ export const AddTalent = () => {
                                     handleChange={handleEducationChange}
                                 />
                                 {/* Languages */}
-                                <LanguagesSection
+                                <LanguagesSection<AddTalentType>
                                     register={register}
                                     errors={errors}
                                     fields={languages}
@@ -565,19 +565,19 @@ export const AddTalent = () => {
                                                 ¿Cuenta con equipo? <span className="text-red-500">*</span>
                                             </label>
                                             <div className="flex items-center gap-6">
-                                                <label className="flex items-center">
+                                                <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="radio"
-                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                                         checked={field.value === true}
                                                         onChange={() => field.onChange(true)}
                                                     />
                                                     <span className="ml-2 text-gray-700">Sí</span>
                                                 </label>
-                                                <label className="flex items-center">
+                                                <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="radio"
-                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                                        className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                                         checked={field.value === false}
                                                         onChange={() => field.onChange(false)}
                                                     />

@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { AddTalentFile, DynamicSectionProps } from "../../models";
 import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 
-interface FileInputProps extends Omit<DynamicSectionProps<AddTalentFile>, "fields" | "onAdd" | "onRemove" | "handleChange"> {
+interface FileInputProps<F extends FieldValues> {
+    register: UseFormRegister<F>;
+    errors: FieldErrors<F>;
     initialText: string;
     name: keyof AddTalentType;
     acceptedTypes?: string;
     onChange: (file: File | null) => void;
 }
 
-export const FileInput = ({ register, errors, name, initialText, acceptedTypes, onChange }: FileInputProps) => {
+export const FileInput = <F extends FieldValues,>({ register, errors, name, initialText, acceptedTypes, onChange }: FileInputProps<F>) => {
     const [fileName, setFileName] = useState<string | null>(null);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +38,7 @@ export const FileInput = ({ register, errors, name, initialText, acceptedTypes, 
                     {/* Input de archivo */}
                     <input
                         type="file"
-                        {...register(name)}
+                        {...register(name as any)}
                         accept={acceptedTypes}
                         onChange={handleFileChange}
                         className="h-full w-full opacity-0 cursor-pointer"

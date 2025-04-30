@@ -7,12 +7,10 @@ import { isDirty, isValid } from "zod";
 import { Loading, EducationsSection, ExperiencesSection, FileInput, LanguagesSection, SoftSkillsSection, TechSkillsSection } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
 import { AddTechSkill, initialTechnicalSkill, AddSoftSkill, initialSoftSkill, AddExperience, initialExperience, AddEducation, initialEducation, AddLanguage, initialLanguage, AddTalentParams, BaseResponseFMI, AddPostulanteParams, InsertUpdateResponse, AddPostulanteSchema, AddPostulanteType } from "../../core/models";
-import { AddTalentSchema, AddTalentType } from "../../core/models/schemas/AddTalentSchema";
 import { addPostulanteService, addTalent } from "../../core/services/apiService";
 import { ARCHIVO_PDF, DOCUMENTO_CV, ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "../../core/utilities/constants";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
-import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const FormPostulante = () => {
     const registerRef = useRef(false);
@@ -80,12 +78,19 @@ export const FormPostulante = () => {
         },
     });
 
-    const { register, handleSubmit, setValue, control, formState: { errors }, reset } = useForm<AddTalentType>({
-        resolver: zodResolver(AddTalentSchema),
+    const { register, handleSubmit, setValue, control, formState: { errors }, reset } = useForm<AddPostulanteType>({
+        resolver: zodResolver(AddPostulanteSchema),
         mode: "onChange",
+        defaultValues: {
+            montoInicialPlanilla: 0,
+            montoFinalPlanilla: 0,
+            montoInicialRxH: 0,
+            montoFinalRxH: 0,
+            idMoneda: 0,
+        }
     });
 
-    const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
+    const onSubmit: SubmitHandler<AddPostulanteType> = async (data) => {
         setCvFileErrors("");
         setFotoFileErrors("");
 
@@ -109,7 +114,7 @@ export const FormPostulante = () => {
             return;
         }
 
-        const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
+        const { codigoPais, telefono, experiencias, educaciones, cv, foto, idMoneda, ...filterData } = data;
         const phone = countryCode.current?.textContent + ' ' + telefono.trim();
 
         const cleanExperiencias = experiencias.map((exp) => ({
@@ -130,6 +135,7 @@ export const FormPostulante = () => {
 
             const cleanData: AddTalentParams = {
                 telefono: phone,
+                idMoneda: (data.idMoneda === 0 || data.idMoneda === undefined) ? null : data.idMoneda,
                 ...filterData,
                 experiencias: cleanExperiencias,
                 educaciones: cleanEducaciones,
@@ -170,7 +176,7 @@ export const FormPostulante = () => {
                             fechaInicioLabores: null,
                             cargo: data.puesto,
                             remuneracion: null,
-                            idMoneda: data.idMoneda,
+                            idMoneda: (data.idMoneda === 0 || data.idMoneda === undefined) ? null : data.idMoneda,
                             idModalidad: null,
                             ubicacion: ubicacion,
                         }).then((response) => {
@@ -179,6 +185,22 @@ export const FormPostulante = () => {
                                 localStorage.removeItem("authToken");
                                 registerRef.current = true;
                                 reset();
+
+                                // Restablecer las secciones dinámicas
+                                setTechnicalSkills([{ ...initialTechnicalSkill }]);
+                                setSoftSkills([{ ...initialSoftSkill }]);
+                                setExperiences([{ ...initialExperience }]);
+                                setEducations([{ ...initialEducation }]);
+                                setLanguages([{ ...initialLanguage }]);
+
+                                // Restablecer los archivos
+                                setCvFile(null);
+                                setFotoFile(null);
+
+                                // Restablecer los países y ciudades seleccionados
+                                setSelectedCountry(0);
+                                setSelectedCity(0);
+                                setSelectedCountryPhone(0);
                             }
                         });
                     }
@@ -306,7 +328,7 @@ export const FormPostulante = () => {
     }, [languages, setValue]);
 
     // file
-    const handleFileChange = (field: keyof AddTalentType, file: File | null) => {
+    const handleFileChange = (field: keyof AddPostulanteType, file: File | null) => {
         if (field === "cv") {
             setCvFile(file);
         } else if (field === "foto") {
@@ -342,7 +364,7 @@ export const FormPostulante = () => {
                                     {/* files */}
                                     <div>
                                         <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
-                                        <FileInput
+                                        <FileInput<AddPostulanteType>
                                             register={register}
                                             errors={errors}
                                             name="cv"
@@ -352,7 +374,7 @@ export const FormPostulante = () => {
                                         />
                                         {cvFileErrors !== "" && (<p className="text-red-400 text-sm">{cvFileErrors}</p>)}
                                         <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
-                                        <FileInput
+                                        <FileInput<AddPostulanteType>
                                             register={register}
                                             errors={errors}
                                             name="foto"
@@ -366,7 +388,7 @@ export const FormPostulante = () => {
                                     <div className="*:mb-4">
                                         <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Datos</h3>
                                         <div className="flex flex-col gap-2">
-                                            <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Documento de identidad<span className="text-red-400">*</span></label>
+                                            <label htmlFor="dni" className="text-[#636d7c] text-sm px-1">Doc. Identidad<span className="text-red-400">*</span></label>
                                             <input {...register("dni")} id="dni" type="text" className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]" placeholder="Documento de identidad" />
                                             {errors.dni && <p className="text-red-400 text-sm">{errors.dni.message}</p>}
                                         </div>
@@ -402,7 +424,7 @@ export const FormPostulante = () => {
                                             </select>
                                             {errors.codigoPais && <p className="text-red-400 text-sm">{errors.codigoPais.message}</p>}
                                             <div className="flex">
-                                                <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center">
+                                                <p ref={countryCode} className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24">
                                                     {selectedCountryPhone ? `${paises.find((p) => p.num1 === selectedCountryPhone)?.string3 || "00"}` : "+00"}
                                                 </p>
                                                 <input {...register("telefono")} id="phone" type="text" className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]" />
@@ -468,46 +490,8 @@ export const FormPostulante = () => {
                                             {errors.idCiudad && <p className="text-red-400 text-sm">{errors.idCiudad.message}</p>}
                                         </div>
                                     </div>
-                                    {/* Salary */}
-                                    <div className="*:mb-4">
-                                        <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Banda salarial</h3>
-                                        <select
-                                            id="currency"
-                                            {...register("idMoneda", { valueAsNumber: true })}
-                                            className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                                            <option value={0}>Seleccione una moneda</option>
-                                            {monedas.map((moneda) => (
-                                                <option key={moneda.idParametro} value={moneda.num1}>
-                                                    {moneda.string1}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {errors.idMoneda && <p className="text-red-400 text-sm">{errors.idMoneda.message}</p>}
-                                        <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
-                                        <div className="flex flex-col sm:flex-row w-full gap-8">
-                                            <div className="flex flex-col sm:w-1/2">
-                                                <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-400">*</span></label>
-                                                <NumberInput register={register} name="montoInicialRxH" error={errors.montoInicialRxH?.message} />
-                                            </div>
-                                            <div className="flex flex-col sm:w-1/2">
-                                                <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-400">*</span></label>
-                                                <NumberInput register={register} name="montoFinalRxH" error={errors.montoFinalRxH?.message} />
-                                            </div>
-                                        </div>
-                                        <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
-                                        <div className="flex flex-col sm:flex-row w-full gap-8">
-                                            <div className="flex flex-col sm:w-1/2">
-                                                <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-400">*</span></label>
-                                                <NumberInput register={register} name="montoInicialPlanilla" error={errors.montoInicialPlanilla?.message} />
-                                            </div>
-                                            <div className="flex flex-col sm:w-1/2">
-                                                <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-400">*</span></label>
-                                                <NumberInput register={register} name="montoFinalPlanilla" error={errors.montoFinalPlanilla?.message} />
-                                            </div>
-                                        </div>
-                                    </div>
                                     {/* Tech skills */}
-                                    <TechSkillsSection
+                                    <TechSkillsSection<AddPostulanteType>
                                         register={register}
                                         errors={errors}
                                         fields={technicalSkills}
@@ -517,7 +501,7 @@ export const FormPostulante = () => {
                                         handleChange={handleSkillChange}
                                     />
                                     {/* Soft skills */}
-                                    <SoftSkillsSection
+                                    <SoftSkillsSection<AddPostulanteType>
                                         register={register}
                                         errors={errors}
                                         fields={softSkills}
@@ -527,7 +511,7 @@ export const FormPostulante = () => {
                                         handleChange={handleSoftSkillChange}
                                     />
                                     {/* Experience */}
-                                    <ExperiencesSection
+                                    <ExperiencesSection<AddPostulanteType>
                                         register={register}
                                         errors={errors}
                                         fields={experiences}
@@ -537,7 +521,7 @@ export const FormPostulante = () => {
                                         handleChange={handleExperienceChange}
                                     />
                                     {/* Education */}
-                                    <EducationsSection
+                                    <EducationsSection<AddPostulanteType>
                                         register={register}
                                         errors={errors}
                                         fields={educations}
@@ -547,7 +531,7 @@ export const FormPostulante = () => {
                                         handleChange={handleEducationChange}
                                     />
                                     {/* Languages */}
-                                    <LanguagesSection
+                                    <LanguagesSection<AddPostulanteType>
                                         register={register}
                                         errors={errors}
                                         fields={languages}

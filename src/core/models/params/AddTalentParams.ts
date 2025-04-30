@@ -16,7 +16,7 @@ export interface AddTalentParams {
     montoFinalPlanilla?: number;
     montoInicialRxH?: number;
     montoFinalRxH?: number;
-    idMoneda?: number;
+    idMoneda?: number | null;
     habilidadesTecnicas?: {
         idHabilidad: number;
         anios: number;
