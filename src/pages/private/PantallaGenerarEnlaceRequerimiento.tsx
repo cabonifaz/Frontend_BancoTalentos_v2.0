@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { axiosInstanceFMI } from '../../core/services/axiosService';
 import { axiosInstance } from '../../core/services/axiosService';
 import { Dashboard } from './Dashboard';
-import { ESTADO_ASIGNADO } from '../../core/utilities/constants';
+import { ESTADO_REGISTRADO } from '../../core/utilities/constants';
 import { enqueueSnackbar } from 'notistack';
 
 type RequerimientoType = {
@@ -29,7 +29,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   const fetchRequirements = async (term = '') => {
     try {
       setIsLoading(true);
-      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?codigoRQ=${term}&estado=${ESTADO_ASIGNADO}`);
+      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?codigoRQ=${term}&estado=${ESTADO_REGISTRADO}`);
       if (response.data.idTipoMensaje === 2) {
         setRequirementsList(response.data.requerimientos);
       }
