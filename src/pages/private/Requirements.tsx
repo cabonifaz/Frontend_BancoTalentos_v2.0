@@ -231,7 +231,7 @@ export const Requirements = () => {
                                         <th className="table-header-cell">Requerimiento</th>
                                         <th className="table-header-cell">Fecha Solicitud</th>
                                         <th className="table-header-cell">Estado</th>
-                                        <th className="table-header-cell">Vacantes</th>
+                                        <th className="table-header-cell">Confirmados / Vacantes</th>
                                         <th className="table-header-cell">Acciones</th>
                                         <th className="table-header-cell"></th>
                                     </tr>
@@ -251,7 +251,21 @@ export const Requirements = () => {
                                                 <td className="table-cell">{req.codigoRQ}</td>
                                                 <td className="table-cell">{req.fechaSolicitud}</td>
                                                 <td className="table-cell">{req.estado}</td>
-                                                <td className="table-cell">{req.vacantes}</td>
+                                                <td className="table-cell text-center">
+                                                    <div className="min-w-full flex justify-center">
+                                                        <div className="w-fit relative group">
+                                                            <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit">
+                                                                {req.vacantesCubiertas} / {req.vacantes}
+                                                            </p>
+                                                            <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                                                {req?.lstPerfiles?.map((perfil, index) => (
+                                                                    <p className="text-start" key={index}>{perfil.vacantesCubiertas} / {perfil.vacantesTotales} {perfil.perfil}</p>
+                                                                ))}
+                                                                <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
                                                 <td className="table-cell">
                                                     <button
                                                         onClick={() => handleAsignarClick(req.idRequerimiento)}
