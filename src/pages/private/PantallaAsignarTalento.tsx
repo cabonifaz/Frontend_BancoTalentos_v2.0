@@ -282,9 +282,12 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
 
         <div className="overflow-y-auto flex-grow">
           {isLoading ? (
-            <div className="p-4 text-center text-gray-500">
-              Cargando talentos...
-            </div>
+            <>
+              <Loading opacity='opacity-60' />
+              <div className="p-4 text-center text-gray-500">
+                Cargando talentos...
+              </div>
+            </>
           ) : availableTalents.length > 0 ? (
             availableTalents.map((talent) => (
               <TalentoSelection
@@ -419,7 +422,7 @@ const TalentTable: React.FC = () => {
             confirmado: talent.confirmado,
             idPerfil: talent.idPerfil,
             perfil: talent.perfil,
-            isFromAPI: true // Marcar como proveniente de API
+            isFromAPI: true
           }));
 
           setLocalTalents(formattedTalents);
@@ -501,6 +504,7 @@ const TalentTable: React.FC = () => {
       }
 
       setLocalTalents(prev => [...prev, formattedTalent]);
+      await handleFinalize([...localTalents, formattedTalent]);
     } catch (error) {
       console.error('Error fetching talent details:', error);
       setLocalTalents(prev => [...prev, formatTalentFromBasicData(talent)]);
@@ -580,11 +584,12 @@ const TalentTable: React.FC = () => {
   };
 
   // Finalizar selección
-  const handleFinalize = async () => {
+  const handleFinalize = async (talents?: TalentoType[]) => {
     try {
       setIsLoading(true);
+      const talentsToUse = talents || localTalents;
 
-      const talentos = localTalents.map(talent => ({
+      const talentos = talentsToUse.map(talent => ({
         idTalento: talent.idTalento,
         nombres: talent.nombres,
         apellidos: talent.apellidos || `${talent.apellidoPaterno || ''} ${talent.apellidoMaterno || ''}`,
