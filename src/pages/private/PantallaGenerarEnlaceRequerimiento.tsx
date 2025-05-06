@@ -8,6 +8,7 @@ import { enqueueSnackbar } from 'notistack';
 type RequerimientoType = {
   idRequerimiento: number;
   codigoRQ: string;
+  titulo: string;
   lstPerfiles: {
     idPerfil: number;
     perfil: string;
@@ -24,12 +25,11 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   // Ref for each select element
   const perfilesRef = useRef<HTMLSelectElement[]>([]);
-  // const perfilRef = React.useRef<HTMLSelectElement>(null);
 
   const fetchRequirements = async (term = '') => {
     try {
       setIsLoading(true);
-      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?codigoRQ=${term}&estado=${ESTADO_REGISTRADO}`);
+      const response = await axiosInstanceFMI.get(`/fmi/requirement/list?buscar=${term}&estado=${ESTADO_REGISTRADO}`);
       if (response.data.idTipoMensaje === 2) {
         setRequirementsList(response.data.requerimientos);
       }
@@ -141,6 +141,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-100 text-gray-700 text-sm">
                     <th className="py-3 px-4 text-center font-semibold">ID</th>
+                    <th className="py-3 px-4 text-center font-semibold">Título</th>
                     <th className="py-3 px-4 text-center font-semibold">Código RQ</th>
                     <th className="py-3 px-4 text-center font-semibold">Perfil</th>
                     <th className="py-3 px-4 text-center font-semibold">Acciones</th>
@@ -150,6 +151,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                   {selectedRequirements.map((req) => (
                     <tr key={req.idRequerimiento} className="border-b hover:bg-gray-50">
                       <td className="py-3 px-4 text-center whitespace-nowrap">{req.idRequerimiento}</td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.titulo}</td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">{req.codigoRQ}</td>
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         <select
@@ -257,7 +259,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                   <div className="relative flex-grow">
                     <input
                       type="text"
-                      placeholder="Buscar por código RQ"
+                      placeholder="Buscar por título o código RQ"
                       className="w-full px-4 py-2 border rounded-lg pr-10"
                       value={requirementSearchTerm}
                       onChange={(e) => setRequirementSearchTerm(e.target.value)}
@@ -297,6 +299,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                       <div key={req.idRequerimiento} className="flex items-center justify-between p-4 border-b">
                         <div>
                           <p className="font-medium">{req.codigoRQ}</p>
+                          <p className="text-sm text-zinc-500 font-medium">{req.titulo}</p>
                         </div>
                         <button
                           onClick={() => !isSelected && handleSelectRequirement(req)}

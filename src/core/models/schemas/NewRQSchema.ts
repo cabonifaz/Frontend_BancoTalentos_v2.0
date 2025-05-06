@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const newRQSchema = z.object({
     idCliente: z.string().min(1, "El cliente es obligatorio"),
+    titulo: z.string().min(1, "El titulo es obligatorio"),
     codigoRQ: z.string().min(1, "El RQ es obligatorio"),
     fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     fechaVencimiento: z.string().min(1, "La fecha de vencimiento es obligatoria"),

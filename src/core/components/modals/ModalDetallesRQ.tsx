@@ -92,7 +92,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     return (
         <>
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[530px] overflow-y-auto relative">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[570px] overflow-y-auto relative">
                     <button className="absolute top-4 right-4 w-6 h-6 z-50" onClick={handleCancelClick}>
                         <img src="/assets/ic_close_x.svg" alt="icon close" />
                     </button>
@@ -103,7 +103,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 children: (
                                     <div>
                                         {loadingReq ? (<p className="text-gray-500 text-center">Cargando Requerimiento...</p>) : (
-                                            <form className="flex flex-col flex-1 mt-8">
+                                            <form className="flex flex-col flex-1 mt-1">
                                                 {/* Campos del formulario */}
                                                 <div className="space-y-4 flex-1 px-4">
                                                     {/* Cliente */}
@@ -124,6 +124,19 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                     </div>
                                                     {errors.idCliente && (
                                                         <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.idCliente.message}</p>
+                                                    )}
+
+                                                    {/* Título RQ */}
+                                                    <div className="flex items-center">
+                                                        <label className="w-1/3 text-sm font-medium text-gray-700">Título:</label>
+                                                        <input
+                                                            {...register("titulo")}
+                                                            disabled={!isEditing}
+                                                            className="w-2/3 input"
+                                                        />
+                                                    </div>
+                                                    {errors.titulo && (
+                                                        <p className="text-red-500 text-sm mt-1 ml-[33%]">{errors.titulo.message}</p>
                                                     )}
 
                                                     {/* Código RQ */}
