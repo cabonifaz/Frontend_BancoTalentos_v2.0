@@ -9,6 +9,7 @@ export interface RequirementResponse {
     requerimiento: {
         idCliente: number;
         cliente: string;
+        titulo: string;
         codigoRQ: string;
         fechaSolicitud: string;
         fechaVencimiento: string;
