@@ -1,4 +1,5 @@
 import { Talent } from "../../models/interfaces/Talent";
+import { MODALIDAD_RXH } from "../../utilities/constants";
 import { Utils } from "../../utilities/utils";
 
 interface Props {
@@ -12,7 +13,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
             onClick={() => selectTalent(talent)}
             className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer relative">
             <div className="mx-2 lg:ms-4 lg:me-8 w-1/4 md:w-fit">
-                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="w-32 h-32 md:w-16 md:h-16 rounded-full border" />
+                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="w-20 h-20 md:w-16 md:h-16 rounded-full border" />
             </div>
             <div className="w-3/4 md:w-fit">
                 <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
@@ -26,9 +27,11 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
                 </p>
                 <div className="text-sm text-[#71717A]">
                     <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">
-                        <p>{`RxH ${talent?.moneda || ""} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
-                        <p className="block md:hidden xl:block">|</p>
-                        <p>{`Planilla ${talent?.moneda || ""} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                        {talent.idModalidadFacturacion === MODALIDAD_RXH ? (
+                            <p>{`RxH ${talent?.moneda || ""} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
+                        ) : (
+                            <p>{`Planilla ${talent?.moneda || ""} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                        )}
                     </div>
                 </div>
             </div>

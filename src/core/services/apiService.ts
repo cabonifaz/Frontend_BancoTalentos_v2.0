@@ -26,16 +26,6 @@ export const getTalent = (talentId: number): Promise<AxiosResponse<models.Talent
 }
 
 export const addTalent = (data: models.AddTalentParams): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
-    const authToken = localStorage.getItem("authToken") || "";
-
-    if (authToken !== "" && authToken !== null) {
-        return axiosInstanceNoToken.post("/bdt/talent/addOrUpdateTalent", data, {
-            headers: {
-                Authorization: `Bearer ${authToken}`
-            }
-        });
-    }
-
     return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
 }
 

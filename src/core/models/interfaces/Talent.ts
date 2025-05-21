@@ -7,6 +7,7 @@ export interface Talent {
     puesto: string;
     pais: string;
     ciudad: string;
+    idModalidadFacturacion: number;
     montoInicialPlanilla: number;
     montoFinalPlanilla: number;
     montoInicialRxH: number;

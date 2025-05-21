@@ -18,23 +18,16 @@ export const AddTalentSchema = z.object({
     puesto: z.string().min(1, "El puesto es requerido"),
     idPais: z.number().min(1, "Seleccione un país"),
     idCiudad: z.number().min(1, "Seleccione una ciudad"),
-    montoInicialPlanilla: z.number({
-        required_error: "El monto inicial planilla es requerido",
+    montoInicial: z.number({
+        required_error: "El monto inicial es requerido",
         invalid_type_error: "Solo se aceptan números"
     }).min(1, "El monto inicial es requerido"),
-    montoFinalPlanilla: z.number({
-        required_error: "El monto final planilla es requerido",
-        invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto final es requerido"),
-    montoInicialRxH: z.number({
-        required_error: "El monto inicial RxH es requerido",
-        invalid_type_error: "Solo se aceptan números"
-    }).min(1, "El monto inicial es requerido"),
-    montoFinalRxH: z.number({
-        required_error: "El monto final RxH es requerido",
+    montoFinal: z.number({
+        required_error: "El monto final es requerido",
         invalid_type_error: "Solo se aceptan números"
     }).min(1, "El monto final es requerido"),
     idMoneda: z.number().min(1, "Seleccione una moneda"),
+    idModalidadFacturacion: z.number().min(1, "Seleccione una modalidad de facturación"),
     habilidadesTecnicas: z.array(
         z.object({
             idHabilidad: z.number({ invalid_type_error: "Seleccione una habilidad técnica" }).min(1, "Seleccione una habilidad técnica"),

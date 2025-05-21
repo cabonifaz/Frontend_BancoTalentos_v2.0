@@ -27,7 +27,7 @@ export const validateCurrency = (currencyId: number): { isValid: boolean; messag
 };
 
 export const validateSalary = (salary: number): { isValid: boolean; message?: string } => {
-    if (isNaN(salary) || salary <= 0) {
+    if (isNaN(salary) || salary < 0) {
         return { isValid: false, message: "Por favor, introduce un monto válido." };
     }
     return { isValid: true };

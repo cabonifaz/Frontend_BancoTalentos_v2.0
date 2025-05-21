@@ -25,12 +25,12 @@ import { enqueueSnackbar } from "notistack";
 import { useApi } from "../../core/hooks/useApi";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { addTalent } from "../../core/services/apiService";
-import { ARCHIVO_IMAGEN, ARCHIVO_PDF, DOCUMENTO_CV, DOCUMENTO_FOTO_PERFIL } from "../../core/utilities/constants";
+import { ARCHIVO_IMAGEN, ARCHIVO_PDF, DOCUMENTO_CV, DOCUMENTO_FOTO_PERFIL, MODALIDAD_PLANILLA, MODALIDAD_RXH } from "../../core/utilities/constants";
 import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const AddTalent = () => {
     const navigate = useNavigate();
-    const { paramsByMaestro } = useParams();
+    const { paramsByMaestro } = useParams("12,13,2,19,20,15,16,32");
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
@@ -54,6 +54,7 @@ export const AddTalent = () => {
     const habilidadesBlandas = paramsByMaestro[20] || [];
     const idiomas = paramsByMaestro[15] || [];
     const nivelesIdioma = paramsByMaestro[16] || [];
+    const modalidadFacturacion = paramsByMaestro[32] || [];
 
     const ciudadesFiltradas = selectedCountry
         ? ciudades.filter((ciudad) => ciudad.num2 === selectedCountry)
@@ -120,7 +121,7 @@ export const AddTalent = () => {
             return;
         }
 
-        const { codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
+        const { idModalidadFacturacion, montoInicial, montoFinal, codigoPais, telefono, experiencias, educaciones, cv, foto, ...filterData } = data;
         const phone = countryCode.current?.textContent + ' ' + telefono.trim();
 
         const cleanExperiencias = experiencias.map((exp) => ({
@@ -142,6 +143,11 @@ export const AddTalent = () => {
             const cleanData: AddTalentParams = {
                 telefono: phone,
                 ...filterData,
+                idModalidadFacturacion: idModalidadFacturacion,
+                montoInicialPlanilla: idModalidadFacturacion === MODALIDAD_PLANILLA ? montoInicial : 0,
+                montoFinalPlanilla: idModalidadFacturacion === MODALIDAD_PLANILLA ? montoFinal : 0,
+                montoInicialRxH: idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
+                montoFinalRxH: idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
                 experiencias: cleanExperiencias,
                 educaciones: cleanEducaciones,
                 cvArchivo: {
@@ -454,6 +460,7 @@ export const AddTalent = () => {
                                 {/* Salary */}
                                 <div className="*:mb-4">
                                     <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">Banda salarial</h3>
+                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Moneda<span className="text-red-500">*</span></h4>
                                     <select
                                         id="currency"
                                         {...register("idMoneda", { valueAsNumber: true })}
@@ -466,26 +473,28 @@ export const AddTalent = () => {
                                         ))}
                                     </select>
                                     {errors.idMoneda && <p className="text-red-400 text-sm">{errors.idMoneda.message}</p>}
-                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Recibo por honorarios</h4>
+                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Modalidad de facturación<span className="text-red-500">*</span></h4>
+                                    <select
+                                        id="modalidadFacturacion"
+                                        {...register("idModalidadFacturacion", { valueAsNumber: true })}
+                                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
+                                        <option value={0}>Seleccione la modalidad de facturación</option>
+                                        {modalidadFacturacion.map((mod) => (
+                                            <option key={mod.idParametro} value={mod.num1}>
+                                                {mod.string1}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.idModalidadFacturacion && <p className="text-red-400 text-sm">{errors.idModalidadFacturacion.message}</p>}
+                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Montos</h4>
                                     <div className="flex flex-col sm:flex-row w-full gap-8">
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="initRxH" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-500">*</span></label>
-                                            <NumberInput register={register} name="montoInicialRxH" error={errors.montoInicialRxH?.message} />
+                                            <NumberInput register={register} name="montoInicial" error={errors.montoInicial?.message} />
                                         </div>
                                         <div className="flex flex-col sm:w-1/2">
                                             <label htmlFor="endRxH" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-500">*</span></label>
-                                            <NumberInput register={register} name="montoFinalRxH" error={errors.montoFinalRxH?.message} />
-                                        </div>
-                                    </div>
-                                    <h4 className="text-[#636d7c] text-base font-semibold px-1">Planilla</h4>
-                                    <div className="flex flex-col sm:flex-row w-full gap-8">
-                                        <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="initPlanilla" className="text-[#71717A] text-sm px-1">Monto inicial<span className="text-red-500">*</span></label>
-                                            <NumberInput register={register} name="montoInicialPlanilla" error={errors.montoInicialPlanilla?.message} />
-                                        </div>
-                                        <div className="flex flex-col sm:w-1/2">
-                                            <label htmlFor="endPlanilla" className="text-[#71717A] text-sm px-1">Monto final<span className="text-red-500">*</span></label>
-                                            <NumberInput register={register} name="montoFinalPlanilla" error={errors.montoFinalPlanilla?.message} />
+                                            <NumberInput register={register} name="montoFinal" error={errors.montoFinal?.message} />
                                         </div>
                                     </div>
                                 </div>

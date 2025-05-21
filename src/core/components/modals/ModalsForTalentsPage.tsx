@@ -74,6 +74,7 @@ export const ModalsForTalentsPage = ({
             <ModalSalary
                 idTalento={talent?.idTalento}
                 idMoneda={talentDet?.idMoneda}
+                idModalidadFacturacion={talent?.idModalidadFacturacion}
                 initPlan={talent?.montoInicialPlanilla}
                 endPlan={talent?.montoFinalPlanilla}
                 initRxH={talent?.montoInicialRxH}

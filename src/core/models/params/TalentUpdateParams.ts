@@ -22,7 +22,7 @@ export interface TalentCvParams {
     idTipoDocumento: number;
 }
 
-export interface TalentSalaryParams extends Pick<AddTalentParams, "montoInicialPlanilla" | "montoFinalPlanilla" | "montoInicialRxH" | "montoFinalRxH" | "idMoneda"> {
+export interface TalentSalaryParams extends Pick<AddTalentParams, "montoInicialPlanilla" | "montoFinalPlanilla" | "montoInicialRxH" | "montoFinalRxH" | "idMoneda" | "idModalidadFacturacion"> {
     idTalento: number;
 }
 

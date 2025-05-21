@@ -25,6 +25,7 @@ import {
 } from '../../core/components';
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
+import { MODALIDAD_RXH } from "../../core/utilities/constants";
 
 export const Talents = () => {
     const navigate = useNavigate();
@@ -44,7 +45,7 @@ export const Talents = () => {
     const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<number | null>(null);
     const [selectedFavourites, setSelectedFavourites] = useState<number | null>(null);
 
-    const { paramsByMaestro, loading: loadingParams } = useParams("12,13,2,19,20,15,16");
+    const { paramsByMaestro, loading: loadingParams } = useParams("12,13,2,19,20,15,16,32");
     const { favourites: favouritesData, fetchFavourites } = useFavouritesContext();
 
     const {
@@ -287,9 +288,9 @@ export const Talents = () => {
                             {loadingTalentDets ? <TalentDetailsSkeleton /> : (
                                 <div>
                                     {talent && (
-                                        <div className="flex flex-col px-8 md:pt-8 overflow-y-scroll overflow-x-hidden h-full lg:h-[calc(100vh-205px)]">
+                                        <div className="flex flex-col px-4 md:pt-8 overflow-y-scroll overflow-x-hidden h-screen lg:h-[calc(100vh-205px)]">
                                             <button type="button" onClick={() => setTalentPanelVisible(false)} className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
-                                                <img src="/assets/ic_go_back.svg" alt="icon close" className="h-6 w-6" />
+                                                <img src="/assets/ic_go_back.svg" alt="icon close" className="h-4 w-4 md:h-6 md:w-6" />
                                                 <p className="text-[#2e2e2e]">Volver</p>
                                             </button>
                                             {/* Talent main info */}
@@ -320,11 +321,11 @@ export const Talents = () => {
                                                         </p>
                                                         <div className="text-sm text-[#71717A] flex items-center gap-2 my-2 xl:m-0">
                                                             <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
-                                                                <p className="w-fit">
-                                                                    {`RxH ${talent.moneda} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}
-                                                                </p>
-                                                                <p className="hidden w-fit xl:block">|</p>
-                                                                <p className="w-fit">{`Planilla ${talent.moneda} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                                                                {talent.idModalidadFacturacion === MODALIDAD_RXH ? (
+                                                                    <p>{`RxH ${talent?.moneda || ""} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
+                                                                ) : (
+                                                                    <p>{`Planilla ${talent?.moneda || ""} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                                                                )}
                                                             </div>
                                                             <button
                                                                 type="button"

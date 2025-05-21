@@ -10,3 +10,7 @@ export const DOCUMENTO_CERT_DIP = 99;
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;
 export const ESTADO_ATENDIDO = 3;
+
+// MODALIDAD FACTURACIÓN
+export const MODALIDAD_RXH = 1;
+export const MODALIDAD_PLANILLA = 2;
