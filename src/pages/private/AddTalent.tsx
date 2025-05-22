@@ -535,7 +535,6 @@ export const AddTalent = () => {
                                     register={register}
                                     errors={errors}
                                     fields={educations}
-                                    setValue={setValue}
                                     onAdd={handleAddEducation}
                                     onRemove={handleRemoveEducation}
                                     handleChange={handleEducationChange}

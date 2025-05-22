@@ -1,33 +1,14 @@
 import { useState } from "react";
 import { AddEducation, DynamicSectionProps } from "../../models";
 import { DynamicSection } from "./DynamicSection";
-import { FieldValues, UseFormSetValue } from "react-hook-form";
+import { FieldValues } from "react-hook-form";
 
 interface EducationsSectionProps<F extends FieldValues> extends DynamicSectionProps<F, AddEducation> {
-    setValue: UseFormSetValue<F>;
     handleChange: (index: number, field: keyof AddEducation, value: string | boolean) => void;
 }
 
-export const EducationsSection = <F extends FieldValues,>({ register, errors, fields, setValue, onAdd, onRemove, handleChange }: EducationsSectionProps<F>) => {
-    const [defaultEntities, setDefaultEntities] = useState<{ [key: number]: boolean }>({});
+export const EducationsSection = <F extends FieldValues,>({ register, errors, fields, onAdd, onRemove, handleChange }: EducationsSectionProps<F>) => {
     const [currentDates, setCurrentDates] = useState<{ [key: number]: boolean }>({});
-
-    const handleCurrentEntityChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const isChecked = e.target.checked;
-
-        setDefaultEntities((prev) => ({
-            ...prev,
-            [index]: isChecked,
-        }));
-
-        if (isChecked) {
-            handleChange(index, 'institucion', 'Fractal');
-            setValue(`educaciones.${index}.institucion` as any, "Fractal" as any);
-            return;
-        }
-        handleChange(index, 'institucion', '');
-        setValue(`educaciones.${index}.institucion` as any, "" as any);
-    };
 
     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const isChecked = e.target.checked;
@@ -53,7 +34,6 @@ export const EducationsSection = <F extends FieldValues,>({ register, errors, fi
                             id={`institucion-${index}`}
                             {...register(`educaciones.${index}.institucion` as any)}
                             value={education.institucion}
-                            readOnly={defaultEntities[index]}
                             onChange={(e) => handleChange(index, 'institucion', e.target.value)}
                             placeholder="Nombre de la institución"
                             className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
@@ -61,16 +41,6 @@ export const EducationsSection = <F extends FieldValues,>({ register, errors, fi
                         {(errors as any).educaciones?.[index]?.institucion && (
                             <p className="text-red-400 text-sm">{(errors as any).educaciones[index]?.institucion?.message}</p>
                         )}
-
-                        <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                            <input
-                                type="checkbox"
-                                id={`currentEntity-${index}`}
-                                checked={defaultEntities[index] || false}
-                                onChange={(e) => handleCurrentEntityChange(e, index)}
-                                className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                            <label htmlFor={`currentEntity-${index}`} className="cursor-pointer text-[#3f3f46] text-sm">Aquí en Fractal</label>
-                        </div>
                     </div>
                     <div className="flex flex-col my-2">
                         <label htmlFor={`carrera-${index}`} className="text-[#71717A] text-sm px-1">Carrera / Curso / Diplomado<span className="text-red-400">*</span></label>
