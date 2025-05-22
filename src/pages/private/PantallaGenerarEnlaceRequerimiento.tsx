@@ -4,6 +4,7 @@ import { axiosInstance } from '../../core/services/axiosService';
 import { Dashboard } from './Dashboard';
 import { ESTADO_REGISTRADO } from '../../core/utilities/constants';
 import { enqueueSnackbar } from 'notistack';
+import { Loading } from '../../core/components';
 
 type RequerimientoType = {
   idRequerimiento: number;
@@ -120,6 +121,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
 
   return (
     <Dashboard>
+      {isLoading && (<Loading opacity="opacity-60" />)}
       <div className="container mx-auto p-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold">Generación de enlace</h3>
@@ -240,7 +242,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
 
         {/* Requirement Selection Modal */}
         {isRequirementModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
             <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Buscar requerimiento</h2>
