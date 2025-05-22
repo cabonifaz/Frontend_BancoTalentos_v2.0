@@ -56,7 +56,7 @@ export const AddTalentSchema = z.object({
                 path: ["fechaFin"],
             }
         )
-    ),
+    ).optional().default([]),
     educaciones: z.array(
         z.object({
             institucion: z.string().min(1, "La institución es requerida"),

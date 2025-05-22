@@ -43,11 +43,11 @@ export const ExperiencesSection = <F extends FieldValues,>({ register, errors, f
     };
 
     return (
-        <DynamicSection title="Experiencias laborales" onAdd={onAdd} onRemove={onRemove}>
+        <DynamicSection title="Experiencias laborales" onAdd={onAdd} onRemove={onRemove} canRemoveFirst={true}>
             {fields.map((experience, index) => (
                 <div key={index}>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`companyName-${index}`} className="text-[#71717A] text-sm px-1">Empresa</label>
+                        <label htmlFor={`companyName-${index}`} className="text-[#71717A] text-sm px-1">Empresa<span className="text-red-400">*</span></label>
                         <input
                             type="text"
                             id={`companyName-${index}`}
@@ -73,7 +73,7 @@ export const ExperiencesSection = <F extends FieldValues,>({ register, errors, f
                         </div>
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`puesto-${index}`} className="text-[#71717A] text-sm px-1">Puesto</label>
+                        <label htmlFor={`puesto-${index}`} className="text-[#71717A] text-sm px-1">Puesto<span className="text-red-400">*</span></label>
                         <input
                             type="text"
                             id={`puesto-${index}`}
@@ -89,7 +89,7 @@ export const ExperiencesSection = <F extends FieldValues,>({ register, errors, f
                     </div>
                     <div className="flex gap-4">
                         <div className="flex flex-col w-1/2">
-                            <label htmlFor={`initDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio</label>
+                            <label htmlFor={`initDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio<span className="text-red-400">*</span></label>
                             <input
                                 id={`initDate-${index}`}
                                 type="date"
@@ -130,7 +130,7 @@ export const ExperiencesSection = <F extends FieldValues,>({ register, errors, f
                         </div>
                     </div>
                     <div className="flex flex-col my-2">
-                        <label htmlFor={`funciones-${index}`} className="text-[#71717A] text-sm px-1">Funciones</label>
+                        <label htmlFor={`funciones-${index}`} className="text-[#71717A] text-sm px-1">Funciones<span className="text-red-400">*</span></label>
                         <textarea
                             id={`funciones-${index}`}
                             {...register(`experiencias.${index}.funciones` as any)}

@@ -13,7 +13,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
             onClick={() => selectTalent(talent)}
             className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer relative">
             <div className="mx-2 lg:ms-4 lg:me-8 w-1/4 md:w-fit">
-                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="w-20 h-20 md:w-16 md:h-16 rounded-full border" />
+                <img src={Utils.getImageSrc(talent.imagen)} alt="Foto Perfil Talento" className="w-20 h-20 md:w-24 md:h-24 xl:w-28 xl:h-28 rounded-full border" />
             </div>
             <div className="w-3/4 md:w-fit">
                 <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>

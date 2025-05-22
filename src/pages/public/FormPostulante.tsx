@@ -14,13 +14,13 @@ import { Utils } from "../../core/utilities/utils";
 
 export const FormPostulante = () => {
     const registerRef = useRef(false);
-    const { paramsByMaestro, loading: loadingParams } = useParams("2, 12, 13, 15, 16, 19, 20");
+    const { paramsByMaestro, loading: loadingParams } = useParams("12, 13, 15, 16, 19, 20");
     const countryCode = useRef<HTMLParagraphElement>(null);
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
     const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([{ ...initialSoftSkill }]);
-    const [experiences, setExperiences] = useState<AddExperience[]>([{ ...initialExperience }]);
     const [educations, setEducations] = useState<AddEducation[]>([{ ...initialEducation }]);
+    const [experiences, setExperiences] = useState<AddExperience[]>([]);
     const [languages, setLanguages] = useState<AddLanguage[]>([]);
 
     const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
@@ -31,7 +31,6 @@ export const FormPostulante = () => {
     const [cvFileErrors, setCvFileErrors] = useState("");
     const [fotoFileErrors, setFotoFileErrors] = useState("");
 
-    const monedas = paramsByMaestro[2] || [];
     const paises = paramsByMaestro[12] || [];
     const ciudades = paramsByMaestro[13] || [];
     const idiomas = paramsByMaestro[15] || [];
@@ -53,32 +52,11 @@ export const FormPostulante = () => {
         fetch: postTalent,
     } = useApi<InsertUpdateResponse, AddTalentParams>(addTalent, {
         onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => {
-            handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar })
+        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar })
+    },
+    );
 
-            if (response.data.idMensaje === 2) {
-                reset();
-
-                // Restablecer las secciones dinámicas
-                setTechnicalSkills([{ ...initialTechnicalSkill }]);
-                setSoftSkills([{ ...initialSoftSkill }]);
-                setExperiences([{ ...initialExperience }]);
-                setEducations([{ ...initialEducation }]);
-                setLanguages([{ ...initialLanguage }]);
-
-                // Restablecer los archivos
-                setCvFile(null);
-                setFotoFile(null);
-
-                // Restablecer los países y ciudades seleccionados
-                setSelectedCountry(0);
-                setSelectedCity(0);
-                setSelectedCountryPhone(0);
-            }
-        },
-    });
-
-    const { register, handleSubmit, setValue, control, formState: { errors }, reset } = useForm<AddPostulanteType>({
+    const { register, handleSubmit, setValue, control, clearErrors, formState: { errors }, reset } = useForm<AddPostulanteType>({
         resolver: zodResolver(AddPostulanteSchema),
         mode: "onChange",
         defaultValues: {
@@ -190,8 +168,8 @@ export const FormPostulante = () => {
                                 setTechnicalSkills([{ ...initialTechnicalSkill }]);
                                 setSoftSkills([{ ...initialSoftSkill }]);
                                 setExperiences([{ ...initialExperience }]);
-                                setEducations([{ ...initialEducation }]);
-                                setLanguages([{ ...initialLanguage }]);
+                                setEducations([]);
+                                setLanguages([]);
 
                                 // Restablecer los archivos
                                 setCvFile(null);
@@ -251,6 +229,8 @@ export const FormPostulante = () => {
     const handleRemoveExperience = (index: number) => {
         const newExperiences = experiences.filter((_, i) => i !== index);
         setExperiences(newExperiences);
+        setValue(`experiencias`, newExperiences);
+        clearErrors(`experiencias`);
     };
 
     const handleExperienceChange = (index: number, field: keyof AddExperience, value: string | boolean) => {

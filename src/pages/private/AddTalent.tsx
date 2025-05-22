@@ -35,8 +35,8 @@ export const AddTalent = () => {
 
     const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([{ ...initialTechnicalSkill }]);
     const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([{ ...initialSoftSkill }]);
-    const [experiences, setExperiences] = useState<AddExperience[]>([{ ...initialExperience }]);
     const [educations, setEducations] = useState<AddEducation[]>([{ ...initialEducation }]);
+    const [experiences, setExperiences] = useState<AddExperience[]>([]);
     const [languages, setLanguages] = useState<AddLanguage[]>([]);
 
     const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
@@ -74,9 +74,9 @@ export const AddTalent = () => {
                 // Restablecer las secciones dinámicas
                 setTechnicalSkills([{ ...initialTechnicalSkill }]);
                 setSoftSkills([{ ...initialSoftSkill }]);
-                setExperiences([{ ...initialExperience }]);
                 setEducations([{ ...initialEducation }]);
-                setLanguages([{ ...initialLanguage }]);
+                setExperiences([]);
+                setLanguages([]);
 
                 // Restablecer los archivos
                 setCvFile(null);
@@ -92,7 +92,7 @@ export const AddTalent = () => {
 
     const onGoBackClick = () => navigate(-1);
 
-    const { control, register, handleSubmit, setValue, formState: { errors }, reset } = useForm<AddTalentType>({
+    const { control, register, handleSubmit, setValue, clearErrors, formState: { errors }, reset } = useForm<AddTalentType>({
         resolver: zodResolver(AddTalentSchema),
         mode: "onChange",
     });
@@ -212,6 +212,8 @@ export const AddTalent = () => {
     const handleRemoveExperience = (index: number) => {
         const newExperiences = experiences.filter((_, i) => i !== index);
         setExperiences(newExperiences);
+        setValue(`experiencias`, newExperiences);
+        clearErrors(`experiencias`);
     };
 
     const handleExperienceChange = (index: number, field: keyof AddExperience, value: string | boolean) => {
