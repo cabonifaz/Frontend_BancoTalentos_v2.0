@@ -123,7 +123,7 @@ export const Requirements = () => {
                 fechaSolicitud: overrides.fechaSolicitud !== undefined ? overrides.fechaSolicitud : (selectedDate ? selectedDate : null),
             });
         }
-    }, [loadingReqs, search, selectedCliente, selectedDate, selectedEstado, currentPage]);
+    }, [loadingReqs, search, selectedCliente, selectedDate, selectedEstado]);
 
     useEffect(() => {
         if (!hasFetchedClients.current && !loadingClientes) {
