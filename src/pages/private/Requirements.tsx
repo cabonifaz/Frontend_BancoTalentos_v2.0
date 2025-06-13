@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { ESTADO_ATENDIDO } from "../../core/utilities/constants";
 
 interface SearchProps {
+    nPag: number | null;
     idCliente: number | null;
     buscar: string | null;
     estado: number | null;
@@ -31,6 +32,7 @@ export const Requirements = () => {
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
     const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
+    const [currentPage, setCurrentPage] = useState<number>(1);
 
     const { paramsByMaestro, loading: loadingParams } = useParams("24");
 
@@ -63,9 +65,9 @@ export const Requirements = () => {
     })) || [];
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const search = ({ idCliente, buscar, estado, fechaSolicitud }: SearchProps) => {
+    const search = ({ nPag, idCliente, buscar, estado, fechaSolicitud }: SearchProps) => {
         fetchRequerimientos({
-            nPag: 1,
+            nPag: nPag || 1,
             idCliente: idCliente,
             buscar: buscar,
             estado: estado,
@@ -76,7 +78,9 @@ export const Requirements = () => {
     const handleEstadoChangeFilter = (selectedValues: string[]) => {
         const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
         setSelectedEstado(newValue);
+        setCurrentPage(1);
         executeSearch({
+            nPag: 1,
             estado: newValue,
             fechaSolicitud: selectedDate ? selectedDate : null,
         });
@@ -85,7 +89,9 @@ export const Requirements = () => {
     const handleClienteChangeFilter = (selectedValues: string[]) => {
         const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
         setSelectedCliente(newValue);
+        setCurrentPage(1);
         executeSearch({
+            nPag: 1,
             estado: selectedEstado,
             fechaSolicitud: selectedDate ? selectedDate : null,
             idCliente: newValue
@@ -99,22 +105,25 @@ export const Requirements = () => {
         }
 
         setSelectedDate(searchDate);
+        setCurrentPage(1);
         executeSearch({
+            nPag: 1,
             estado: selectedEstado,
             fechaSolicitud: date ? searchDate : null,
         });
     };
 
-    const executeSearch = useCallback((overrides: { estado?: number | null; fechaSolicitud?: string | null; idCliente?: number | null } = {}) => {
+    const executeSearch = useCallback((overrides: { nPag?: number | null, estado?: number | null; fechaSolicitud?: string | null; idCliente?: number | null } = {}) => {
         if (!loadingReqs) {
             search({
+                nPag: overrides.nPag || 1,
                 idCliente: overrides.idCliente !== undefined ? overrides.idCliente : selectedCliente,
                 buscar: RequerimientoRef.current?.value || null,
                 estado: overrides.estado !== undefined ? overrides.estado : selectedEstado,
                 fechaSolicitud: overrides.fechaSolicitud !== undefined ? overrides.fechaSolicitud : (selectedDate ? selectedDate : null),
             });
         }
-    }, [loadingReqs, search, selectedCliente, selectedDate, selectedEstado]);
+    }, [loadingReqs, search, selectedCliente, selectedDate, selectedEstado, currentPage]);
 
     useEffect(() => {
         if (!hasFetchedClients.current && !loadingClientes) {
@@ -129,7 +138,9 @@ export const Requirements = () => {
     }, [fetchClients, executeSearch, loadingClientes, loadingReqs]);
 
     const handleSearch = () => {
-        executeSearch();
+        setCurrentPage(1);
+        executeSearch({ nPag: 1 });
+
     };
 
     const openDetallesRQModal = (req: RequirementItem) => {
@@ -163,15 +174,15 @@ export const Requirements = () => {
         <>
             {(loadingClientes || loadingParams || loadingReqs) && (<Loading opacity="opacity-60" />)}
             <Dashboard>
-                <div className="p-4 mx-4 xl:mx-36">
-                    <h2 className="text-2xl font-semibold mb-4 flex gap-2">
+                <div className="p-4 mx-4 xl:mx-16">
+                    <h2 className="text-2xl font-semibold flex gap-2">
                         Requerimientos
                     </h2>
                     {/* filters */}
                     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                         <div className="flex flex-col gap-4">
-                            <div className="flex flex-col lg:flex-row gap-4">
-                                <div className="flex-1">
+                            <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
+                                <div className="flex-1 ">
                                     <label htmlFor="requerimiento" className="block text-sm font-medium text-gray-700">Búsqueda por título o código de requerimiento</label>
                                     <input
                                         type="text"
@@ -180,7 +191,14 @@ export const Requirements = () => {
                                         ref={RequerimientoRef}
                                         className="input w-full"
                                     />
+
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={handleSearch}
+                                    className="btn btn-primary lg:self-end p-3 h-12">
+                                    Buscar
+                                </button>
                             </div>
                             <div className="flex gap-4 flex-wrap">
                                 <FilterDropDown
@@ -208,14 +226,6 @@ export const Requirements = () => {
                                     onChange={handleEstadoChangeFilter}
                                 />
                                 <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
-                            </div>
-                            <div className="flex justify-start">
-                                <button
-                                    type="button"
-                                    onClick={handleSearch}
-                                    className="btn btn-primary">
-                                    Buscar
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -303,6 +313,33 @@ export const Requirements = () => {
                             </table>
                         </div>
                     </div>
+
+                    {/* Pagination */}
+                    {(ReqsResponse?.requerimientos || []).length > 0 && (
+                        <div className="flex justify-center items-center gap-4 mt-4 mb-2">
+                            <button
+                                className={`btn ${currentPage === 1 ? 'btn-disabled' : 'btn-blue'}`}
+                                onClick={() => {
+                                    const newPage = currentPage - 1;
+                                    setCurrentPage(newPage);
+                                    executeSearch({ nPag: newPage });
+                                }}
+                                disabled={currentPage === 1}>
+                                Anterior
+                            </button>
+                            <span>Página {currentPage}</span>
+                            <button
+                                className={`btn ${(ReqsResponse?.requerimientos || []).length < 8 ? 'btn-disabled' : 'btn-blue'}`}
+                                onClick={() => {
+                                    const newPage = currentPage + 1;
+                                    setCurrentPage(newPage);
+                                    executeSearch({ nPag: newPage });
+                                }}
+                                disabled={(ReqsResponse?.requerimientos || []).length < 8}>
+                                Siguiente
+                            </button>
+                        </div>
+                    )}
                 </div>
             </Dashboard>
             {isDetallesRQModalOpen && <ModalDetallesRQ onClose={() => setIsDetallesRQModalOpen(false)} estadoOptions={paramsByMaestro[24] || []} RQ={selectedRQ} clientes={clientesResponse?.clientes || []} updateRQData={updateRQData} />}

@@ -1,5 +1,5 @@
 export interface ReqListParams {
-    nPag: number;
+    nPag: number | null;
     idCliente: number | null;
     buscar: string | null;
     estado: number | null;

@@ -47,18 +47,17 @@ type RequerimientoType = {
 // Componentes
 const TableHeader = () => (
   <thead>
-    <tr className="bg-gray-100 text-gray-700 text-sm">
-      <th className="py-3 px-4 text-left font-semibold">ID</th>
-      <th className="py-3 px-4 text-left font-semibold">Nombres</th>
-      <th className="py-3 px-4 text-left font-semibold">Apellidos</th>
-      <th className="py-3 px-4 text-left font-semibold">Doc. Identidad</th>
-      <th className="py-3 px-4 text-left font-semibold">Cel</th>
-      <th className="py-3 px-4 text-left font-semibold">Email</th>
-      <th className="py-3 px-4 text-left font-semibold">Situación</th>
-      <th className="py-3 px-4 text-left font-semibold">Estado</th>
-      <th className="py-3 px-4 text-left font-semibold">Perfil</th>
-      <th className="py-3 px-4 text-left font-semibold">Confirmado</th>
-      <th className="py-3 px-4 text-left font-semibold">Acciones</th>
+    <tr className="table-header">
+      <th className="table-header-cell">ID</th>
+      <th className="table-header-cell">Nombres</th>
+      <th className="table-header-cell">Doc. Identidad</th>
+      <th className="table-header-cell">Celular</th>
+      <th className="table-header-cell">Correo</th>
+      <th className="table-header-cell">Situación</th>
+      <th className="table-header-cell">Estado</th>
+      <th className="table-header-cell">Perfil</th>
+      <th className="table-header-cell">Confirmado</th>
+      <th className="table-header-cell">Acciones</th>
     </tr>
   </thead>
 );
@@ -97,16 +96,13 @@ const TableRow: React.FC<TableRowProps> = ({
   };
 
   return (
-    <tr className="border-b hover:bg-gray-50">
-      <td className="py-3 px-4 whitespace-nowrap">{talento.idTalento}</td>
-      <td className="py-3 px-4 whitespace-nowrap">{talento.nombres}</td>
-      <td className="py-3 px-4 whitespace-nowrap">
-        {talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}
-      </td>
-      <td className="py-3 px-4 whitespace-nowrap">{talento.dni}</td>
-      <td className="py-3 px-4 whitespace-nowrap">{talento.telefono || talento.celular}</td>
-      <td className="py-3 px-4 whitespace-nowrap">{talento.email}</td>
-      <td className="py-3 px-4 whitespace-nowrap">
+    <tr className="bg-white divide-y divide-gray-200">
+      <td className="table-cell">{talento.idTalento}</td>
+      <td className="table-cell">{talento.nombres} {talento.apellidos || `${talento.apellidoPaterno || ''} ${talento.apellidoMaterno || ''}`}</td>
+      <td className="table-cell">{talento.dni}</td>
+      <td className="table-cell">{talento.telefono || talento.celular}</td>
+      <td className="table-cell">{talento.email}</td>
+      <td className="table-cell">
         <div className="min-w-full flex justify-center gap-1 items-center">
           <p>
             {talento?.situacion || ''}
@@ -122,7 +118,7 @@ const TableRow: React.FC<TableRowProps> = ({
           )}
         </div>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap">
+      <td className="table-cell">
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${isAceptado ? 'bg-green-100 text-green-800' :
           isObservado ? 'bg-yellow-100 text-yellow-800' :
             'bg-gray-100 text-gray-800'
@@ -130,10 +126,10 @@ const TableRow: React.FC<TableRowProps> = ({
           {(talento.estado || (talento.idEstado === 2 ? 'DATOS COMPLETOS' : 'OBSERVADO')).toUpperCase()}
         </span>
       </td>
-      <td className="py-3 px-4 whitespace-nowrap">
+      <td className="table-cell">
         {talento?.perfil}
       </td>
-      <td className="py-3 px-4 whitespace-nowrap text-center">
+      <td className="table-cell text-center">
         <input
           type="checkbox"
           checked={talento.confirmado || false}
@@ -654,7 +650,7 @@ const TalentTable: React.FC = () => {
   return (
     <Dashboard>
       {isLoading && (<Loading opacity='opacity-60' />)}
-      <div className="container mx-auto p-4">
+      <div className="p-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />

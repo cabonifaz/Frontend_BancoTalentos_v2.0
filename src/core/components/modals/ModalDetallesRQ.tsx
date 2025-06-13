@@ -93,7 +93,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
     return (
         <>
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1000px] h-[570px] overflow-y-auto relative">
+                <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] h-[570px] overflow-y-auto relative">
                     <button className="absolute top-4 right-4 w-6 h-6 z-50" onClick={handleCancelClick}>
                         <img src="/assets/ic_close_x.svg" alt="icon close" />
                     </button>
@@ -221,7 +221,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                             {
                                 label: "Cliente",
                                 children: (
-                                    <>
+                                    <div className="flex flex-col h-[calc(570px-120px)]">
                                         {/* Cliente */}
                                         <div className="flex items-center">
                                             <label className="text-sm font-medium text-gray-700">Cliente:</label>
@@ -246,7 +246,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             <h2 className="text-sm font-medium text-gray-700">Lista de contactos</h2>
                                         </div>
 
-                                        <div className="mt-4 max-h-[30vh] overflow-y-auto">
+                                        <div className="mt-4 flex-1 overflow-y-auto">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
@@ -294,7 +294,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
+                                    </div >
                                 )
                             },
                             {
@@ -307,36 +307,85 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                     </p>
                                 ),
                                 children: (
-                                    <div className="p-1">
-                                        <div className="table-container">
-                                            <div className="table-wrapper">
-                                                <table className="table">
-                                                    <thead>
-                                                        <tr className="table-header">
-                                                            <th scope="col" className="table-header-cell">ID</th>
-                                                            <th scope="col" className="table-header-cell">Perfil profesional</th>
-                                                            <th scope="col" className="table-header-cell">Cantidad</th>
-                                                            <th scope="col" className="table-header-cell"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {requirementResponse?.requerimiento.lstRqVacantes.length === 0 ? (
-                                                            <tr>
-                                                                <td colSpan={4} className="table-empty">
-                                                                    No hay vacantes disponibles.
-                                                                </td>
+                                    <div className="p-1 flex flex-col h-[calc(570px-90px)]">
+                                        <div className="flex-1 overflow-y-auto">
+                                            <div className="table-container">
+                                                <div className="table-wrapper">
+                                                    <table className="table">
+                                                        <thead>
+                                                            <tr className="table-header">
+                                                                <th scope="col" className="table-header-cell">ID</th>
+                                                                <th scope="col" className="table-header-cell">Perfil profesional</th>
+                                                                <th scope="col" className="table-header-cell">Cantidad</th>
+                                                                <th scope="col" className="table-header-cell"></th>
                                                             </tr>
-                                                        ) : (
-                                                            requirementResponse?.requerimiento.lstRqVacantes.map((vacante) => (
-                                                                <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                    <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                    <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                    <td className="table-cell">{vacante.cantidad}</td>
+                                                        </thead>
+                                                        <tbody>
+                                                            {requirementResponse?.requerimiento.lstRqVacantes.length === 0 ? (
+                                                                <tr>
+                                                                    <td colSpan={4} className="table-empty">
+                                                                        No hay vacantes disponibles.
+                                                                    </td>
                                                                 </tr>
-                                                            ))
-                                                        )}
-                                                    </tbody>
-                                                </table>
+                                                            ) : (
+                                                                requirementResponse?.requerimiento.lstRqVacantes.map((vacante) => (
+                                                                    <>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                            <td className="table-cell">{vacante.cantidad}</td>
+                                                                        </tr>
+                                                                    </>
+                                                                ))
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -346,47 +395,47 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                 label: "Postulantes",
                                 children: (
                                     <div className="p-1">
-                                        <div className="bg-white rounded-lg shadow-md overflow-auto max-w-full max-h-[445px]">
-                                            <table className="min-w-full divide-y divide-gray-200">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Nombres</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Apellidos</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Doc. Identidad</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Celular</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Email</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Situación</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Estado</th>
-                                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap tracking-wider">Perfil</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
-                                                    {requirementResponse?.requerimiento.lstRqTalento.length === 0 ? (
+                                        <div className="table-container">
+                                            <div className="table-wrapper">
+                                                <table className="table">
+                                                    <thead className="table-header">
                                                         <tr>
-                                                            <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                                                No hay postulantes disponibles.
-                                                            </td>
+                                                            <th scope="col" className="table-header-cell">Nombres y apellidos</th>
+                                                            <th scope="col" className="table-header-cell">Doc. Identidad</th>
+                                                            <th scope="col" className="table-header-cell">Celular</th>
+                                                            <th scope="col" className="table-header-cell">Email</th>
+                                                            <th scope="col" className="table-header-cell">Situación</th>
+                                                            <th scope="col" className="table-header-cell">Estado</th>
+                                                            <th scope="col" className="table-header-cell">Perfil</th>
                                                         </tr>
-                                                    ) : (
-                                                        requirementResponse?.requerimiento?.lstRqTalento?.map((talento) => (
-                                                            <tr key={talento.idTalento}>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.nombresTalento}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.apellidosTalento}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.dni}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.celular}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.email}</td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.situacion}</td>
-                                                                <td className="table-cell">
-                                                                    <span className={`badge ${talento.idEstado === 2 ? 'badge-green' : 'badge-yellow'}`}>
-                                                                        {(talento?.estado).toUpperCase()}
-                                                                    </span>
+                                                    </thead>
+                                                    <tbody className="bg-white divide-y divide-gray-200">
+                                                        {requirementResponse?.requerimiento.lstRqTalento.length === 0 ? (
+                                                            <tr>
+                                                                <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                                                                    No hay postulantes disponibles.
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{talento.perfil}</td>
                                                             </tr>
-                                                        ))
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                                        ) : (
+                                                            requirementResponse?.requerimiento?.lstRqTalento?.map((talento) => (
+                                                                <tr key={talento.idTalento}>
+                                                                    <td className="table-cell">{talento.nombresTalento} {talento.apellidosTalento}</td>
+                                                                    <td className="table-cell">{talento.dni}</td>
+                                                                    <td className="table-cell">{talento.celular}</td>
+                                                                    <td className="table-cell">{talento.email}</td>
+                                                                    <td className="table-cell">{talento.situacion}</td>
+                                                                    <td className="table-cell">
+                                                                        <span className={`badge ${talento.idEstado === 2 ? 'badge-green' : 'badge-yellow'}`}>
+                                                                            {(talento?.estado).toUpperCase()}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="table-cell">{talento.perfil}</td>
+                                                                </tr>
+                                                            ))
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 ),
