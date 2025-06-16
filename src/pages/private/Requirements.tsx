@@ -170,6 +170,24 @@ export const Requirements = () => {
         }
     }
 
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            const newPage = currentPage - 1;
+            setCurrentPage(newPage);
+            executeSearch({ nPag: newPage });
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < (ReqsResponse?.totalPaginas || 0)) {
+            const newPage = currentPage + 1;
+            setCurrentPage(newPage);
+            executeSearch({ nPag: newPage });
+        }
+    };
+
+    const shouldShowPagination = (ReqsResponse?.totalElementos || 0) > 0 && (ReqsResponse?.totalPaginas || 0) > 1;
+
     return (
         <>
             {(loadingClientes || loadingParams || loadingReqs) && (<Loading opacity="opacity-60" />)}
@@ -315,29 +333,32 @@ export const Requirements = () => {
                     </div>
 
                     {/* Pagination */}
-                    {(ReqsResponse?.requerimientos || []).length > 0 && (
-                        <div className="flex justify-center items-center gap-4 mt-4 mb-2">
-                            <button
-                                className={`btn ${currentPage === 1 ? 'btn-disabled' : 'btn-blue'}`}
-                                onClick={() => {
-                                    const newPage = currentPage - 1;
-                                    setCurrentPage(newPage);
-                                    executeSearch({ nPag: newPage });
-                                }}
-                                disabled={currentPage === 1}>
-                                Anterior
-                            </button>
-                            <span>Página {currentPage}</span>
-                            <button
-                                className={`btn ${(ReqsResponse?.requerimientos || []).length < 8 ? 'btn-disabled' : 'btn-blue'}`}
-                                onClick={() => {
-                                    const newPage = currentPage + 1;
-                                    setCurrentPage(newPage);
-                                    executeSearch({ nPag: newPage });
-                                }}
-                                disabled={(ReqsResponse?.requerimientos || []).length < 8}>
-                                Siguiente
-                            </button>
+                    {(ReqsResponse?.totalElementos || 0) > 0 && (
+                        <div className="flex flex-col items-center gap-2 my-4">
+                            {shouldShowPagination && (
+                                <div className="flex justify-center items-center gap-4">
+                                    {/* Botón Anterior */}
+                                    <button
+                                        className={`btn ${currentPage === 1 ? 'btn-disabled' : 'btn-blue'}`}
+                                        onClick={handlePreviousPage}
+                                        disabled={currentPage === 1}>
+                                        Anterior
+                                    </button>
+
+                                    {/* Información de página actual */}
+                                    <span className="text-sm">
+                                        Página {currentPage} de {(ReqsResponse?.totalPaginas || 0)}
+                                    </span>
+
+                                    {/* Botón Siguiente */}
+                                    <button
+                                        className={`btn ${currentPage >= (ReqsResponse?.totalPaginas || 0) ? 'btn-disabled' : 'btn-blue'}`}
+                                        onClick={handleNextPage}
+                                        disabled={currentPage >= (ReqsResponse?.totalPaginas || 0)}>
+                                        Siguiente
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
