@@ -329,58 +329,11 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                                                 </tr>
                                                             ) : (
                                                                 requirementResponse?.requerimiento.lstRqVacantes.map((vacante) => (
-                                                                    <>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                        <tr key={vacante.idRequerimientoVacante} className="table-row">
-                                                                            <td className="table-cell">{vacante.idRequerimientoVacante}</td>
-                                                                            <td className="table-cell">{vacante.perfilProfesional}</td>
-                                                                            <td className="table-cell">{vacante.cantidad}</td>
-                                                                        </tr>
-                                                                    </>
+                                                                    <tr key={vacante.idRequerimientoVacante} className="table-row">
+                                                                        <td className="table-cell">{vacante.idRequerimientoVacante}</td>
+                                                                        <td className="table-cell">{vacante.perfilProfesional}</td>
+                                                                        <td className="table-cell">{vacante.cantidad}</td>
+                                                                    </tr>
                                                                 ))
                                                             )}
                                                         </tbody>
