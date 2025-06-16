@@ -246,7 +246,7 @@ export const ModalDetallesRQ = ({ onClose, updateRQData, estadoOptions, RQ, clie
                                             <h2 className="text-sm font-medium text-gray-700">Lista de contactos</h2>
                                         </div>
 
-                                        <div className="mt-4 flex-1 overflow-y-auto">
+                                        <div className="mt-4 flex-1 overflow-y-auto custom-scroll">
                                             <div className="table-container">
                                                 <div className="table-wrapper">
                                                     <table className="table">
