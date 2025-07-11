@@ -11,7 +11,7 @@ export const loginApp = ({ username, password }: models.LoginParams): Promise<Ax
 
 // user
 export const createNewFavList = (data: { collectionName: string }): Promise<AxiosResponse<models.BaseResponse>> => {
-    return axiosInstance.post("/user/addFavourite", { collectionName: data.collectionName });
+    return axiosInstance.post("/bdt/user/addFavourite", { collectionName: data.collectionName });
 }
 
 // talents
@@ -119,7 +119,7 @@ export const deleteTalenteFeedback = (idFeedback: number): Promise<AxiosResponse
 
 // user
 export const getUserFavourites = (): Promise<AxiosResponse<models.FavouritesResponse>> => {
-    return axiosInstance.get("/user/getFavourites");
+    return axiosInstance.get("/bdt/user/getFavourites");
 };
 
 // FMI ENDPOINTS
