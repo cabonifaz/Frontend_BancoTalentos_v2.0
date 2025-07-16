@@ -204,7 +204,7 @@ export const AddTalent = () => {
         montoInicialRxH:
           idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
         montoFinalRxH:
-          idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
+          idModalidadFacturacion === MODALIDAD_RXH ? montoFinal : 0,
         experiencias: cleanExperiencias,
         educaciones: cleanEducaciones,
         cvArchivo: {
@@ -433,6 +433,7 @@ export const AddTalent = () => {
                     initialText="Sube un archivo"
                     acceptedTypes=".pdf"
                     onChange={(file) => handleFileChange("cv", file)}
+                    value={cvFile}
                   />
                   {cvFileErrors !== "" && (
                     <p className="text-red-400 text-sm">{cvFileErrors}</p>
@@ -447,6 +448,7 @@ export const AddTalent = () => {
                     initialText="Sube una foto"
                     acceptedTypes=".png, .jpeg"
                     onChange={(file) => handleFileChange("foto", file)}
+                    value={fotoFile}
                   />
                   {fotoFileErrors !== "" && (
                     <p className="text-red-400 text-sm">{fotoFileErrors}</p>
