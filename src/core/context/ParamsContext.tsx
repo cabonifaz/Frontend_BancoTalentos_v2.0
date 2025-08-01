@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext, useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { Param, ParamsResponse } from "../models";
-import { axiosInstance } from "../services/axiosService";
+import {axiosInstance, axiosInstanceNoToken} from "../services/axiosService";
 
 interface ParamContextType {
     paramsByMaestro: Record<number, Param[]>;
@@ -25,7 +25,7 @@ export const ParamsProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
 
         try {
-            const response = await axiosInstance.get<ParamsResponse>(
+            const response = await axiosInstanceNoToken.get<ParamsResponse>(
                 `/bdt/params?groupIdMaestros=${idMaestros}`
             );
 
