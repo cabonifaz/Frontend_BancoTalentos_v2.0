@@ -257,7 +257,7 @@ export const saveTalentFMI = (
 export const addPostulanteService = (
   data: models.AddPostulanteParams,
 ): Promise<AxiosResponse<models.BaseResponseFMI>> => {
-  const token = localStorage.getItem("authToken") || "";
+  const token = localStorage.getItem("tempToken") || "";
 
   return axiosInstanceNoTokenFMI.post("/fmi/postulant/register", data, {
     headers: {
