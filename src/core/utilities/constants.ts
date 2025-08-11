@@ -1,7 +1,7 @@
-// export const BASE_URL = "https://api-bdt.aplicacion2-team.com";
-// export const BASE_URL_FMI = "https://api-autfmi.aplicacion2-team.com";
-export const BASE_URL = "http://localhost:8080";
-export const BASE_URL_FMI = "http://localhost:8081";
+export const BASE_URL = "https://api-bdt.aplicacion2-team.com";
+export const BASE_URL_FMI = "https://api-autfmi.aplicacion2-team.com";
+// export const BASE_URL = "http://localhost:8080";
+// export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
