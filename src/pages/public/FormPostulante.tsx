@@ -224,7 +224,7 @@ export const FormPostulante = () => {
               nombres: data.nombres,
               apellidoPaterno: data.apellidoPaterno,
               apellidoMaterno: data?.apellidoMaterno || "",
-              telefono: data.telefono,
+              telefono: phone,
               dni: data?.dni || "",
               email: data.email,
               tiempoContrato: null,
@@ -238,6 +238,7 @@ export const FormPostulante = () => {
                   : data.idMoneda,
               idModalidad: null,
               ubicacion: ubicacion,
+              tieneEquipo: data.tieneEquipo,
             }).then((response) => {
               if (response.data.idTipoMensaje === 2) {
                 localStorage.removeItem("tempToken");
