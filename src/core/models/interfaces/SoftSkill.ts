@@ -1,7 +1,8 @@
 export interface SoftSkill {
-    nombreHabilidad: string;
+  nombreHabilidad: string;
 }
 
 export interface AddSoftSkill {
-    idHabilidad: number;
+  idHabilidad: number;
+  habilidad: string;
 }
