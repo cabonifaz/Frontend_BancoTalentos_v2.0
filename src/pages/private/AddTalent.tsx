@@ -48,7 +48,9 @@ import { NumberInput } from "../../core/components/ui/InputNumber";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
-  const { paramsByMaestro } = useParams("12,13,2,19,20,15,16,32");
+  const { paramsByMaestro, refetchParams } = useParams(
+    "12,13,2,19,20,15,16,32",
+  );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
   const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([
@@ -116,6 +118,9 @@ export const AddTalent = () => {
         setSelectedCountry(0);
         setSelectedCity(0);
         setSelectedCountryPhone(0);
+
+        // refrescar parametros para futuros registros
+        refetchParams("12,13,2,19,20,15,16,32");
       }
     },
   });
@@ -237,16 +242,27 @@ export const AddTalent = () => {
   const handleRemoveSkill = (index: number) => {
     const newSkills = technicalSkills.filter((_, i) => i !== index);
     setTechnicalSkills(newSkills);
+    setValue(`habilidadesTecnicas`, newSkills);
+    clearErrors(`habilidadesTecnicas`);
   };
 
   const handleSkillChange = (
     index: number,
     field: keyof AddTechSkill,
-    value: number,
+    value: number | string,
   ) => {
-    const newSkills = [...technicalSkills];
-    newSkills[index][field] = value;
-    setTechnicalSkills(newSkills);
+    // Actualiza react-hook-form
+    setValue(`habilidadesTecnicas.${index}.${field}`, value, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    // Actualiza el estado local
+    setTechnicalSkills((prev) => {
+      const newSkills = [...prev];
+      newSkills[index][field] = value as never;
+      return newSkills;
+    });
   };
 
   // Soft skills
@@ -257,16 +273,27 @@ export const AddTalent = () => {
   const handleRemoveSoftSkill = (index: number) => {
     const newSkills = softSkills.filter((_, i) => i !== index);
     setSoftSkills(newSkills);
+    setValue(`habilidadesBlandas`, newSkills);
+    clearErrors(`habilidadesBlandas`);
   };
 
   const handleSoftSkillChange = (
     index: number,
     field: keyof AddSoftSkill,
-    value: number,
+    value: number | string,
   ) => {
-    const newSkills = [...softSkills];
-    newSkills[index][field] = value;
-    setSoftSkills(newSkills);
+    // Actualiza react-hook-form
+    setValue(`habilidadesBlandas.${index}.${field}`, value, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    // Actualiza el estado local
+    setSoftSkills((prev) => {
+      const newSkills = [...prev];
+      newSkills[index][field] = value as never;
+      return newSkills;
+    });
   };
 
   // Experiences
@@ -822,6 +849,7 @@ export const AddTalent = () => {
                   onAdd={handleAddSkill}
                   onRemove={handleRemoveSkill}
                   handleChange={handleSkillChange}
+                  dropdownWithSearch={true}
                 />
                 {/* Soft skills */}
                 <SoftSkillsSection<AddTalentType>
@@ -832,6 +860,7 @@ export const AddTalent = () => {
                   onAdd={handleAddSoftSkill}
                   onRemove={handleRemoveSoftSkill}
                   handleChange={handleSoftSkillChange}
+                  dropdownWithSearch={true}
                 />
                 {/* Experience */}
                 <ExperiencesSection<AddTalentType>
