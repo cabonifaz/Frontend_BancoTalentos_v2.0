@@ -17,6 +17,7 @@ export const EducationsSection = <F extends FieldValues>({
   control,
   errors,
   shouldShowEmptyForm = true,
+  shouldAddElements = true,
 }: EducationsSectionProps<F>) => {
   const { setValue, clearErrors } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
@@ -60,6 +61,7 @@ export const EducationsSection = <F extends FieldValues>({
       }
       onRemove={remove}
       canRemoveFirst={!shouldShowEmptyForm}
+      canAddSections={shouldAddElements}
     >
       {fields.map((field, index) => (
         <div key={field.id}>
@@ -244,7 +246,7 @@ export const EducationsSection = <F extends FieldValues>({
                     type="date"
                     id={`educaciones.${index}.fechaFin`}
                     disabled={!!currentDates[index]}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
                   />
                 )}
               />

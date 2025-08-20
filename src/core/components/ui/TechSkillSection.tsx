@@ -4,6 +4,7 @@ import {
   Path,
   ArrayPath,
   useFieldArray,
+  useFormContext,
 } from "react-hook-form";
 import { DynamicSection } from "..";
 import { DynamicSectionProps, Param } from "../../models";
@@ -21,7 +22,9 @@ export const TechSkillsSection = <F extends FieldValues>({
   habilidadesTecnicas,
   dropdownWithSearch,
   shouldShowEmptyForm = true,
+  shouldAddElements = true,
 }: TechSkillsSectionProps<F>) => {
+  const { setValue } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
     name: "habilidadesTecnicas" as ArrayPath<F>,
@@ -57,12 +60,29 @@ export const TechSkillsSection = <F extends FieldValues>({
     }
   }, [shouldShowEmptyForm, fields.length, append]);
 
+  // Función para actualizar idHabilidad automáticamente basado en el texto
+  const updateIdHabilidadFromText = (text: string, index: number) => {
+    const habilidadExistente = habilidadesTecnicas.find(
+      (h) => h.string1.toLowerCase() === text.toLowerCase(),
+    );
+
+    const idHabilidadPath =
+      `habilidadesTecnicas.${index}.idHabilidad` as Path<F>;
+
+    if (habilidadExistente) {
+      setValue(idHabilidadPath, habilidadExistente.num1 as any);
+    } else {
+      setValue(idHabilidadPath, 0 as any);
+    }
+  };
+
   return (
     <DynamicSection
       title="Habilidades técnicas"
       onAdd={() => append({ idHabilidad: 0, habilidad: "", anios: 0 } as any)}
       onRemove={(index) => remove(index)}
       canRemoveFirst={!shouldShowEmptyForm}
+      canAddSections={shouldAddElements}
     >
       {fields.map((field, index) => (
         <div key={field.id}>
@@ -84,10 +104,6 @@ export const TechSkillsSection = <F extends FieldValues>({
                   const filteredOptions = habilidadesTecnicas.filter((h) =>
                     h.string1.toLowerCase().includes(searchValue.toLowerCase()),
                   );
-                  const existsExact = habilidadesTecnicas.some(
-                    (h) =>
-                      h.string1.toLowerCase() === searchValue.toLowerCase(),
-                  );
 
                   return (
                     <div className="relative">
@@ -99,7 +115,11 @@ export const TechSkillsSection = <F extends FieldValues>({
                         autoComplete="off"
                         value={searchValue}
                         onChange={(e) => {
-                          field.onChange(e.target.value);
+                          const newValue = e.target.value;
+                          field.onChange(newValue);
+                          // Actualizar idHabilidad automáticamente
+                          updateIdHabilidadFromText(newValue, index);
+
                           setShowSuggestions((prev) => {
                             const arr = [...prev];
                             arr[index] = true;
@@ -113,15 +133,18 @@ export const TechSkillsSection = <F extends FieldValues>({
                             return arr;
                           })
                         }
-                        onBlur={() =>
+                        onBlur={() => {
+                          // Asegurar idHabilidad al perder foco
+                          updateIdHabilidadFromText(searchValue, index);
+
                           setTimeout(() => {
                             setShowSuggestions((prev) => {
                               const arr = [...prev];
                               arr[index] = false;
                               return arr;
                             });
-                          }, 150)
-                        }
+                          }, 150);
+                        }}
                         placeholder="Escribe para buscar..."
                         className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full"
                         aria-expanded={showSuggestions[index]}
@@ -129,31 +152,19 @@ export const TechSkillsSection = <F extends FieldValues>({
 
                       {showSuggestions[index] && searchValue && (
                         <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto z-20">
-                          {filteredOptions.length > 0 &&
-                            filteredOptions.map((habilidad) => (
-                              <li
-                                key={habilidad.idParametro}
-                                className="p-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() => {
-                                  // set nombre visible y id seleccionado
-                                  field.onChange(habilidad.string1);
-                                  setShowSuggestions((prev) => {
-                                    const arr = [...prev];
-                                    arr[index] = false;
-                                    return arr;
-                                  });
-                                }}
-                              >
-                                {habilidad.string1}
-                              </li>
-                            ))}
-
-                          {!existsExact && (
+                          {filteredOptions.map((habilidad) => (
                             <li
-                              className="p-2 hover:bg-gray-100 cursor-pointer text-blue-600"
+                              key={habilidad.idParametro}
+                              className="p-2 hover:bg-gray-100 cursor-pointer"
                               onClick={() => {
-                                // agregar nueva: id = 0, nombre = searchValue
-                                field.onChange(searchValue);
+                                field.onChange(habilidad.string1);
+                                const idHabilidadPath =
+                                  `habilidadesTecnicas.${index}.idHabilidad` as Path<F>;
+                                setValue(
+                                  idHabilidadPath,
+                                  habilidad.num1 as any,
+                                );
+
                                 setShowSuggestions((prev) => {
                                   const arr = [...prev];
                                   arr[index] = false;
@@ -161,9 +172,9 @@ export const TechSkillsSection = <F extends FieldValues>({
                                 });
                               }}
                             >
-                              ➕ Agregar "{searchValue}"
+                              {habilidad.string1}
                             </li>
-                          )}
+                          ))}
                         </ul>
                       )}
                     </div>
@@ -179,7 +190,23 @@ export const TechSkillsSection = <F extends FieldValues>({
                     {...field}
                     id={`habilidadesTecnicas.${index}.idHabilidad`}
                     value={field.value ?? 0}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => {
+                      const newValue = Number(e.target.value);
+                      field.onChange(newValue);
+
+                      // También actualizar el campo habilidad con el texto seleccionado
+                      const selectedHabilidad = habilidadesTecnicas.find(
+                        (h) => h.num1 === newValue,
+                      );
+                      if (selectedHabilidad) {
+                        const habilidadPath =
+                          `habilidadesTecnicas.${index}.habilidad` as Path<F>;
+                        setValue(
+                          habilidadPath,
+                          selectedHabilidad.string1 as any,
+                        );
+                      }
+                    }}
                     className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
                   >
                     <option value={0}>Seleccione una habilidad</option>

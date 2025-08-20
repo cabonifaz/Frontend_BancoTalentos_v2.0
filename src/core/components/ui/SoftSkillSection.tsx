@@ -4,6 +4,7 @@ import {
   Path,
   ArrayPath,
   useFieldArray,
+  useFormContext,
 } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
 import { DynamicSection } from "..";
@@ -21,7 +22,9 @@ export function SoftSkillsSection<F extends FieldValues>({
   habilidadesBlandas,
   dropdownWithSearch,
   shouldShowEmptyForm = true,
+  shouldAddElements = true,
 }: SoftSkillsSectionProps<F>) {
+  const { setValue } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
     name: "habilidadesBlandas" as ArrayPath<F>,
@@ -51,12 +54,29 @@ export function SoftSkillsSection<F extends FieldValues>({
     }
   }, [shouldShowEmptyForm, fields.length, append]);
 
+  // Función para actualizar idHabilidad automáticamente basado en el texto
+  const updateIdHabilidadFromText = (text: string, index: number) => {
+    const habilidadExistente = habilidadesBlandas.find(
+      (h) => h.string1.toLowerCase() === text.toLowerCase(),
+    );
+
+    const idHabilidadPath =
+      `habilidadesBlandas.${index}.idHabilidad` as Path<F>;
+
+    if (habilidadExistente) {
+      setValue(idHabilidadPath, habilidadExistente.num1 as any);
+    } else {
+      setValue(idHabilidadPath, 0 as any);
+    }
+  };
+
   return (
     <DynamicSection
       title="Habilidades blandas"
       onAdd={() => append({ idHabilidad: 0, habilidad: "" } as any)}
       onRemove={(index) => remove(index)}
       canRemoveFirst={!shouldShowEmptyForm}
+      canAddSections={shouldAddElements}
     >
       {fields.map((field, index) => (
         <div className="flex flex-col my-2 relative" key={field.id}>
@@ -76,9 +96,6 @@ export function SoftSkillsSection<F extends FieldValues>({
                 const filteredOptions = habilidadesBlandas.filter((h) =>
                   h.string1.toLowerCase().includes(searchValue.toLowerCase()),
                 );
-                const existsExact = habilidadesBlandas.some(
-                  (h) => h.string1.toLowerCase() === searchValue.toLowerCase(),
-                );
 
                 return (
                   <div className="relative">
@@ -87,7 +104,11 @@ export function SoftSkillsSection<F extends FieldValues>({
                       autoComplete="off"
                       value={searchValue}
                       onChange={(e) => {
-                        field.onChange(e.target.value);
+                        const newValue = e.target.value;
+                        field.onChange(newValue);
+                        // Actualizar idHabilidad automáticamente
+                        updateIdHabilidadFromText(newValue, index);
+
                         setShowSuggestions((prev) => {
                           const arr = [...prev];
                           arr[index] = true;
@@ -101,15 +122,18 @@ export function SoftSkillsSection<F extends FieldValues>({
                           return arr;
                         })
                       }
-                      onBlur={() =>
+                      onBlur={() => {
+                        // Asegurar idHabilidad al perder foco
+                        updateIdHabilidadFromText(searchValue, index);
+
                         setTimeout(() => {
                           setShowSuggestions((prev) => {
                             const arr = [...prev];
                             arr[index] = false;
                             return arr;
                           });
-                        }, 150)
-                      }
+                        }, 150);
+                      }}
                       placeholder="Escribe para buscar..."
                       className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full"
                       aria-expanded={showSuggestions[index]}
@@ -117,31 +141,16 @@ export function SoftSkillsSection<F extends FieldValues>({
 
                     {showSuggestions[index] && searchValue && (
                       <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-40 overflow-y-auto z-20">
-                        {filteredOptions.length > 0 &&
-                          filteredOptions.map((habilidad) => (
-                            <li
-                              key={habilidad.idParametro}
-                              className="p-2 hover:bg-gray-100 cursor-pointer"
-                              onClick={() => {
-                                field.onChange(habilidad.string1);
-                                // Cerrar las sugerencias al seleccionar
-                                setShowSuggestions((prev) => {
-                                  const arr = [...prev];
-                                  arr[index] = false;
-                                  return arr;
-                                });
-                              }}
-                            >
-                              {habilidad.string1}
-                            </li>
-                          ))}
-
-                        {!existsExact && (
+                        {filteredOptions.map((habilidad) => (
                           <li
-                            className="p-2 hover:bg-gray-100 cursor-pointer text-blue-600"
+                            key={habilidad.idParametro}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
                             onClick={() => {
-                              field.onChange(searchValue);
-                              // Cerrar sugerencias al agregar nueva
+                              field.onChange(habilidad.string1);
+                              const idHabilidadPath =
+                                `habilidadesBlandas.${index}.idHabilidad` as Path<F>;
+                              setValue(idHabilidadPath, habilidad.num1 as any);
+
                               setShowSuggestions((prev) => {
                                 const arr = [...prev];
                                 arr[index] = false;
@@ -149,9 +158,9 @@ export function SoftSkillsSection<F extends FieldValues>({
                               });
                             }}
                           >
-                            ➕ Agregar "{searchValue}"
+                            {habilidad.string1}
                           </li>
-                        )}
+                        ))}
                       </ul>
                     )}
                   </div>
@@ -166,7 +175,20 @@ export function SoftSkillsSection<F extends FieldValues>({
                 <select
                   {...field}
                   value={field.value ?? 0}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newValue = Number(e.target.value);
+                    field.onChange(newValue);
+
+                    // También actualizar el campo habilidad con el texto seleccionado
+                    const selectedHabilidad = habilidadesBlandas.find(
+                      (h) => h.num1 === newValue,
+                    );
+                    if (selectedHabilidad) {
+                      const habilidadPath =
+                        `habilidadesBlandas.${index}.habilidad` as Path<F>;
+                      setValue(habilidadPath, selectedHabilidad.string1 as any);
+                    }
+                  }}
                   className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full"
                 >
                   <option value={0}>Seleccione una habilidad</option>

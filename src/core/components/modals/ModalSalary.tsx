@@ -1,4 +1,7 @@
-import { useRef, useState, ChangeEvent, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useEffect } from "react";
 import { useParams } from "../../context/ParamsContext";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
@@ -9,213 +12,418 @@ import { enqueueSnackbar } from "notistack";
 import { updateTalentSalary } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
-import { validateCurrency, validateSalary } from "../../utilities/validation";
 import { MODALIDAD_PLANILLA, MODALIDAD_RXH } from "../../utilities/constants";
 
 interface Props {
-    idTalento?: number;
-    idMoneda?: number;
-    idModalidadFacturacion?: number;
-    moneda?: string;
-    initPlan?: number;
-    endPlan?: number;
-    initRxH?: number;
-    endRxH?: number;
-    updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
+  idTalento?: number;
+  idMoneda?: number;
+  idModalidadFacturacion?: number;
+  moneda?: string;
+  initPlan?: number;
+  endPlan?: number;
+  initRxH?: number;
+  endRxH?: number;
+  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, initRxH, endRxH, idModalidadFacturacion, updateTalentList }: Props) => {
-    const { paramsByMaestro } = useParams();
-    const { closeModal } = useModal();
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [inputValues, setInputValues] = useState({
-        montoInicial: '0',
-        montoFinal: '0',
-    });
+// Esquema de validación con Zod - SIN transform para mantener string en el form
+const salarySchema = z
+  .object({
+    idMoneda: z.number().min(1, "La moneda es requerida"),
+    idModalidadFacturacion: z
+      .number()
+      .min(1, "La modalidad de facturación es requerida"),
+    montoInicial: z
+      .string()
+      .min(1, "El monto inicial es requerido")
+      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
+        message: "Formato de monto inválido",
+      })
+      .refine(
+        (val) => {
+          const num = Number(val);
+          return num > 0;
+        },
+        {
+          message: "El monto inicial debe ser mayor a 0",
+        },
+      ),
+    montoFinal: z
+      .string()
+      .min(1, "El monto final es requerido")
+      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
+        message: "Formato de monto inválido",
+      })
+      .refine(
+        (val) => {
+          const num = Number(val);
+          return num > 0;
+        },
+        {
+          message: "El monto final debe ser mayor a 0",
+        },
+      ),
+  })
+  .refine(
+    (data) => {
+      const inicial = Number(data.montoInicial);
+      const final = Number(data.montoFinal);
+      return final >= inicial;
+    },
+    {
+      message: "El monto final debe ser mayor o igual al inicial",
+      path: ["montoFinal"],
+    },
+  );
 
-    useEffect(() => {
-        const newMontoInicial = idModalidadFacturacion === MODALIDAD_RXH
-            ? initRxH?.toString()
-            : initPlan?.toString();
+// Tipo para el formulario (mantiene strings)
+type SalaryFormData = {
+  idMoneda: number;
+  idModalidadFacturacion: number;
+  montoInicial: string;
+  montoFinal: string;
+};
 
-        const newMontoFinal = idModalidadFacturacion === MODALIDAD_RXH
-            ? endRxH?.toString()
-            : endPlan?.toString();
+// Tipo para los datos enviados a la API (con numbers)
+type SalaryApiData = {
+  idMoneda: number;
+  idModalidadFacturacion: number;
+  montoInicial: number;
+  montoFinal: number;
+};
 
-        // Solo actualiza si los valores no son undefined
-        if (newMontoInicial !== undefined && newMontoFinal !== undefined) {
-            setInputValues({
-                montoInicial: newMontoInicial,
-                montoFinal: newMontoFinal,
-            });
+export const ModalSalary = ({
+  idTalento,
+  idMoneda,
+  moneda,
+  initPlan,
+  endPlan,
+  initRxH,
+  endRxH,
+  idModalidadFacturacion,
+  updateTalentList,
+}: Props) => {
+  const { paramsByMaestro } = useParams();
+  const { closeModal, isModalOpen } = useModal();
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = useForm<SalaryFormData>({
+    resolver: zodResolver(salarySchema),
+    defaultValues: {
+      idMoneda: idMoneda || 0,
+      idModalidadFacturacion: idModalidadFacturacion || 0,
+      montoInicial: "",
+      montoFinal: "",
+    },
+    mode: "onChange",
+  });
+
+  // Efecto para inicializar valores cuando el modal se abre
+  useEffect(() => {
+    if (isModalOpen("modalSalary")) {
+      const montoInicial =
+        idModalidadFacturacion === MODALIDAD_RXH
+          ? initRxH?.toString() || ""
+          : initPlan?.toString() || "";
+
+      const montoFinal =
+        idModalidadFacturacion === MODALIDAD_RXH
+          ? endRxH?.toString() || ""
+          : endPlan?.toString() || "";
+
+      // No validar al inicializar
+      setValue("idModalidadFacturacion", idModalidadFacturacion || 0, {
+        shouldValidate: false,
+      });
+      setValue("idMoneda", idMoneda || 0, { shouldValidate: false });
+      setValue("montoInicial", montoInicial, { shouldValidate: false });
+      setValue("montoFinal", montoFinal, { shouldValidate: false });
+    }
+  }, [
+    isModalOpen,
+    idModalidadFacturacion,
+    idMoneda,
+    initPlan,
+    endPlan,
+    initRxH,
+    endRxH,
+    setValue,
+  ]);
+
+  const { loading, fetch: updateData } = useApi<
+    BaseResponse,
+    TalentSalaryParams
+  >(updateTalentSalary, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      });
+    },
+  });
+
+  const monedas = paramsByMaestro[2] || [];
+  const modalidadFacturacionOptions = paramsByMaestro[32] || [];
+
+  const handleNumberInput = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: string) => void,
+  ) => {
+    let inputValue = e.target.value;
+
+    // Permitir solo números y punto decimal
+    if (/^(\d+\.?\d*|\.\d+)$/.test(inputValue) || inputValue === "") {
+      if (inputValue.includes(".")) {
+        const parts = inputValue.split(".");
+        if (parts[1].length > 2) {
+          inputValue = parts[0] + "." + parts[1].substring(0, 2);
         }
-    }, [idModalidadFacturacion, initPlan, endPlan, initRxH, endRxH]);
+      }
+      onChange(inputValue);
+    } else if (inputValue === ".") {
+      onChange("0.");
+    }
+  };
 
-    const currencyRef = useRef<HTMLSelectElement>(null);
-    const modalidadFacturacionRef = useRef<HTMLSelectElement>(null);
+  const onSubmit = (data: SalaryFormData) => {
+    if (!idTalento) return;
 
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentSalaryParams>(updateTalentSalary, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar })
-    });
-
-    const monedas = paramsByMaestro[2] || [];
-    const modalidadFacturacion = paramsByMaestro[32] || [];
-
-    const handleNumberChange = (e: ChangeEvent<HTMLInputElement>, fieldName: keyof typeof inputValues) => {
-        let inputValue = e.target.value;
-
-        if (/^(\d+\.?\d*|\.\d+)$/.test(inputValue) || inputValue === "") {
-            if (inputValue.includes('.')) {
-                const parts = inputValue.split('.');
-                if (parts[1].length > 2) {
-                    inputValue = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-            }
-
-            setInputValues(prev => ({
-                ...prev,
-                [fieldName]: inputValue
-            }));
-        } else if (inputValue === ".") {
-            setInputValues(prev => ({
-                ...prev,
-                [fieldName]: "0."
-            }));
-        }
+    // Convertir strings a numbers para la API
+    const apiData: SalaryApiData = {
+      idMoneda: data.idMoneda,
+      idModalidadFacturacion: data.idModalidadFacturacion,
+      montoInicial: Number(data.montoInicial),
+      montoFinal: Number(data.montoFinal),
     };
 
-    const handleOnConfirm = () => {
-        setErrors({});
-        const newErrors: { [key: string]: string } = {};
+    const initPlanilla =
+      apiData.idModalidadFacturacion === MODALIDAD_PLANILLA
+        ? apiData.montoInicial
+        : 0;
+    const endPlanilla =
+      apiData.idModalidadFacturacion === MODALIDAD_PLANILLA
+        ? apiData.montoFinal
+        : 0;
+    const initRxH =
+      apiData.idModalidadFacturacion === MODALIDAD_RXH
+        ? apiData.montoInicial
+        : 0;
+    const endRxH =
+      apiData.idModalidadFacturacion === MODALIDAD_RXH ? apiData.montoFinal : 0;
 
-        if (currencyRef.current && idTalento) {
-            const idCurrency = Number(currencyRef.current.value);
-            const modalidadFacturacion = Number(modalidadFacturacionRef.current?.value);
-            const initPlanilla = modalidadFacturacion === MODALIDAD_PLANILLA ? Number(inputValues.montoInicial) : 0;
-            const endPlanilla = modalidadFacturacion === MODALIDAD_PLANILLA ? Number(inputValues.montoFinal) : 0;
-            const initRxH = modalidadFacturacion === MODALIDAD_RXH ? Number(inputValues.montoInicial) : 0;
-            const endRxH = modalidadFacturacion === MODALIDAD_RXH ? Number(inputValues.montoFinal) : 0;
-
-            const currencyValidation = validateCurrency(idCurrency);
-            if (!currencyValidation.isValid) {
-                newErrors.currency = currencyValidation.message || "Error de validación.";
-            }
-
-            const montoInicialValidation = validateSalary(Number(inputValues.montoInicial));
-            if (!montoInicialValidation.isValid) {
-                newErrors.initPlan = montoInicialValidation.message || "Error de validación.";
-            }
-
-            const montoFinalValidation = validateSalary(Number(inputValues.montoFinal));
-            if (!montoFinalValidation.isValid) {
-                newErrors.endPlan = montoFinalValidation.message || "Error de validación.";
-            }
-
-            if (Object.keys(newErrors).length > 0) {
-                setErrors(newErrors);
-                return;
-            }
-
-            updateData({
-                idTalento: idTalento,
-                idMoneda: idCurrency,
-                montoInicialPlanilla: initPlanilla,
-                montoFinalPlanilla: endPlanilla,
-                montoInicialRxH: initRxH,
-                montoFinalRxH: endRxH,
-                idModalidadFacturacion: modalidadFacturacion
-            }).then(
-                (response) => {
-                    if (response.data.idMensaje === 2) {
-                        closeModal("modalSalary");
-                        if (idTalento && updateTalentList && currencyRef.current) {
-                            const selectedIndex = currencyRef.current.selectedIndex;
-                            const selectedOption = currencyRef.current.options[selectedIndex];
-
-                            updateTalentList(
-                                idTalento,
-                                {
-                                    moneda: selectedOption.getAttribute('data-code') ?? moneda,
-                                    idModalidadFacturacion: modalidadFacturacion,
-                                    montoInicialPlanilla: initPlanilla,
-                                    montoFinalPlanilla: endPlanilla,
-                                    montoInicialRxH: initRxH,
-                                    montoFinalRxH: endRxH
-                                }
-                            );
-                        }
-                    }
-                }
-            );
+    updateData({
+      idTalento,
+      idMoneda: apiData.idMoneda,
+      montoInicialPlanilla: initPlanilla,
+      montoFinalPlanilla: endPlanilla,
+      montoInicialRxH: initRxH,
+      montoFinalRxH: endRxH,
+      idModalidadFacturacion: apiData.idModalidadFacturacion,
+    }).then((response) => {
+      if (response.data.idMensaje === 2) {
+        handleCloseModal();
+        if (idTalento && updateTalentList) {
+          updateTalentList(idTalento, {
+            moneda: moneda,
+            idModalidadFacturacion: idModalidadFacturacion,
+            montoInicialPlanilla: initPlan || 0,
+            montoFinalPlanilla: endPlan || 0,
+            montoInicialRxH: initRxH || 0,
+            montoFinalRxH: endRxH || 0,
+          });
         }
-    }
+      }
+    });
+  };
 
-    return (
-        <Modal id="modalSalary" title="Modifica tu banda salarial" confirmationLabel="Editar" onConfirm={handleOnConfirm}>
-            {loading && (<Loading opacity="opacity-60" />)}
-            <div>
-                <h3 className="text-[#71717A] text-sm my-3">Agrega el rango de tus espectativas salariales.</h3>
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="currency" className="input-label">Moneda</label>
-                    <select
-                        id="currency"
-                        ref={currencyRef}
-                        name="currency"
-                        defaultValue={idMoneda || 0}
-                        className="input w-full">
-                        <option value={0}>Seleccione una moneda</option>
-                        {monedas.map((moneda) => (
-                            <option key={moneda.idParametro} value={moneda.num1} data-code={moneda.num1 === 3 ? moneda.string2 : moneda.string3}>
-                                {moneda.string1}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.currency && <p className="text-red-500 text-sm mt-2">{errors.currency}</p>}
-                    <label htmlFor="modalidadFacturacion" className="input-label">Modalidad de facturación</label>
-                    <select
-                        id="modalidadFacturacion"
-                        ref={modalidadFacturacionRef}
-                        defaultValue={idModalidadFacturacion || 0}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                        <option value={0}>Seleccione la modalidad de facturación</option>
-                        {modalidadFacturacion.map((mod) => (
-                            <option key={mod.idParametro} value={mod.num1}>
-                                {mod.string1}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <h3 className="w-full my-2">Montos</h3>
-                <div className="flex w-full gap-8">
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="montoInicial" className="input-label">Monto inicial</label>
-                        <input
-                            type="text"
-                            value={inputValues.montoInicial}
-                            onChange={(e) => handleNumberChange(e, 'montoInicial')}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            onFocus={(e) => e.currentTarget.select()}
-                            name="montoInicial"
-                            className="input"
-                            inputMode="decimal" />
-                        {errors.montoInicial && <p className="text-red-500 text-sm mt-2">{errors.montoInicial}</p>}
-                    </div>
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="montoFinal" className="input-label">Monto final</label>
-                        <input
-                            type="text"
-                            value={inputValues.montoFinal}
-                            onChange={(e) => handleNumberChange(e, 'montoFinal')}
-                            name="montoFinal"
-                            onFocus={(e) => e.currentTarget.select()}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            className="input"
-                            inputMode="decimal" />
-                        {errors.montoFinal && <p className="text-red-500 text-sm mt-2">{errors.montoFinal}</p>}
-                    </div>
-                </div>
-            </div>
-        </Modal>
+  const handleCloseModal = () => {
+    // Resetear el formulario al cerrar el modal
+    reset(
+      {
+        idMoneda: idMoneda || 0,
+        idModalidadFacturacion: idModalidadFacturacion || 0,
+        montoInicial:
+          idModalidadFacturacion === MODALIDAD_RXH
+            ? initRxH?.toString() || ""
+            : initPlan?.toString() || "",
+        montoFinal:
+          idModalidadFacturacion === MODALIDAD_RXH
+            ? endRxH?.toString() || ""
+            : endPlan?.toString() || "",
+      },
+      {
+        keepErrors: false, // limpiar errores
+      },
     );
-}
+    closeModal("modalSalary");
+  };
+
+  return (
+    <Modal
+      id="modalSalary"
+      title="Modifica tu banda salarial"
+      confirmationLabel="Editar"
+      onConfirm={handleSubmit(onSubmit)}
+      onClose={handleCloseModal}
+    >
+      {loading && <Loading opacity="opacity-60" />}
+
+      <div>
+        <h3 className="text-[#71717A] text-sm my-3">
+          Agrega el rango de tus expectativas salariales.
+        </h3>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Moneda */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="idMoneda" className="input-label">
+              Moneda
+            </label>
+            <Controller
+              name="idMoneda"
+              control={control}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  id="idMoneda"
+                  className="input w-full"
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(Number(e.target.value));
+                  }}
+                >
+                  <option value={0}>Seleccione una moneda</option>
+                  {monedas.map((monedaOption) => (
+                    <option
+                      key={monedaOption.idParametro}
+                      value={monedaOption.num1}
+                      data-code={
+                        monedaOption.num1 === 3
+                          ? monedaOption.string2
+                          : monedaOption.string3
+                      }
+                    >
+                      {monedaOption.string1}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {errors.idMoneda && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.idMoneda.message}
+              </p>
+            )}
+          </div>
+
+          {/* Modalidad de facturación */}
+          <div className="flex flex-col gap-1">
+            <label htmlFor="idModalidadFacturacion" className="input-label">
+              Modalidad de facturación
+            </label>
+            <Controller
+              name="idModalidadFacturacion"
+              control={control}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  id="idModalidadFacturacion"
+                  className="input w-full"
+                  value={field.value}
+                  onChange={(e) => {
+                    field.onChange(Number(e.target.value));
+                  }}
+                >
+                  <option value={0}>
+                    Seleccione la modalidad de facturación
+                  </option>
+                  {modalidadFacturacionOptions.map((mod) => (
+                    <option key={mod.idParametro} value={mod.num1}>
+                      {mod.string1}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {errors.idModalidadFacturacion && (
+              <p className="text-red-500 text-sm mt-2">
+                {errors.idModalidadFacturacion.message}
+              </p>
+            )}
+          </div>
+
+          {/* Montos */}
+          <h3 className="w-full my-2">Montos</h3>
+          <div className="flex w-full gap-8">
+            {/* Monto Inicial */}
+            <div className="flex flex-col w-1/2">
+              <label htmlFor="montoInicial" className="input-label">
+                Monto inicial
+              </label>
+              <Controller
+                name="montoInicial"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    id="montoInicial"
+                    value={field.value}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="input"
+                    inputMode="decimal"
+                    placeholder="Ej: 1000.00"
+                    onChange={(e) => handleNumberInput(e, field.onChange)}
+                  />
+                )}
+              />
+              {errors.montoInicial && (
+                <p className="text-red-500 text-sm mt-2">
+                  {errors.montoInicial.message}
+                </p>
+              )}
+            </div>
+
+            {/* Monto Final */}
+            <div className="flex flex-col w-1/2">
+              <label htmlFor="montoFinal" className="input-label">
+                Monto final
+              </label>
+              <Controller
+                name="montoFinal"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="text"
+                    id="montoFinal"
+                    value={field.value}
+                    onFocus={(e) => e.currentTarget.select()}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    className="input"
+                    inputMode="decimal"
+                    placeholder="Ej: 2000.00"
+                    onChange={(e) => handleNumberInput(e, field.onChange)}
+                  />
+                )}
+              />
+              {errors.montoFinal && (
+                <p className="text-red-500 text-sm mt-2">
+                  {errors.montoFinal.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
+    </Modal>
+  );
+};

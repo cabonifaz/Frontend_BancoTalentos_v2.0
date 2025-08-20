@@ -1,6 +1,6 @@
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useRef, useState } from "react";
-import { useModal } from "../../context/ModalContext";
 import { useParams } from "../../context/ParamsContext";
 import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
@@ -8,76 +8,137 @@ import { TalentSoftSkillParams } from "../../models/params/TalentUpdateParams";
 import { addTalentSoftSkill } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
+import { useModal } from "../../context/ModalContext";
 import { Loading } from "../ui/Loading";
-import { validateSkill } from "../../utilities/validation";
+import { z } from "zod";
+import { SoftSkillsSection } from "..";
+import { emptyToNull } from "../../models/schemas/Validations";
+import { useFieldArray } from "react-hook-form";
 
 interface Props {
-    idTalento?: number;
-    onUpdate?: (idTalento: number) => void;
+  idTalento?: number;
+  onUpdate?: (idTalento: number) => void;
 }
+
+export const softSkillSchema = z.object({
+  idHabilidad: z.coerce
+    .number({
+      invalid_type_error: "Seleccione una habilidad blanda",
+      required_error: "Seleccione una habilidad blanda",
+    })
+    .min(0, "Seleccione una habilidad blanda"),
+  habilidad: z.preprocess(
+    emptyToNull,
+    z.string({
+      invalid_type_error: "Seleccione una habilidad blanda",
+      required_error: "Seleccione una habilidad blanda",
+    }),
+  ),
+});
+
+export type SoftSkillFormData = z.infer<typeof softSkillSchema>;
+
+// Tipo para el formulario con array de habilidades
+type SoftSkillsArrayFormData = {
+  habilidadesBlandas: SoftSkillFormData[];
+};
 
 export const ModalSoftSkills = ({ idTalento, onUpdate }: Props) => {
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const { paramsByMaestro } = useParams();
-    const { closeModal } = useModal();
-    const abilityRef = useRef<HTMLSelectElement>(null);
+  const { paramsByMaestro } = useParams();
+  const { closeModal } = useModal();
+  const habilidadesBlandas = paramsByMaestro[20] || [];
 
-    const habilidadesBlandas = paramsByMaestro[20] || [];
+  const methods = useForm<SoftSkillsArrayFormData>({
+    resolver: zodResolver(
+      z.object({
+        habilidadesBlandas: z
+          .array(softSkillSchema)
+          .min(1, "Debe agregar al menos una habilidad"),
+      }),
+    ),
+    defaultValues: {
+      habilidadesBlandas: [
+        {
+          idHabilidad: 0,
+          habilidad: "",
+        },
+      ],
+    },
+    mode: "onChange",
+  });
 
-    const { loading, fetch: addData } = useApi<BaseResponse, TalentSoftSkillParams>(addTalentSoftSkill, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = methods;
+
+  const { loading, fetch: addData } = useApi<
+    BaseResponse,
+    TalentSoftSkillParams
+  >(addTalentSoftSkill, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      });
+    },
+  });
+
+  const onSubmit = (data: SoftSkillsArrayFormData) => {
+    if (!idTalento) return;
+
+    // Enviar la primera habilidad del array
+    const primeraHabilidad = data.habilidadesBlandas[0];
+
+    addData({
+      idTalento: idTalento,
+      idHabilidad: primeraHabilidad.idHabilidad,
+      habilidad: primeraHabilidad.habilidad || "",
+    }).then((response) => {
+      if (response.data.idMensaje === 2) {
+        if (onUpdate && idTalento) onUpdate(idTalento);
+        handleCloseModal();
+      }
     });
+  };
 
-    const handleOnConfirm = () => {
-        setErrors({});
-        const newErrors: { [key: string]: string } = {};
-        if (abilityRef.current && idTalento) {
-            const ability = Number(abilityRef.current.value);
+  const handleCloseModal = () => {
+    setValue("habilidadesBlandas", []);
+    closeModal("modalSoftSkills");
+  };
 
-            const skillValidation = validateSkill(ability);
-            if (!skillValidation.isValid) {
-                newErrors.skill = skillValidation.message || "Error de validación.";
-            }
+  return (
+    <FormProvider {...methods}>
+      <Modal
+        id="modalSoftSkills"
+        title="Agregar habilidad blanda"
+        confirmationLabel="Agregar"
+        onConfirm={handleSubmit(onSubmit)}
+        onClose={handleCloseModal}
+      >
+        {loading && <Loading opacity="opacity-60" />}
 
-            if (Object.keys(newErrors).length > 0) {
-                setErrors(newErrors);
-                return;
-            }
+        <div>
+          <h3 className="text-[#71717A] text-sm mt-6 mb-4">
+            Agrega tu nueva habilidad blanda
+          </h3>
 
-            addData({
-                idTalento: idTalento,
-                idHabilidad: ability,
-            }).then((response) => {
-                if (response.data.idMensaje === 2) {
-                    if (onUpdate) onUpdate(idTalento);
-                    closeModal("modalSoftSkills");
-                }
-            });
-        }
-    }
-
-    return (
-        <Modal id="modalSoftSkills" title="Agregar habilidad blanda" confirmationLabel="Agregar" onConfirm={handleOnConfirm}>
-            {loading && (<Loading opacity="opacity-60" />)}
-            <div>
-                <h3 className="text-[#71717A] text-sm mt-6">Agrega tu nueva habilidad blanda</h3>
-                <div className="flex flex-col my-2">
-                    <label htmlFor="softSkill" className="text-[#37404c] text-base my-2">Habilidad blanda</label>
-                    <select
-                        id="softSkill"
-                        ref={abilityRef}
-                        className="input">
-                        <option value={0}>Seleccione una habilidad</option>
-                        {habilidadesBlandas.map((habilidad) => (
-                            <option key={habilidad.idParametro} value={habilidad.num1}>
-                                {habilidad.string1}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.skill && <p className="text-red-500 text-sm mt-2">{errors.skill}</p>}
-                </div>
-            </div>
-        </Modal>
-    );
-}
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <SoftSkillsSection
+              control={control}
+              errors={errors}
+              habilidadesBlandas={habilidadesBlandas}
+              dropdownWithSearch={true}
+              shouldShowEmptyForm={true}
+              shouldAddElements={false}
+            />
+          </form>
+        </div>
+      </Modal>
+    </FormProvider>
+  );
+};

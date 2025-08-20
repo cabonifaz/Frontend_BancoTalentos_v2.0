@@ -6,6 +6,7 @@ interface Props {
   onRemove: (index: number) => void;
   children: ReactNode[];
   canRemoveFirst?: boolean;
+  canAddSections?: boolean;
 }
 
 export const DynamicSection = ({
@@ -14,6 +15,7 @@ export const DynamicSection = ({
   onRemove,
   children,
   canRemoveFirst = false,
+  canAddSections = true,
 }: Props) => {
   return (
     <div className="*:mb-4">
@@ -39,13 +41,15 @@ export const DynamicSection = ({
           {child}
         </div>
       ))}
-      <button
-        type="button"
-        onClick={onAdd}
-        className="px-4 py-2 text-[#0b85c3] rounded-lg hover:bg-sky-50"
-      >
-        Agregar
-      </button>
+      {canAddSections && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="px-4 py-2 text-[#0b85c3] rounded-lg hover:bg-sky-50"
+        >
+          Agregar
+        </button>
+      )}
     </div>
   );
 };

@@ -1,27 +1,5 @@
 import { z } from "zod";
-
-/** Helpers de normalización */
-const trim = (v: unknown) => (typeof v === "string" ? v.trim() : v);
-const trimLower = (v: unknown) =>
-  typeof v === "string" ? v.trim().toLowerCase() : v;
-/** "" -> undefined (para optional) */
-const emptyToUndef = (v: unknown) => {
-  if (v == null) return v;
-  if (typeof v === "string") {
-    const t = v.trim();
-    return t === "" ? undefined : t;
-  }
-  return v;
-};
-/** "" -> null (para campos nullable) */
-const emptyToNull = (v: unknown) => {
-  if (v == null) return v;
-  if (typeof v === "string") {
-    const t = v.trim();
-    return t === "" ? null : t;
-  }
-  return v;
-};
+import { emptyToNull, emptyToUndef, trim, trimLower } from "./Validations";
 
 export const AddTalentSchema = z.object({
   dni: z.preprocess(
