@@ -1,151 +1,307 @@
-import { useState } from "react";
-import { AddExperience, DynamicSectionProps } from "../../models";
+import { useEffect, useRef, useState } from "react";
+import { DynamicSectionProps } from "../../models";
 import { DynamicSection } from "./DynamicSection";
-import { FieldValues, UseFormSetValue } from "react-hook-form";
+import {
+  FieldValues,
+  Path,
+  Controller,
+  useFieldArray,
+  ArrayPath,
+  useFormContext,
+} from "react-hook-form";
 
-interface ExperiencesSectionProps<F extends FieldValues> extends DynamicSectionProps<F, AddExperience> {
-    setValue: UseFormSetValue<F>;
-    handleChange: (index: number, field: keyof AddExperience, value: string | boolean) => void;
-}
+interface ExperiencesSectionProps<F extends FieldValues>
+  extends DynamicSectionProps<F> {}
 
-export const ExperiencesSection = <F extends FieldValues,>({ register, errors, fields, setValue, onAdd, onRemove, handleChange }: ExperiencesSectionProps<F>) => {
-    const [defaultCompanies, setDefaultCompanies] = useState<{ [key: number]: boolean }>({});
-    const [currentDates, setCurrentDates] = useState<{ [key: number]: boolean }>({});
+export const ExperiencesSection = <F extends FieldValues>({
+  control,
+  errors,
+  shouldShowEmptyForm = true,
+}: ExperiencesSectionProps<F>) => {
+  const { setValue, clearErrors } = useFormContext<F>();
+  const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
+    control,
+    name: "experiencias" as ArrayPath<F>,
+  });
 
-    const handleCurrentCompanyChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const isChecked = e.target.checked;
+  // UI-only: para bloquear el campo "empresa" si se marca "Aquí en Fractal"
+  const [defaultCompanies, setDefaultCompanies] = useState<
+    Record<number, boolean>
+  >({});
+  // UI-only: para deshabilitar fechaFin si se marca "Hasta la actualidad"
+  const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
 
-        setDefaultCompanies((prev) => ({
-            ...prev,
-            [index]: isChecked,
-        }));
+  const hasAppendedInitial = useRef(false);
 
-        if (isChecked) {
-            handleChange(index, 'empresa', 'Fractal');
-            setValue(`experiencias.${index}.empresa` as any, "Fractal" as any);
-            return;
-        }
-        setValue(`experiencias.${index}.empresa` as any, "" as any);
-        handleChange(index, 'empresa', '');
-    };
+  const handleCurrentCompanyChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    onChange: (value: any) => void,
+  ) => {
+    const isChecked = e.target.checked;
+    setDefaultCompanies((prev) => ({ ...prev, [index]: isChecked }));
 
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const isChecked = e.target.checked;
+    // Actualizar el valor del campo empresa
+    onChange(isChecked ? "Fractal" : "");
+  };
 
-        setCurrentDates((prev) => ({
-            ...prev,
-            [index]: isChecked,
-        }));
+  useEffect(() => {
+    if (
+      shouldShowEmptyForm &&
+      fields.length === 0 &&
+      !hasAppendedInitial.current
+    ) {
+      append({
+        empresa: "",
+        puesto: "",
+        fechaInicio: "",
+        fechaFin: "",
+        flActualidad: false,
+        funciones: "",
+      } as any);
+      hasAppendedInitial.current = true;
+    }
+  }, [shouldShowEmptyForm, fields.length, append]);
 
-        if (isChecked) {
-            handleChange(index, 'fechaFin', '');
-        }
-    };
+  return (
+    <DynamicSection
+      title="Experiencias laborales"
+      onAdd={() =>
+        append({
+          empresa: "",
+          puesto: "",
+          fechaInicio: "",
+          fechaFin: "",
+          flActualidad: false,
+          funciones: "",
+        } as any)
+      }
+      onRemove={remove}
+      canRemoveFirst={!shouldShowEmptyForm}
+    >
+      {fields.map((field, index) => (
+        <div key={field.id}>
+          {/* Empresa */}
+          <div className="flex flex-col my-2">
+            <label
+              htmlFor={`experiencias.${index}.empresa`}
+              className="text-[#71717A] text-sm px-1"
+            >
+              Empresa<span className="text-red-400">*</span>
+            </label>
 
-    return (
-        <DynamicSection title="Experiencias laborales" onAdd={onAdd} onRemove={onRemove} canRemoveFirst={true}>
-            {fields.map((experience, index) => (
-                <div key={index}>
-                    <div className="flex flex-col my-2">
-                        <label htmlFor={`companyName-${index}`} className="text-[#71717A] text-sm px-1">Empresa<span className="text-red-400">*</span></label>
-                        <input
-                            type="text"
-                            id={`companyName-${index}`}
-                            {...register(`experiencias.${index}.empresa` as any)}
-                            value={experience.empresa}
-                            readOnly={defaultCompanies[index]}
-                            onChange={(e) => handleChange(index, 'empresa', e.target.value)}
-                            placeholder="Nombre de la empresa"
-                            className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+            <Controller
+              name={`experiencias.${index}.empresa` as Path<F>}
+              control={control}
+              render={({ field: { value, onChange, ...fieldProps } }) => (
+                <input
+                  {...fieldProps}
+                  value={value || ""}
+                  onChange={onChange}
+                  id={`experiencias.${index}.empresa`}
+                  type="text"
+                  placeholder="Nombre de la empresa"
+                  autoComplete="organization"
+                  readOnly={!!defaultCompanies[index]}
+                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                />
+              )}
+            />
 
-                        {(errors as any).experiencias?.[index]?.empresa && (
-                            <p className="text-red-400 text-sm">{(errors as any).experiencias[index]?.empresa?.message}</p>
-                        )}
+            {(errors as any).experiencias?.[index]?.empresa && (
+              <p className="text-red-400 text-sm">
+                {(errors as any).experiencias[index]?.empresa?.message}
+              </p>
+            )}
 
-                        <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                            <input
-                                type="checkbox"
-                                id={`currentCompany-${index}`}
-                                checked={defaultCompanies[index] || false}
-                                onChange={(e) => handleCurrentCompanyChange(e, index)}
-                                className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                            <label htmlFor={`currentCompany-${index}`} className="cursor-pointer text-[#3f3f46] text-sm">Aquí en Fractal</label>
-                        </div>
-                    </div>
-                    <div className="flex flex-col my-2">
-                        <label htmlFor={`puesto-${index}`} className="text-[#71717A] text-sm px-1">Puesto<span className="text-red-400">*</span></label>
-                        <input
-                            type="text"
-                            id={`puesto-${index}`}
-                            {...register(`experiencias.${index}.puesto` as any)}
-                            placeholder="Puesto"
-                            value={experience.puesto}
-                            onChange={(e) => handleChange(index, 'puesto', e.target.value)}
-                            className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+            {/* Checkbox auxiliar NO registrado (solo UI) */}
+            <div className="px-1 flex items-center gap-2 mt-2 w-fit">
+              <Controller
+                name={`experiencias.${index}.empresa` as Path<F>}
+                control={control}
+                render={({ field: { onChange } }) => (
+                  <input
+                    type="checkbox"
+                    id={`currentCompany-${index}`}
+                    checked={!!defaultCompanies[index]}
+                    onChange={(e) =>
+                      handleCurrentCompanyChange(e, index, onChange)
+                    }
+                    className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
+                  />
+                )}
+              />
+              <label
+                htmlFor={`currentCompany-${index}`}
+                className="cursor-pointer text-[#3f3f46] text-sm"
+              >
+                Aquí en Fractal
+              </label>
+            </div>
+          </div>
 
-                        {(errors as any).experiencias?.[index]?.puesto && (
-                            <p className="text-red-400 text-sm">{(errors as any).experiencias[index]?.puesto?.message}</p>
-                        )}
-                    </div>
-                    <div className="flex gap-4">
-                        <div className="flex flex-col w-1/2">
-                            <label htmlFor={`initDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de inicio<span className="text-red-400">*</span></label>
-                            <input
-                                id={`initDate-${index}`}
-                                type="date"
-                                {...register(`experiencias.${index}.fechaInicio` as any)}
-                                value={experience.fechaInicio}
-                                onChange={(e) => handleChange(index, 'fechaInicio', e.target.value)}
-                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+          {/* Puesto */}
+          <div className="flex flex-col my-2">
+            <label
+              htmlFor={`experiencias.${index}.puesto`}
+              className="text-[#71717A] text-sm px-1"
+            >
+              Puesto<span className="text-red-400">*</span>
+            </label>
+            <Controller
+              name={`experiencias.${index}.puesto` as Path<F>}
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  id={`experiencias.${index}.puesto`}
+                  type="text"
+                  placeholder="Puesto"
+                  autoComplete="organization-title"
+                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                />
+              )}
+            />
+            {(errors as any).experiencias?.[index]?.puesto && (
+              <p className="text-red-400 text-sm">
+                {(errors as any).experiencias[index]?.puesto?.message}
+              </p>
+            )}
+          </div>
 
-                            {(errors as any).experiencias?.[index]?.fechaInicio && (
-                                <p className="text-red-400 text-sm">{(errors as any).experiencias[index]?.fechaInicio?.message}</p>
-                            )}
+          {/* Fechas */}
+          <div className="flex gap-4">
+            <div className="flex flex-col w-1/2">
+              <label
+                htmlFor={`experiencias.${index}.fechaInicio`}
+                className="text-[#71717A] text-sm px-1"
+              >
+                Mes y año de inicio<span className="text-red-400">*</span>
+              </label>
+              <Controller
+                name={`experiencias.${index}.fechaInicio` as Path<F>}
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="date"
+                    id={`experiencias.${index}.fechaInicio`}
+                    autoComplete="bday"
+                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                  />
+                )}
+              />
+              {(errors as any).experiencias?.[index]?.fechaInicio && (
+                <p className="text-red-400 text-sm">
+                  {(errors as any).experiencias[index]?.fechaInicio?.message}
+                </p>
+              )}
 
-                            <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                                <input
-                                    type="checkbox"
-                                    id={`currentDateExp-${index}`}
-                                    {...register(`experiencias.${index}.flActualidad` as any)}
-                                    checked={currentDates[index] || false}
-                                    onChange={(e) => handleEndDateChange(e, index)}
-                                    className="accent-[#4F46E5] h-4 w-4 cursor-pointer" />
-                                <label htmlFor={`currentDateExp-${index}`} className="cursor-pointer text-[#3f3f46] text-sm">Hasta la actualidad</label>
-                            </div>
-                        </div>
-                        <div className="flex flex-col w-1/2">
-                            <label htmlFor={`endDate-${index}`} className="text-[#71717A] text-sm px-1">Mes y año de fin</label>
-                            <input
-                                id={`endDate-${index}`}
-                                type="date"
-                                {...register(`experiencias.${index}.fechaFin` as any)}
-                                value={experience.fechaFin}
-                                disabled={currentDates[index]}
-                                onChange={(e) => handleChange(index, 'fechaFin', e.target.value)}
-                                className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]" />
+              <div className="px-1 flex items-center gap-2 mt-2 w-fit">
+                <Controller
+                  name={`experiencias.${index}.flActualidad` as Path<F>}
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      type="checkbox"
+                      id={`experiencias.${index}.flActualidad`}
+                      className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
+                      checked={!!field.value}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        field.onChange(checked);
+                        setCurrentDates((prev) => ({
+                          ...prev,
+                          [index]: checked,
+                        }));
 
-                            {(errors as any).experiencias?.[index]?.fechaFin && (
-                                <p className="text-red-400 text-sm">{(errors as any).experiencias[index]?.fechaFin?.message}</p>
-                            )}
-                        </div>
-                    </div>
-                    <div className="flex flex-col my-2">
-                        <label htmlFor={`funciones-${index}`} className="text-[#71717A] text-sm px-1">Funciones<span className="text-red-400">*</span></label>
-                        <textarea
-                            id={`funciones-${index}`}
-                            {...register(`experiencias.${index}.funciones` as any)}
-                            value={experience.funciones}
-                            onChange={(e) => handleChange(index, 'funciones', e.target.value)}
-                            placeholder="Digitar funciones"
-                            className="h-24 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                        </textarea>
+                        // Limpiar errores de fechaFin cuando se marca "Hasta la actualidad"
+                        if (checked) {
+                          // Limpiar el valor de fechaFin
+                          setValue(
+                            `experiencias.${index}.fechaFin` as Path<F>,
+                            "" as any,
+                            {
+                              shouldValidate: true,
+                            },
+                          );
 
-                        {(errors as any).experiencias?.[index]?.funciones && (
-                            <p className="text-red-400 text-sm">{(errors as any).experiencias[index]?.funciones?.message}</p>
-                        )}
-                    </div>
-                </div>
-            ))}
-        </DynamicSection>
-    );
+                          // Limpiar los errores de fechaFin
+                          clearErrors(
+                            `experiencias.${index}.fechaFin` as Path<F>,
+                          );
+                        }
+                      }}
+                    />
+                  )}
+                />
+                <label
+                  htmlFor={`experiencias.${index}.flActualidad`}
+                  className="cursor-pointer text-[#3f3f46] text-sm"
+                >
+                  Hasta la actualidad
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-col w-1/2">
+              <label
+                htmlFor={`experiencias.${index}.fechaFin`}
+                className="text-[#71717A] text-sm px-1"
+              >
+                Mes y año de fin
+              </label>
+              <Controller
+                name={`experiencias.${index}.fechaFin` as Path<F>}
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="date"
+                    id={`experiencias.${index}.fechaFin`}
+                    disabled={!!currentDates[index]}
+                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                  />
+                )}
+              />
+              {(errors as any).experiencias?.[index]?.fechaFin && (
+                <p className="text-red-400 text-sm">
+                  {(errors as any).experiencias[index]?.fechaFin?.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Funciones */}
+          <div className="flex flex-col my-2">
+            <label
+              htmlFor={`experiencias.${index}.funciones`}
+              className="text-[#71717A] text-sm px-1"
+            >
+              Funciones<span className="text-red-400">*</span>
+            </label>
+            <Controller
+              name={`experiencias.${index}.funciones` as Path<F>}
+              control={control}
+              render={({ field }) => (
+                <textarea
+                  {...field}
+                  id={`experiencias.${index}.funciones`}
+                  placeholder="Digitar funciones"
+                  autoComplete="on"
+                  className="h-24 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                />
+              )}
+            />
+            {(errors as any).experiencias?.[index]?.funciones && (
+              <p className="text-red-400 text-sm">
+                {(errors as any).experiencias[index]?.funciones?.message}
+              </p>
+            )}
+          </div>
+        </div>
+      ))}
+    </DynamicSection>
+  );
 };

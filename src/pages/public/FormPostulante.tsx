@@ -1,8 +1,13 @@
 import { useParams } from "../../core/context/ParamsContext";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import {
+  useForm,
+  SubmitHandler,
+  Controller,
+  FormProvider,
+} from "react-hook-form";
 import { isDirty, isValid } from "zod";
 import {
   Loading,
@@ -15,22 +20,13 @@ import {
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
 import {
-  AddTechSkill,
-  initialTechnicalSkill,
-  AddSoftSkill,
-  initialSoftSkill,
-  AddExperience,
-  initialExperience,
-  AddEducation,
-  initialEducation,
-  AddLanguage,
-  initialLanguage,
   AddTalentParams,
   BaseResponseFMI,
   AddPostulanteParams,
   InsertUpdateResponse,
   AddPostulanteSchema,
   AddPostulanteType,
+  initialFormValuesPostulante,
 } from "../../core/models";
 import {
   addPostulanteService,
@@ -52,23 +48,6 @@ export const FormPostulante = () => {
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
-  const [technicalSkills, setTechnicalSkills] = useState<AddTechSkill[]>([
-    { ...initialTechnicalSkill },
-  ]);
-  const [softSkills, setSoftSkills] = useState<AddSoftSkill[]>([
-    { ...initialSoftSkill },
-  ]);
-  const [educations, setEducations] = useState<AddEducation[]>([
-    { ...initialEducation },
-  ]);
-  const [experiences, setExperiences] = useState<AddExperience[]>([]);
-  const [languages, setLanguages] = useState<AddLanguage[]>([]);
-
-  const [selectedCountry, setSelectedCountry] = useState<number | null>(null);
-  const [selectedCity, setSelectedCity] = useState<number | null>(null);
-  const [selectedCountryPhone, setSelectedCountryPhone] = useState<
-    number | null
-  >(null);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
   const [cvFileErrors, setCvFileErrors] = useState("");
@@ -80,10 +59,6 @@ export const FormPostulante = () => {
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
   const habilidadesBlandas = paramsByMaestro[20] || [];
-
-  const ciudadesFiltradas = selectedCountry
-    ? ciudades.filter((ciudad) => ciudad.num2 === selectedCountry)
-    : [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
     BaseResponseFMI,
@@ -111,15 +86,7 @@ export const FormPostulante = () => {
       }),
   });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    control,
-    clearErrors,
-    formState: { errors },
-    reset,
-  } = useForm<AddPostulanteType>({
+  const methods = useForm<AddPostulanteType>({
     resolver: zodResolver(AddPostulanteSchema),
     mode: "onChange",
     defaultValues: {
@@ -130,6 +97,23 @@ export const FormPostulante = () => {
       idMoneda: 0,
     },
   });
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+    reset,
+  } = methods;
+
+  const watchCountryPhone = watch("codigoPais");
+  const watchCountry = watch("idPais");
+  // const watchCity = watch("idCiudad");
+
+  const ciudadesFiltradas = watchCountry
+    ? ciudades.filter((ciudad) => ciudad.num2 === watchCountry)
+    : [];
 
   const onSubmit: SubmitHandler<AddPostulanteType> = async (data) => {
     setCvFileErrors("");
@@ -152,9 +136,10 @@ export const FormPostulante = () => {
     }
     if (
       !data.foto[0].name.endsWith(".png") &&
-      !data.foto[0].name.endsWith(".jpeg")
+      !data.foto[0].name.endsWith(".jpeg") &&
+      !data.foto[0].name.endsWith(".jpg")
     ) {
-      setFotoFileErrors("La foto debe ser un archivo PNG o JPEG");
+      setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
       return;
     }
 
@@ -238,29 +223,17 @@ export const FormPostulante = () => {
                   : data.idMoneda,
               idModalidad: null,
               ubicacion: ubicacion,
-              tieneEquipo: data.tieneEquipo,
+              tieneEquipo: data?.tieneEquipo || false,
             }).then((response) => {
               if (response.data.idTipoMensaje === 2) {
                 localStorage.removeItem("tempToken");
                 localStorage.removeItem("authToken");
                 registerRef.current = true;
-                reset();
-
-                // Restablecer las secciones dinámicas
-                setTechnicalSkills([{ ...initialTechnicalSkill }]);
-                setSoftSkills([{ ...initialSoftSkill }]);
-                setExperiences([{ ...initialExperience }]);
-                setEducations([]);
-                setLanguages([]);
+                reset(initialFormValuesPostulante);
 
                 // Restablecer los archivos
                 setCvFile(null);
                 setFotoFile(null);
-
-                // Restablecer los países y ciudades seleccionados
-                setSelectedCountry(0);
-                setSelectedCity(0);
-                setSelectedCountryPhone(0);
               }
             });
           }
@@ -271,178 +244,6 @@ export const FormPostulante = () => {
     }
   };
 
-  // Tech skills
-  const handleAddSkill = () => {
-    setTechnicalSkills([...technicalSkills, { ...initialTechnicalSkill }]);
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    const newSkills = technicalSkills.filter((_, i) => i !== index);
-    setTechnicalSkills(newSkills);
-    setValue(`habilidadesTecnicas`, newSkills);
-    clearErrors(`habilidadesTecnicas`);
-  };
-
-  const handleSkillChange = (
-    index: number,
-    field: keyof AddTechSkill,
-    value: number | string,
-  ) => {
-    // Actualiza react-hook-form
-    setValue(`habilidadesTecnicas.${index}.${field}`, value, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-
-    // Actualiza el estado local
-    setTechnicalSkills((prev) => {
-      const newSkills = [...prev];
-      newSkills[index][field] = value as never;
-      return newSkills;
-    });
-  };
-
-  // Soft skills
-  const handleAddSoftSkill = () => {
-    setSoftSkills([...softSkills, { ...initialSoftSkill }]);
-  };
-
-  const handleRemoveSoftSkill = (index: number) => {
-    const newSkills = softSkills.filter((_, i) => i !== index);
-    setSoftSkills(newSkills);
-    setValue(`habilidadesBlandas`, newSkills);
-    clearErrors(`habilidadesBlandas`);
-  };
-
-  const handleSoftSkillChange = (
-    index: number,
-    field: keyof AddSoftSkill,
-    value: number | string,
-  ) => {
-    // Actualiza react-hook-form
-    setValue(`habilidadesBlandas.${index}.${field}`, value, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-
-    // Actualiza el estado local
-    setSoftSkills((prev) => {
-      const newSkills = [...prev];
-      newSkills[index][field] = value as never;
-      return newSkills;
-    });
-  };
-
-  // Experiences
-  const handleAddExperience = () => {
-    setExperiences([...experiences, { ...initialExperience }]);
-  };
-
-  const handleRemoveExperience = (index: number) => {
-    const newExperiences = experiences.filter((_, i) => i !== index);
-    setExperiences(newExperiences);
-    setValue(`experiencias`, newExperiences);
-    clearErrors(`experiencias`);
-  };
-
-  const handleExperienceChange = (
-    index: number,
-    field: keyof AddExperience,
-    value: string | boolean,
-  ) => {
-    const newExperiences = [...experiences];
-
-    if (
-      field === "empresa" ||
-      field === "puesto" ||
-      field === "funciones" ||
-      field === "fechaInicio" ||
-      field === "fechaFin"
-    ) {
-      if (typeof value === "string") {
-        newExperiences[index][field] = value;
-      }
-    } else if (field === "flActualidad") {
-      if (typeof value === "boolean") {
-        newExperiences[index][field] = value;
-      }
-    }
-
-    setExperiences(newExperiences);
-  };
-
-  // Education
-  const handleAddEducation = () => {
-    setEducations([...educations, { ...initialEducation }]);
-  };
-
-  const handleRemoveEducation = (index: number) => {
-    const newEducations = educations.filter((_, i) => i !== index);
-    setEducations(newEducations);
-  };
-
-  const handleEducationChange = (
-    index: number,
-    field: keyof AddEducation,
-    value: string | boolean,
-  ) => {
-    const newEducations = [...educations];
-
-    if (
-      field === "institucion" ||
-      field === "carrera" ||
-      field === "grado" ||
-      field === "fechaInicio" ||
-      field === "fechaFin"
-    ) {
-      if (typeof value === "string") {
-        newEducations[index][field] = value;
-      }
-    } else if (field === "flActualidad") {
-      if (typeof value === "boolean") {
-        newEducations[index][field] = value;
-      }
-    }
-
-    setEducations(newEducations);
-  };
-
-  // Language
-  const handleAddLanguage = () => {
-    setLanguages([...languages, { ...initialLanguage }]);
-  };
-
-  const handleRemoveLanguage = (index: number) => {
-    const newLanguage = languages.filter((_, i) => i !== index);
-    setLanguages(newLanguage);
-  };
-
-  const handleLanguageChange = (
-    index: number,
-    field: keyof AddLanguage,
-    value: number,
-  ) => {
-    const newLanguage = [...languages];
-    newLanguage[index][field] = value;
-    setLanguages(newLanguage);
-  };
-
-  const handleStarChange = (index: number, star: number) => {
-    const newLanguages = [...languages];
-
-    if (newLanguages[index].estrellas === star) {
-      newLanguages[index].estrellas = 0;
-    } else {
-      newLanguages[index].estrellas = star;
-    }
-
-    setLanguages(newLanguages);
-  };
-
-  useEffect(() => {
-    setValue("idiomas", languages);
-  }, [languages, setValue]);
-
   // file
   const handleFileChange = (
     field: keyof AddPostulanteType,
@@ -450,13 +251,15 @@ export const FormPostulante = () => {
   ) => {
     if (field === "cv") {
       setCvFile(file);
+      setCvFileErrors("");
     } else if (field === "foto") {
       setFotoFile(file);
+      setFotoFileErrors("");
     }
   };
 
   return (
-    <>
+    <FormProvider {...methods}>
       {(loadingAddPostulante || loadingAddTalent || loadingParams) && (
         <Loading opacity="opacity-60" />
       )}
@@ -505,7 +308,7 @@ export const FormPostulante = () => {
                       errors={errors}
                       name="foto"
                       initialText="Sube una foto"
-                      acceptedTypes=".png, .jpeg"
+                      acceptedTypes=".png, .jpeg, .jpg"
                       onChange={(file) => handleFileChange("foto", file)}
                       value={fotoFile}
                     />
@@ -607,11 +410,8 @@ export const FormPostulante = () => {
                       </label>
                       <select
                         id="countrycode"
-                        value={selectedCountryPhone || ""}
+                        autoComplete="tel-country-code"
                         {...register("codigoPais", { valueAsNumber: true })}
-                        onChange={(e) =>
-                          setSelectedCountryPhone(Number(e.target.value))
-                        }
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
@@ -631,14 +431,15 @@ export const FormPostulante = () => {
                           ref={countryCode}
                           className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
                         >
-                          {selectedCountryPhone
-                            ? `${paises.find((p) => p.num1 === selectedCountryPhone)?.string3 || "00"}`
+                          {watchCountryPhone
+                            ? `${paises.find((p) => p.num1 === watchCountryPhone)?.string3 || "00"}`
                             : "+00"}
                         </p>
                         <input
                           {...register("telefono")}
                           id="phone"
-                          type="text"
+                          type="tel"
+                          autoComplete="tel-national"
                           className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]"
                         />
                       </div>
@@ -743,11 +544,8 @@ export const FormPostulante = () => {
                       </label>
                       <select
                         id="country"
-                        value={selectedCountry || ""}
+                        autoComplete="country"
                         {...register("idPais", { valueAsNumber: true })}
-                        onChange={(e) =>
-                          setSelectedCountry(Number(e.target.value))
-                        }
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
@@ -772,11 +570,8 @@ export const FormPostulante = () => {
                       </label>
                       <select
                         id="city"
-                        value={selectedCity || ""}
+                        autoComplete="address-level2"
                         {...register("idCiudad", { valueAsNumber: true })}
-                        onChange={(e) =>
-                          setSelectedCity(Number(e.target.value))
-                        }
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione una ciudad</option>
@@ -795,56 +590,41 @@ export const FormPostulante = () => {
                   </div>
                   {/* Tech skills */}
                   <TechSkillsSection<AddPostulanteType>
-                    register={register}
+                    control={control}
                     errors={errors}
-                    fields={technicalSkills}
                     habilidadesTecnicas={habilidadesTecnicas}
-                    onAdd={handleAddSkill}
-                    onRemove={handleRemoveSkill}
-                    handleChange={handleSkillChange}
                     dropdownWithSearch={false}
+                    shouldShowEmptyForm={true}
                   />
                   {/* Soft skills */}
                   <SoftSkillsSection<AddPostulanteType>
-                    register={register}
+                    control={control}
                     errors={errors}
-                    fields={softSkills}
                     habilidadesBlandas={habilidadesBlandas}
-                    onAdd={handleAddSoftSkill}
-                    onRemove={handleRemoveSoftSkill}
-                    handleChange={handleSoftSkillChange}
                     dropdownWithSearch={false}
+                    shouldShowEmptyForm={true}
                   />
                   {/* Experience */}
                   <ExperiencesSection<AddPostulanteType>
-                    register={register}
+                    control={control}
                     errors={errors}
-                    fields={experiences}
-                    setValue={setValue}
-                    onAdd={handleAddExperience}
-                    onRemove={handleRemoveExperience}
-                    handleChange={handleExperienceChange}
+                    shouldShowEmptyForm={false}
                   />
+
                   {/* Education */}
                   <EducationsSection<AddPostulanteType>
-                    register={register}
+                    control={control}
                     errors={errors}
-                    fields={educations}
-                    onAdd={handleAddEducation}
-                    onRemove={handleRemoveEducation}
-                    handleChange={handleEducationChange}
+                    shouldShowEmptyForm={true}
                   />
+
                   {/* Languages */}
                   <LanguagesSection<AddPostulanteType>
-                    register={register}
+                    control={control}
                     errors={errors}
-                    fields={languages}
-                    onAdd={handleAddLanguage}
-                    onRemove={handleRemoveLanguage}
-                    handleChange={handleLanguageChange}
-                    handleStarChange={handleStarChange}
                     idiomas={idiomas}
                     nivelesIdioma={nivelesIdioma}
+                    shouldShowEmptyForm={false}
                   />
                   {/* Social media */}
                   <div className="*:mb-4">
@@ -958,6 +738,6 @@ export const FormPostulante = () => {
           <div className="absolute top-1/3 -left-12 w-16 h-16 bg-[#FAAB34]/10 rotate-12"></div>
         </div>
       </div>
-    </>
+    </FormProvider>
   );
 };
