@@ -119,7 +119,8 @@ export const ModalEducation = ({
         ],
       });
     }
-  }, [educationRef, educationRef.current, setValue, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [educationRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,

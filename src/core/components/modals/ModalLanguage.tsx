@@ -95,7 +95,8 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
         ],
       });
     }
-  }, [languageRef, languageRef.current, setValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languageRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,

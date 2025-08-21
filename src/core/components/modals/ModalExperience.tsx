@@ -119,6 +119,7 @@ export const ModalExperience = ({
         ],
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [experienceRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<

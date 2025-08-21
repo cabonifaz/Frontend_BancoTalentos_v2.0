@@ -68,7 +68,8 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
         });
       }
     }
-  }, [isModalOpen, feedbackRef, feedbackRef.current, setValue, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen, feedbackRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,
