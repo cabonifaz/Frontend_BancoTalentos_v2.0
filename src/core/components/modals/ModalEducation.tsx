@@ -119,7 +119,7 @@ export const ModalEducation = ({
         ],
       });
     }
-  }, [educationRef.current, setValue, reset]);
+  }, [educationRef, educationRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,
@@ -195,18 +195,15 @@ export const ModalEducation = ({
   };
 
   const handleCloseModal = () => {
-    if (!isEditing) {
-      reset({
-        educaciones: [
-          {
-            institucion: "",
-            carrera: "",
-            grado: "",
-            fechaInicio: "",
-            fechaFin: "",
-            flActualidad: false,
-          },
-        ],
+    if (educationRef.current) {
+      const educacion = educationRef.current;
+      setValue("educaciones.0", {
+        institucion: educacion.nombreInstitucion || "",
+        carrera: educacion.carrera || "",
+        grado: educacion.grado || "",
+        fechaInicio: Utils.formatDateForInput(educacion.fechaInicio) || "",
+        fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
+        flActualidad: educacion.flActualidad || false,
       });
     }
     closeModal("modalEducation");

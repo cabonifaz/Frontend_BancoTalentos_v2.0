@@ -95,7 +95,7 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
         ],
       });
     }
-  }, [languageRef.current, setValue]);
+  }, [languageRef, languageRef.current, setValue]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,
@@ -161,15 +161,12 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
   };
 
   const handleCloseModal = () => {
-    if (!isEditing) {
-      reset({
-        idiomas: [
-          {
-            idIdioma: 0,
-            idNivel: 0,
-            estrellas: 0,
-          },
-        ],
+    if (languageRef.current) {
+      const idioma = languageRef.current;
+      setValue("idiomas.0", {
+        idIdioma: idioma.idIdioma || 0,
+        idNivel: idioma.idNivel || 0,
+        estrellas: idioma.estrellas || 0,
       });
     }
     closeModal("modalLanguage");

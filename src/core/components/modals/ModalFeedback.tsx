@@ -68,7 +68,7 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
         });
       }
     }
-  }, [isModalOpen, feedbackRef.current, setValue, reset]);
+  }, [isModalOpen, feedbackRef, feedbackRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
     BaseResponse,
@@ -132,10 +132,10 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
 
   const handleCloseModal = () => {
     // Resetear el formulario al cerrar el modal
-    reset({
-      feedback: "",
-      estrellas: 0,
-    });
+    if (feedbackRef.current) {
+      setValue("feedback", feedbackRef.current.descripcion || "");
+      setValue("estrellas", feedbackRef.current.estrellas || 0);
+    }
     closeModal("modalFeedback");
   };
 

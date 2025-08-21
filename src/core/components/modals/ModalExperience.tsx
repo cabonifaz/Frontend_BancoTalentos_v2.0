@@ -190,18 +190,15 @@ export const ModalExperience = ({
   };
 
   const handleCloseModal = () => {
-    if (!isEditing) {
-      reset({
-        experiencias: [
-          {
-            empresa: "",
-            puesto: "",
-            fechaInicio: "",
-            fechaFin: "",
-            flActualidad: false,
-            funciones: "",
-          },
-        ],
+    if (experienceRef.current) {
+      const experiencia = experienceRef.current;
+      setValue("experiencias.0", {
+        empresa: experiencia.nombreEmpresa || "",
+        puesto: experiencia.puesto || "",
+        fechaInicio: Utils.formatDateForInput(experiencia.fechaInicio) || "",
+        fechaFin: Utils.formatDateForInput(experiencia.fechaFin) || "",
+        flActualidad: experiencia.flActualidad || false,
+        funciones: experiencia.funciones || "",
       });
     }
     closeModal("modalExperience");
