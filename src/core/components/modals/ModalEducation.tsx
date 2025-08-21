@@ -1,238 +1,262 @@
-import { useEffect, useState } from "react";
-import { useModal } from "../../context/ModalContext";
-import { AddOrUpdateEducationParams, BaseResponse, Education } from "../../models";
-import { Modal } from "./Modal";
-import { useApi } from "../../hooks/useApi";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { addOrUpdateTalentEducation, deleteTalenteEducation } from "../../services/apiService";
+import { useModal } from "../../context/ModalContext";
+import { useApi } from "../../hooks/useApi";
+import {
+  AddOrUpdateEducationParams,
+  BaseResponse,
+  Education,
+} from "../../models";
+import {
+  addOrUpdateTalentEducation,
+  deleteTalenteEducation,
+} from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
+import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
+import { EducationsSection } from "..";
+import { useEffect } from "react";
+import { z } from "zod";
+import { trim, emptyToUndef } from "../../models/schemas/Validations";
 import { Utils } from "../../utilities/utils";
-import { validateDates, validateText } from "../../utilities/validation";
 
 interface Props {
-    idTalento?: number;
-    educationRef: React.MutableRefObject<Education | null>;
-    onUpdate?: (idTalento: number) => void;
+  idTalento?: number;
+  educationRef: React.MutableRefObject<Education | null>;
+  onUpdate?: (idTalento: number) => void;
 }
 
-export const ModalEducation = ({ idTalento, educationRef, onUpdate }: Props) => {
-    const isEditing = !!educationRef.current;
-    const { closeModal } = useModal();
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [institucion, setInstitucion] = useState(educationRef.current?.nombreInstitucion || "");
-    const [carrera, setCarrera] = useState(educationRef.current?.carrera || "");
-    const [grado, setGrado] = useState(educationRef.current?.grado || "");
-    const [fechaInicio, setFechaInicio] = useState(Utils.formatDateForMonthInput(educationRef.current?.fechaInicio) || "");
-    const [fechaFin, setFechaFin] = useState(Utils.formatDateForMonthInput(educationRef.current?.fechaFin) || "");
-    const [institucionCheck, setInstitucionCheck] = useState(false);
-    const [dateCheck, setDateCheck] = useState(educationRef.current?.flActualidad || false);
+export const educationSchema = z
+  .object({
+    institucion: z.preprocess(
+      trim,
+      z.string().min(1, "La institución es requerida"),
+    ),
+    carrera: z.preprocess(trim, z.string().min(1, "La carrera es requerida")),
+    grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
+    fechaInicio: z.preprocess(
+      trim,
+      z.string().min(1, "La fecha de inicio es requerida"),
+    ),
+    fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
+    flActualidad: z.coerce.boolean(),
+  })
+  .refine((data) => data.flActualidad || !!data.fechaFin, {
+    message: "La fecha de fin es requerida",
+    path: ["fechaFin"],
+  });
 
-    const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<BaseResponse, AddOrUpdateEducationParams>(addOrUpdateTalentEducation, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
-    });
+export type EducationFormData = z.infer<typeof educationSchema>;
 
-    const { loading: deleteLoading, fetch: deleteData } = useApi<BaseResponse, number>(deleteTalenteEducation, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
-    });
+// Tipo para el formulario con array de educaciones
+type EducationsArrayFormData = {
+  educaciones: EducationFormData[];
+};
 
-    useEffect(() => {
-        if (educationRef.current) {
-            setInstitucion(educationRef.current.nombreInstitucion || "");
-            setCarrera(educationRef.current.carrera || "");
-            setGrado(educationRef.current.grado || "");
-            setFechaInicio(Utils.formatDateForMonthInput(educationRef.current.fechaInicio) || "");
-            setFechaFin(Utils.formatDateForMonthInput(educationRef.current.fechaFin) || "");
-            setDateCheck(educationRef.current.flActualidad || false);
-        } else {
-            setInstitucion("");
-            setCarrera("");
-            setGrado("");
-            setFechaInicio("");
-            setFechaFin("");
-            setDateCheck(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [educationRef.current]);
+export const ModalEducation = ({
+  idTalento,
+  educationRef,
+  onUpdate,
+}: Props) => {
+  const isEditing = !!educationRef.current;
+  const { closeModal } = useModal();
 
-    useEffect(() => {
-        if (institucionCheck) {
-            setInstitucion("Fractal");
-        } else {
-            setInstitucion("");
-        }
-    }, [institucionCheck]);
+  const methods = useForm<EducationsArrayFormData>({
+    resolver: zodResolver(
+      z.object({
+        educaciones: z
+          .array(educationSchema)
+          .min(1, "Debe agregar al menos una educación"),
+      }),
+    ),
+    defaultValues: {
+      educaciones: [
+        {
+          institucion: "",
+          carrera: "",
+          grado: "",
+          fechaInicio: "",
+          fechaFin: "",
+          flActualidad: false,
+        },
+      ],
+    },
+    mode: "onChange",
+  });
 
-    useEffect(() => {
-        if (dateCheck) {
-            setFechaFin("");
-        }
-    }, [dateCheck]);
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    reset,
+  } = methods;
 
-    const handleOnConfirm = () => {
-        setErrors({});
-        const newErrors: { [key: string]: string } = {};
+  // Efecto para cargar datos cuando se edita
+  useEffect(() => {
+    if (educationRef.current) {
+      const educacion = educationRef.current;
+      setValue("educaciones.0", {
+        institucion: educacion.nombreInstitucion || "",
+        carrera: educacion.carrera || "",
+        grado: educacion.grado || "",
+        fechaInicio: Utils.formatDateForInput(educacion.fechaInicio) || "",
+        fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
+        flActualidad: educacion.flActualidad || false,
+      });
+    } else {
+      reset({
+        educaciones: [
+          {
+            institucion: "",
+            carrera: "",
+            grado: "",
+            fechaInicio: "",
+            fechaFin: "",
+            flActualidad: false,
+          },
+        ],
+      });
+    }
+  }, [educationRef.current, setValue, reset]);
 
-        if (idTalento) {
-            const institucionValidation = validateText(institucion);
-            if (!institucionValidation.isValid) {
-                newErrors.institucion = institucionValidation.message || "Error de validación.";
-            }
+  const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
+    BaseResponse,
+    AddOrUpdateEducationParams
+  >(addOrUpdateTalentEducation, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      });
+    },
+  });
 
-            const carreraValidation = validateText(carrera);
-            if (!carreraValidation.isValid) {
-                newErrors.carrera = carreraValidation.message || "Error de validación.";
-            }
+  const { loading: deleteLoading, fetch: deleteData } = useApi<
+    BaseResponse,
+    number
+  >(deleteTalenteEducation, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      });
 
-            const gradoValidation = validateText(grado);
-            if (!gradoValidation.isValid) {
-                newErrors.grado = gradoValidation.message || "Error de validación.";
-            }
+      if (response.data.idMensaje === 2) {
+        if (onUpdate && idTalento) onUpdate(idTalento);
+        handleCloseModal();
+      }
+    },
+  });
 
-            const datesValidation = validateDates(fechaInicio, fechaFin, dateCheck);
-            if (!datesValidation.isValid) {
-                newErrors.fechasEdu = datesValidation.message || "Error de validación.";
-            }
+  const onSubmit = (data: EducationsArrayFormData) => {
+    if (!idTalento) return;
 
-            if (Object.keys(newErrors).length > 0) {
-                setErrors(newErrors);
-                return;
-            }
+    const primeraEducacion = data.educaciones[0];
 
-            let data: AddOrUpdateEducationParams = {
-                idTalento: idTalento,
-                institucion: institucion,
-                carrera: carrera,
-                grado: grado,
-                fechaInicio: fechaInicio,
-                fechaFin: fechaFin,
-                flActualidad: dateCheck ? 1 : 0,
-            };
-
-            if (isEditing && educationRef.current) {
-                data = {
-                    idTalentoEducacion: educationRef.current.idEducacion,
-                    ...data
-                };
-            }
-
-            addOrUpdateData(data).then((response) => {
-                if (response.data.idMensaje === 2) {
-                    if (onUpdate) onUpdate(idTalento);
-                    closeModal("modalEducation");
-                }
-            });
-        }
+    const requestData: AddOrUpdateEducationParams = {
+      idTalento: idTalento,
+      institucion: primeraEducacion.institucion,
+      carrera: primeraEducacion.carrera,
+      grado: primeraEducacion.grado,
+      fechaInicio: primeraEducacion.fechaInicio,
+      fechaFin: primeraEducacion.flActualidad
+        ? ""
+        : primeraEducacion.fechaFin || "",
+      flActualidad: primeraEducacion.flActualidad ? 1 : 0,
     };
 
-    const handleOnDelete = () => {
-        if (educationRef.current && idTalento) {
-            deleteData(educationRef.current.idEducacion).then((response) => {
-                if (response.data.idMensaje === 2) {
-                    if (onUpdate) onUpdate(idTalento);
-                    closeModal("modalEducation");
-                }
-            });
+    if (isEditing && educationRef.current) {
+      requestData.idTalentoEducacion = educationRef.current.idEducacion;
+    }
+
+    addOrUpdateData(requestData).then((response) => {
+      if (response.data.idMensaje === 2) {
+        if (onUpdate) onUpdate(idTalento);
+        handleCloseModal();
+      }
+    });
+  };
+
+  const handleOnDelete = () => {
+    if (educationRef.current && idTalento) {
+      deleteData(educationRef.current.idEducacion).then((response) => {
+        if (response.data.idMensaje === 2) {
+          if (onUpdate) onUpdate(idTalento);
+          handleCloseModal();
         }
-    };
+      });
+    }
+  };
 
-    return (
-        <Modal id="modalEducation" title={isEditing ? "Editar educación" : "Agregar educación"} confirmationLabel={isEditing ? "Actualizar" : "Agregar"} onConfirm={handleOnConfirm}>
-            {(addOrUpdateLoading || deleteLoading) && (<Loading opacity="opacity-60" />)}
-            <div className="relative">
-                <h3 className="text-[#71717A] text-sm mt-6">Describe y agrega tu nueva experiencia educativa.</h3>
-                {isEditing && (
-                    <button type="button" onClick={handleOnDelete} className="absolute -right-2 top-6 rounded-lg hover:bg-red-50 w-10 h-10">
-                        <img src="/assets/ic_delete_bdt.svg" alt="delete icon" className="w-7 h-7 mx-auto" />
-                    </button>
-                )}
-                <div className="flex flex-col my-2">
-                    <label htmlFor="institucion" className="input-label">Institución</label>
-                    <input
-                        type="text"
-                        id="institucion"
-                        name="institucion"
-                        value={institucion}
-                        onChange={(e) => setInstitucion(e.target.value)}
-                        placeholder="Nombre de la institución"
-                        disabled={institucionCheck}
-                        className="input" />
+  const handleCloseModal = () => {
+    if (!isEditing) {
+      reset({
+        educaciones: [
+          {
+            institucion: "",
+            carrera: "",
+            grado: "",
+            fechaInicio: "",
+            fechaFin: "",
+            flActualidad: false,
+          },
+        ],
+      });
+    }
+    closeModal("modalEducation");
+  };
 
-                    {errors.institucion && <p className="text-red-500 text-sm mt-2">{errors.institucion}</p>}
-                    <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                        <input
-                            type="checkbox"
-                            name="currentEntity"
-                            checked={institucionCheck}
-                            onChange={(e) => setInstitucionCheck(e.target.checked)}
-                            id="currentEntity"
-                            className="input-checkbox" />
-                        <label htmlFor="currentEntity" className="cursor-pointer input-label">Aquí en Fractal</label>
-                    </div>
-                </div>
-                <div className="flex flex-col my-2">
-                    <label htmlFor="carrera" className="input-label">Carrera</label>
-                    <input
-                        type="text"
-                        id="carrera"
-                        name="carrera"
-                        value={carrera}
-                        onChange={(e) => setCarrera(e.target.value)}
-                        placeholder="Carrera"
-                        className="input" />
+  return (
+    <FormProvider {...methods}>
+      <Modal
+        id="modalEducation"
+        title={isEditing ? "Editar educación" : "Agregar educación"}
+        confirmationLabel={isEditing ? "Actualizar" : "Agregar"}
+        onConfirm={handleSubmit(onSubmit)}
+        onClose={handleCloseModal}
+      >
+        {(addOrUpdateLoading || deleteLoading) && (
+          <Loading opacity="opacity-60" />
+        )}
 
-                    {errors.carrera && <p className="text-red-500 text-sm mt-2">{errors.carrera}</p>}
-                </div>
-                <div className="flex flex-col my-2">
-                    <label htmlFor="grado" className="input-label">Grado</label>
-                    <input
-                        type="text"
-                        id="grado"
-                        name="grado"
-                        value={grado}
-                        onChange={(e) => setGrado(e.target.value)}
-                        placeholder="Grado"
-                        className="input" />
+        <div className="relative">
+          <h3 className="text-[#71717A] text-sm mt-6 mb-4">
+            {isEditing
+              ? "Edita tu experiencia educativa"
+              : "Describe tu nueva experiencia educativa"}
+          </h3>
 
-                    {errors.grado && <p className="text-red-500 text-sm mt-2">{errors.grado}</p>}
-                </div>
-                <div className="flex gap-4">
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="initDateEducation" className="input-label">Mes y año de inicio</label>
-                        <input
-                            type="date"
-                            name="initDateEducation"
-                            id="initDateEducation"
-                            value={fechaInicio}
-                            onChange={(e) => setFechaInicio(e.target.value)}
-                            className="input" />
-                        <div className="px-1 flex items-center gap-2 mt-2 w-fit">
-                            <input
-                                type="checkbox"
-                                name="currentDate"
-                                checked={dateCheck}
-                                onChange={(e) => setDateCheck(e.target.checked)}
-                                id="currentDate"
-                                className="input-checkbox" />
-                            <label htmlFor="currentDate" className="cursor-pointer input-label">Hasta la actualidad</label>
-                        </div>
-                    </div>
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="endDateEducation" className="input-label">Mes y año de fin</label>
-                        <input
-                            type="date"
-                            name="endDateEducation"
-                            id="endDateEducation"
-                            value={fechaFin}
-                            onChange={(e) => setFechaFin(e.target.value)}
-                            disabled={dateCheck}
-                            className="input" />
-                    </div>
-                </div>
-                {errors.fechasEdu && <p className="text-red-500 text-sm mt-2">{errors.fechasEdu}</p>}
-            </div>
-        </Modal>
-    );
+          {/* Botón de eliminar */}
+          {isEditing && (
+            <button
+              type="button"
+              onClick={handleOnDelete}
+              className="absolute -right-2 top-0 rounded-lg hover:bg-red-50 w-10 h-10"
+            >
+              <img
+                src="/assets/ic_delete_bdt.svg"
+                alt="delete icon"
+                className="w-6 h-6 mx-auto"
+              />
+            </button>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <EducationsSection
+              control={control}
+              errors={errors}
+              shouldShowEmptyForm={true}
+              shouldAddElements={false}
+            />
+          </form>
+        </div>
+      </Modal>
+    </FormProvider>
+  );
 };
