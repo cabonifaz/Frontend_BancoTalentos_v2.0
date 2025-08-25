@@ -1,7 +1,5 @@
-export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-// export const BASE_URL = "http://localhost:8080";
-// export const BASE_URL_FMI = "http://localhost:8081";
+export const BASE_URL = "https://api-bdt.fractal.com.pe";
+export const BASE_URL_FMI = "https://api-autfmi.fractal.com.pe";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
