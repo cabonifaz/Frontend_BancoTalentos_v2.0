@@ -1,78 +1,177 @@
-import { FieldValues } from "react-hook-form";
-import { AddLanguage, DynamicSectionProps, Param } from "../../models";
+import { useEffect, useRef } from "react";
+import {
+  FieldValues,
+  Controller,
+  Control,
+  useFieldArray,
+  ArrayPath,
+  Path,
+} from "react-hook-form";
+import { DynamicSectionProps, Param } from "../../models";
 import { DynamicSection } from "./DynamicSection";
 
-interface LanguagesSectionProps<F extends FieldValues> extends DynamicSectionProps<F, AddLanguage> {
-    idiomas: Param[];
-    nivelesIdioma: Param[];
-    handleChange: (index: number, field: keyof AddLanguage, value: number) => void;
-    handleStarChange: (index: number, star: number) => void;
+interface LanguagesSectionProps<F extends FieldValues>
+  extends DynamicSectionProps<F> {
+  idiomas: Param[];
+  nivelesIdioma: Param[];
 }
 
-export const LanguagesSection = <F extends FieldValues,>({ register, errors, fields, idiomas, nivelesIdioma, onAdd, onRemove, handleChange, handleStarChange }: LanguagesSectionProps<F>) => {
+export const LanguagesSection = <F extends FieldValues>({
+  control,
+  errors,
+  idiomas,
+  nivelesIdioma,
+  shouldShowEmptyForm = true,
+}: LanguagesSectionProps<F>) => {
+  const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
+    control,
+    name: "idiomas" as ArrayPath<F>,
+  });
 
-    return (
-        <DynamicSection title="Idiomas" onAdd={onAdd} onRemove={onRemove} canRemoveFirst={true}>
-            {fields.map((language, index) => (
-                <div key={index}>
-                    <div className="flex flex-col my-2">
-                        <label htmlFor="language" className="text-[#71717A] text-sm px-1">Idioma<span className="text-red-400">*</span></label>
-                        <select
-                            id="language"
-                            {...register(`idiomas.${index}.idIdioma` as any, { valueAsNumber: true })}
-                            value={language.idIdioma}
-                            onChange={(e) => handleChange(index, 'idIdioma', Number(e.target.value))}
-                            className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                            <option value={0}>Seleccione un idioma</option>
-                            {idiomas.map((idioma) => (
-                                <option key={idioma.idParametro} value={idioma.num1}>
-                                    {idioma.string1}
-                                </option>
-                            ))}
-                        </select>
-                        {(errors as any).idiomas?.[index]?.idIdioma && (
-                            <p className="text-red-400 text-sm">{(errors as any).idiomas[index]?.idIdioma?.message}</p>
-                        )}
-                    </div>
-                    <div className="flex flex-col my-2">
-                        <label htmlFor="proficiency" className="text-[#71717A] text-sm px-1">Nivel<span className="text-red-400">*</span></label>
-                        <select
-                            id="proficiency"
-                            {...register(`idiomas.${index}.idNivel` as any, { valueAsNumber: true })}
-                            value={language.idNivel}
-                            onChange={(e) => handleChange(index, 'idNivel', Number(e.target.value))}
-                            className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]">
-                            <option value={0}>Seleccione un nivel</option>
-                            {nivelesIdioma.map((nivel) => (
-                                <option key={nivel.idParametro} value={nivel.num1}>
-                                    {nivel.string1}
-                                </option>
-                            ))}
-                        </select>
-                        {(errors as any).idiomas?.[index]?.idNivel && (
-                            <p className="text-red-400 text-sm">{(errors as any).idiomas[index]?.idNivel?.message}</p>
-                        )}
-                    </div>
-                    <div id="rating-container" className="flex items-center my-6 gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                            <div
-                                key={star}
-                                className="star cursor-pointer"
-                                onClick={() => handleStarChange(index, star)}>
-                                <img
-                                    src={language.estrellas >= star ? "/assets/ic_fill_star.svg" : "/assets/ic_outline_star.svg"}
-                                    alt={`Star ${star}`}
-                                    className="star-icon w-6 h-6"
-                                />
-                            </div>
-                        ))}
+  const hasAppendedInitial = useRef(false);
 
-                        {(errors as any).idiomas?.[index]?.estrellas && (
-                            <p className="text-red-400 text-sm ms-4">{(errors as any).idiomas[index]?.estrellas?.message}</p>
-                        )}
+  useEffect(() => {
+    if (
+      shouldShowEmptyForm &&
+      fields.length === 0 &&
+      !hasAppendedInitial.current
+    ) {
+      append({
+        idIdioma: 0,
+        idNivel: 0,
+        estrellas: 0,
+      } as any);
+      hasAppendedInitial.current = true;
+    }
+  }, [shouldShowEmptyForm, fields.length, append]);
+
+  return (
+    <DynamicSection
+      title="Idiomas"
+      onAdd={() =>
+        append({
+          idIdioma: 0,
+          idNivel: 0,
+          estrellas: 0,
+        } as any)
+      }
+      onRemove={remove}
+      canRemoveFirst={!shouldShowEmptyForm}
+    >
+      {fields.map((field, index) => (
+        <div key={field.id}>
+          {/* Idioma */}
+          <div className="flex flex-col my-2">
+            <label
+              htmlFor={`idiomas.${index}.idIdioma`}
+              className="text-[#71717A] text-sm px-1"
+            >
+              Idioma<span className="text-red-400">*</span>
+            </label>
+            <Controller
+              name={`idiomas.${index}.idIdioma` as Path<F>}
+              control={control}
+              rules={{ required: "Seleccione un idioma" }}
+              render={({ field: controllerField }) => (
+                <select
+                  {...controllerField}
+                  id={`idiomas.${index}.idIdioma`}
+                  value={controllerField.value ?? 0}
+                  onChange={(e) =>
+                    controllerField.onChange(Number(e.target.value))
+                  }
+                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                >
+                  <option value={0}>Seleccione un idioma</option>
+                  {idiomas.map((idioma) => (
+                    <option key={idioma.idParametro} value={idioma.num1}>
+                      {idioma.string1}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {(errors as any)?.idiomas?.[index]?.idIdioma && (
+              <p className="text-red-400 text-sm">
+                {(errors as any).idiomas[index]?.idIdioma?.message as string}
+              </p>
+            )}
+          </div>
+
+          {/* Nivel */}
+          <div className="flex flex-col my-2">
+            <label
+              htmlFor={`idiomas.${index}.idNivel`}
+              className="text-[#71717A] text-sm px-1"
+            >
+              Nivel<span className="text-red-400">*</span>
+            </label>
+            <Controller
+              name={`idiomas.${index}.idNivel` as Path<F>}
+              control={control}
+              rules={{ required: "Seleccione un nivel" }}
+              render={({ field: controllerField }) => (
+                <select
+                  {...controllerField}
+                  id={`idiomas.${index}.idNivel`}
+                  value={controllerField.value ?? 0}
+                  onChange={(e) =>
+                    controllerField.onChange(Number(e.target.value))
+                  }
+                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                >
+                  <option value={0}>Seleccione un nivel</option>
+                  {nivelesIdioma.map((nivel) => (
+                    <option key={nivel.idParametro} value={nivel.num1}>
+                      {nivel.string1}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {(errors as any)?.idiomas?.[index]?.idNivel && (
+              <p className="text-red-400 text-sm">
+                {(errors as any).idiomas[index]?.idNivel?.message as string}
+              </p>
+            )}
+          </div>
+
+          {/* Estrellas */}
+          <div id="rating-container" className="flex items-center my-6 gap-2">
+            <Controller
+              name={`idiomas.${index}.estrellas` as Path<F>}
+              control={control}
+              rules={{ required: "Debe seleccionar estrellas" }}
+              render={({ field: controllerField }) => (
+                <>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <div
+                      key={star}
+                      className="star cursor-pointer"
+                      onClick={() => controllerField.onChange(star)}
+                    >
+                      <img
+                        src={
+                          (controllerField.value ?? 0) >= star
+                            ? "/assets/ic_fill_star.svg"
+                            : "/assets/ic_outline_star.svg"
+                        }
+                        alt={`Star ${star}`}
+                        className="star-icon w-6 h-6"
+                      />
                     </div>
-                </div>
-            ))}
-        </DynamicSection>
-    );
+                  ))}
+                </>
+              )}
+            />
+            {(errors as any)?.idiomas?.[index]?.estrellas && (
+              <p className="text-red-400 text-sm ms-4">
+                {(errors as any).idiomas[index]?.estrellas?.message as string}
+              </p>
+            )}
+          </div>
+        </div>
+      ))}
+    </DynamicSection>
+  );
 };
