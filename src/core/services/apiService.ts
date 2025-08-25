@@ -186,13 +186,13 @@ export const deleteTalenteLanguage = (
 // feedback
 export const addOrUpdateTalentFeedback = (
   data: models.AddOrUpdateFeedbackParams,
-): Promise<AxiosResponse<models.BaseResponse>> => {
+): Promise<AxiosResponse<models.FeedbackResponse>> => {
   return axiosInstance.post("/bdt/talent/addOrUpdateFeedback", data);
 };
 
 export const deleteTalenteFeedback = (
   idFeedback: number,
-): Promise<AxiosResponse<models.BaseResponse>> => {
+): Promise<AxiosResponse<models.FeedbackResponse>> => {
   return axiosInstance.post("/bdt/talent/deleteFeedback", { id: idFeedback });
 };
 
