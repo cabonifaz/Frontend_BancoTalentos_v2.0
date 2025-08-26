@@ -7,6 +7,8 @@ import {
   AddOrUpdateFeedbackParams,
   BaseResponse,
   Feedback,
+  FeedbackResponse,
+  Talent,
 } from "../../models";
 import {
   addOrUpdateTalentFeedback,
@@ -23,6 +25,7 @@ interface Props {
   idTalento?: number;
   feedbackRef: React.MutableRefObject<Feedback | null>;
   onUpdate?: (idTalento: number) => void;
+  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
 export const feedbackSchema = z.object({
@@ -35,7 +38,12 @@ export const feedbackSchema = z.object({
 
 export type FeedbackFormData = z.infer<typeof feedbackSchema>;
 
-export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
+export const ModalFeedback = ({
+  idTalento,
+  feedbackRef,
+  onUpdate,
+  updateTalentList,
+}: Props) => {
   const isEditing = !!feedbackRef.current;
   const { closeModal, isModalOpen } = useModal();
 
@@ -72,7 +80,7 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
   }, [isModalOpen, feedbackRef.current, setValue, reset]);
 
   const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
-    BaseResponse,
+    FeedbackResponse,
     AddOrUpdateFeedbackParams
   >(addOrUpdateTalentFeedback, {
     onError: (error) => handleError(error, enqueueSnackbar),
@@ -86,7 +94,7 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
   });
 
   const { loading: deleteLoading, fetch: deleteData } = useApi<
-    BaseResponse,
+    FeedbackResponse,
     number
   >(deleteTalenteFeedback, {
     onError: (error) => handleError(error, enqueueSnackbar),
@@ -114,7 +122,14 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
 
     addOrUpdateData(requestData).then((response) => {
       if (response.data.idMensaje === 2) {
-        if (onUpdate && idTalento) onUpdate(idTalento);
+        if (onUpdate && idTalento) {
+          onUpdate(idTalento);
+          if (response.data.avgEstrellas >= 0) {
+            updateTalentList?.(idTalento, {
+              estrellas: response.data.avgEstrellas,
+            });
+          }
+        }
         handleCloseModal();
       }
     });
@@ -124,7 +139,12 @@ export const ModalFeedback = ({ idTalento, feedbackRef, onUpdate }: Props) => {
     if (feedbackRef.current && idTalento) {
       deleteData(feedbackRef.current.idFeedback).then((response) => {
         if (response.data.idMensaje === 2) {
-          if (onUpdate && idTalento) onUpdate(idTalento);
+          onUpdate?.(idTalento);
+          if (response.data.avgEstrellas >= 0) {
+            updateTalentList?.(idTalento, {
+              estrellas: response.data.avgEstrellas,
+            });
+          }
           handleCloseModal();
         }
       });
