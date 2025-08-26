@@ -1,5 +1,7 @@
-export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
+export const BASE_URL =
+  "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
+export const BASE_URL_FMI =
+  "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
 // export const BASE_URL = "http://localhost:8080";
 // export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
@@ -16,3 +18,8 @@ export const ESTADO_ATENDIDO = 3;
 // MODALIDAD FACTURACIÓN
 export const MODALIDAD_RXH = 1;
 export const MODALIDAD_PLANILLA = 2;
+
+// PARAMS
+export const TIPO_MODALIDAD = "3";
+export const UNIDAD = "7";
+export const MOTIVO_INGRESO = "8";

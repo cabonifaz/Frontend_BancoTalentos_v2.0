@@ -10,8 +10,8 @@ export const AddPostulanteSchema = z.object({
       .max(30, {
         message: "El Doc. de identidad no puede tener más de 30 caracteres",
       })
-      .regex(/^\d+$/, {
-        message: "El Doc. de identidad solo puede contener números",
+      .regex(/^[a-zA-Z0-9]+$/, {
+        message: "El Doc. de identidad solo puede contener letras y números",
       }),
   ),
 
