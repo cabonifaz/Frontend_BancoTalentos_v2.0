@@ -16,6 +16,7 @@ interface Props {
   flex?: boolean;
   required: boolean;
   disabled?: boolean;
+  clearErrorsFrom?: string[];
 }
 
 const DropdownForm = ({
@@ -29,6 +30,7 @@ const DropdownForm = ({
   disabled = false,
   required,
   clearErrors,
+  clearErrorsFrom,
 }: Props) => {
   return (
     <>
@@ -36,7 +38,7 @@ const DropdownForm = ({
         {label && (
           <label
             htmlFor={name}
-            className={`${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}
+            className={`text-nowrap ${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}
           >
             {label}
             {required && <span className="text-red-400">*</span>}
@@ -54,10 +56,13 @@ const DropdownForm = ({
                   field.onChange(Number(e.target.value));
                   if (clearErrors) {
                     clearErrors(name);
+                    clearErrorsFrom?.forEach((path) => {
+                      clearErrors(path);
+                    });
                   }
                 }}
                 disabled={disabled}
-                className="input w-full h-12"
+                className="input w-full h-12 disabled:text-gray-400"
               >
                 <option value={0}>Elige una opción</option>
                 {options.map((option) => (

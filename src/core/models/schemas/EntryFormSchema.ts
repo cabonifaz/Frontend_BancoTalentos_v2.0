@@ -66,7 +66,7 @@ export const EntryFormSchema = z
       })
       .min(1, "Campo obligatorio"),
     declararSunat: validDropdown,
-    idSedeDeclarar: validDropdown,
+    idSedeDeclarar: z.union([z.number().int(), z.nan()]).optional(),
     ubicacion: z
       .string({
         invalid_type_error: "Campo obligatorio",
@@ -107,6 +107,18 @@ export const EntryFormSchema = z
   .refine((data) => data.montoBase > 0, {
     message: "El monto base debe ser mayor a 0.",
     path: ["montoBase"],
+  })
+  .superRefine((data, ctx) => {
+    if (data.declararSunat !== 2) {
+      // En este caso es obligatorio
+      if (data.idSedeDeclarar === undefined || data.idSedeDeclarar === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Debe seleccionar la sede a declarar",
+          path: ["idSedeDeclarar"],
+        });
+      }
+    }
   });
 
 export type EntryFormType = z.infer<typeof EntryFormSchema>;

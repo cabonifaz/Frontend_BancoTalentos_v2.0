@@ -37,6 +37,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     handleSubmit,
     formState: { errors },
     setValue,
+    getValues,
+    clearErrors,
   } = useForm<EntryFormType>({
     resolver: zodResolver(EntryFormSchema),
     mode: "onChange",
@@ -71,9 +73,11 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       const updatedTalento: AsignarTalentoType = {
         ...currentTalent,
         ...data,
-        sedeDeclarar: sedeSunatList.find(
-          (sede) => sede.idSede === data.idSedeDeclarar,
-        )?.nombre,
+        sedeDeclarar:
+          data.declararSunat === 2
+            ? ""
+            : sedeSunatList.find((sede) => sede.idSede === data.idSedeDeclarar)
+                ?.nombre,
         area:
           unitValues.find((unit) => data.idArea === unit.num1)?.string1 || "",
         tieneEquipo: data.tieneEquipo ? 1 : 0,
@@ -302,13 +306,15 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
               {
                 label: "Salario - SUNAT",
                 children: (
-                  <div className="flex flex-col gap-4 px-2 py-1">
+                  <div className="flex flex-col gap-4 px-1 py-1">
                     {/* SUNAT */}
                     <DropdownForm
                       name="declararSunat"
                       control={control}
                       label="¿Declarado en SUNAT?"
                       error={errors.declararSunat}
+                      clearErrorsFrom={["idSedeDeclarar"]}
+                      clearErrors={clearErrors}
                       options={[
                         { value: 1, label: "Sí" },
                         { value: 2, label: "No" },
@@ -321,11 +327,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       control={control}
                       label="Sede a declarar"
                       error={errors.idSedeDeclarar}
+                      disabled={getValues("declararSunat") === 2}
                       options={sedeSunatList.map((sede) => ({
                         value: sede.idSede,
                         label: sede.nombre,
                       }))}
-                      required={true}
+                      required={false}
                     />
                     <div className="flex justify-center">
                       <SalaryStructureForm
