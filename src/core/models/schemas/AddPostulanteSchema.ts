@@ -45,7 +45,7 @@ export const AddPostulanteSchema = z.object({
     trim,
     z.string().min(1, "La disponibilidad es requerida"),
   ),
-  puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
+  // puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
 
   idPais: z.coerce.number().min(1, "Seleccione un país"),
   idCiudad: z.coerce.number().min(1, "Seleccione una ciudad"),

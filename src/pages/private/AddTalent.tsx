@@ -457,7 +457,7 @@ export const AddTalent = () => {
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2">
+                  {/*<div className="flex flex-col gap-2">
                     <label
                       htmlFor="puestoAnt"
                       className="text-[#636d7c] text-sm px-1"
@@ -476,7 +476,7 @@ export const AddTalent = () => {
                         {errors.puesto.message}
                       </p>
                     )}
-                  </div>
+                  </div>*/}
                   <div className="flex flex-col gap-2">
                     <label
                       htmlFor="availability"
