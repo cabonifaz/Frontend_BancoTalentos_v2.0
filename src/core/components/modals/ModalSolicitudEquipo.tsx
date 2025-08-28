@@ -210,7 +210,7 @@ export const ModalSolicitudEquipo = ({
             className="focus:outline-none"
           >
             <img
-              src="/assets/ic_close_x_fmi.svg"
+              src="/assets/ic_close_x.svg"
               alt="icon close"
               className="w-6 h-6"
             />
