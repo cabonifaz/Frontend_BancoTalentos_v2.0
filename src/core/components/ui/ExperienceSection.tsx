@@ -9,7 +9,6 @@ import {
   ArrayPath,
   useFormContext,
 } from "react-hook-form";
-import { isEditable } from "@testing-library/user-event/dist/utils";
 
 interface ExperiencesSectionProps<F extends FieldValues>
   extends DynamicSectionProps<F> {
@@ -132,9 +131,10 @@ export const ExperiencesSection = <F extends FieldValues>({
                   <input
                     {...fieldProps}
                     value={value || ""}
-                    disabled={isFractal || defaultCompanies[index]}
+                    disabled={defaultCompanies[index]}
                     id={`experiencias.${index}.empresa`}
                     type="text"
+                    onChange={onChange}
                     placeholder="Nombre de la empresa"
                     autoComplete="organization"
                     className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-600"
