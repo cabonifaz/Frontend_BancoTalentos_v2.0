@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const validDropdown = z
   .number()
+  .int()
   .refine((value) => value !== 0, { message: "Opción no válida" });
+
+export const validDropdownOptional = validDropdown.optional();
 
 /** Helpers de normalización */
 export const trim = (v: unknown) => (typeof v === "string" ? v.trim() : v);
