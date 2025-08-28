@@ -14,55 +14,12 @@ import {
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
-
-type TalentoType = {
-  idTalento: number;
-  nombres: string;
-  apellidos?: string;
-  apellidoPaterno?: string;
-  apellidoMaterno?: string;
-  dni: string;
-  celular?: string;
-  email: string;
-  estado?: string;
-  idEstado?: number;
-  situacion?: string;
-  idSituacion?: number;
-  tooltip: string;
-  perfil?: string;
-  idPerfil?: number;
-  confirmado?: boolean;
-  isFromAPI?: boolean;
-
-  ingreso?: number;
-  idCliente?: number;
-  idArea?: number;
-  cargo?: string;
-  fchInicioContrato?: string;
-  fchTerminoContrato?: string;
-  proyectoServicio?: string;
-  objetoContrato?: string;
-  remuneracion?: number;
-  idTiempoContrato?: number;
-  tiempoContrato?: number;
-  idModalidadContrato?: number;
-  horario?: string;
-  tieneEquipo?: number;
-  ubicacion?: string;
-  idMotivo?: number;
-  idMoneda?: number;
-  declararSunat?: number;
-  sedeDeclarar?: string;
-  montoBase?: number;
-  montoMovilidad?: number;
-  montoTrimestral?: number;
-  montoSemestral?: number;
-};
+import { AsignarTalentoType } from "../../models";
 
 interface Props {
   onClose: () => void;
-  onConfirm: (talento: TalentoType) => void;
-  currentTalent?: TalentoType | null;
+  onConfirm: (talento: AsignarTalentoType) => void;
+  currentTalent?: AsignarTalentoType | null;
 }
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
@@ -101,6 +58,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       proyectoServicio: currentTalent?.proyectoServicio || "",
       objetoContrato: currentTalent?.objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
+      tieneEquipo: currentTalent?.tieneEquipo === 1,
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar,
@@ -110,12 +68,14 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {
-      const updatedTalento: TalentoType = {
+      const updatedTalento: AsignarTalentoType = {
         ...currentTalent,
         ...data,
         sedeDeclarar: sedeSunatList.find(
           (sede) => sede.idSede === data.idSedeDeclarar,
         )?.nombre,
+        area:
+          unitValues.find((unit) => data.idArea === unit.num1)?.string1 || "",
         tieneEquipo: data.tieneEquipo ? 1 : 0,
         ingreso: 1,
         confirmado: true,
@@ -219,21 +179,23 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                             </div>
                           </label>
                           <div className="flex items-center gap-6">
-                            <label className="flex items-center cursor-pointer">
+                            <label className="flex items-center">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
                                 checked={field.value === true}
                                 onChange={() => field.onChange(true)}
+                                disabled
                               />
                               <span className="ml-2 text-gray-700">Sí</span>
                             </label>
-                            <label className="flex items-center cursor-pointer">
+                            <label className="flex items-center">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
                                 checked={field.value === false}
                                 onChange={() => field.onChange(false)}
+                                disabled
                               />
                               <span className="ml-2 text-gray-700">No</span>
                             </label>
