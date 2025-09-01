@@ -443,7 +443,8 @@ export const AddTalent = () => {
                       htmlFor="description"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Descripción<span className="text-red-500">*</span>
+                      Descripción
+                      {/*<span className="text-red-500">*</span>*/}
                     </label>
                     <textarea
                       {...register("descripcion")}

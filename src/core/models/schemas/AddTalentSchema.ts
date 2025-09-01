@@ -36,10 +36,7 @@ export const AddTalentSchema = z.object({
   linkedin: z.preprocess(emptyToUndef, z.string().optional()),
   github: z.preprocess(emptyToUndef, z.string().optional()),
 
-  descripcion: z.preprocess(
-    trim,
-    z.string().min(1, "La descripción es requerida"),
-  ),
+  descripcion: z.string().optional(),
   disponibilidad: z.preprocess(
     trim,
     z.string().min(1, "La disponibilidad es requerida"),
@@ -121,10 +118,7 @@ export const AddTalentSchema = z.object({
             trim,
             z.string().min(1, "El puesto es requerido"),
           ),
-          funciones: z.preprocess(
-            trim,
-            z.string().min(1, "Las funciones son requeridas"),
-          ),
+          funciones: z.string().optional(),
           fechaInicio: z.preprocess(
             trim,
             z.string().min(1, "La fecha de inicio es requerida"),

@@ -475,7 +475,8 @@ export const FormPostulante = () => {
                         htmlFor="description"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Descripción<span className="text-red-400">*</span>
+                        Descripción
+                        {/*<span className="text-red-400">*</span>*/}
                       </label>
                       <textarea
                         {...register("descripcion")}

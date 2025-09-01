@@ -313,7 +313,8 @@ export const ExperiencesSection = <F extends FieldValues>({
                 htmlFor={`experiencias.${index}.funciones`}
                 className="text-[#71717A] text-sm px-1"
               >
-                Funciones<span className="text-red-400">*</span>
+                Funciones
+                {/*<span className="text-red-400">*</span>*/}
               </label>
               <Controller
                 name={`experiencias.${index}.funciones` as Path<F>}
