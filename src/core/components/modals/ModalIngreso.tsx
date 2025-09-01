@@ -183,23 +183,23 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                             </div>
                           </label>
                           <div className="flex items-center gap-6">
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === true}
                                 onChange={() => field.onChange(true)}
-                                disabled
+                                // disabled
                               />
                               <span className="ml-2 text-gray-700">Sí</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === false}
                                 onChange={() => field.onChange(false)}
-                                disabled
+                                // disabled
                               />
                               <span className="ml-2 text-gray-700">No</span>
                             </label>
