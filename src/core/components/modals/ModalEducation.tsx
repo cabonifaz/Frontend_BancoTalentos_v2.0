@@ -45,7 +45,19 @@ export const educationSchema = z
   .refine((data) => data.flActualidad || !!data.fechaFin, {
     message: "La fecha de fin es requerida",
     path: ["fechaFin"],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.flActualidad || !data.fechaFin) return true;
+      const inicio = new Date(data.fechaInicio);
+      const fin = new Date(data.fechaFin);
+      return fin > inicio;
+    },
+    {
+      message: "La fecha de fin debe ser mayor a la fecha de inicio",
+      path: ["fechaFin"],
+    },
+  );
 
 export type EducationFormData = z.infer<typeof educationSchema>;
 

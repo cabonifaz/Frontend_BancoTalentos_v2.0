@@ -8,7 +8,7 @@ import { useApi } from "../../hooks/useApi";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { useModal } from "../../context/ModalContext";
 import { Loading } from "../ui/Loading";
-import { validateText } from "../../utilities/validation";
+// import { validateText } from "../../utilities/validation";
 
 interface Props {
   idTalento?: number;
@@ -42,39 +42,39 @@ export const ModalSummary = ({
   // Sincronizar el estado con la prop cuando cambie
   useEffect(() => {
     setInputValue(description || "");
-    validateField(description || "");
+    // validateField(description || "");
   }, [description]);
 
   // Validar en tiempo real
-  useEffect(() => {
-    validateField(inputValue);
-  }, [inputValue]);
+  // useEffect(() => {
+  //   validateField(inputValue);
+  // }, [inputValue]);
 
-  const validateField = (value: string) => {
-    const newErrors: { [key: string]: string } = {};
+  // const validateField = (value: string) => {
+  //   const newErrors: { [key: string]: string } = {};
 
-    if (!value.trim()) {
-      newErrors.description = "El resumen profesional es requerido";
-    } else {
-      const textValidation = validateText(value);
-      if (!textValidation.isValid) {
-        newErrors.description =
-          textValidation.message || "Error de validación.";
-      }
-    }
+  //   if (!value.trim()) {
+  //     newErrors.description = "El resumen profesional es requerido";
+  //   } else {
+  //     const textValidation = validateText(value);
+  //     if (!textValidation.isValid) {
+  //       newErrors.description =
+  //         textValidation.message || "Error de validación.";
+  //     }
+  //   }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
   };
 
   const handleOnConfirm = () => {
-    const isValid = validateField(inputValue);
+    // const isValid = validateField(inputValue);
 
-    if (!isValid || !idTalento) {
+    if (!idTalento) {
       return;
     }
 
