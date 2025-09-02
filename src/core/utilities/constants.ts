@@ -1,5 +1,5 @@
 export const BASE_URL =
-  "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
+  "https://bancotalentobackendpreprod-awdecbbsgrh4d8bn.canadacentral-01.azurewebsites.net";
 export const BASE_URL_FMI =
   "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
 // export const BASE_URL = "http://localhost:8080";
