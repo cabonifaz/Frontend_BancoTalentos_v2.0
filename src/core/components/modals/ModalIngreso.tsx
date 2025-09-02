@@ -49,7 +49,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       idArea: currentTalent?.idArea || 0,
       idCliente: currentTalent?.idCliente || 0,
       idMotivo: currentTalent?.idMotivo || 0,
-      cargo: currentTalent?.cargo || "",
+      cargo: currentTalent?.perfil || "",
       horario: currentTalent?.horario || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
