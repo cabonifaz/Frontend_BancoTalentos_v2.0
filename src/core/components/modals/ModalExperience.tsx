@@ -31,10 +31,7 @@ export const experienceSchema = z
   .object({
     empresa: z.preprocess(trim, z.string().min(1, "La empresa es requerida")),
     puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
-    funciones: z.preprocess(
-      trim,
-      z.string().min(1, "Las funciones son requeridas"),
-    ),
+    funciones: z.string().optional(),
     fechaInicio: z.preprocess(
       trim,
       z.string().min(1, "La fecha de inicio es requerida"),
@@ -45,7 +42,19 @@ export const experienceSchema = z
   .refine((data) => data.flActualidad || !!data.fechaFin, {
     message: "La fecha de fin es requerida",
     path: ["fechaFin"],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.flActualidad || !data.fechaFin) return true;
+      const inicio = new Date(data.fechaInicio);
+      const fin = new Date(data.fechaFin);
+      return fin > inicio;
+    },
+    {
+      message: "La fecha de fin debe ser mayor a la fecha de inicio",
+      path: ["fechaFin"],
+    },
+  );
 
 export type ExperienceFormData = z.infer<typeof experienceSchema>;
 
@@ -159,7 +168,7 @@ export const ModalExperience = ({
       idTalento: idTalento,
       empresa: primeraExperiencia.empresa,
       puesto: primeraExperiencia.puesto,
-      funciones: primeraExperiencia.funciones,
+      funciones: primeraExperiencia?.funciones || "",
       fechaInicio: primeraExperiencia.fechaInicio,
       fechaFin: primeraExperiencia.flActualidad
         ? ""

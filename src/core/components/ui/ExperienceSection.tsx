@@ -22,7 +22,7 @@ export const ExperiencesSection = <F extends FieldValues>({
   shouldAddElements = true,
   empresaValue,
 }: ExperiencesSectionProps<F>) => {
-  const { setValue, clearErrors, watch } = useFormContext<F>();
+  const { setValue, getValues, clearErrors, watch } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
     name: "experiencias" as ArrayPath<F>,
@@ -294,7 +294,9 @@ export const ExperiencesSection = <F extends FieldValues>({
                       {...field}
                       type="date"
                       id={`experiencias.${index}.fechaFin`}
-                      disabled={!!currentDates[index]}
+                      disabled={getValues(
+                        `experiencias.${index}.flActualidad` as Path<F>,
+                      )}
                       className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
                     />
                   )}
