@@ -103,6 +103,7 @@ const PantallaDatos = () => {
       idTalento: talento.idTalento,
       APELLIDO_PATERNO: talento.apellidoPaterno,
       apellidoMaterno: apellidoMaterno || "",
+      cargo: data?.cargo || "",
       ...cleanData,
     };
 

@@ -520,6 +520,11 @@ const TalentTable: React.FC = () => {
               perfil: talent.perfil,
               // comfirmed from api
               isFromAPI: talent.confirmado ? true : false,
+              ubicacion: talent?.ubicacion || "",
+              idModalidadContrato: talent?.idModalidadContrato || 0,
+              fchInicioContrato: talent?.fchInicioContrato || "",
+              fchTerminoContrato: talent?.fchTerminoContrato || "",
+              montoBase: talent?.montoBase || 0,
             }),
           );
 
@@ -607,6 +612,11 @@ const TalentTable: React.FC = () => {
           idPerfil: idPerfil,
           perfil: perfil,
           tieneEquipo: talentDetails.tieneEquipo || 0,
+          ubicacion: talent?.ubicacion || "",
+          idModalidadContrato: talent?.idModalidadContrato || 0,
+          fchInicioContrato: talent?.fchInicioContrato || "",
+          fchTerminoContrato: talent?.fchTerminoContrato || "",
+          montoBase: talent?.montoBase || 0,
         };
       } else {
         formattedTalent = formatTalentFromBasicData(talent);
