@@ -215,7 +215,7 @@ export const FormPostulante = () => {
               tiempoContrato: null,
               idTiempoContrato: null,
               fechaInicioLabores: null,
-              cargo: data.puesto,
+              // cargo: data.puesto,
               remuneracion: null,
               idMoneda:
                 data.idMoneda === 0 || data.idMoneda === undefined
@@ -475,7 +475,8 @@ export const FormPostulante = () => {
                         htmlFor="description"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Descripción<span className="text-red-400">*</span>
+                        Descripción
+                        {/*<span className="text-red-400">*</span>*/}
                       </label>
                       <textarea
                         {...register("descripcion")}
@@ -489,7 +490,7 @@ export const FormPostulante = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2">
+                    {/*<div className="flex flex-col gap-2">
                       <label
                         htmlFor="puestoAnt"
                         className="text-[#636d7c] text-sm px-1"
@@ -508,7 +509,7 @@ export const FormPostulante = () => {
                           {errors.puesto.message}
                         </p>
                       )}
-                    </div>
+                    </div>*/}
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="availability"

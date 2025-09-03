@@ -63,7 +63,14 @@ export const Tabs = ({
       </div>
 
       <div className="mt-1">
-        {tabs[activeTab].children}
+        {tabs.map((tab, index) => (
+          <div
+            key={index}
+            style={{ display: activeTab === index ? "block" : "none" }}
+          >
+            {tab.children}
+          </div>
+        ))}
         {isDataLoading && (
           <div className="absolute inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-4 rounded-lg shadow-sm">

@@ -37,15 +37,13 @@ export const AddPostulanteSchema = z.object({
   linkedin: z.preprocess(emptyToUndef, z.string().optional()),
   github: z.preprocess(emptyToUndef, z.string().optional()),
 
-  descripcion: z.preprocess(
-    trim,
-    z.string().min(1, "La descripción es requerida"),
-  ),
+  descripcion: z.string().optional(),
+
   disponibilidad: z.preprocess(
     trim,
     z.string().min(1, "La disponibilidad es requerida"),
   ),
-  puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
+  // puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
 
   idPais: z.coerce.number().min(1, "Seleccione un país"),
   idCiudad: z.coerce.number().min(1, "Seleccione una ciudad"),
@@ -108,10 +106,7 @@ export const AddPostulanteSchema = z.object({
             trim,
             z.string().min(1, "El puesto es requerido"),
           ),
-          funciones: z.preprocess(
-            trim,
-            z.string().min(1, "Las funciones son requeridas"),
-          ),
+          funciones: z.string().optional(),
           fechaInicio: z.preprocess(
             trim,
             z.string().min(1, "La fecha de inicio es requerida"),
@@ -123,7 +118,19 @@ export const AddPostulanteSchema = z.object({
         .refine((data) => data.flActualidad || !!data.fechaFin, {
           message: "La fecha de fin es requerida",
           path: ["fechaFin"],
-        }),
+        })
+        .refine(
+          (data) => {
+            if (data.flActualidad || !data.fechaFin) return true;
+            const inicio = new Date(data.fechaInicio);
+            const fin = new Date(data.fechaFin);
+            return fin > inicio;
+          },
+          {
+            message: "La fecha de fin debe ser mayor a la fecha de inicio",
+            path: ["fechaFin"],
+          },
+        ),
     )
     .optional()
     .default([]),
@@ -150,7 +157,19 @@ export const AddPostulanteSchema = z.object({
       .refine((data) => data.flActualidad || !!data.fechaFin, {
         message: "La fecha de fin es requerida",
         path: ["fechaFin"],
-      }),
+      })
+      .refine(
+        (data) => {
+          if (data.flActualidad || !data.fechaFin) return true;
+          const inicio = new Date(data.fechaInicio);
+          const fin = new Date(data.fechaFin);
+          return fin > inicio;
+        },
+        {
+          message: "La fecha de fin debe ser mayor a la fecha de inicio",
+          path: ["fechaFin"],
+        },
+      ),
   ),
 
   idiomas: z

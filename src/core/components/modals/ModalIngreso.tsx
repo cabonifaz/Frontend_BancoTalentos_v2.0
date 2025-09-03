@@ -11,10 +11,12 @@ import {
   TIPO_MODALIDAD,
   UNIDAD,
   MOTIVO_INGRESO,
+  HORARIO_TRABAJO,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
+import { useEffect } from "react";
 
 interface Props {
   onClose: () => void;
@@ -24,13 +26,16 @@ interface Props {
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
   const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO}`,
+    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO}`,
   );
   const { clientes, loading: clientsLoading } = useFetchClients();
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
+  const horarioTrabajo = paramsByMaestro[HORARIO_TRABAJO]?.find(
+    (item) => item.num1 === 1,
+  )?.string1;
 
   const {
     control,
@@ -49,8 +54,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       idArea: currentTalent?.idArea || 0,
       idCliente: currentTalent?.idCliente || 0,
       idMotivo: currentTalent?.idMotivo || 0,
-      cargo: currentTalent?.cargo || "",
-      horario: currentTalent?.horario || "",
+      cargo: currentTalent?.perfil || "",
+      horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
@@ -61,12 +66,19 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       objetoContrato: currentTalent?.objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
+      ubicacion: currentTalent?.ubicacion || "",
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar,
         )?.idSede || 0,
     },
   });
+
+  useEffect(() => {
+    if (horarioTrabajo) {
+      setValue("horario", horarioTrabajo);
+    }
+  }, [horarioTrabajo, setValue]);
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {
@@ -183,23 +195,23 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                             </div>
                           </label>
                           <div className="flex items-center gap-6">
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === true}
                                 onChange={() => field.onChange(true)}
-                                disabled
+                                // disabled
                               />
                               <span className="ml-2 text-gray-700">Sí</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                               <input
                                 type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3]"
+                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === false}
                                 onChange={() => field.onChange(false)}
-                                disabled
+                                // disabled
                               />
                               <span className="ml-2 text-gray-700">No</span>
                             </label>
