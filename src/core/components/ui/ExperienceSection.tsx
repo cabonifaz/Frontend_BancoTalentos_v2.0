@@ -8,6 +8,7 @@ import {
   useFieldArray,
   ArrayPath,
   useFormContext,
+  useWatch,
 } from "react-hook-form";
 
 interface ExperiencesSectionProps<F extends FieldValues>
@@ -22,17 +23,22 @@ export const ExperiencesSection = <F extends FieldValues>({
   shouldAddElements = true,
   empresaValue,
 }: ExperiencesSectionProps<F>) => {
-  const { setValue, getValues, clearErrors, watch } = useFormContext<F>();
+  const { setValue, getValues, clearErrors, watch, trigger } =
+    useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
     name: "experiencias" as ArrayPath<F>,
+  });
+
+  const watchedFechasInicio = useWatch({
+    control,
+    name: "experiencias" as any,
   });
 
   // UI-only: para bloquear el campo "empresa" si se marca "Aquí en Fractal"
   const [defaultCompanies, setDefaultCompanies] = useState<
     Record<number, boolean>
   >({});
-  // UI-only: para deshabilitar fechaFin si se marca "Hasta la actualidad"
   const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
 
   const hasAppendedInitial = useRef(false);
@@ -81,6 +87,15 @@ export const ExperiencesSection = <F extends FieldValues>({
       hasAppendedInitial.current = true;
     }
   }, [shouldShowEmptyForm, fields.length, append]);
+
+  useEffect(() => {
+    // Validar todas las fechas de fin cuando cambia alguna fecha de inicio
+    fields.forEach((_, index) => {
+      if (getValues(`experiencias.${index}.fechaFin` as Path<F>)) {
+        trigger(`experiencias.${index}.fechaFin` as Path<F>);
+      }
+    });
+  }, [watchedFechasInicio, trigger, fields, getValues]);
 
   return (
     <DynamicSection

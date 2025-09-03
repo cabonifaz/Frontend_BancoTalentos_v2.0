@@ -8,6 +8,7 @@ import {
   useFieldArray,
   ArrayPath,
   useFormContext,
+  useWatch,
 } from "react-hook-form";
 
 interface EducationsSectionProps<F extends FieldValues>
@@ -19,10 +20,15 @@ export const EducationsSection = <F extends FieldValues>({
   shouldShowEmptyForm = true,
   shouldAddElements = true,
 }: EducationsSectionProps<F>) => {
-  const { setValue, getValues, clearErrors } = useFormContext<F>();
+  const { setValue, getValues, clearErrors, trigger } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
     name: "educaciones" as ArrayPath<F>,
+  });
+
+  const watchedFechasInicio = useWatch({
+    control,
+    name: "educaciones" as any,
   });
 
   const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
@@ -45,6 +51,15 @@ export const EducationsSection = <F extends FieldValues>({
       hasAppendedInitial.current = true;
     }
   }, [shouldShowEmptyForm, fields.length, append]);
+
+  useEffect(() => {
+    // Validar todas las fechas de fin cuando cambia alguna fecha de inicio
+    fields.forEach((_, index) => {
+      if (getValues(`educaciones.${index}.fechaFin` as Path<F>)) {
+        trigger(`educaciones.${index}.fechaFin` as Path<F>);
+      }
+    });
+  }, [watchedFechasInicio, trigger, fields, getValues]);
 
   return (
     <DynamicSection

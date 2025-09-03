@@ -16,6 +16,7 @@ import {
 } from "../../utilities/constants";
 import { AsignarTalentoType } from "../../models/interfaces/TalentoFMI";
 import { Tabs } from "../ui/Tabs";
+import { format } from "date-fns";
 
 interface Props {
   onClose: () => void;
@@ -61,8 +62,8 @@ export const ModalSolicitudEquipo = ({
     resolver: zodResolver(ModalSolicitudEquipoFormSchema),
     mode: "onChange",
     defaultValues: {
-      fechaSolicitud: new Date().toISOString().split("T")[0],
-      fechaEntrega: new Date().toISOString().split("T")[0],
+      fechaSolicitud: format(new Date(), "yyyy-MM-dd"),
+      fechaEntrega: format(new Date(), "yyyy-MM-dd"),
       tipoHardware: tipoHardwareParams?.length
         ? tipoHardwareParams[tipoHardwareParams.length - 1].num1
         : 99,
