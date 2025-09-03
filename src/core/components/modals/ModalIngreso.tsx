@@ -11,10 +11,12 @@ import {
   TIPO_MODALIDAD,
   UNIDAD,
   MOTIVO_INGRESO,
+  HORARIO_TRABAJO,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
+import { useEffect } from "react";
 
 interface Props {
   onClose: () => void;
@@ -24,13 +26,16 @@ interface Props {
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
   const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO}`,
+    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO}`,
   );
   const { clientes, loading: clientsLoading } = useFetchClients();
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
+  const horarioTrabajo = paramsByMaestro[HORARIO_TRABAJO]?.find(
+    (item) => item.num1 === 1,
+  )?.string1;
 
   const {
     control,
@@ -50,7 +55,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       idCliente: currentTalent?.idCliente || 0,
       idMotivo: currentTalent?.idMotivo || 0,
       cargo: currentTalent?.perfil || "",
-      horario: currentTalent?.horario || "",
+      horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
@@ -61,12 +66,19 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       objetoContrato: currentTalent?.objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
+      ubicacion: currentTalent?.ubicacion || "",
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar,
         )?.idSede || 0,
     },
   });
+
+  useEffect(() => {
+    if (horarioTrabajo) {
+      setValue("horario", horarioTrabajo);
+    }
+  }, [horarioTrabajo, setValue]);
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {
