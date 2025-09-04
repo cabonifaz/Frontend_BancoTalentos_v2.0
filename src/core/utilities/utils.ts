@@ -1,5 +1,6 @@
 import { format, isValid, parse } from "date-fns";
 import { createElement, ReactNode } from "react";
+import { Param } from "../models";
 
 type fileNameType = string | undefined | null;
 
@@ -10,6 +11,17 @@ enum TipoArchivo {
 }
 
 export class Utils {
+  static getPriorityValueFromParams = (values?: Param[]): number => {
+    if (!values || values.length === 0) return 0;
+
+    // buscamos el primer item con prioridad (num2 = 1)
+    const prioritized = values.find((item) => item.num2 === 1);
+    if (prioritized) return prioritized.num1;
+
+    // fallback: usamos el primer valor disponible
+    return values[0].num1 ?? 0;
+  };
+
   static getStars = (rating: number): ReactNode[] => {
     const getFilledStar = (key: string): ReactNode => {
       return createElement("img", {
