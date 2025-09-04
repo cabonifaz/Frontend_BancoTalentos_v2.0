@@ -777,6 +777,7 @@ const TalentTable: React.FC = () => {
         sedeDeclarar: talent.sedeDeclarar || "",
         montoBase: talent.montoBase || 0,
         montoMovilidad: talent.montoMovilidad || 0,
+        montoMensual: talent.montoMensual || 0,
         montoTrimestral: talent.montoTrimestral || 0,
         montoSemestral: talent.montoSemestral || 0,
         // isFromApi: talent?.isFromAPI,
