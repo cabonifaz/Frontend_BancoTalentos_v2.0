@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Control,
   Controller,
@@ -17,6 +18,7 @@ interface Props {
   required: boolean;
   disabled?: boolean;
   clearErrorsFrom?: string[];
+  defaultValue?: number;
 }
 
 const DropdownForm = ({
@@ -31,7 +33,14 @@ const DropdownForm = ({
   required,
   clearErrors,
   clearErrorsFrom,
+  defaultValue,
 }: Props) => {
+  const safeDefault = useMemo(() => {
+    if (!options || options.length === 0) return 0;
+    const found = options.find((opt) => opt.value === defaultValue);
+    return found ? found.value : options[0].value;
+  }, [options, defaultValue]);
+
   return (
     <>
       <div className={`${flex ? "flex-1" : "flex flex-1 gap-4 items-center"}`}>
@@ -52,6 +61,7 @@ const DropdownForm = ({
               <select
                 id={name}
                 {...field}
+                value={field.value ?? safeDefault}
                 onChange={(e) => {
                   field.onChange(Number(e.target.value));
                   if (clearErrors) {
