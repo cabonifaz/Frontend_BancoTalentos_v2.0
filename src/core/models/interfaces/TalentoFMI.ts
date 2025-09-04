@@ -51,6 +51,7 @@ export interface AsignarTalentoType {
   sedeDeclarar?: string;
   montoBase?: number;
   montoMovilidad?: number;
+  montoMensual?: number;
   montoTrimestral?: number;
   montoSemestral?: number;
 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Control,
   Controller,
@@ -20,6 +21,7 @@ interface Props {
   mainLabel?: string;
   inputs: InputItem[];
   errors: FieldErrors;
+  enabledFields: string[];
 }
 
 const SalaryStructureForm = ({
@@ -28,6 +30,7 @@ const SalaryStructureForm = ({
   mainLabel,
   inputs,
   errors,
+  enabledFields,
 }: Props) => {
   // Función de manejo de cambios basada en InputForm
   const handleChange = (
@@ -57,6 +60,29 @@ const SalaryStructureForm = ({
     }
   };
 
+  useEffect(() => {
+    inputs.forEach((inp) => {
+      const canUse = enabledFields.includes(inp.name);
+      const cb = document.getElementById(
+        `checkbox-${inp.name}`,
+      ) as HTMLInputElement | null;
+      const inputEl = document.getElementById(
+        inp.name,
+      ) as HTMLInputElement | null;
+
+      if (cb) {
+        cb.disabled = !canUse;
+        cb.checked = canUse;
+      }
+      if (inputEl) {
+        inputEl.disabled = !canUse;
+        if (!canUse) {
+          setValue(inp.name as keyof EntryFormType, 0);
+        }
+      }
+    });
+  }, [enabledFields, inputs, setValue]);
+
   return (
     <div className="flex flex-col md:flex-row items-start justify-between gap-4 mt-4">
       {mainLabel && (
@@ -79,8 +105,9 @@ const SalaryStructureForm = ({
                       <input
                         type="checkbox"
                         id={`checkbox-${input.name}`}
-                        className="w-5 h-5 accent-blue-500"
-                        defaultChecked={input.name === "montoBase"}
+                        className="w-5 h-5 accent-blue-400 enabled:cursor-pointer"
+                        defaultChecked={enabledFields.includes(input.name)}
+                        disabled={!enabledFields.includes(input.name)}
                         onChange={(e) => {
                           const isChecked = e.target.checked;
                           const inputElement = document.getElementById(
@@ -92,7 +119,7 @@ const SalaryStructureForm = ({
                       />
                       <label
                         htmlFor={`checkbox-${input.name}`}
-                        className="text-xs font-semibold"
+                        className={`text-xs font-semibold ${!enabledFields.includes(input.name) ? "text-gray-400" : "cursor-pointer"}`}
                       >
                         {input.label}
                         {input.required && (
@@ -117,7 +144,7 @@ const SalaryStructureForm = ({
                       control={control}
                       render={({ field }) => (
                         <input
-                          disabled={input.name !== "montoBase"}
+                          disabled={!enabledFields.includes(input.name)}
                           id={input.name}
                           type={
                             input.type === "number"
@@ -133,7 +160,7 @@ const SalaryStructureForm = ({
                           inputMode={
                             input.type === "number" ? "decimal" : undefined
                           }
-                          className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10"
+                          className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 disabled:text-gray-400 disabled:bg-gray-100"
                         />
                       )}
                     />

@@ -20,7 +20,7 @@ import {
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFetchParams } from "../../hooks/useFetchParams";
 import { Utils } from "../../utilities/utils";
 
@@ -31,7 +31,11 @@ interface Props {
 }
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
-  const { paramsByMaestro, loading, fetchParams } = useFetchParams();
+  const {
+    paramsByMaestro,
+    loading: paramLoading,
+    fetchParams,
+  } = useFetchParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
 
   useEffect(() => {
@@ -79,6 +83,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
+      montoMensual: currentTalent?.montoMensual || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
@@ -138,6 +143,10 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     name: "idModalidadContrato",
   });
 
+  const [enabledSalaryFields, setEnabledSalaryFields] = useState<string[]>([
+    "montoBase",
+  ]);
+
   useEffect(() => {
     if (!watchedModalidad || !modalityValues) return;
 
@@ -152,11 +161,19 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     if (grupo === GROUP_MODALIDAD_LOC_SERVICIOS) {
       setValue("declararSunat", 2, { shouldValidate: true });
       setValue("idSedeDeclarar", 0, { shouldValidate: true });
+      setEnabledSalaryFields(["montoBase"]);
     }
 
     if (grupo === GROUP_MODALIDAD_PLANILLA) {
       setValue("declararSunat", 1, { shouldValidate: true });
       setValue("idSedeDeclarar", 1, { shouldValidate: true });
+      setEnabledSalaryFields([
+        "montoBase",
+        "montoMovilidad",
+        "montoTrimestral",
+        "montoSemestral",
+        "montoMensual",
+      ]);
     }
   }, [watchedModalidad, modalityValues, setValue]);
 
@@ -183,7 +200,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
           className="flex flex-col justify-between min-h-[500px]"
         >
           <Tabs
-            isDataLoading={clientsLoading}
+            isDataLoading={paramLoading || clientsLoading}
             tabs={[
               {
                 label: "General",
@@ -410,6 +427,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       <SalaryStructureForm
                         control={control}
                         setValue={setValue}
+                        enabledFields={enabledSalaryFields}
                         errors={errors}
                         inputs={[
                           {
@@ -421,6 +439,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                           {
                             label: "Monto Movilidad",
                             name: "montoMovilidad",
+                            type: "number",
+                            regex: /^\d*(\.\d{0,2})?$/,
+                          },
+                          {
+                            label: "Monto Mensual",
+                            name: "montoMensual",
                             type: "number",
                             regex: /^\d*(\.\d{0,2})?$/,
                           },
