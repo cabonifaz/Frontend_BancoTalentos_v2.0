@@ -1,4 +1,4 @@
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { DropdownForm, InputForm, SalaryStructureForm } from "../forms";
 import { Tabs } from "../ui/Tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,8 @@ import {
   HORARIO_TRABAJO,
   OBJETO_CONTRATO,
   PROYECTO_SERVICIO,
+  GROUP_MODALIDAD_LOC_SERVICIOS,
+  GROUP_MODALIDAD_PLANILLA,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
@@ -93,6 +95,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     },
   });
 
+  // cargar valores por defecto desde parametros
   useEffect(() => {
     setValue("horario", horarioTrabajo);
     setValue("idArea", defaultUnit);
@@ -129,6 +132,33 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       onClose();
     }
   };
+
+  const watchedModalidad = useWatch({
+    control,
+    name: "idModalidadContrato",
+  });
+
+  useEffect(() => {
+    if (!watchedModalidad || !modalityValues) return;
+
+    const selectedModality = modalityValues.find(
+      (m) => m.num1 === watchedModalidad,
+    );
+
+    if (!selectedModality) return;
+
+    const grupo = selectedModality.num2;
+
+    if (grupo === GROUP_MODALIDAD_LOC_SERVICIOS) {
+      setValue("declararSunat", 2, { shouldValidate: true });
+      setValue("idSedeDeclarar", 0, { shouldValidate: true });
+    }
+
+    if (grupo === GROUP_MODALIDAD_PLANILLA) {
+      setValue("declararSunat", 1, { shouldValidate: true });
+      setValue("idSedeDeclarar", 1, { shouldValidate: true });
+    }
+  }, [watchedModalidad, modalityValues, setValue]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
