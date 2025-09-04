@@ -12,11 +12,15 @@ import {
   UNIDAD,
   MOTIVO_INGRESO,
   HORARIO_TRABAJO,
+  OBJETO_CONTRATO,
+  PROYECTO_SERVICIO,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
 import { useEffect } from "react";
+import { useFetchParams } from "../../hooks/useFetchParams";
+import { Utils } from "../../utilities/utils";
 
 interface Props {
   onClose: () => void;
@@ -25,17 +29,32 @@ interface Props {
 }
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
-  const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO}`,
-  );
+  const { paramsByMaestro, loading, fetchParams } = useFetchParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
+
+  useEffect(() => {
+    fetchParams(
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`,
+    );
+  }, [fetchParams]);
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
-  const horarioTrabajo = paramsByMaestro[HORARIO_TRABAJO]?.find(
-    (item) => item.num1 === 1,
-  )?.string1;
+  const horarioTrabajo =
+    paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const proyectoServicio =
+    paramsByMaestro[PROYECTO_SERVICIO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const objetoContrato =
+    paramsByMaestro[OBJETO_CONTRATO]?.find((item) => item.num1 === 1)
+      ?.string1 || "";
+
+  const defaultUnit = Utils.getPriorityValueFromParams(unitValues);
+  const defaultReason = Utils.getPriorityValueFromParams(reasonValues);
 
   const {
     control,
@@ -62,8 +81,8 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
       fchTerminoContrato: currentTalent?.fchTerminoContrato || "",
-      proyectoServicio: currentTalent?.proyectoServicio || "",
-      objetoContrato: currentTalent?.objetoContrato || "",
+      proyectoServicio: proyectoServicio || "",
+      objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
@@ -75,10 +94,19 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
   });
 
   useEffect(() => {
-    if (horarioTrabajo) {
-      setValue("horario", horarioTrabajo);
-    }
-  }, [horarioTrabajo, setValue]);
+    setValue("horario", horarioTrabajo);
+    setValue("idArea", defaultUnit);
+    setValue("idMotivo", defaultReason);
+    setValue("proyectoServicio", proyectoServicio);
+    setValue("objetoContrato", objetoContrato);
+  }, [
+    horarioTrabajo,
+    setValue,
+    defaultReason,
+    defaultUnit,
+    proyectoServicio,
+    objetoContrato,
+  ]);
 
   const onSubmit = (data: EntryFormType) => {
     if (currentTalent?.idTalento) {
@@ -125,7 +153,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
           className="flex flex-col justify-between min-h-[500px]"
         >
           <Tabs
-            isDataLoading={paramLoading || clientsLoading}
+            isDataLoading={clientsLoading}
             tabs={[
               {
                 label: "General",
@@ -166,6 +194,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       control={control}
                       label="Área"
                       error={errors.idArea}
+                      defaultValue={defaultUnit}
                       options={
                         unitValues?.map((unit) => ({
                           value: unit.num1,
@@ -249,6 +278,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       control={control}
                       label="Motivo de ingreso"
                       error={errors.idMotivo}
+                      defaultValue={defaultReason}
                       options={
                         reasonValues?.map((reason) => ({
                           value: reason.num1,
