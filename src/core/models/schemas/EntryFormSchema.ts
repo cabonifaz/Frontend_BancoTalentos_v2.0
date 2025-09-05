@@ -33,6 +33,12 @@ export const EntryFormSchema = z
         invalid_type_error: "Monto movilidad debe tener 2 decimales",
       })
       .optional(),
+    montoMensual: z
+      .number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Monto mensual debe tener 2 decimales",
+      })
+      .optional(),
     montoTrimestral: z
       .number({
         required_error: "Campo obligatorio",
