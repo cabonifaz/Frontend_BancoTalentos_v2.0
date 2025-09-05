@@ -1,4 +1,4 @@
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { DropdownForm, InputForm, SalaryStructureForm } from "../forms";
 import { Tabs } from "../ui/Tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,11 +14,13 @@ import {
   HORARIO_TRABAJO,
   OBJETO_CONTRATO,
   PROYECTO_SERVICIO,
+  GROUP_MODALIDAD_LOC_SERVICIOS,
+  GROUP_MODALIDAD_PLANILLA,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFetchParams } from "../../hooks/useFetchParams";
 import { Utils } from "../../utilities/utils";
 
@@ -29,7 +31,11 @@ interface Props {
 }
 
 export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
-  const { paramsByMaestro, loading, fetchParams } = useFetchParams();
+  const {
+    paramsByMaestro,
+    loading: paramLoading,
+    fetchParams,
+  } = useFetchParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
 
   useEffect(() => {
@@ -77,6 +83,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
       montoMovilidad: currentTalent?.montoMovilidad || 0,
+      montoMensual: currentTalent?.montoMensual || 0,
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
@@ -93,6 +100,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     },
   });
 
+  // cargar valores por defecto desde parametros
   useEffect(() => {
     setValue("horario", horarioTrabajo);
     setValue("idArea", defaultUnit);
@@ -130,6 +138,45 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     }
   };
 
+  const watchedModalidad = useWatch({
+    control,
+    name: "idModalidadContrato",
+  });
+
+  const [enabledSalaryFields, setEnabledSalaryFields] = useState<string[]>([
+    "montoBase",
+  ]);
+
+  useEffect(() => {
+    if (!watchedModalidad || !modalityValues) return;
+
+    const selectedModality = modalityValues.find(
+      (m) => m.num1 === watchedModalidad,
+    );
+
+    if (!selectedModality) return;
+
+    const grupo = selectedModality.num2;
+
+    if (grupo === GROUP_MODALIDAD_LOC_SERVICIOS) {
+      setValue("declararSunat", 2, { shouldValidate: true });
+      setValue("idSedeDeclarar", 0, { shouldValidate: true });
+      setEnabledSalaryFields(["montoBase"]);
+    }
+
+    if (grupo === GROUP_MODALIDAD_PLANILLA) {
+      setValue("declararSunat", 1, { shouldValidate: true });
+      setValue("idSedeDeclarar", 1, { shouldValidate: true });
+      setEnabledSalaryFields([
+        "montoBase",
+        "montoMovilidad",
+        "montoTrimestral",
+        "montoSemestral",
+        "montoMensual",
+      ]);
+    }
+  }, [watchedModalidad, modalityValues, setValue]);
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
       <div className="bg-white rounded-lg shadow-lg p-3 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto">
@@ -153,7 +200,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
           className="flex flex-col justify-between min-h-[500px]"
         >
           <Tabs
-            isDataLoading={clientsLoading}
+            isDataLoading={paramLoading || clientsLoading}
             tabs={[
               {
                 label: "General",
@@ -380,6 +427,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                       <SalaryStructureForm
                         control={control}
                         setValue={setValue}
+                        enabledFields={enabledSalaryFields}
                         errors={errors}
                         inputs={[
                           {
@@ -391,6 +439,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                           {
                             label: "Monto Movilidad",
                             name: "montoMovilidad",
+                            type: "number",
+                            regex: /^\d*(\.\d{0,2})?$/,
+                          },
+                          {
+                            label: "Monto Mensual",
+                            name: "montoMensual",
                             type: "number",
                             regex: /^\d*(\.\d{0,2})?$/,
                           },
