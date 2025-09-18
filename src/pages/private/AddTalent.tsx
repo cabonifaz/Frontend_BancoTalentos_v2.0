@@ -41,11 +41,12 @@ import {
   MODALIDAD_RXH,
 } from "../../core/utilities/constants";
 import { NumberInput } from "../../core/components/ui/InputNumber";
+import { validateFile } from "../../core/utilities/validation";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
   const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32",
+    "12,13,2,19,20,15,16,32"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -127,8 +128,18 @@ export const AddTalent = () => {
       return;
     }
 
-    // Validación manual
-    if (!data.foto[0] || !(data.foto[0] instanceof File)) {
+    // Validación manual de foto
+    const photoFile = data.foto?.[0];
+    if (photoFile && photoFile instanceof File) {
+      const { isValid } = validateFile(photoFile, ["png", "jpeg", "jpg"]);
+      if (!isValid) {
+        setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
+        return;
+      }
+    }
+
+    setFotoFileErrors("");
+    /*  if (!data.foto[0] || !(data.foto[0] instanceof File)) {
       setFotoFileErrors("La foto es requerida");
       return;
     }
@@ -139,7 +150,7 @@ export const AddTalent = () => {
     ) {
       setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
       return;
-    }
+    } */
 
     const {
       idModalidadFacturacion,
@@ -169,7 +180,9 @@ export const AddTalent = () => {
 
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile!);
-      const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+      const fotoBase64 = photoFile
+        ? await Utils.fileToBase64(fotoFile!)
+        : undefined;
 
       const cleanData: AddTalentParams = {
         telefono: phone,
@@ -192,13 +205,15 @@ export const AddTalent = () => {
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
         },
-        fotoArchivo: {
-          stringB64: fotoBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-          extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
-          idTipoArchivo: ARCHIVO_IMAGEN,
-          idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
-        },
+        fotoArchivo: fotoBase64
+          ? {
+              stringB64: fotoBase64,
+              nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
+              extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+              idTipoArchivo: ARCHIVO_IMAGEN,
+              idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+            }
+          : undefined,
       };
 
       postTalent(cleanData);
@@ -268,9 +283,7 @@ export const AddTalent = () => {
                   {cvFileErrors !== "" && (
                     <p className="text-red-400 text-sm">{cvFileErrors}</p>
                   )}
-                  <h3 className="text-[#3f3f46] text-lg">
-                    Foto de perfil<span className="text-red-500">*</span>
-                  </h3>
+                  <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
                   <FileInput<AddTalentType>
                     register={register}
                     errors={errors}
@@ -401,7 +414,10 @@ export const AddTalent = () => {
                         className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
                       >
                         {watchCountryPhone
-                          ? `${paises.find((p) => p.num1 === watchCountryPhone)?.string3 || "00"}`
+                          ? `${
+                              paises.find((p) => p.num1 === watchCountryPhone)
+                                ?.string3 || "00"
+                            }`
                           : "+00"}
                       </p>
                       <input
