@@ -91,7 +91,7 @@ export const initialFormValuesPostulante: AddPostulanteType = {
   experiencias: [],
   educaciones: [initialEducation],
   habilidadesTecnicas: [initialTechnicalSkill],
-  habilidadesBlandas: [initialSoftSkill],
+  // habilidadesBlandas: [initialSoftSkill],
   idiomas: [],
   cv: [],
   foto: [],

@@ -59,7 +59,7 @@ export const FormPostulante = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
-  const habilidadesBlandas = paramsByMaestro[20] || [];
+  // const habilidadesBlandas = paramsByMaestro[20] || [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
     BaseResponseFMI,
@@ -618,13 +618,13 @@ export const FormPostulante = () => {
                     shouldShowEmptyForm={true}
                   />
                   {/* Soft skills */}
-                  <SoftSkillsSection<AddPostulanteType>
+                  {/*  <SoftSkillsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
                     habilidadesBlandas={habilidadesBlandas}
                     dropdownWithSearch={false}
                     shouldShowEmptyForm={true}
-                  />
+                  /> */}
                   {/* Experience */}
                   <ExperiencesSection<AddPostulanteType>
                     control={control}
