@@ -110,7 +110,6 @@ export const AddPostulanteSchema = z.object({
             trim,
             z.string().min(1, "El puesto es requerido")
           ),
-          funciones: z.string().optional(),
           fechaInicio: z.preprocess(
             trim,
             z.string().min(1, "La fecha de inicio es requerida")

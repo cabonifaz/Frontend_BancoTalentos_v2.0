@@ -57,7 +57,7 @@ export const ExperiencesSection = <F extends FieldValues>({
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
     onChange: (value: any) => void,
-    currentValue: string,
+    currentValue: string
   ) => {
     const isChecked = e.target.checked;
     setDefaultCompanies((prev) => ({ ...prev, [index]: isChecked }));
@@ -117,7 +117,7 @@ export const ExperiencesSection = <F extends FieldValues>({
       {fields.map((field, index) => {
         // Determinar si es Fractal basado en el valor actual del campo empresa
         const currentEmpresa = watch(
-          `experiencias.${index}.empresa` as Path<F>,
+          `experiencias.${index}.empresa` as Path<F>
         );
         const isFractal =
           typeof currentEmpresa === "string" &&
@@ -273,12 +273,12 @@ export const ExperiencesSection = <F extends FieldValues>({
                               "" as any,
                               {
                                 shouldValidate: true,
-                              },
+                              }
                             );
 
                             // Limpiar los errores de fechaFin
                             clearErrors(
-                              `experiencias.${index}.fechaFin` as Path<F>,
+                              `experiencias.${index}.fechaFin` as Path<F>
                             );
                           }
                         }}
@@ -310,7 +310,7 @@ export const ExperiencesSection = <F extends FieldValues>({
                       type="date"
                       id={`experiencias.${index}.fechaFin`}
                       disabled={getValues(
-                        `experiencias.${index}.flActualidad` as Path<F>,
+                        `experiencias.${index}.flActualidad` as Path<F>
                       )}
                       className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
                     />
@@ -322,35 +322,6 @@ export const ExperiencesSection = <F extends FieldValues>({
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Funciones */}
-            <div className="flex flex-col my-2">
-              <label
-                htmlFor={`experiencias.${index}.funciones`}
-                className="text-[#71717A] text-sm px-1"
-              >
-                Funciones
-                {/*<span className="text-red-400">*</span>*/}
-              </label>
-              <Controller
-                name={`experiencias.${index}.funciones` as Path<F>}
-                control={control}
-                render={({ field }) => (
-                  <textarea
-                    {...field}
-                    id={`experiencias.${index}.funciones`}
-                    placeholder="Digitar funciones"
-                    autoComplete="on"
-                    className="h-24 p-3 resize-none border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                  />
-                )}
-              />
-              {(errors as any).experiencias?.[index]?.funciones && (
-                <p className="text-red-400 text-sm">
-                  {(errors as any).experiencias[index]?.funciones?.message}
-                </p>
-              )}
             </div>
           </div>
         );
