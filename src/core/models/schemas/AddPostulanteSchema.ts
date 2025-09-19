@@ -139,42 +139,45 @@ export const AddPostulanteSchema = z.object({
     .optional()
     .default([]),
 
-  educaciones: z.array(
-    z
-      .object({
-        institucion: z.preprocess(
-          trim,
-          z.string().min(1, "La institución es requerida")
-        ),
-        carrera: z.preprocess(
-          trim,
-          z.string().min(1, "La carrera es requerida")
-        ),
-        grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
-        fechaInicio: z.preprocess(
-          trim,
-          z.string().min(1, "La fecha de inicio es requerida")
-        ),
-        fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
-        flActualidad: z.coerce.boolean(),
-      })
-      .refine((data) => data.flActualidad || !!data.fechaFin, {
-        message: "La fecha de fin es requerida",
-        path: ["fechaFin"],
-      })
-      .refine(
-        (data) => {
-          if (data.flActualidad || !data.fechaFin) return true;
-          const inicio = new Date(data.fechaInicio);
-          const fin = new Date(data.fechaFin);
-          return fin > inicio;
-        },
-        {
-          message: "La fecha de fin debe ser mayor a la fecha de inicio",
+  educaciones: z
+    .array(
+      z
+        .object({
+          institucion: z.preprocess(
+            trim,
+            z.string().min(1, "La institución es requerida")
+          ),
+          carrera: z.preprocess(
+            trim,
+            z.string().min(1, "La carrera es requerida")
+          ),
+          grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
+          fechaInicio: z.preprocess(
+            trim,
+            z.string().min(1, "La fecha de inicio es requerida")
+          ),
+          fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
+          flActualidad: z.coerce.boolean(),
+        })
+        .refine((data) => data?.flActualidad || !!data?.fechaFin, {
+          message: "La fecha de fin es requerida",
           path: ["fechaFin"],
-        }
-      )
-  ),
+        })
+        .refine(
+          (data) => {
+            if (data?.flActualidad || !data?.fechaFin) return true;
+            const inicio = new Date(data?.fechaInicio || "");
+            const fin = new Date(data?.fechaFin || "");
+            return fin > inicio;
+          },
+          {
+            message: "La fecha de fin debe ser mayor a la fecha de inicio",
+            path: ["fechaFin"],
+          }
+        )
+    )
+    .optional()
+    .default([]),
 
   idiomas: z
     .array(
@@ -184,8 +187,7 @@ export const AddPostulanteSchema = z.object({
         estrellas: z.coerce.number().min(0, "Las estrellas son requeridas"),
       })
     )
-    .optional()
-    .default([]),
+    .optional(),
 
   cv: z.any(),
   foto: z.any(),

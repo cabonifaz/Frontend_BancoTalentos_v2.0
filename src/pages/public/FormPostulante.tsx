@@ -173,10 +173,10 @@ export const FormPostulante = () => {
       fechaFin: exp.flActualidad ? null : exp.fechaFin,
     }));
 
-    const cleanEducaciones = educaciones.map((edu) => ({
+    const cleanEducaciones = educaciones?.map((edu) => ({
       ...edu,
-      flActualidad: edu.flActualidad ? 1 : 0,
-      fechaFin: edu.flActualidad ? null : edu.fechaFin,
+      flActualidad: edu?.flActualidad ? 1 : 0,
+      fechaFin: edu?.flActualidad ? null : edu?.fechaFin,
     }));
 
     try {
@@ -636,7 +636,7 @@ export const FormPostulante = () => {
                   <EducationsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
-                    shouldShowEmptyForm={true}
+                    shouldShowEmptyForm={false}
                   />
 
                   {/* Languages */}
