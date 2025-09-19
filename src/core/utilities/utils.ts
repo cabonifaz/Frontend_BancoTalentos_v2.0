@@ -293,4 +293,20 @@ export class Utils {
 
     return mdNames.join(", ");
   }
+
+  static formatDegree(degree: string | null | undefined): string {
+    // Cotejar con la tabla maestra
+    const degrees = {
+      3183: "Bachiller",
+      3184: "Título",
+      3185: "Curso",
+      3186: "Técnico",
+      3187: "Egresado",
+      3188: "Estudiante",
+    } as Record<number, string>;
+
+    if (!degree || degree.trim() === "") return "No específicado";
+
+    return degrees[Number(degree)] ?? `Grado desc. (${degree})`;
+  }
 }
