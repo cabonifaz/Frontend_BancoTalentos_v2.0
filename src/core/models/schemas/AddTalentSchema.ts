@@ -12,35 +12,34 @@ export const AddTalentSchema = z.object({
       })
       .regex(/^[a-zA-Z0-9]+$/, {
         message: "El Doc. de identidad solo puede contener letras y números",
-      }),
+      })
   ),
 
   nombres: z.preprocess(trim, z.string().min(1, "El nombre es requerido")),
   apellidoPaterno: z.preprocess(
     trim,
-    z.string().min(1, "El apellido paterno es requerido"),
+    z.string().min(1, "El apellido paterno es requerido")
   ),
   apellidoMaterno: z.preprocess(emptyToNull, z.string().optional().nullable()),
 
   email: z.preprocess(
     trimLower,
-    z.string().email("Correo electrónico inválido"),
+    z.string().email("Correo electrónico inválido")
   ),
 
   codigoPais: z.coerce.number().min(1, "Seleccione un país"),
   telefono: z.preprocess(
     trim,
-    z.string().min(1, "El número de teléfono es requerido"),
+    z.string().min(1, "El número de teléfono es requerido")
   ),
 
   linkedin: z.preprocess(emptyToUndef, z.string().optional()),
   github: z.preprocess(emptyToUndef, z.string().optional()),
 
   descripcion: z.string().optional(),
-  disponibilidad: z.preprocess(
-    trim,
-    z.string().min(1, "La disponibilidad es requerida"),
-  ),
+  disponibilidad: z
+    .array(z.string())
+    .min(1, "Debes selecionar al menos una disponibilidad"),
   // puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
 
   idPais: z.coerce.number().min(1, "Seleccione un país"),
@@ -83,9 +82,9 @@ export const AddTalentSchema = z.object({
         z.string({
           invalid_type_error: "Seleccione una habilidad técnica",
           required_error: "Seleccione una habilidad técnica",
-        }),
+        })
       ),
-    }),
+    })
   ),
 
   habilidadesBlandas: z.array(
@@ -101,9 +100,9 @@ export const AddTalentSchema = z.object({
         z.string({
           invalid_type_error: "Seleccione una habilidad blanda",
           required_error: "Seleccione una habilidad blanda",
-        }),
+        })
       ),
-    }),
+    })
   ),
 
   experiencias: z
@@ -112,16 +111,16 @@ export const AddTalentSchema = z.object({
         .object({
           empresa: z.preprocess(
             trim,
-            z.string().min(1, "La empresa es requerida"),
+            z.string().min(1, "La empresa es requerida")
           ),
           puesto: z.preprocess(
             trim,
-            z.string().min(1, "El puesto es requerido"),
+            z.string().min(1, "El puesto es requerido")
           ),
           funciones: z.string().optional(),
           fechaInicio: z.preprocess(
             trim,
-            z.string().min(1, "La fecha de inicio es requerida"),
+            z.string().min(1, "La fecha de inicio es requerida")
           ),
           fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
           flActualidad: z.coerce.boolean().optional().default(false),
@@ -140,8 +139,8 @@ export const AddTalentSchema = z.object({
           {
             message: "La fecha de fin debe ser mayor a la fecha de inicio",
             path: ["fechaFin"],
-          },
-        ),
+          }
+        )
     )
     .optional()
     .default([]),
@@ -151,16 +150,16 @@ export const AddTalentSchema = z.object({
       .object({
         institucion: z.preprocess(
           trim,
-          z.string().min(1, "La institución es requerida"),
+          z.string().min(1, "La institución es requerida")
         ),
         carrera: z.preprocess(
           trim,
-          z.string().min(1, "La carrera es requerida"),
+          z.string().min(1, "La carrera es requerida")
         ),
         grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
         fechaInicio: z.preprocess(
           trim,
-          z.string().min(1, "La fecha de inicio es requerida"),
+          z.string().min(1, "La fecha de inicio es requerida")
         ),
         fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
         flActualidad: z.coerce.boolean(),
@@ -179,8 +178,8 @@ export const AddTalentSchema = z.object({
         {
           message: "La fecha de fin debe ser mayor a la fecha de inicio",
           path: ["fechaFin"],
-        },
-      ),
+        }
+      )
   ),
 
   idiomas: z
@@ -189,7 +188,7 @@ export const AddTalentSchema = z.object({
         idIdioma: z.coerce.number().min(1, "Seleccione un idioma"),
         idNivel: z.coerce.number().min(1, "Seleccione un nivel"),
         estrellas: z.coerce.number().min(0, "Las estrellas son requeridas"),
-      }),
+      })
     )
     .optional()
     .default([]),

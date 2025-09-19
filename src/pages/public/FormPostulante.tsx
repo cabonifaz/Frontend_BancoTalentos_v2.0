@@ -45,7 +45,7 @@ import { validateFile } from "../../core/utilities/validation";
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12, 13, 15, 16, 19, 20"
+    "12, 13, 15, 16, 19, 20, 31"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -59,6 +59,7 @@ export const FormPostulante = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
+  const disponibilidades = paramsByMaestro[31] || [];
   // const habilidadesBlandas = paramsByMaestro[20] || [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
@@ -96,6 +97,7 @@ export const FormPostulante = () => {
       montoInicialRxH: 0,
       montoFinalRxH: 0,
       idMoneda: 0,
+      disponibilidad: [],
     },
   });
 
@@ -142,19 +144,6 @@ export const FormPostulante = () => {
 
     setFotoFileErrors("");
 
-    /*  if (!data.foto[0] || !(data.foto[0] instanceof File)) {
-      setFotoFileErrors("La foto es requerida");
-      return;
-    }
-    if (
-      !data.foto[0].name.endsWith(".png") &&
-      !data.foto[0].name.endsWith(".jpeg") &&
-      !data.foto[0].name.endsWith(".jpg")
-    ) {
-      setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
-      return;
-    } */
-
     const {
       codigoPais,
       telefono,
@@ -163,6 +152,7 @@ export const FormPostulante = () => {
       cv,
       foto,
       idMoneda,
+      disponibilidad,
       ...filterData
     } = data;
     const phone = countryCode.current?.textContent + " " + telefono.trim();
@@ -186,6 +176,7 @@ export const FormPostulante = () => {
         : undefined;
 
       const cleanData: AddTalentParams = {
+        disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
         idMoneda:
           data.idMoneda === 0 || data.idMoneda === undefined
@@ -531,19 +522,25 @@ export const FormPostulante = () => {
                       )}
                     </div>*/}
                     <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="availability"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Disponibilidad<span className="text-red-400">*</span>
+                      <label className="text-[#636d7c] text-sm px-1">
+                        Disponibilidad <span className="text-red-400">*</span>
                       </label>
-                      <input
-                        {...register("disponibilidad")}
-                        id="availability"
-                        type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Disponibilidad"
-                      />
+
+                      {disponibilidades?.map((d) => (
+                        <label
+                          className="flex items-center gap-2"
+                          key={d.idParametro}
+                        >
+                          <input
+                            type="checkbox"
+                            value={d.idParametro}
+                            {...register("disponibilidad")}
+                            className="w-4 h-4"
+                          />
+                          <span>{d.string1}</span>
+                        </label>
+                      ))}
+
                       {errors.disponibilidad && (
                         <p className="text-red-400 text-sm">
                           {errors.disponibilidad.message}
