@@ -664,10 +664,12 @@ export const Talents = () => {
                       {/* Availability */}
                       <div className="flex flex-col pb-8 justify-center">
                         <h2 className="text-[#52525B] font-semibold my-2">
-                          Dispinobilidad
+                          Disponibilidad
                         </h2>
                         <p className="text-[#71717A] text-sm flex gap-2 items-center">
-                          {talentDets?.disponibilidad}
+                          {Utils.formatDisponibilidad(
+                            talentDets?.disponibilidad
+                          )}
                           <button
                             type="button"
                             onClick={() => openModal("modalAvailability")}

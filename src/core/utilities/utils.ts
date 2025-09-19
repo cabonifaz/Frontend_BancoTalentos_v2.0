@@ -44,7 +44,7 @@ export class Utils {
     const stars: ReactNode[] = [];
     for (let i = 0; i < 5; i++) {
       stars.push(
-        i < rating ? getFilledStar(`${i}`) : getOutlinedStar(`${i + 5}`),
+        i < rating ? getFilledStar(`${i}`) : getOutlinedStar(`${i + 5}`)
       );
     }
     return stars;
@@ -80,7 +80,7 @@ export class Utils {
         atob(base64)
           .split("")
           .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
-          .join(""),
+          .join("")
       );
       return JSON.parse(jsonPayload);
     } catch (err) {
@@ -123,7 +123,7 @@ export class Utils {
 
   static isValidImageBase64 = (base64String: string) => {
     return /^data:image\/(jpeg|png|jpg);base64,[A-Za-z0-9+/=]+$/.test(
-      base64String,
+      base64String
     );
   };
 
@@ -198,7 +198,7 @@ export class Utils {
   }
 
   static getFileNameAndExtension = (
-    fileName: fileNameType,
+    fileName: fileNameType
   ): { nombreArchivo: string; extensionArchivo: string } => {
     if (!fileName) return { nombreArchivo: "", extensionArchivo: "" };
 
@@ -254,7 +254,7 @@ export class Utils {
 
   static formatMonthYear = (
     dateString: string,
-    originalFormat = "dd/MM/yyyy",
+    originalFormat = "dd/MM/yyyy"
   ) => {
     if (!dateString) return "";
 
@@ -271,4 +271,26 @@ export class Utils {
       return "";
     }
   };
+
+  static formatDisponibilidad(mdIds: string | null | undefined): string {
+    // Cotejar con la tabla maestro
+    const modalidades: Record<number, string> = {
+      188: "Presencial",
+      189: "Remoto",
+      190: "Híbrido",
+    };
+
+    // Normalizamos: null, undefined, vacío o solo espacios
+    if (!mdIds || mdIds.trim() === "") return "No específicado";
+
+    const ids = mdIds.split(",").map((id) => id.trim());
+
+    if (ids.length === 0) return "No específicado";
+
+    const mdNames = ids.map(
+      (id) => modalidades[Number(id)] ?? `Desconocida (${id})`
+    );
+
+    return mdNames.join(", ");
+  }
 }
