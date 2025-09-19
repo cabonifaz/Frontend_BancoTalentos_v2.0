@@ -13,9 +13,14 @@ export const EducationCard = ({ data, onEdit }: Props) => {
         <div className="flex flex-col gap-2">
           <h2 className="text-[#27272A] text-base">{data.nombreInstitucion}</h2>
           <p className="text-[#71717A] text-sm flex flex-col">
-            {data.carrera}
             <span>
-              {`${Utils.formatMonthYear(data?.fechaInicio)} - ${Utils.formatMonthYear(data?.fechaFin)}`}
+              {Utils.formatDegree(data.grado)} - {data.carrera}
+            </span>
+
+            <span>
+              {`${Utils.formatMonthYear(
+                data?.fechaInicio
+              )} - ${Utils.formatMonthYear(data?.fechaFin)}`}
             </span>
           </p>
         </div>
