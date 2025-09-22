@@ -45,7 +45,7 @@ export const AddTalentSchema = z.object({
   idPais: z.coerce.number().min(1, "Seleccione un país"),
   idCiudad: z.coerce.number().min(1, "Seleccione una ciudad"),
 
-  montoInicial: z.coerce
+  /* montoInicial: z.coerce
     .number({
       required_error: "El monto inicial es requerido",
       invalid_type_error: "Solo se aceptan números",
@@ -57,12 +57,7 @@ export const AddTalentSchema = z.object({
       required_error: "El monto final es requerido",
       invalid_type_error: "Solo se aceptan números",
     })
-    .min(1, "El monto final es requerido"),
-
-  idMoneda: z.coerce.number().min(1, "Seleccione una moneda"),
-  idModalidadFacturacion: z.coerce
-    .number()
-    .min(1, "Seleccione una modalidad de facturación"),
+    .min(1, "El monto final es requerido"), */
 
   habilidadesTecnicas: z.array(
     z.object({
@@ -188,40 +183,53 @@ export const AddTalentSchema = z.object({
     .optional()
     .default([]),
 
-  salaryExpectations: z
-    .object({
-      rxh: z
-        .object({
-          coin: z.string().min(1, "La moneda es requerida"),
-          min: z
-            .number({ invalid_type_error: "Debe ser un número" })
-            .nonnegative("Debe ser mayor o igual a cero"),
-          max: z
-            .number({ invalid_type_error: "Debe ser un número" })
-            .nonnegative("Debe ser mayor o igual a 0"),
-        })
-        .refine((data) => data.max >= data.min, {
-          message: "El máximo debe ser mayor o igual al mínimo",
-          path: ["max"],
-        }),
+  salaryExpectations: z.object({
+    rxh: z
+      .object({
+        coin: z.string().min(1, "La moneda es requerida"),
+        min: z
+          .number({ invalid_type_error: "Debe ser un número" })
+          .nonnegative("Debe ser mayor o igual a cero"),
+        max: z
+          .number({ invalid_type_error: "Debe ser un número" })
+          .nonnegative("Debe ser mayor o igual a 0"),
+      })
+      .refine((data) => data.max >= data.min, {
+        message: "El máximo debe ser mayor o igual al mínimo",
+        path: ["max"],
+      }),
 
-      planilla: z
-        .object({
-          coin: z.string(),
-          min: z
-            .number({ invalid_type_error: "Debe ser un número" })
-            .nonnegative("Debe ser mayor o igual a 0"),
-          max: z
-            .number({ invalid_type_error: "Debe ser un número" })
-            .nonnegative("Debe ser mayor o igual a 0"),
-        })
-        .refine((data) => data.max >= data.min, {
-          message: "El máximo debe ser mayor o igual al mínimo",
-          path: ["max"],
-        })
-        .optional(),
-    })
-    .optional(),
+    planilla: z
+      .object({
+        coin: z.string().min(1, "La moneda debe ser requerida").optional(),
+        min: z
+          .number({ invalid_type_error: "Min debe ser un número" })
+          .nonnegative("Debe ser mayor o igual a 0")
+          .optional(),
+        max: z
+          .number({ invalid_type_error: "Max debe ser un número" })
+          .nonnegative("Debe ser mayor o igual a 0")
+          .optional(),
+      })
+      .refine(
+        (data) => {
+          const anyFilled = data.coin || data.min != null || data.max != null;
+          if (!anyFilled) return true;
+          return (
+            !!data.coin &&
+            data.min != null &&
+            data.max != null &&
+            data.max >= data.min
+          );
+        },
+        {
+          message:
+            "Si completas planilla, debes elegir moneda, mínimo y máximo (máximo >= mínimo).",
+          path: ["coin"],
+        }
+      )
+      .optional(),
+  }),
 
   idiomas: z
     .array(

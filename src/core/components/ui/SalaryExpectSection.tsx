@@ -58,6 +58,9 @@ export const SalaryExpectSection = ({
               render={({ field }) => (
                 <input
                   {...field}
+                  {...control.register("salaryExpectations.rxh.min", {
+                    valueAsNumber: true,
+                  })}
                   type="number"
                   placeholder="0"
                   className="p-1 text-sm text-right border-r outline-none"
@@ -72,6 +75,9 @@ export const SalaryExpectSection = ({
               render={({ field }) => (
                 <input
                   {...field}
+                  {...control.register("salaryExpectations.rxh.max", {
+                    valueAsNumber: true,
+                  })}
                   type="number"
                   placeholder="0"
                   className="p-1 text-sm text-right outline-none"
@@ -126,11 +132,6 @@ export const SalaryExpectSection = ({
                   </select>
                 )}
               />
-              {errors.salaryExpectations?.planilla?.coin && (
-                <p className="text-red-500 text-xs">
-                  {errors.salaryExpectations.planilla.coin.message}
-                </p>
-              )}
             </div>
 
             {/* Min Planilla */}
@@ -140,17 +141,15 @@ export const SalaryExpectSection = ({
               render={({ field }) => (
                 <input
                   {...field}
+                  {...control.register("salaryExpectations.planilla.min", {
+                    valueAsNumber: true,
+                  })}
                   type="number"
                   placeholder="0"
                   className="p-1 text-sm text-right border-r outline-none"
                 />
               )}
             />
-            {errors.salaryExpectations?.planilla?.min && (
-              <p className="text-red-500 text-xs">
-                {errors.salaryExpectations.planilla.min.message}
-              </p>
-            )}
 
             {/* Max Planilla */}
             <Controller
@@ -159,18 +158,31 @@ export const SalaryExpectSection = ({
               render={({ field }) => (
                 <input
                   {...field}
+                  {...control.register("salaryExpectations.planilla.max", {
+                    valueAsNumber: true,
+                  })}
                   type="number"
                   placeholder="0"
                   className="p-1 text-sm text-right outline-none"
                 />
               )}
             />
-            {errors.salaryExpectations?.planilla?.max && (
-              <p className="text-red-500 text-xs">
-                {errors.salaryExpectations.planilla.max.message}
-              </p>
-            )}
           </div>
+          {errors.salaryExpectations?.planilla?.coin && (
+            <span className="text-red-500 text-xs me-2">
+              {errors.salaryExpectations.planilla.coin.message}
+            </span>
+          )}
+          {errors.salaryExpectations?.planilla?.min && (
+            <span className="text-red-500 text-xs me-2">
+              {errors.salaryExpectations.planilla.min.message}
+            </span>
+          )}
+          {errors.salaryExpectations?.planilla?.max && (
+            <span className="text-red-500 text-xs">
+              {errors.salaryExpectations.planilla.max.message}
+            </span>
+          )}
         </div>
       </div>
     </div>

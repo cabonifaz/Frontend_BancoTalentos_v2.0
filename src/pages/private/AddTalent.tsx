@@ -145,9 +145,8 @@ export const AddTalent = () => {
     setFotoFileErrors("");
 
     const {
-      idModalidadFacturacion,
-      montoInicial,
-      montoFinal,
+      /*  montoInicial,
+      montoFinal, */
       codigoPais,
       telefono,
       experiencias,
@@ -155,6 +154,7 @@ export const AddTalent = () => {
       cv,
       foto,
       disponibilidad,
+      salaryExpectations,
       ...filterData
     } = data;
     const phone = countryCode.current?.textContent + " " + telefono.trim();
@@ -180,8 +180,29 @@ export const AddTalent = () => {
       const cleanData: AddTalentParams = {
         disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
+
+        idMonedaPlan: salaryExpectations.planilla?.coin
+          ? Number(salaryExpectations.planilla.coin)
+          : undefined,
+        montMaxPlan: salaryExpectations.planilla?.max
+          ? Number(salaryExpectations.planilla.max)
+          : undefined,
+        montMinPlan: salaryExpectations.planilla?.min
+          ? Number(salaryExpectations.planilla.min)
+          : undefined,
+
+        // Salary Expec RXH
+        idMonedaRxh: salaryExpectations.rxh?.coin
+          ? Number(salaryExpectations.rxh.coin)
+          : undefined,
+        montMaxRxh: salaryExpectations.rxh?.max
+          ? Number(salaryExpectations.rxh.max)
+          : undefined,
+        montMinRxh: salaryExpectations.rxh?.min
+          ? Number(salaryExpectations.rxh.min)
+          : undefined,
         ...filterData,
-        idModalidadFacturacion: idModalidadFacturacion,
+        /* idModalidadFacturacion: idModalidadFacturacion,
         montoInicialPlanilla:
           idModalidadFacturacion === MODALIDAD_PLANILLA ? montoInicial : 0,
         montoFinalPlanilla:
@@ -189,7 +210,7 @@ export const AddTalent = () => {
         montoInicialRxH:
           idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
         montoFinalRxH:
-          idModalidadFacturacion === MODALIDAD_RXH ? montoFinal : 0,
+          idModalidadFacturacion === MODALIDAD_RXH ? montoFinal : 0, */
         experiencias: cleanExperiencias,
         educaciones: cleanEducaciones,
         cvArchivo: {
@@ -556,17 +577,18 @@ export const AddTalent = () => {
                 {/* Salary */}
                 <SalaryExpectSection
                   coins={monedas.map((moneda) => ({
-                    idCoin: moneda.num1,
+                    idCoin: moneda.idParametro,
                     stringVal: moneda.string1,
                   }))}
                   control={control}
                   errors={errors}
                 />
-                {/* <div className="*:mb-4">
-                  <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
+                {/* Banda salarial, posible eliminación */}
+                <div className="*:mb-4">
+                  {/* <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
                     Banda salarial
-                  </h3>
-                  <h4 className="text-[#636d7c] text-base font-semibold px-1">
+                  </h3> */}
+                  {/*  <h4 className="text-[#636d7c] text-base font-semibold px-1">
                     Moneda<span className="text-red-500">*</span>
                   </h4>
                   <select
@@ -585,8 +607,8 @@ export const AddTalent = () => {
                     <p className="text-red-400 text-sm">
                       {errors.idMoneda.message}
                     </p>
-                  )}
-                  <h4 className="text-[#636d7c] text-base font-semibold px-1">
+                  )} */}
+                  {/* <h4 className="text-[#636d7c] text-base font-semibold px-1">
                     Modalidad de facturación
                     <span className="text-red-500">*</span>
                   </h4>
@@ -610,8 +632,8 @@ export const AddTalent = () => {
                     <p className="text-red-400 text-sm">
                       {errors.idModalidadFacturacion.message}
                     </p>
-                  )}
-                  <h4 className="text-[#636d7c] text-base font-semibold px-1">
+                  )} */}
+                  {/*  <h4 className="text-[#636d7c] text-base font-semibold px-1">
                     Montos
                   </h4>
                   <div className="flex flex-col sm:flex-row w-full gap-8">
@@ -641,8 +663,8 @@ export const AddTalent = () => {
                         error={errors.montoFinal?.message}
                       />
                     </div>
-                  </div>
-                </div> */}
+                  </div> */}
+                </div>
                 {/* Tech skills */}
                 <TechSkillsSection<AddTalentType>
                   control={control}
