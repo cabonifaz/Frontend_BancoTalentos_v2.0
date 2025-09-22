@@ -646,7 +646,7 @@ export const AddTalent = () => {
                   errors={errors}
                   habilidadesBlandas={habilidadesBlandas}
                   dropdownWithSearch={true}
-                  shouldShowEmptyForm={true}
+                  shouldShowEmptyForm={false}
                 />
                 {/* Experience */}
                 <ExperiencesSection<AddTalentType>
@@ -659,7 +659,7 @@ export const AddTalent = () => {
                 <EducationsSection<AddTalentType>
                   control={control}
                   errors={errors}
-                  shouldShowEmptyForm={true}
+                  shouldShowEmptyForm={false}
                 />
 
                 {/* Languages */}
