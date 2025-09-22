@@ -42,6 +42,7 @@ import {
 } from "../../core/utilities/constants";
 import { NumberInput } from "../../core/components/ui/InputNumber";
 import { validateFile } from "../../core/utilities/validation";
+import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -118,6 +119,8 @@ export const AddTalent = () => {
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
     setCvFileErrors("");
     setFotoFileErrors("");
+
+    console.log("Salary: ", data.salaryExpectations);
 
     // Validación manual
     if (!data.cv[0] || !(data.cv[0] instanceof File)) {
@@ -551,7 +554,15 @@ export const AddTalent = () => {
                   </div>
                 </div>
                 {/* Salary */}
-                <div className="*:mb-4">
+                <SalaryExpectSection
+                  coins={monedas.map((moneda) => ({
+                    idCoin: moneda.num1,
+                    stringVal: moneda.string1,
+                  }))}
+                  control={control}
+                  errors={errors}
+                />
+                {/* <div className="*:mb-4">
                   <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
                     Banda salarial
                   </h3>
@@ -631,7 +642,7 @@ export const AddTalent = () => {
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
                 {/* Tech skills */}
                 <TechSkillsSection<AddTalentType>
                   control={control}
