@@ -275,9 +275,9 @@ export class Utils {
   static formatDisponibilidad(mdIds: string | null | undefined): string {
     // Cotejar con la tabla maestro
     const modalidades: Record<number, string> = {
-      188: "Presencial",
-      189: "Remoto",
-      190: "Híbrido",
+      1: "Presencial",
+      2: "Remoto",
+      3: "Híbrido",
     };
 
     // Normalizamos: null, undefined, vacío o solo espacios
@@ -297,12 +297,12 @@ export class Utils {
   static formatDegree(degree: string | null | undefined): string {
     // Cotejar con la tabla maestra
     const degrees = {
-      3183: "Bachiller",
-      3184: "Título",
-      3185: "Curso",
-      3186: "Técnico",
-      3187: "Egresado",
-      3188: "Estudiante",
+      1: "Bachiller",
+      2: "Título",
+      3: "Curso",
+      4: "Técnico",
+      5: "Egresado",
+      6: "Estudiante",
     } as Record<number, string>;
 
     if (!degree || degree.trim() === "") return "No específicado";

@@ -527,13 +527,10 @@ export const FormPostulante = () => {
                       </label>
 
                       {disponibilidades?.map((d) => (
-                        <label
-                          className="flex items-center gap-2"
-                          key={d.idParametro}
-                        >
+                        <label className="flex items-center gap-2" key={d.num1}>
                           <input
                             type="checkbox"
-                            value={d.idParametro}
+                            value={d.num1}
                             {...register("disponibilidad")}
                             className="w-4 h-4"
                           />
