@@ -40,11 +40,12 @@ import {
 } from "../../core/utilities/constants";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
+import { validateFile } from "../../core/utilities/validation";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12, 13, 15, 16, 19, 20",
+    "12, 13, 15, 16, 19, 20, 31"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -58,7 +59,8 @@ export const FormPostulante = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
-  const habilidadesBlandas = paramsByMaestro[20] || [];
+  const disponibilidades = paramsByMaestro[31] || [];
+  // const habilidadesBlandas = paramsByMaestro[20] || [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
     BaseResponseFMI,
@@ -95,6 +97,7 @@ export const FormPostulante = () => {
       montoInicialRxH: 0,
       montoFinalRxH: 0,
       idMoneda: 0,
+      disponibilidad: [],
     },
   });
 
@@ -129,19 +132,17 @@ export const FormPostulante = () => {
       return;
     }
 
-    // Validación manual
-    if (!data.foto[0] || !(data.foto[0] instanceof File)) {
-      setFotoFileErrors("La foto es requerida");
-      return;
+    // Validación manual de foto
+    const photoFile = data.foto?.[0];
+    if (photoFile && photoFile instanceof File) {
+      const { isValid } = validateFile(photoFile, ["png", "jpeg", "jpg"]);
+      if (!isValid) {
+        setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
+        return;
+      }
     }
-    if (
-      !data.foto[0].name.endsWith(".png") &&
-      !data.foto[0].name.endsWith(".jpeg") &&
-      !data.foto[0].name.endsWith(".jpg")
-    ) {
-      setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
-      return;
-    }
+
+    setFotoFileErrors("");
 
     const {
       codigoPais,
@@ -151,6 +152,7 @@ export const FormPostulante = () => {
       cv,
       foto,
       idMoneda,
+      disponibilidad,
       ...filterData
     } = data;
     const phone = countryCode.current?.textContent + " " + telefono.trim();
@@ -161,17 +163,20 @@ export const FormPostulante = () => {
       fechaFin: exp.flActualidad ? null : exp.fechaFin,
     }));
 
-    const cleanEducaciones = educaciones.map((edu) => ({
+    const cleanEducaciones = educaciones?.map((edu) => ({
       ...edu,
-      flActualidad: edu.flActualidad ? 1 : 0,
-      fechaFin: edu.flActualidad ? null : edu.fechaFin,
+      flActualidad: edu?.flActualidad ? 1 : 0,
+      fechaFin: edu?.flActualidad ? null : edu?.fechaFin,
     }));
 
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile!);
-      const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+      const fotoBase64 = photoFile
+        ? await Utils.fileToBase64(fotoFile!)
+        : undefined;
 
       const cleanData: AddTalentParams = {
+        disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
         idMoneda:
           data.idMoneda === 0 || data.idMoneda === undefined
@@ -187,13 +192,15 @@ export const FormPostulante = () => {
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
         },
-        fotoArchivo: {
-          stringB64: fotoBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-          extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
-          idTipoArchivo: ARCHIVO_IMAGEN,
-          idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
-        },
+        fotoArchivo: fotoBase64
+          ? {
+              stringB64: fotoBase64,
+              nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
+              extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+              idTipoArchivo: ARCHIVO_IMAGEN,
+              idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+            }
+          : undefined,
       };
 
       // Save talent data in BDT
@@ -201,7 +208,9 @@ export const FormPostulante = () => {
         // on success register postulante in FMI
         if (response.data.idMensaje === 2) {
           const idTalent = response.data.idNuevo;
-          const ubicacion = `${paises.find((item) => item.num1 === data.idPais)?.string1}, ${ciudades.find((item) => item.num1 === data.idCiudad)?.string1}`;
+          const ubicacion = `${
+            paises.find((item) => item.num1 === data.idPais)?.string1
+          }, ${ciudades.find((item) => item.num1 === data.idCiudad)?.string1}`;
 
           if (idTalent) {
             addPostulante({
@@ -247,7 +256,7 @@ export const FormPostulante = () => {
   // file
   const handleFileChange = (
     field: keyof AddPostulanteType,
-    file: File | null,
+    file: File | null
   ) => {
     if (field === "cv") {
       setCvFile(file);
@@ -432,7 +441,10 @@ export const FormPostulante = () => {
                           className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
                         >
                           {watchCountryPhone
-                            ? `${paises.find((p) => p.num1 === watchCountryPhone)?.string3 || "00"}`
+                            ? `${
+                                paises.find((p) => p.num1 === watchCountryPhone)
+                                  ?.string3 || "00"
+                              }`
                             : "+00"}
                         </p>
                         <input
@@ -475,14 +487,13 @@ export const FormPostulante = () => {
                         htmlFor="description"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Descripción
-                        {/*<span className="text-red-400">*</span>*/}
+                        Presentación
                       </label>
                       <textarea
                         {...register("descripcion")}
                         id="description"
                         className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Descripción"
+                        placeholder="Presentación"
                       ></textarea>
                       {errors.descripcion && (
                         <p className="text-red-400 text-sm">
@@ -511,19 +522,25 @@ export const FormPostulante = () => {
                       )}
                     </div>*/}
                     <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="availability"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Disponibilidad<span className="text-red-400">*</span>
+                      <label className="text-[#636d7c] text-sm px-1">
+                        Disponibilidad <span className="text-red-400">*</span>
                       </label>
-                      <input
-                        {...register("disponibilidad")}
-                        id="availability"
-                        type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Disponibilidad"
-                      />
+
+                      {disponibilidades?.map((d) => (
+                        <label
+                          className="flex items-center gap-2"
+                          key={d.idParametro}
+                        >
+                          <input
+                            type="checkbox"
+                            value={d.idParametro}
+                            {...register("disponibilidad")}
+                            className="w-4 h-4"
+                          />
+                          <span>{d.string1}</span>
+                        </label>
+                      ))}
+
                       {errors.disponibilidad && (
                         <p className="text-red-400 text-sm">
                           {errors.disponibilidad.message}
@@ -598,13 +615,13 @@ export const FormPostulante = () => {
                     shouldShowEmptyForm={true}
                   />
                   {/* Soft skills */}
-                  <SoftSkillsSection<AddPostulanteType>
+                  {/*  <SoftSkillsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
                     habilidadesBlandas={habilidadesBlandas}
                     dropdownWithSearch={false}
                     shouldShowEmptyForm={true}
-                  />
+                  /> */}
                   {/* Experience */}
                   <ExperiencesSection<AddPostulanteType>
                     control={control}
@@ -616,7 +633,7 @@ export const FormPostulante = () => {
                   <EducationsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
-                    shouldShowEmptyForm={true}
+                    shouldShowEmptyForm={false}
                   />
 
                   {/* Languages */}

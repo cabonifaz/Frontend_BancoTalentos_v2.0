@@ -10,6 +10,7 @@ import {
   useFormContext,
   useWatch,
 } from "react-hook-form";
+import { useParams } from "../../context/ParamsContext";
 
 interface EducationsSectionProps<F extends FieldValues>
   extends DynamicSectionProps<F> {}
@@ -33,6 +34,9 @@ export const EducationsSection = <F extends FieldValues>({
 
   const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
   const hasAppendedInitial = useRef(false);
+
+  const { paramsByMaestro } = useParams("38");
+  const grados = paramsByMaestro[38] || [];
 
   useEffect(() => {
     if (
@@ -151,14 +155,18 @@ export const EducationsSection = <F extends FieldValues>({
               name={`educaciones.${index}.grado` as Path<F>}
               control={control}
               render={({ field }) => (
-                <input
+                <select
                   {...field}
                   id={`educaciones.${index}.grado`}
-                  type="text"
-                  placeholder="Grado"
-                  autoComplete="on"
                   className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                />
+                >
+                  <option value="">Selecciona un grado</option>
+                  {grados?.map((gr) => (
+                    <option key={gr.idParametro} value={gr.idParametro}>
+                      {gr.string1}
+                    </option>
+                  ))}
+                </select>
               )}
             />
             {(errors as any).educaciones?.[index]?.grado && (
@@ -224,12 +232,12 @@ export const EducationsSection = <F extends FieldValues>({
                             "" as any,
                             {
                               shouldValidate: true,
-                            },
+                            }
                           );
 
                           // Limpiar los errores de fechaFin
                           clearErrors(
-                            `educaciones.${index}.fechaFin` as Path<F>,
+                            `educaciones.${index}.fechaFin` as Path<F>
                           );
                         }
                       }}
@@ -261,7 +269,7 @@ export const EducationsSection = <F extends FieldValues>({
                     type="date"
                     id={`educaciones.${index}.fechaFin`}
                     disabled={getValues(
-                      `educaciones.${index}.flActualidad` as Path<F>,
+                      `educaciones.${index}.flActualidad` as Path<F>
                     )}
                     className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
                   />

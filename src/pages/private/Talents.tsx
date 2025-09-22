@@ -55,11 +55,11 @@ export const Talents = () => {
     number | null
   >(null);
   const [selectedFavourites, setSelectedFavourites] = useState<number | null>(
-    null,
+    null
   );
 
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12,13,2,19,20,15,16,32",
+    "12,13,2,19,20,15,16,32"
   );
   const { favourites: favouritesData, fetchFavourites } =
     useFavouritesContext();
@@ -104,7 +104,7 @@ export const Talents = () => {
 
   const handleSearch = (
     englishLevel?: number | null,
-    favourites?: number | null,
+    favourites?: number | null
   ) => {
     const searchValue = searchInputRef.current?.value || "";
 
@@ -128,8 +128,9 @@ export const Talents = () => {
   const handleTalentUpdate = (id: number, fields: Partial<Talent>) => {
     if (!talentsData) return;
 
-    const updatedTalents = talentsData?.talents.map((talento) =>
-      talento.idTalento === id ? { ...talento, ...fields } : talento,
+    // Talents list validated to avoid null errors
+    const updatedTalents = talentsData?.talents?.map((talento) =>
+      talento.idTalento === id ? { ...talento, ...fields } : talento
     );
 
     setTalentsData({
@@ -138,7 +139,7 @@ export const Talents = () => {
     });
 
     setTalent(
-      updatedTalents.find((talento) => talento.idTalento === id) || null,
+      updatedTalents.find((talento) => talento.idTalento === id) || null
     );
   };
 
@@ -177,7 +178,7 @@ export const Talents = () => {
   const handleOpenModal = <T,>(
     modalId: string,
     ref: React.MutableRefObject<T | null>,
-    itemToEdit?: T,
+    itemToEdit?: T
   ) => {
     ref.current = itemToEdit || null;
     openModal(modalId);
@@ -229,7 +230,9 @@ export const Talents = () => {
                 <img src="/assets/ic_add.svg" alt="add talent icon" />
                 <span> Nuevo Talento</span>
               </button>
-              <p className="text-sm text-[#71717A] hidden xl:block">{`${talentsData?.total || 0} resultados encontrados`}</p>
+              <p className="text-sm text-[#71717A] hidden xl:block">{`${
+                talentsData?.total || 0
+              } resultados encontrados`}</p>
             </div>
             <div className="flex lg:flex-row flex-col-reverse items-center w-full sm:w-2/3 gap-4 lg:gap-12 lg:h-12">
               {/* Filters */}
@@ -357,7 +360,9 @@ export const Talents = () => {
             </div>
             {/* Talent details */}
             <div
-              className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${!isTalentPanelVisible ? "hidden" : ""}`}
+              className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${
+                !isTalentPanelVisible ? "hidden" : ""
+              }`}
             >
               {loadingTalentDets ? (
                 <TalentDetailsSkeleton />
@@ -422,9 +427,13 @@ export const Talents = () => {
                               <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
                                 {talent.idModalidadFacturacion ===
                                 MODALIDAD_RXH ? (
-                                  <p>{`RxH ${talent?.moneda || ""} ${talent.montoInicialRxH} - ${talent.montoFinalRxH}`}</p>
+                                  <p>{`RxH ${talent?.moneda || ""} ${
+                                    talent.montoInicialRxH
+                                  } - ${talent.montoFinalRxH}`}</p>
                                 ) : (
-                                  <p>{`Planilla ${talent?.moneda || ""} ${talent.montoInicialPlanilla} - ${talent.montoFinalPlanilla}`}</p>
+                                  <p>{`Planilla ${talent?.moneda || ""} ${
+                                    talent.montoInicialPlanilla
+                                  } - ${talent.montoFinalPlanilla}`}</p>
                                 )}
                               </div>
                               <button
@@ -476,7 +485,11 @@ export const Talents = () => {
                             </button>
                             <div className="flex gap-4 justify-center items-end">
                               <div
-                                className={`${!talentDets?.github ? "pointer-events-none opacity-50" : ""}`}
+                                className={`${
+                                  !talentDets?.github
+                                    ? "pointer-events-none opacity-50"
+                                    : ""
+                                }`}
                               >
                                 <a
                                   href={
@@ -497,7 +510,11 @@ export const Talents = () => {
                               </div>
 
                               <div
-                                className={`${!talentDets?.linkedin ? "pointer-events-none opacity-50" : ""}`}
+                                className={`${
+                                  !talentDets?.linkedin
+                                    ? "pointer-events-none opacity-50"
+                                    : ""
+                                }`}
                               >
                                 <a
                                   href={
@@ -580,9 +597,13 @@ export const Talents = () => {
                                   key={index}
                                   className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
                                 >
-                                  {`${item.nombreHabilidad} ${item?.aniosExperiencia ? ` - (${item.aniosExperiencia})` : ""}`}
+                                  {`${item.nombreHabilidad} ${
+                                    item?.aniosExperiencia
+                                      ? ` - (${item.aniosExperiencia})`
+                                      : ""
+                                  }`}
                                 </p>
-                              ),
+                              )
                             )}
                           </div>
                         </div>
@@ -613,7 +634,7 @@ export const Talents = () => {
                                 >
                                   {item.nombreHabilidad}
                                 </p>
-                              ),
+                              )
                             )}
                           </div>
                         </div>
@@ -643,10 +664,12 @@ export const Talents = () => {
                       {/* Availability */}
                       <div className="flex flex-col pb-8 justify-center">
                         <h2 className="text-[#52525B] font-semibold my-2">
-                          Dispinobilidad
+                          Disponibilidad
                         </h2>
                         <p className="text-[#71717A] text-sm flex gap-2 items-center">
-                          {talentDets?.disponibilidad}
+                          {Utils.formatDisponibilidad(
+                            talentDets?.disponibilidad
+                          )}
                           <button
                             type="button"
                             onClick={() => openModal("modalAvailability")}
@@ -688,11 +711,11 @@ export const Talents = () => {
                                   handleOpenModal(
                                     "modalExperience",
                                     experienceRef,
-                                    item,
+                                    item
                                   )
                                 }
                               />
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -724,11 +747,11 @@ export const Talents = () => {
                                   handleOpenModal(
                                     "modalEducation",
                                     educationRef,
-                                    item,
+                                    item
                                   )
                                 }
                               />
-                            ),
+                            )
                           )}
                         </div>
                       </div>
@@ -759,7 +782,7 @@ export const Talents = () => {
                                 handleOpenModal(
                                   "modalLanguage",
                                   languageRef,
-                                  item,
+                                  item
                                 )
                               }
                             />
@@ -780,7 +803,7 @@ export const Talents = () => {
                                 handleOpenModal(
                                   "modalFeedback",
                                   feedbackRef,
-                                  item,
+                                  item
                                 )
                               }
                             />

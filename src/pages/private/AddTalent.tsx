@@ -41,11 +41,12 @@ import {
   MODALIDAD_RXH,
 } from "../../core/utilities/constants";
 import { NumberInput } from "../../core/components/ui/InputNumber";
+import { validateFile } from "../../core/utilities/validation";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
   const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32",
+    "12,13,2,19,20,15,16,32,31"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -62,6 +63,7 @@ export const AddTalent = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const modalidadFacturacion = paramsByMaestro[32] || [];
+  const disponibilidades = paramsByMaestro[31] || [];
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
     BaseResponse,
@@ -127,19 +129,17 @@ export const AddTalent = () => {
       return;
     }
 
-    // Validación manual
-    if (!data.foto[0] || !(data.foto[0] instanceof File)) {
-      setFotoFileErrors("La foto es requerida");
-      return;
+    // Validación manual de foto
+    const photoFile = data.foto?.[0];
+    if (photoFile && photoFile instanceof File) {
+      const { isValid } = validateFile(photoFile, ["png", "jpeg", "jpg"]);
+      if (!isValid) {
+        setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
+        return;
+      }
     }
-    if (
-      !data.foto[0].name.endsWith(".png") &&
-      !data.foto[0].name.endsWith(".jpeg") &&
-      !data.foto[0].name.endsWith(".jpg")
-    ) {
-      setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
-      return;
-    }
+
+    setFotoFileErrors("");
 
     const {
       idModalidadFacturacion,
@@ -151,6 +151,7 @@ export const AddTalent = () => {
       educaciones,
       cv,
       foto,
+      disponibilidad,
       ...filterData
     } = data;
     const phone = countryCode.current?.textContent + " " + telefono.trim();
@@ -169,9 +170,12 @@ export const AddTalent = () => {
 
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile!);
-      const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+      const fotoBase64 = photoFile
+        ? await Utils.fileToBase64(fotoFile!)
+        : undefined;
 
       const cleanData: AddTalentParams = {
+        disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
         ...filterData,
         idModalidadFacturacion: idModalidadFacturacion,
@@ -192,13 +196,15 @@ export const AddTalent = () => {
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
         },
-        fotoArchivo: {
-          stringB64: fotoBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-          extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
-          idTipoArchivo: ARCHIVO_IMAGEN,
-          idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
-        },
+        fotoArchivo: fotoBase64
+          ? {
+              stringB64: fotoBase64,
+              nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
+              extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+              idTipoArchivo: ARCHIVO_IMAGEN,
+              idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+            }
+          : undefined,
       };
 
       postTalent(cleanData);
@@ -268,9 +274,7 @@ export const AddTalent = () => {
                   {cvFileErrors !== "" && (
                     <p className="text-red-400 text-sm">{cvFileErrors}</p>
                   )}
-                  <h3 className="text-[#3f3f46] text-lg">
-                    Foto de perfil<span className="text-red-500">*</span>
-                  </h3>
+                  <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
                   <FileInput<AddTalentType>
                     register={register}
                     errors={errors}
@@ -401,7 +405,10 @@ export const AddTalent = () => {
                         className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
                       >
                         {watchCountryPhone
-                          ? `${paises.find((p) => p.num1 === watchCountryPhone)?.string3 || "00"}`
+                          ? `${
+                              paises.find((p) => p.num1 === watchCountryPhone)
+                                ?.string3 || "00"
+                            }`
                           : "+00"}
                       </p>
                       <input
@@ -458,40 +465,26 @@ export const AddTalent = () => {
                       </p>
                     )}
                   </div>
-                  {/*<div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="puestoAnt"
-                      className="text-[#636d7c] text-sm px-1"
-                    >
-                      Puesto actual<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      {...register("puesto")}
-                      id="puestoAnt"
-                      type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                      placeholder="Puesto actual"
-                    />
-                    {errors.puesto && (
-                      <p className="text-red-400 text-sm">
-                        {errors.puesto.message}
-                      </p>
-                    )}
-                  </div>*/}
                   <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="availability"
-                      className="text-[#636d7c] text-sm px-1"
-                    >
-                      Disponibilidad<span className="text-red-500">*</span>
+                    <label className="text-[#636d7c] text-sm px-1">
+                      Disponibilidad <span className="text-red-400">*</span>
                     </label>
-                    <input
-                      {...register("disponibilidad")}
-                      id="availability"
-                      type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                      placeholder="Disponibilidad"
-                    />
+
+                    {disponibilidades?.map((d) => (
+                      <label
+                        className="flex items-center gap-2"
+                        key={d.idParametro}
+                      >
+                        <input
+                          type="checkbox"
+                          value={d.idParametro}
+                          {...register("disponibilidad")}
+                          className="w-4 h-4"
+                        />
+                        <span>{d.string1}</span>
+                      </label>
+                    ))}
+
                     {errors.disponibilidad && (
                       <p className="text-red-400 text-sm">
                         {errors.disponibilidad.message}
