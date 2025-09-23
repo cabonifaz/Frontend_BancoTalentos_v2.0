@@ -34,6 +34,8 @@ export interface TalentSalaryParams
     | "montoFinalRxH"
     | "idMoneda"
     | "idModalidadFacturacion"
+    | "idMonedaPlan"
+    | "idMonedaRxh"
   > {
   idTalento: number;
 }
