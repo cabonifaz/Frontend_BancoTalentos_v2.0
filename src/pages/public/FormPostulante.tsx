@@ -41,11 +41,13 @@ import {
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
 import { validateFile } from "../../core/utilities/validation";
+import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
+import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12, 13, 15, 16, 19, 20, 31"
+    "2, 12, 13, 15, 16, 19, 20, 31"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -59,6 +61,7 @@ export const FormPostulante = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
+  const coins = paramsByMaestro[2] || [];
   const disponibilidades = paramsByMaestro[31] || [];
   // const habilidadesBlandas = paramsByMaestro[20] || [];
 
@@ -92,12 +95,24 @@ export const FormPostulante = () => {
     resolver: zodResolver(AddPostulanteSchema),
     mode: "onChange",
     defaultValues: {
-      montoInicialPlanilla: 0,
+      /* montoInicialPlanilla: 0,
       montoFinalPlanilla: 0,
       montoInicialRxH: 0,
       montoFinalRxH: 0,
-      idMoneda: 0,
+      idMoneda: 0, */
       disponibilidad: [],
+      salaryExpectations: {
+        rxh: {
+          coin: undefined,
+          min: undefined,
+          max: undefined,
+        },
+        planilla: {
+          coin: undefined,
+          min: undefined,
+          max: undefined,
+        },
+      },
     },
   });
 
@@ -151,8 +166,9 @@ export const FormPostulante = () => {
       educaciones,
       cv,
       foto,
-      idMoneda,
+      /* idMoneda, */
       disponibilidad,
+      salaryExpectations,
       ...filterData
     } = data;
     const phone = countryCode.current?.textContent + " " + telefono.trim();
@@ -178,10 +194,13 @@ export const FormPostulante = () => {
       const cleanData: AddTalentParams = {
         disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
-        idMoneda:
-          data.idMoneda === 0 || data.idMoneda === undefined
-            ? null
-            : data.idMoneda,
+        idMonedaPlan: salaryExpectations?.planilla?.coin,
+        idMonedaRxh: salaryExpectations?.rxh?.coin,
+        montoInicialPlanilla: salaryExpectations?.planilla?.min,
+        montoFinalPlanilla: salaryExpectations?.planilla?.max,
+        montoInicialRxH: salaryExpectations?.rxh?.min,
+        montoFinalRxH: salaryExpectations?.rxh?.max,
+        idMoneda: null,
         ...filterData,
         experiencias: cleanExperiencias,
         educaciones: cleanEducaciones,
@@ -226,10 +245,10 @@ export const FormPostulante = () => {
               fechaInicioLabores: null,
               // cargo: data.puesto,
               remuneracion: null,
-              idMoneda:
+              /* idMoneda:
                 data.idMoneda === 0 || data.idMoneda === undefined
                   ? null
-                  : data.idMoneda,
+                  : data.idMoneda, */
               idModalidad: null,
               ubicacion: ubicacion,
               tieneEquipo: data?.tieneEquipo || false,
@@ -603,6 +622,16 @@ export const FormPostulante = () => {
                       )}
                     </div>
                   </div>
+                  {/* Salary */}
+                  <SalaryExpectSectionExter
+                    coins={coins.map((c) => ({
+                      idCoin: c.num1,
+                      stringVal: c.string1,
+                    }))}
+                    control={control}
+                    errors={errors}
+                  />
+
                   {/* Tech skills */}
                   <TechSkillsSection<AddPostulanteType>
                     control={control}

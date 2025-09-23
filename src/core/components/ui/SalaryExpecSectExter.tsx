@@ -1,13 +1,14 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { AddPostulanteType } from "../../models";
 
 interface SalaryExpecProps {
   coins: { idCoin: number; stringVal: string }[];
-  control: Control<AddTalentType>;
+  control: Control<AddPostulanteType>;
   errors: FieldErrors<AddTalentType>;
 }
 
-export const SalaryExpectSection = ({
+export const SalaryExpectSectionExter = ({
   coins,
   control,
   errors,

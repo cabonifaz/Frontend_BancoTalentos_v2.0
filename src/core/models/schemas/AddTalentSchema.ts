@@ -1,6 +1,52 @@
 import { z } from "zod";
 import { emptyToNull, emptyToUndef, trim, trimLower } from "./Validations";
 
+const salaryExpectationSchema = z
+  .object({
+    coin: z.number().int().positive().optional(),
+    min: z.number().min(0).optional(),
+    max: z.number().min(0).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const { coin, min, max } = data;
+    const hasAnything =
+      coin !== undefined || min !== undefined || max !== undefined;
+
+    // Si se llena algún campo, todos son obligatorios
+    if (hasAnything) {
+      if (coin === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Debe seleccionar una moneda",
+          path: ["coin"],
+        });
+      }
+      if (min === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario mínimo es requerido",
+          path: ["min"],
+        });
+      }
+      if (max === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario máximo es requerido",
+          path: ["max"],
+        });
+      }
+
+      // Si están todos llenos, validar que max >= min
+      if (min !== undefined && max !== undefined && max < min) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario máximo debe ser mayor o igual al mínimo",
+          path: ["max"],
+        });
+      }
+    }
+  });
+
 export const AddTalentSchema = z.object({
   dni: z.preprocess(
     trim,
@@ -183,53 +229,12 @@ export const AddTalentSchema = z.object({
     .optional()
     .default([]),
 
-  salaryExpectations: z.object({
-    rxh: z
-      .object({
-        coin: z.string().min(1, "La moneda es requerida"),
-        min: z
-          .number({ invalid_type_error: "Debe ser un número" })
-          .nonnegative("Debe ser mayor o igual a cero"),
-        max: z
-          .number({ invalid_type_error: "Debe ser un número" })
-          .nonnegative("Debe ser mayor o igual a 0"),
-      })
-      .refine((data) => data.max >= data.min, {
-        message: "El máximo debe ser mayor o igual al mínimo",
-        path: ["max"],
-      }),
-
-    planilla: z
-      .object({
-        coin: z.string().min(1, "La moneda debe ser requerida").optional(),
-        min: z
-          .number({ invalid_type_error: "Min debe ser un número" })
-          .nonnegative("Debe ser mayor o igual a 0")
-          .optional(),
-        max: z
-          .number({ invalid_type_error: "Max debe ser un número" })
-          .nonnegative("Debe ser mayor o igual a 0")
-          .optional(),
-      })
-      .refine(
-        (data) => {
-          const anyFilled = data.coin || data.min != null || data.max != null;
-          if (!anyFilled) return true;
-          return (
-            !!data.coin &&
-            data.min != null &&
-            data.max != null &&
-            data.max >= data.min
-          );
-        },
-        {
-          message:
-            "Si completas planilla, debes elegir moneda, mínimo y máximo (máximo >= mínimo).",
-          path: ["coin"],
-        }
-      )
-      .optional(),
-  }),
+  salaryExpectations: z
+    .object({
+      rxh: salaryExpectationSchema.optional(),
+      planilla: salaryExpectationSchema.optional(),
+    })
+    .optional(),
 
   idiomas: z
     .array(

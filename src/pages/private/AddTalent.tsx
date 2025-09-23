@@ -120,8 +120,6 @@ export const AddTalent = () => {
     setCvFileErrors("");
     setFotoFileErrors("");
 
-    console.log("Salary: ", data.salaryExpectations);
-
     // Validación manual
     if (!data.cv[0] || !(data.cv[0] instanceof File)) {
       setCvFileErrors("El CV es requerido");
@@ -181,26 +179,14 @@ export const AddTalent = () => {
         disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
 
-        idMonedaPlan: salaryExpectations.planilla?.coin
-          ? Number(salaryExpectations.planilla.coin)
-          : undefined,
-        montMaxPlan: salaryExpectations.planilla?.max
-          ? Number(salaryExpectations.planilla.max)
-          : undefined,
-        montMinPlan: salaryExpectations.planilla?.min
-          ? Number(salaryExpectations.planilla.min)
-          : undefined,
+        idMonedaPlan: salaryExpectations?.planilla?.coin,
+        idMonedaRxh: salaryExpectations?.rxh?.coin,
+        montoInicialPlanilla: salaryExpectations?.planilla?.min,
+        montoFinalPlanilla: salaryExpectations?.planilla?.max,
+        montoInicialRxH: salaryExpectations?.rxh?.min,
+        montoFinalRxH: salaryExpectations?.rxh?.max,
+        idMoneda: null,
 
-        // Salary Expec RXH
-        idMonedaRxh: salaryExpectations.rxh?.coin
-          ? Number(salaryExpectations.rxh.coin)
-          : undefined,
-        montMaxRxh: salaryExpectations.rxh?.max
-          ? Number(salaryExpectations.rxh.max)
-          : undefined,
-        montMinRxh: salaryExpectations.rxh?.min
-          ? Number(salaryExpectations.rxh.min)
-          : undefined,
         ...filterData,
         /* idModalidadFacturacion: idModalidadFacturacion,
         montoInicialPlanilla:
@@ -574,7 +560,7 @@ export const AddTalent = () => {
                 {/* Salary */}
                 <SalaryExpectSection
                   coins={monedas.map((moneda) => ({
-                    idCoin: moneda.idParametro,
+                    idCoin: moneda.num1,
                     stringVal: moneda.string1,
                   }))}
                   control={control}
