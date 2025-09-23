@@ -12,95 +12,74 @@ import { enqueueSnackbar } from "notistack";
 import { updateTalentSalary } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
-import { MODALIDAD_PLANILLA, MODALIDAD_RXH } from "../../utilities/constants";
+
+// --- Helpers ---
+const toNumberOrUndef = (val: string | number): number | undefined => {
+  if (val === "" || val === null || val === undefined) return undefined;
+  const num = Number(val);
+  return isNaN(num) || num < 0 ? undefined : Math.round(num * 100) / 100;
+};
+
+// --- Schema con validación cruzada para cada modalidad ---
+const salaryBlock = z
+  .object({
+    coin: z.number().int().optional(),
+    min: z.number().positive("Minimo debe ser mayor que 0").optional(),
+    max: z.number().positive("Maximo debe ser mayor que 0").optional(),
+  })
+  .refine(
+    (data) => {
+      // Si alguno está lleno, los demás deben ser obligatorios
+      const filled =
+        data.coin !== undefined ||
+        data.min !== undefined ||
+        data.max !== undefined;
+      if (!filled) return true; // todo vacío está bien
+      return (
+        data.coin !== undefined &&
+        data.min !== undefined &&
+        data.max !== undefined
+      );
+    },
+    { message: "Debe completar moneda, mínimo y máximo", path: ["coin"] }
+  )
+  .refine(
+    (data) => {
+      if (data.min !== undefined && data.max !== undefined) {
+        return data.max >= data.min;
+      }
+      return true;
+    },
+    { message: "El máximo debe ser mayor o igual al mínimo", path: ["max"] }
+  );
+
+const salarySchema = z.object({
+  rxh: salaryBlock,
+  planilla: salaryBlock,
+});
+
+// --- Tipos ---
+type SalaryFormData = z.infer<typeof salarySchema>;
 
 interface Props {
   idTalento?: number;
-  idMoneda?: number;
-  idModalidadFacturacion?: number;
-  moneda?: string;
   initPlan?: number;
   endPlan?: number;
   initRxH?: number;
   endRxH?: number;
+  idMonedaPlan?: number;
+  idMonedaRxh?: number;
   updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-// Esquema de validación con Zod - SIN transform para mantener string en el form
-const salarySchema = z
-  .object({
-    idMoneda: z.number().min(1, "La moneda es requerida"),
-    idModalidadFacturacion: z
-      .number()
-      .min(1, "La modalidad de facturación es requerida"),
-    montoInicial: z
-      .string()
-      .min(1, "El monto inicial es requerido")
-      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
-        message: "Formato de monto inválido",
-      })
-      .refine(
-        (val) => {
-          const num = Number(val);
-          return num > 0;
-        },
-        {
-          message: "El monto inicial debe ser mayor a 0",
-        },
-      ),
-    montoFinal: z
-      .string()
-      .min(1, "El monto final es requerido")
-      .refine((val) => /^\d+(\.\d{1,2})?$/.test(val), {
-        message: "Formato de monto inválido",
-      })
-      .refine(
-        (val) => {
-          const num = Number(val);
-          return num > 0;
-        },
-        {
-          message: "El monto final debe ser mayor a 0",
-        },
-      ),
-  })
-  .refine(
-    (data) => {
-      const inicial = Number(data.montoInicial);
-      const final = Number(data.montoFinal);
-      return final >= inicial;
-    },
-    {
-      message: "El monto final debe ser mayor o igual al inicial",
-      path: ["montoFinal"],
-    },
-  );
-
-// Tipo para el formulario (mantiene strings)
-type SalaryFormData = {
-  idMoneda: number;
-  idModalidadFacturacion: number;
-  montoInicial: string;
-  montoFinal: string;
-};
-
-// Tipo para los datos enviados a la API (con numbers)
-type SalaryApiData = {
-  idMoneda: number;
-  idModalidadFacturacion: number;
-  montoInicial: number;
-  montoFinal: number;
-};
-
 export const ModalSalary = ({
   idTalento,
-  idMoneda,
-  moneda,
   initPlan,
   endPlan,
   initRxH,
   endRxH,
-  idModalidadFacturacion,
+  idMonedaPlan,
+  idMonedaRxh,
   updateTalentList,
 }: Props) => {
   const { paramsByMaestro } = useParams();
@@ -110,49 +89,41 @@ export const ModalSalary = ({
     control,
     handleSubmit,
     formState: { errors },
-    setValue,
     reset,
   } = useForm<SalaryFormData>({
     resolver: zodResolver(salarySchema),
     defaultValues: {
-      idMoneda: idMoneda || 0,
-      idModalidadFacturacion: idModalidadFacturacion || 0,
-      montoInicial: "",
-      montoFinal: "",
+      rxh: {
+        coin: idMonedaRxh,
+        min: initRxH,
+        max: endRxH,
+      },
+      planilla: {
+        coin: idMonedaPlan,
+        min: initPlan,
+        max: endPlan,
+      },
     },
     mode: "onChange",
   });
 
-  // Efecto para inicializar valores cuando el modal se abre
+  // Reiniciar valores al abrir modal
   useEffect(() => {
     if (isModalOpen("modalSalary")) {
-      const montoInicial =
-        idModalidadFacturacion === MODALIDAD_RXH
-          ? initRxH?.toString() || ""
-          : initPlan?.toString() || "";
-
-      const montoFinal =
-        idModalidadFacturacion === MODALIDAD_RXH
-          ? endRxH?.toString() || ""
-          : endPlan?.toString() || "";
-
-      // No validar al inicializar
-      setValue("idModalidadFacturacion", idModalidadFacturacion || 0, {
-        shouldValidate: false,
+      reset({
+        rxh: { coin: idMonedaRxh, min: initRxH, max: endRxH },
+        planilla: { coin: idMonedaPlan, min: initPlan, max: endPlan },
       });
-      setValue("idMoneda", idMoneda || 0, { shouldValidate: false });
-      setValue("montoInicial", montoInicial, { shouldValidate: false });
-      setValue("montoFinal", montoFinal, { shouldValidate: false });
     }
   }, [
     isModalOpen,
-    idModalidadFacturacion,
-    idMoneda,
+    reset,
     initPlan,
     endPlan,
     initRxH,
     endRxH,
-    setValue,
+    idMonedaPlan,
+    idMonedaRxh,
   ]);
 
   const { loading, fetch: updateData } = useApi<
@@ -170,73 +141,31 @@ export const ModalSalary = ({
   });
 
   const monedas = paramsByMaestro[2] || [];
-  const modalidadFacturacionOptions = paramsByMaestro[32] || [];
-
-  const handleNumberInput = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    onChange: (value: string) => void,
-  ) => {
-    let inputValue = e.target.value;
-
-    // Permitir solo números y punto decimal
-    if (/^(\d+\.?\d*|\.\d+)$/.test(inputValue) || inputValue === "") {
-      if (inputValue.includes(".")) {
-        const parts = inputValue.split(".");
-        if (parts[1].length > 2) {
-          inputValue = parts[0] + "." + parts[1].substring(0, 2);
-        }
-      }
-      onChange(inputValue);
-    } else if (inputValue === ".") {
-      onChange("0.");
-    }
-  };
 
   const onSubmit = (data: SalaryFormData) => {
     if (!idTalento) return;
 
-    // Convertir strings a numbers para la API
-    const apiData: SalaryApiData = {
-      idMoneda: data.idMoneda,
-      idModalidadFacturacion: data.idModalidadFacturacion,
-      montoInicial: Number(data.montoInicial),
-      montoFinal: Number(data.montoFinal),
-    };
-
-    const initPlanilla =
-      apiData.idModalidadFacturacion === MODALIDAD_PLANILLA
-        ? apiData.montoInicial
-        : 0;
-    const endPlanilla =
-      apiData.idModalidadFacturacion === MODALIDAD_PLANILLA
-        ? apiData.montoFinal
-        : 0;
-    const initRxH =
-      apiData.idModalidadFacturacion === MODALIDAD_RXH
-        ? apiData.montoInicial
-        : 0;
-    const endRxH =
-      apiData.idModalidadFacturacion === MODALIDAD_RXH ? apiData.montoFinal : 0;
-
     updateData({
       idTalento,
-      idMoneda: apiData.idMoneda,
-      montoInicialPlanilla: initPlanilla,
-      montoFinalPlanilla: endPlanilla,
-      montoInicialRxH: initRxH,
-      montoFinalRxH: endRxH,
-      idModalidadFacturacion: apiData.idModalidadFacturacion,
+      montoInicialPlanilla: data.planilla.min ?? 0,
+      montoFinalPlanilla: data.planilla.max ?? 0,
+      montoInicialRxH: data.rxh.min ?? 0,
+      montoFinalRxH: data.rxh.max ?? 0,
+      idModalidadFacturacion: 0,
+      // Enviamos la información de la monedas por modalidad
+      idMonedaPlan: data.planilla.coin ?? 0,
+      idMonedaRxh: data.rxh.coin ?? 0,
     }).then((response) => {
       if (response.data.idMensaje === 2) {
         handleCloseModal();
         if (idTalento && updateTalentList) {
           updateTalentList(idTalento, {
-            moneda: moneda,
-            idModalidadFacturacion: idModalidadFacturacion,
-            montoInicialPlanilla: initPlan || 0,
-            montoFinalPlanilla: endPlan || 0,
-            montoInicialRxH: initRxH || 0,
-            montoFinalRxH: endRxH || 0,
+            montoInicialPlanilla: data.planilla.min ?? 0,
+            montoFinalPlanilla: data.planilla.max ?? 0,
+            montoInicialRxH: data.rxh.min ?? 0,
+            montoFinalRxH: data.rxh.max ?? 0,
+            idMonedaPlan: data.planilla.coin ?? 0,
+            idMonedaRxh: data.rxh.coin ?? 0,
           });
         }
       }
@@ -244,24 +173,7 @@ export const ModalSalary = ({
   };
 
   const handleCloseModal = () => {
-    // Resetear el formulario al cerrar el modal
-    reset(
-      {
-        idMoneda: idMoneda || 0,
-        idModalidadFacturacion: idModalidadFacturacion || 0,
-        montoInicial:
-          idModalidadFacturacion === MODALIDAD_RXH
-            ? initRxH?.toString() || ""
-            : initPlan?.toString() || "",
-        montoFinal:
-          idModalidadFacturacion === MODALIDAD_RXH
-            ? endRxH?.toString() || ""
-            : endPlan?.toString() || "",
-      },
-      {
-        keepErrors: false, // limpiar errores
-      },
-    );
+    reset();
     closeModal("modalSalary");
   };
 
@@ -280,149 +192,194 @@ export const ModalSalary = ({
           Agrega el rango de tus expectativas salariales.
         </h3>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Moneda */}
-          <div className="flex flex-col gap-1">
-            <label htmlFor="idMoneda" className="input-label">
-              Moneda
-            </label>
-            <Controller
-              name="idMoneda"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  id="idMoneda"
-                  className="input w-full"
-                  value={field.value}
-                  onChange={(e) => {
-                    field.onChange(Number(e.target.value));
-                  }}
-                >
-                  <option value={0}>Seleccione una moneda</option>
-                  {monedas.map((monedaOption) => (
-                    <option
-                      key={monedaOption.idParametro}
-                      value={monedaOption.num1}
-                      data-code={
-                        monedaOption.num1 === 3
-                          ? monedaOption.string2
-                          : monedaOption.string3
-                      }
-                    >
-                      {monedaOption.string1}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.idMoneda && (
-              <p className="text-red-500 text-sm mt-2">
-                {errors.idMoneda.message}
-              </p>
-            )}
-          </div>
-
-          {/* Modalidad de facturación */}
-          <div className="flex flex-col gap-1">
-            <label htmlFor="idModalidadFacturacion" className="input-label">
-              Modalidad de facturación
-            </label>
-            <Controller
-              name="idModalidadFacturacion"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  id="idModalidadFacturacion"
-                  className="input w-full"
-                  value={field.value}
-                  onChange={(e) => {
-                    field.onChange(Number(e.target.value));
-                  }}
-                >
-                  <option value={0}>
-                    Seleccione la modalidad de facturación
-                  </option>
-                  {modalidadFacturacionOptions.map((mod) => (
-                    <option key={mod.idParametro} value={mod.num1}>
-                      {mod.string1}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.idModalidadFacturacion && (
-              <p className="text-red-500 text-sm mt-2">
-                {errors.idModalidadFacturacion.message}
-              </p>
-            )}
-          </div>
-
-          {/* Montos */}
-          <h3 className="w-full my-2">Montos</h3>
-          <div className="flex w-full gap-8">
-            {/* Monto Inicial */}
-            <div className="flex flex-col w-1/2">
-              <label htmlFor="montoInicial" className="input-label">
-                Monto inicial
-              </label>
+        {/* --- Tabla de expectativas salariales --- */}
+        <div className="border rounded-lg divide-y">
+          {/* RxH */}
+          <div>
+            <div className="bg-gray-100 text-sm font-medium text-gray-700 p-2 text-center">
+              Locación de Servicios (RxH)
+            </div>
+            <div className="grid grid-cols-3 bg-gray-50 text-xs text-gray-600">
+              <div className="p-2 border-r">Moneda</div>
+              <div className="p-2 border-r text-center">Mínimo</div>
+              <div className="p-2 text-center">Máximo</div>
+            </div>
+            <div className="grid grid-cols-3">
               <Controller
-                name="montoInicial"
+                name="rxh.coin"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                    className="p-2 border-r text-sm"
+                  >
+                    <option value="">Elija una moneda</option>
+                    {monedas.map((monedaOption) => (
+                      <option
+                        key={monedaOption.idParametro}
+                        value={monedaOption.num1}
+                      >
+                        {monedaOption.string1}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <Controller
+                name="rxh.min"
                 control={control}
                 render={({ field }) => (
                   <input
                     {...field}
-                    type="text"
-                    id="montoInicial"
-                    value={field.value}
-                    onWheel={(e) => e.currentTarget.blur()}
-                    onFocus={(e) => e.currentTarget.select()}
-                    className="input"
-                    inputMode="decimal"
-                    placeholder="Ej: 1000.00"
-                    onChange={(e) => handleNumberInput(e, field.onChange)}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 border-r text-sm text-right outline-none"
                   />
                 )}
               />
-              {errors.montoInicial && (
-                <p className="text-red-500 text-sm mt-2">
-                  {errors.montoInicial.message}
-                </p>
-              )}
-            </div>
-
-            {/* Monto Final */}
-            <div className="flex flex-col w-1/2">
-              <label htmlFor="montoFinal" className="input-label">
-                Monto final
-              </label>
               <Controller
-                name="montoFinal"
+                name="rxh.max"
                 control={control}
                 render={({ field }) => (
                   <input
                     {...field}
-                    type="text"
-                    id="montoFinal"
-                    value={field.value}
-                    onFocus={(e) => e.currentTarget.select()}
-                    onWheel={(e) => e.currentTarget.blur()}
-                    className="input"
-                    inputMode="decimal"
-                    placeholder="Ej: 2000.00"
-                    onChange={(e) => handleNumberInput(e, field.onChange)}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 text-sm text-right outline-none"
                   />
                 )}
               />
-              {errors.montoFinal && (
-                <p className="text-red-500 text-sm mt-2">
-                  {errors.montoFinal.message}
-                </p>
-              )}
             </div>
+            {errors.rxh?.coin && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.coin.message}
+              </span>
+            )}
+            {errors.rxh?.min && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.min.message}
+              </span>
+            )}
+            {errors.rxh?.max && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.max.message}
+              </span>
+            )}
           </div>
-        </form>
+
+          {/* Planilla */}
+          <div>
+            <div className="bg-gray-100 text-sm font-medium text-gray-700 p-2 text-center">
+              Régimen General (Planilla)
+            </div>
+            <div className="grid grid-cols-3 bg-gray-50 text-xs text-gray-600">
+              <div className="p-2 border-r">Moneda</div>
+              <div className="p-2 border-r text-center">Mínimo</div>
+              <div className="p-2 text-center">Máximo</div>
+            </div>
+            <div className="grid grid-cols-3">
+              <Controller
+                name="planilla.coin"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                    className="p-2 border-r text-sm"
+                  >
+                    <option value="">Elija una moneda</option>
+                    {monedas.map((monedaOption) => (
+                      <option
+                        key={monedaOption.idParametro}
+                        value={monedaOption.num1}
+                      >
+                        {monedaOption.string1}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <Controller
+                name="planilla.min"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 border-r text-sm text-right outline-none"
+                  />
+                )}
+              />
+              <Controller
+                name="planilla.max"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 text-sm text-right outline-none"
+                  />
+                )}
+              />
+            </div>
+            {errors.planilla?.coin && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.coin.message}
+              </span>
+            )}
+            {errors.planilla?.min && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.min.message}
+              </span>
+            )}
+            {errors.planilla?.max && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.max.message}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </Modal>
   );

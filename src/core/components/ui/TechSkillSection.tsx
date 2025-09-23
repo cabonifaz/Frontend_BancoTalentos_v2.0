@@ -31,7 +31,7 @@ export const TechSkillsSection = <F extends FieldValues>({
   });
 
   const [showSuggestions, setShowSuggestions] = useState<boolean[]>(
-    fields.map(() => false),
+    fields.map(() => false)
   );
 
   const hasAppendedInitial = useRef(false);
@@ -63,7 +63,7 @@ export const TechSkillsSection = <F extends FieldValues>({
   // Función para actualizar idHabilidad automáticamente basado en el texto
   const updateIdHabilidadFromText = (text: string, index: number) => {
     const habilidadExistente = habilidadesTecnicas.find(
-      (h) => h.string1.toLowerCase() === text.toLowerCase(),
+      (h) => h.string1.toLowerCase() === text.toLowerCase()
     );
 
     const idHabilidadPath =
@@ -102,7 +102,7 @@ export const TechSkillsSection = <F extends FieldValues>({
                 render={({ field }) => {
                   const searchValue = (field.value as string) ?? "";
                   const filteredOptions = habilidadesTecnicas.filter((h) =>
-                    h.string1.toLowerCase().includes(searchValue.toLowerCase()),
+                    h.string1.toLowerCase().includes(searchValue.toLowerCase())
                   );
 
                   return (
@@ -162,7 +162,7 @@ export const TechSkillsSection = <F extends FieldValues>({
                                   `habilidadesTecnicas.${index}.idHabilidad` as Path<F>;
                                 setValue(
                                   idHabilidadPath,
-                                  habilidad.num1 as any,
+                                  habilidad.num1 as any
                                 );
 
                                 setShowSuggestions((prev) => {
@@ -196,14 +196,14 @@ export const TechSkillsSection = <F extends FieldValues>({
 
                       // También actualizar el campo habilidad con el texto seleccionado
                       const selectedHabilidad = habilidadesTecnicas.find(
-                        (h) => h.num1 === newValue,
+                        (h) => h.num1 === newValue
                       );
                       if (selectedHabilidad) {
                         const habilidadPath =
                           `habilidadesTecnicas.${index}.habilidad` as Path<F>;
                         setValue(
                           habilidadPath,
-                          selectedHabilidad.string1 as any,
+                          selectedHabilidad.string1 as any
                         );
                       }
                     }}

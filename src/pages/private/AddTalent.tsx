@@ -460,14 +460,14 @@ export const AddTalent = () => {
                       htmlFor="description"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Descripción
+                      Presentación
                       {/*<span className="text-red-500">*</span>*/}
                     </label>
                     <textarea
                       {...register("descripcion")}
                       id="description"
                       className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                      placeholder="Descripción"
+                      placeholder="Presentación"
                     ></textarea>
                     {errors.descripcion && (
                       <p className="text-red-400 text-sm">

@@ -50,7 +50,7 @@ export const ModalsForTalentsPage = ({
     <>
       <ModalResume
         cvData={talentDet?.files.find(
-          (file) => file.idTipoDocumento === DOCUMENTO_CV,
+          (file) => file.idTipoDocumento === DOCUMENTO_CV
         )}
       />
 
@@ -84,8 +84,10 @@ export const ModalsForTalentsPage = ({
 
       <ModalSalary
         idTalento={talent?.idTalento}
-        idMoneda={talentDet?.idMoneda}
-        idModalidadFacturacion={talent?.idModalidadFacturacion}
+        // idMoneda={talentDet?.idMoneda}
+        idMonedaPlan={talent?.idMonedaPlan}
+        idMonedaRxh={talent?.idMonedaRxh}
+        // idModalidadFacturacion={talent?.idModalidadFacturacion}
         initPlan={talent?.montoInicialPlanilla}
         endPlan={talent?.montoFinalPlanilla}
         initRxH={talent?.montoInicialRxH}
