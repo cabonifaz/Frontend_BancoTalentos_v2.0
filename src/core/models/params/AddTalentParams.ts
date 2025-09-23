@@ -60,4 +60,14 @@ export interface AddTalentParams {
     idTipoArchivo: number;
     idTipoDocumento: number;
   };
+
+  // Salary Expec Plan
+  idMonedaPlan?: number;
+  montMaxPlan?: number;
+  montMinPlan?: number;
+
+  // Salary Expec RXH
+  idMonedaRxh?: number;
+  montMaxRxh?: number;
+  montMinRxh?: number;
 }

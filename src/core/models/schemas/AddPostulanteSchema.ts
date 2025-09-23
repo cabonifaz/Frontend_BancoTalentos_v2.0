@@ -1,6 +1,52 @@
 import { z } from "zod";
 import { emptyToNull, emptyToUndef, trim, trimLower } from "./Validations";
 
+const salaryExpectationSchema = z
+  .object({
+    coin: z.number().int().positive().optional(),
+    min: z.number().min(0).optional(),
+    max: z.number().min(0).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const { coin, min, max } = data;
+    const hasAnything =
+      coin !== undefined || min !== undefined || max !== undefined;
+
+    // Si se llena algún campo, todos son obligatorios
+    if (hasAnything) {
+      if (coin === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Debe seleccionar una moneda",
+          path: ["coin"],
+        });
+      }
+      if (min === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario mínimo es requerido",
+          path: ["min"],
+        });
+      }
+      if (max === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario máximo es requerido",
+          path: ["max"],
+        });
+      }
+
+      // Si están todos llenos, validar que max >= min
+      if (min !== undefined && max !== undefined && max < min) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El salario máximo debe ser mayor o igual al mínimo",
+          path: ["max"],
+        });
+      }
+    }
+  });
+
 export const AddPostulanteSchema = z.object({
   dni: z.preprocess(
     trim,
@@ -47,7 +93,7 @@ export const AddPostulanteSchema = z.object({
   idPais: z.coerce.number().min(1, "Seleccione un país"),
   idCiudad: z.coerce.number().min(1, "Seleccione una ciudad"),
 
-  montoInicialPlanilla: z.coerce
+  /* montoInicialPlanilla: z.coerce
     .number({
       required_error: "El monto inicial planilla es requerido",
       invalid_type_error: "Solo se aceptan números",
@@ -74,9 +120,16 @@ export const AddPostulanteSchema = z.object({
       invalid_type_error: "Solo se aceptan números",
     })
     .default(0)
-    .optional(),
+    .optional(), */
 
-  idMoneda: z.coerce.number().default(0).optional().nullable(),
+  /* idMoneda: z.coerce.number().default(0).optional().nullable(), */
+
+  salaryExpectations: z
+    .object({
+      rxh: salaryExpectationSchema.optional(),
+      planilla: salaryExpectationSchema.optional(),
+    })
+    .optional(),
 
   habilidadesTecnicas: z.array(
     z.object({

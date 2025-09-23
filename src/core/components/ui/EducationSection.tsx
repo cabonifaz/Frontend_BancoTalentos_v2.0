@@ -162,7 +162,7 @@ export const EducationsSection = <F extends FieldValues>({
                 >
                   <option value="">Selecciona un grado</option>
                   {grados?.map((gr) => (
-                    <option key={gr.idParametro} value={gr.idParametro}>
+                    <option key={gr.num1} value={gr.num1}>
                       {gr.string1}
                     </option>
                   ))}
