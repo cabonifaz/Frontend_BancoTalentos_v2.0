@@ -425,16 +425,22 @@ export const Talents = () => {
                             </p>
                             <div className="text-sm text-[#71717A] flex items-center gap-2 my-2 xl:m-0">
                               <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
-                                {talent.idModalidadFacturacion ===
-                                MODALIDAD_RXH ? (
-                                  <p>{`RxH ${talent?.moneda || ""} ${
-                                    talent.montoInicialRxH
-                                  } - ${talent.montoFinalRxH}`}</p>
-                                ) : (
-                                  <p>{`Planilla ${talent?.moneda || ""} ${
-                                    talent.montoInicialPlanilla
-                                  } - ${talent.montoFinalPlanilla}`}</p>
-                                )}
+                                <p>
+                                  {`RxH ${
+                                    Utils.formatCoinByNum1(talent.idMonedaRxh)
+                                      .string3
+                                  } `}
+                                  {talent.montoInicialRxH.toFixed(2)} -{" "}
+                                  {talent.montoInicialRxH.toFixed(2)}
+                                </p>
+                                <p>
+                                  {`Planilla ${
+                                    Utils.formatCoinByNum1(talent.idMonedaPlan)
+                                      .string3
+                                  } `}
+                                  {talent.montoInicialPlanilla.toFixed(2)} -{" "}
+                                  {talent.montoFinalPlanilla.toFixed(2)}
+                                </p>
                               </div>
                               <button
                                 type="button"
