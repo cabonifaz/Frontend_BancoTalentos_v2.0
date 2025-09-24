@@ -637,7 +637,7 @@ export const FormPostulante = () => {
                     control={control}
                     errors={errors}
                     habilidadesTecnicas={habilidadesTecnicas}
-                    dropdownWithSearch={false}
+                    dropdownWithSearch={true}
                     shouldShowEmptyForm={true}
                   />
                   {/* Soft skills */}
