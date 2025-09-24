@@ -821,15 +821,6 @@ export const AgregarRQModal = ({
                                                   ?.cantidad?.message
                                               }
                                             />
-                                            {errors.lstVacantes?.[index]
-                                              ?.cantidad && (
-                                              <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
-                                                {
-                                                  errors.lstVacantes[index]
-                                                    ?.cantidad?.message
-                                                }
-                                              </p>
-                                            )}
                                           </div>
                                         </div>
                                       </td>
@@ -951,13 +942,8 @@ export const AgregarRQModal = ({
                           <NumberInput<newRQSchemaType>
                             control={control}
                             name="duracion"
-                            error={errors?.descripcion?.message}
+                            error={errors?.duracion?.message}
                           />
-                          {errors.duracion && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {errors.duracion.message}
-                            </p>
-                          )}
                         </div>
                         <DropdownForm
                           name="idDuracion"
