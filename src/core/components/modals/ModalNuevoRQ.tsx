@@ -479,6 +479,7 @@ export const AgregarRQModal = ({
                               {...register("idEstado", { valueAsNumber: true })}
                               className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                             >
+                              <option value={0}>Seleccione un estado</option>
                               {estadoOptions.map((option) => (
                                 <option key={option.num1} value={option.num1}>
                                   {option.string1}
