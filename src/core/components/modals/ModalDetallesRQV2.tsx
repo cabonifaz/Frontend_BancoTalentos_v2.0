@@ -25,12 +25,17 @@ import { DropdownForm } from "../forms";
 import { NumberInput } from "../../components/ui/InputNumber";
 import { useParams } from "../../context/ParamsContext";
 import {
+  BASE_URL_FMI,
   DURACION_RQ,
   ESTADO_ATENDIDO,
   MODALIDAD_RQ,
 } from "../../utilities/constants";
 import { enqueueSnackbar } from "notistack";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
+import { useApi } from "../../hooks/useApi";
+import { FileResponse } from "../../models";
+import { handleError, handleResponse } from "../../utilities/errorHandler";
+import { getCvFile } from "../../services/apiService";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -547,10 +552,43 @@ export const ModalDetallesRQV2 = ({
     setContactToEdit(contact);
     setIsModalRQContactOPen(true);
   };
+  /**
+   * Fetch CV file for talent
+   */
+  const { loading: downloadingFile, fetch } = useApi<FileResponse, number>(
+    getCvFile,
+    {
+      onError: (error) => handleError(error, enqueueSnackbar),
+      onSuccess: (response) =>
+        handleResponse({
+          response: response,
+          showSuccessMessage: false,
+          enqueueSnackbar: enqueueSnackbar,
+        }),
+    }
+  );
+
+  const [selectedTalent, setSelectedTalent] = useState<number>(-1);
+
+  const openFile = (index: number) => {
+    setSelectedTalent(index);
+    if (requirement?.requerimiento.lstRqTalento[index].idCvFile) {
+      fetch(requirement?.requerimiento.lstRqTalento[index].idCvFile).then(
+        (response) => {
+          if (response.data.result.idMensaje === 2) {
+            const archivoB64 = response.data.archivo;
+            Utils.openPdfDocument(archivoB64);
+          }
+        }
+      );
+    }
+  };
 
   return (
     <>
-      {(postloading || deleteLoading) && <Loading opacity="opacity-50" />}
+      {(postloading || deleteLoading || downloadingFile) && (
+        <Loading opacity="opacity-60" />
+      )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
@@ -1277,6 +1315,9 @@ export const ModalDetallesRQV2 = ({
                             <thead>
                               <tr className="table-header">
                                 <th scope="col" className="table-header-cell">
+                                  CV
+                                </th>
+                                <th scope="col" className="table-header-cell">
                                   Nombres y apellidos
                                 </th>
                                 <th scope="col" className="table-header-cell">
@@ -1309,11 +1350,24 @@ export const ModalDetallesRQV2 = ({
                                 </tr>
                               ) : (
                                 requirement?.requerimiento.lstRqTalento.map(
-                                  (talento) => (
+                                  (talento, index) => (
                                     <tr
                                       key={talento.idTalento}
                                       className="table-row"
                                     >
+                                      <td className="text-center">
+                                        <button
+                                          type="button"
+                                          className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
+                                          onClick={() => openFile(index)}
+                                        >
+                                          <img
+                                            src="/assets/ic_show_pass.svg"
+                                            alt="icon eye"
+                                            className="w-5 h-5"
+                                          />
+                                        </button>
+                                      </td>
                                       <td className="table-cell">
                                         {talento.nombresTalento}{" "}
                                         {talento.apellidosTalento}
