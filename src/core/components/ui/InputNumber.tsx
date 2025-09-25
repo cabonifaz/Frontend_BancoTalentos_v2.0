@@ -4,12 +4,14 @@ interface NumberInputProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   error?: string;
+  isDisabled?: boolean;
 }
 
 export const NumberInput = <T extends FieldValues>({
   control,
   name,
   error,
+  isDisabled = false,
 }: NumberInputProps<T>) => {
   return (
     <Controller
@@ -20,7 +22,7 @@ export const NumberInput = <T extends FieldValues>({
         const stringValue =
           typeof value === "number" && !Number.isNaN(value)
             ? String(value)
-            : ((value as string) ?? "");
+            : (value as string) ?? "";
 
         const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           let inputValue = e.target.value.replace(/[^0-9.]/g, "");
@@ -57,6 +59,7 @@ export const NumberInput = <T extends FieldValues>({
               onChange={handleChange}
               inputMode="decimal" // teclado numérico en móviles
               className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+              disabled={isDisabled}
             />
             {error && <p className="text-red-400 text-sm">{error}</p>}
           </>

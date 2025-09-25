@@ -10,7 +10,6 @@ import {
   DateFilter,
   FilterDropDown,
   Loading,
-  ModalDetallesRQ,
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
@@ -23,7 +22,11 @@ import { useNavigate } from "react-router-dom";
 import { ESTADO_ATENDIDO, ESTADO_RQ } from "../../core/utilities/constants";
 import { useModal } from "../../core/context/ModalContext";
 import { AgregarRQModal } from "../../core/components/modals/ModalNuevoRQ";
-import { MODAL_NUEVO_RQ } from "../../core/utilities/modalsIds";
+import {
+  MODAL_DETALLES_RQ,
+  MODAL_NUEVO_RQ,
+} from "../../core/utilities/modalsIds";
+import { ModalDetallesRQV2 } from "../../core/components/modals/ModalDetallesRQV2";
 
 interface SearchProps {
   nPag: number | null;
@@ -43,7 +46,6 @@ export const Requirements = () => {
   const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
   const [selectedCliente, setSelectedCliente] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [isDetallesRQModalOpen, setIsDetallesRQModalOpen] = useState(false);
   const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -200,8 +202,8 @@ export const Requirements = () => {
   };
 
   const openDetallesRQModal = (req: RequirementItem) => {
-    setIsDetallesRQModalOpen(true);
     setSelectedRQ(req);
+    openModal(MODAL_DETALLES_RQ);
   };
 
   const updateRQData = () => {
@@ -252,13 +254,25 @@ export const Requirements = () => {
         <Loading opacity="opacity-60" />
       )}
 
-      {/** Modal RQ */}
+      {/** Agregar Modal RQ */}
       {isModalOpen(MODAL_NUEVO_RQ) && (
         <AgregarRQModal
           onClose={() => closeModal(MODAL_NUEVO_RQ)}
           updateRQData={updateRQData}
           estadoOptions={rqState}
           clientes={clientesResponse?.clientes || []}
+        />
+      )}
+
+      {/** Detalles Modal RQ */}
+      {isModalOpen(MODAL_DETALLES_RQ) && (
+        <ModalDetallesRQV2
+          onClose={() => closeModal(MODAL_DETALLES_RQ)}
+          RQ={selectedRQ}
+          updateRQData={updateRQData}
+          estadoOptions={rqState}
+          clientes={clientesResponse?.clientes || []}
+          handleAsignar={handleAsignarClick}
         />
       )}
 
@@ -477,15 +491,6 @@ export const Requirements = () => {
           )}
         </div>
       </Dashboard>
-      {isDetallesRQModalOpen && (
-        <ModalDetallesRQ
-          onClose={() => setIsDetallesRQModalOpen(false)}
-          estadoOptions={paramsByMaestro[24] || []}
-          RQ={selectedRQ}
-          clientes={clientesResponse?.clientes || []}
-          updateRQData={updateRQData}
-        />
-      )}
     </>
   );
 };
