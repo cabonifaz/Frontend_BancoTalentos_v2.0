@@ -25,7 +25,6 @@ import { DropdownForm } from "../forms";
 import { NumberInput } from "../../components/ui/InputNumber";
 import { useParams } from "../../context/ParamsContext";
 import {
-  BASE_URL_FMI,
   DURACION_RQ,
   ESTADO_ATENDIDO,
   MODALIDAD_RQ,
@@ -38,6 +37,7 @@ import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { getCvFile } from "../../services/apiService";
 import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
 import { useModal } from "../../context/ModalContext";
+import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -1131,18 +1131,59 @@ export const ModalDetallesRQV2 = ({
                                         <td className="table-cell">
                                           <div className="flex">
                                             <div className="flex flex-col gap-1 relative">
-                                              <NumberInput<UpdateBaseRQSchemaType>
+                                              <NumberInputFMIBase<UpdateBaseRQSchemaType>
+                                                register={register}
                                                 key={`vacante-${index}-${restoreKey}`}
                                                 control={control}
-                                                isDisabled={
+                                                name={`lstVacantes.${index}.cantidad`}
+                                                defaultValue={Number(
+                                                  originalCantidades[index] || 1
+                                                )}
+                                                disabled={
                                                   !isEditingVacantesData
                                                 }
-                                                name={`lstVacantes.${index}.cantidad`}
-                                                error={
-                                                  errors.lstVacantes?.[index]
-                                                    ?.cantidad?.message
-                                                }
+                                                onChange={(value) => {
+                                                  const numValue =
+                                                    Number(value) || 0;
+                                                  const currentValue =
+                                                    getValues(
+                                                      `lstVacantes.${index}`
+                                                    );
+                                                  if (
+                                                    currentValue.idRequerimientoVacante >
+                                                      0 &&
+                                                    currentValue.idEstado === 0
+                                                  ) {
+                                                    setValue(
+                                                      `lstVacantes.${index}.idEstado`,
+                                                      2
+                                                    );
+                                                  }
+                                                  setCantidadesVacantes(
+                                                    (prev) => {
+                                                      const newCantidades = [
+                                                        ...prev,
+                                                      ];
+                                                      newCantidades[index] =
+                                                        String(numValue);
+                                                      return newCantidades;
+                                                    }
+                                                  );
+                                                  clearErrors(
+                                                    `lstVacantes.${index}.cantidad`
+                                                  );
+                                                }}
+                                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                               />
+                                              {errors.lstVacantes?.[index]
+                                                ?.cantidad && (
+                                                <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                  {
+                                                    errors.lstVacantes[index]
+                                                      ?.cantidad?.message
+                                                  }
+                                                </p>
+                                              )}
                                             </div>
                                             <div className="ms-4 flex items-center">
                                               {field.idEstado === 1 ? (
