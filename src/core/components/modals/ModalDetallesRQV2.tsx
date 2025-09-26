@@ -466,8 +466,6 @@ export const ModalDetallesRQV2 = ({
           duracion: Number(data.duracion),
           lstVacantes: vacantesParaEnviar,
         };
-        console.log("Inf. vac: ", payload.lstVacantes);
-        console.log("Inf. arch: ", data.lstVacantes);
 
         const response = await postData("/fmi/requirement/update", payload);
 
