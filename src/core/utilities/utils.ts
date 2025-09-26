@@ -337,4 +337,31 @@ export class Utils {
 
     return coins[num1] ?? { ...coins[3], string3: "S/M" };
   }
+
+  static formatCoin(coinValue: number): string {
+    // Check if the input is a valid finite number
+    if (
+      typeof coinValue !== "number" ||
+      !isFinite(coinValue) ||
+      isNaN(coinValue)
+    ) {
+      return "-";
+    }
+
+    // Initialize Intl.NumberFormat with specific options:
+    const formatter = new Intl.NumberFormat("en-US", {
+      // Use 'decimal' style for regular number formatting (not currency symbol)
+      style: "decimal",
+
+      // Ensure there are always exactly 2 digits after the decimal point
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+
+      // Ensure thousand separators are used (this is default behavior for 'en-US',
+      // but explicitly stating it is good practice if needed)
+      useGrouping: true,
+    });
+
+    return formatter.format(coinValue);
+  }
 }

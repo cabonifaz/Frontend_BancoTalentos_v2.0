@@ -199,7 +199,10 @@ export const ModalDetallesRQV2 = ({
       const moneda =
         tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      );
     } else {
       setValue(`lstVacantes.${index}.tarifa`, "S/. -");
     }
@@ -333,7 +336,7 @@ export const ModalDetallesRQV2 = ({
             idPerfil: vacante.idPerfil,
             cantidad: String(vacante.cantidad),
             idEstado: 0,
-            tarifa: `${moneda} ${tarifa}`,
+            tarifa: `${moneda} ${Utils.formatCoin(Number(tarifa))}`,
           };
         }
       );
@@ -505,7 +508,10 @@ export const ModalDetallesRQV2 = ({
         tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
         "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      );
     });
   };
 
@@ -1131,7 +1137,6 @@ export const ModalDetallesRQV2 = ({
                                             <div className="flex flex-col gap-1 relative">
                                               <NumberInputFMIBase<UpdateBaseRQSchemaType>
                                                 register={register}
-                                                key={`vacante-${index}-${restoreKey}`}
                                                 control={control}
                                                 name={`lstVacantes.${index}.cantidad`}
                                                 defaultValue={Number(
@@ -1198,8 +1203,12 @@ export const ModalDetallesRQV2 = ({
                                               `lstVacantes.${index}.tarifa`
                                             )}
                                             defaultValue={
-                                              getValues(
-                                                `lstVacantes.${index}.tarifa`
+                                              Utils.formatCoin(
+                                                Number(
+                                                  getValues(
+                                                    `lstVacantes.${index}.tarifa`
+                                                  )
+                                                )
                                               )?.toString() || "-"
                                             }
                                             type="text"

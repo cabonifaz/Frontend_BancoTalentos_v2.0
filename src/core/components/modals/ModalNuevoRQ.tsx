@@ -149,7 +149,10 @@ export const AgregarRQModal = ({
     const moneda =
       tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
 
-    setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+    setValue(
+      `lstVacantes.${index}.tarifa`,
+      `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+    );
     clearErrors(`lstVacantes.${index}.idPerfil`);
   };
 
@@ -831,7 +834,13 @@ export const AgregarRQModal = ({
                                           {...register(
                                             `lstVacantes.${index}.tarifa`
                                           )}
-                                          defaultValue={"S/. -"}
+                                          defaultValue={`${Utils.formatCoin(
+                                            Number(
+                                              getValues(
+                                                `lstVacantes.${index}.tarifa`
+                                              )
+                                            )
+                                          )}`}
                                           type="text"
                                           id="v-tarifa"
                                           className="input-readonly-text"
