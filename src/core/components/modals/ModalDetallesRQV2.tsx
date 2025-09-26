@@ -36,6 +36,8 @@ import { useApi } from "../../hooks/useApi";
 import { FileResponse } from "../../models";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { getCvFile } from "../../services/apiService";
+import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
+import { useModal } from "../../context/ModalContext";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -171,6 +173,8 @@ export const ModalDetallesRQV2 = ({
       (perfil) => !selectedProfiles.includes(perfil.idPerfil)
     );
   };
+
+  const { closeModal, isModalOpen } = useModal();
 
   const handleProfileChange = (index: number, value: string) => {
     const currentValue = getValues(`lstVacantes.${index}`);
@@ -448,7 +452,7 @@ export const ModalDetallesRQV2 = ({
         .map((vacante) => ({
           idRequerimientoVacante: vacante.idRequerimientoVacante,
           idPerfil: vacante.idPerfil,
-          cantidad: Number(vacante.cantidad),
+          cantidad: vacante.cantidad,
           idEstado: vacante.idEstado,
         }));
 
@@ -462,6 +466,8 @@ export const ModalDetallesRQV2 = ({
           duracion: Number(data.duracion),
           lstVacantes: vacantesParaEnviar,
         };
+        console.log("Inf. vac: ", payload.lstVacantes);
+        console.log("Inf. arch: ", data.lstVacantes);
 
         const response = await postData("/fmi/requirement/update", payload);
 
@@ -1302,7 +1308,12 @@ export const ModalDetallesRQV2 = ({
                         <button
                           type="button"
                           className="focus:outline-none text-sm rounded-lg py-1 px-2 mx-1 my-2 btn-blue cursor-pointer"
-                          onClick={() => handleAsignar(RQ?.idRequerimiento)}
+                          onClick={() => {
+                            if (isModalOpen(MODAL_DETALLES_RQ)) {
+                              closeModal(MODAL_DETALLES_RQ);
+                            }
+                            handleAsignar(RQ?.idRequerimiento);
+                          }}
                         >
                           Asignar
                         </button>

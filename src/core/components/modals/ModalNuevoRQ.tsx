@@ -88,6 +88,8 @@ export const AgregarRQModal = ({
       lstVacantes: [],
       lstArchivos: [],
       duracion: 1,
+      idDuracion: 0,
+      idModalidad: 0,
     },
   });
 
