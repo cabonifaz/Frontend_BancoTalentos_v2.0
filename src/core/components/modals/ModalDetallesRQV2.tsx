@@ -25,7 +25,6 @@ import { DropdownForm } from "../forms";
 import { NumberInput } from "../../components/ui/InputNumber";
 import { useParams } from "../../context/ParamsContext";
 import {
-  BASE_URL_FMI,
   DURACION_RQ,
   ESTADO_ATENDIDO,
   MODALIDAD_RQ,
@@ -36,12 +35,20 @@ import { useApi } from "../../hooks/useApi";
 import { FileResponse } from "../../models";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { getCvFile } from "../../services/apiService";
+import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
+import { useModal } from "../../context/ModalContext";
+import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
+import { axiosInstanceFMI } from "../../services/axiosService";
+import { downloadAnyFile } from "../../utilities/file-utils";
+import { FileRqResponse } from "../../models/response/FileRqResponse";
+import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
 
 interface Archivo {
   idRequerimientoArchivo: number;
   name: string;
   size: number;
   file: File;
+  link?: string;
 }
 
 interface Props {
@@ -172,6 +179,8 @@ export const ModalDetallesRQV2 = ({
     );
   };
 
+  const { closeModal, isModalOpen } = useModal();
+
   const handleProfileChange = (index: number, value: string) => {
     const currentValue = getValues(`lstVacantes.${index}`);
     if (
@@ -195,7 +204,10 @@ export const ModalDetallesRQV2 = ({
       const moneda =
         tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      );
     } else {
       setValue(`lstVacantes.${index}.tarifa`, "S/. -");
     }
@@ -329,7 +341,7 @@ export const ModalDetallesRQV2 = ({
             idPerfil: vacante.idPerfil,
             cantidad: String(vacante.cantidad),
             idEstado: 0,
-            tarifa: `${moneda} ${tarifa}`,
+            tarifa: `${moneda} ${Utils.formatCoin(Number(tarifa))}`,
           };
         }
       );
@@ -448,7 +460,7 @@ export const ModalDetallesRQV2 = ({
         .map((vacante) => ({
           idRequerimientoVacante: vacante.idRequerimientoVacante,
           idPerfil: vacante.idPerfil,
-          cantidad: Number(vacante.cantidad),
+          cantidad: vacante.cantidad,
           idEstado: vacante.idEstado,
         }));
 
@@ -501,7 +513,10 @@ export const ModalDetallesRQV2 = ({
         tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
         "S/.";
 
-      setValue(`lstVacantes.${index}.tarifa`, `${moneda} ${tarifa}`);
+      setValue(
+        `lstVacantes.${index}.tarifa`,
+        `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      );
     });
   };
 
@@ -568,10 +583,7 @@ export const ModalDetallesRQV2 = ({
     }
   );
 
-  const [selectedTalent, setSelectedTalent] = useState<number>(-1);
-
   const openFile = (index: number) => {
-    setSelectedTalent(index);
     if (requirement?.requerimiento.lstRqTalento[index].idCvFile) {
       fetch(requirement?.requerimiento.lstRqTalento[index].idCvFile).then(
         (response) => {
@@ -583,10 +595,15 @@ export const ModalDetallesRQV2 = ({
       );
     }
   };
+  const [isLoading, downloadFile] = useDownloadRqFile();
+
+  const handleDownloadRqFile = (rqFile: number) => {
+    downloadFile(rqFile);
+  };
 
   return (
     <>
-      {(postloading || deleteLoading || downloadingFile) && (
+      {(postloading || deleteLoading || downloadingFile || isLoading) && (
         <Loading opacity="opacity-60" />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -1125,18 +1142,58 @@ export const ModalDetallesRQV2 = ({
                                         <td className="table-cell">
                                           <div className="flex">
                                             <div className="flex flex-col gap-1 relative">
-                                              <NumberInput<UpdateBaseRQSchemaType>
-                                                key={`vacante-${index}-${restoreKey}`}
+                                              <NumberInputFMIBase<UpdateBaseRQSchemaType>
+                                                register={register}
                                                 control={control}
-                                                isDisabled={
+                                                name={`lstVacantes.${index}.cantidad`}
+                                                defaultValue={Number(
+                                                  originalCantidades[index] || 1
+                                                )}
+                                                disabled={
                                                   !isEditingVacantesData
                                                 }
-                                                name={`lstVacantes.${index}.cantidad`}
-                                                error={
-                                                  errors.lstVacantes?.[index]
-                                                    ?.cantidad?.message
-                                                }
+                                                onChange={(value) => {
+                                                  const numValue =
+                                                    Number(value) || 0;
+                                                  const currentValue =
+                                                    getValues(
+                                                      `lstVacantes.${index}`
+                                                    );
+                                                  if (
+                                                    currentValue.idRequerimientoVacante >
+                                                      0 &&
+                                                    currentValue.idEstado === 0
+                                                  ) {
+                                                    setValue(
+                                                      `lstVacantes.${index}.idEstado`,
+                                                      2
+                                                    );
+                                                  }
+                                                  setCantidadesVacantes(
+                                                    (prev) => {
+                                                      const newCantidades = [
+                                                        ...prev,
+                                                      ];
+                                                      newCantidades[index] =
+                                                        String(numValue);
+                                                      return newCantidades;
+                                                    }
+                                                  );
+                                                  clearErrors(
+                                                    `lstVacantes.${index}.cantidad`
+                                                  );
+                                                }}
+                                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                               />
+                                              {errors.lstVacantes?.[index]
+                                                ?.cantidad && (
+                                                <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
+                                                  {
+                                                    errors.lstVacantes[index]
+                                                      ?.cantidad?.message
+                                                  }
+                                                </p>
+                                              )}
                                             </div>
                                             <div className="ms-4 flex items-center">
                                               {field.idEstado === 1 ? (
@@ -1153,8 +1210,12 @@ export const ModalDetallesRQV2 = ({
                                               `lstVacantes.${index}.tarifa`
                                             )}
                                             defaultValue={
-                                              getValues(
-                                                `lstVacantes.${index}.tarifa`
+                                              Utils.formatCoin(
+                                                Number(
+                                                  getValues(
+                                                    `lstVacantes.${index}.tarifa`
+                                                  )
+                                                )
                                               )?.toString() || "-"
                                             }
                                             type="text"
@@ -1250,6 +1311,21 @@ export const ModalDetallesRQV2 = ({
                             key={index}
                             className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
                           >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleDownloadRqFile(
+                                  archivo.idRequerimientoArchivo
+                                );
+                              }}
+                              className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                            >
+                              <img
+                                src="/assets/ic_show_pass.svg"
+                                alt="icon preview"
+                                className="w-5 h-5"
+                              />
+                            </button>
                             <span className="text-sm text-gray-700 truncate flex-1 mr-2">
                               {archivo.name}
                             </span>
@@ -1302,7 +1378,12 @@ export const ModalDetallesRQV2 = ({
                         <button
                           type="button"
                           className="focus:outline-none text-sm rounded-lg py-1 px-2 mx-1 my-2 btn-blue cursor-pointer"
-                          onClick={() => handleAsignar(RQ?.idRequerimiento)}
+                          onClick={() => {
+                            if (isModalOpen(MODAL_DETALLES_RQ)) {
+                              closeModal(MODAL_DETALLES_RQ);
+                            }
+                            handleAsignar(RQ?.idRequerimiento);
+                          }}
                         >
                           Asignar
                         </button>
