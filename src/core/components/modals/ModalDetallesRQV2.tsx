@@ -42,6 +42,7 @@ import { axiosInstanceFMI } from "../../services/axiosService";
 import { downloadAnyFile } from "../../utilities/file-utils";
 import { FileRqResponse } from "../../models/response/FileRqResponse";
 import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
+import { Navigate } from "react-router-dom";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -601,6 +602,13 @@ export const ModalDetallesRQV2 = ({
     downloadFile(rqFile);
   };
 
+  /** Validate rol */
+  const isRecruiter = (): boolean => {
+    const token = localStorage.getItem("token");
+    const rol = Utils.decodeJwt(token ?? "").roles[0];
+    return rol === "RECLUTADOR";
+  };
+
   return (
     <>
       {(postloading || deleteLoading || downloadingFile || isLoading) && (
@@ -1002,10 +1010,29 @@ export const ModalDetallesRQV2 = ({
                                   <th className="table-header-cell">
                                     Cantidad
                                   </th>
-                                  <th className="table-header-cell">Tarifa</th>
-                                  <th className="table-header-cell">
-                                    Tipo Tarifa
+
+                                  <th
+                                    className="table-header-cell"
+                                    style={{
+                                      display: isRecruiter()
+                                        ? "none"
+                                        : "table-header-cell",
+                                    }}
+                                  >
+                                    Tarifa
                                   </th>
+
+                                  <th
+                                    className="table-header-cell"
+                                    style={{
+                                      display: isRecruiter()
+                                        ? "none"
+                                        : "table-header-cell",
+                                    }}
+                                  >
+                                    Tipo tarifa
+                                  </th>
+
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -1204,7 +1231,15 @@ export const ModalDetallesRQV2 = ({
                                             </div>
                                           </div>
                                         </td>
-                                        <td className="table-cell">
+
+                                        <td
+                                          className="table-cell"
+                                          style={{
+                                            display: isRecruiter()
+                                              ? "none"
+                                              : "table-cell",
+                                          }}
+                                        >
                                           <input
                                             {...register(
                                               `lstVacantes.${index}.tarifa`
@@ -1224,9 +1259,18 @@ export const ModalDetallesRQV2 = ({
                                             readOnly
                                           />
                                         </td>
-                                        <td className="table-cell">
+
+                                        <td
+                                          className="table-cell"
+                                          style={{
+                                            display: isRecruiter()
+                                              ? "none"
+                                              : "table-cell",
+                                          }}
+                                        >
                                           {tipoTarifa}
                                         </td>
+
                                         <td className="table-cell">
                                           {isEditingVacantesData && (
                                             <button

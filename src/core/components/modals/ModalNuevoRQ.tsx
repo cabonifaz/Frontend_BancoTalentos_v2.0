@@ -352,6 +352,13 @@ export const AgregarRQModal = ({
     errors.idModalidad?.message !== undefined ||
     errors.idDuracion?.message !== undefined;
 
+  /** Validate rol */
+  const isRecruiter = (): boolean => {
+    const token = localStorage.getItem("token");
+    const rol = Utils.decodeJwt(token ?? "").roles[0];
+    return rol === "RECLUTADOR";
+  };
+
   return (
     <>
       {(postloading || loadingTarifario) && <Loading opacity="opacity-60" />}
@@ -724,10 +731,26 @@ export const AgregarRQModal = ({
                                 <th scope="col" className="table-header-cell">
                                   Cantidad
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                  style={{
+                                    display: isRecruiter()
+                                      ? "none"
+                                      : "table-header-cell",
+                                  }}
+                                >
                                   Tarifa
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                  style={{
+                                    display: isRecruiter()
+                                      ? "none"
+                                      : "table-header-cell",
+                                  }}
+                                >
                                   Tipo Tarifa
                                 </th>
                                 <th
@@ -829,7 +852,14 @@ export const AgregarRQModal = ({
                                           </div>
                                         </div>
                                       </td>
-                                      <td className="table-cell">
+                                      <td
+                                        className="table-cell"
+                                        style={{
+                                          display: isRecruiter()
+                                            ? "none"
+                                            : "table-header-cell",
+                                        }}
+                                      >
                                         <input
                                           {...register(
                                             `lstVacantes.${index}.tarifa`
@@ -847,7 +877,14 @@ export const AgregarRQModal = ({
                                           readOnly
                                         />
                                       </td>
-                                      <td className="table-cell">
+                                      <td
+                                        className="table-cell"
+                                        style={{
+                                          display: isRecruiter()
+                                            ? "none"
+                                            : "table-cell",
+                                        }}
+                                      >
                                         <p>{tipoTarifa}</p>
                                       </td>
                                       <td className="table-cell">
