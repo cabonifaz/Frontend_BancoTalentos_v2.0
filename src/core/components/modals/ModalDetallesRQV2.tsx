@@ -38,12 +38,17 @@ import { getCvFile } from "../../services/apiService";
 import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
 import { useModal } from "../../context/ModalContext";
 import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
+import { axiosInstanceFMI } from "../../services/axiosService";
+import { downloadAnyFile } from "../../utilities/file-utils";
+import { FileRqResponse } from "../../models/response/FileRqResponse";
+import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
 
 interface Archivo {
   idRequerimientoArchivo: number;
   name: string;
   size: number;
   file: File;
+  link?: string;
 }
 
 interface Props {
@@ -578,10 +583,7 @@ export const ModalDetallesRQV2 = ({
     }
   );
 
-  const [selectedTalent, setSelectedTalent] = useState<number>(-1);
-
   const openFile = (index: number) => {
-    setSelectedTalent(index);
     if (requirement?.requerimiento.lstRqTalento[index].idCvFile) {
       fetch(requirement?.requerimiento.lstRqTalento[index].idCvFile).then(
         (response) => {
@@ -593,10 +595,15 @@ export const ModalDetallesRQV2 = ({
       );
     }
   };
+  const [isLoading, downloadFile] = useDownloadRqFile();
+
+  const handleDownloadRqFile = (rqFile: number) => {
+    downloadFile(rqFile);
+  };
 
   return (
     <>
-      {(postloading || deleteLoading || downloadingFile) && (
+      {(postloading || deleteLoading || downloadingFile || isLoading) && (
         <Loading opacity="opacity-60" />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -1304,6 +1311,21 @@ export const ModalDetallesRQV2 = ({
                             key={index}
                             className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
                           >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleDownloadRqFile(
+                                  archivo.idRequerimientoArchivo
+                                );
+                              }}
+                              className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                            >
+                              <img
+                                src="/assets/ic_show_pass.svg"
+                                alt="icon preview"
+                                className="w-5 h-5"
+                              />
+                            </button>
                             <span className="text-sm text-gray-700 truncate flex-1 mr-2">
                               {archivo.name}
                             </span>
