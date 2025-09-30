@@ -46,13 +46,21 @@ export const newRQSchema = z
         required_error: "Elija una duración",
         invalid_type_error: "Elija una duración",
       })
-      .min(1, "elige una duración"),
+      .min(1, "Elige una duración"),
     idModalidad: z
       .number({
         required_error: "Elija una modalidad",
         invalid_type_error: "Elija una modalidad",
       })
       .min(1, "Elija una modalidad"),
+    idModalidadFact: z
+      .array(
+        z.coerce.number({
+          required_error: "Elija una modalidad de pago",
+          invalid_type_error: "Elija una modalidad de pago",
+        })
+      )
+      .optional(),
     lstVacantes: z
       .array(vacanteSchema)
       .min(1, "Debe agregar 1 vacante como mínimo"),
