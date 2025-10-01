@@ -16,7 +16,11 @@ import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
 import { ReqContacto } from "../../models/interfaces/ReqContacto";
 import { ModalRQContact } from "./ModalRQContact";
 import { DropdownForm } from "../forms";
-import { DURACION_RQ, MODALIDAD_RQ } from "../../utilities/constants";
+import {
+  DURACION_RQ,
+  MODALIDAD_RQ,
+  TIPO_MODALIDAD,
+} from "../../utilities/constants";
 import { useParams } from "../../context/ParamsContext";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import { format } from "date-fns";
@@ -54,7 +58,9 @@ export const AgregarRQModal = ({
   const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
-  const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+  const { paramsByMaestro } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}`
+  );
 
   const {
     tarifario,
@@ -90,6 +96,7 @@ export const AgregarRQModal = ({
       duracion: 1,
       idDuracion: 0,
       idModalidad: 0,
+      idModalidadFact: [],
     },
   });
 
@@ -242,6 +249,9 @@ export const AgregarRQModal = ({
         }) || []
       );
 
+      /** Modalidad fact */
+      const modalidadFact = data.idModalidadFact?.join(",");
+
       // 3. Crear el objeto final para enviar
       const payload = {
         ...data,
@@ -256,6 +266,7 @@ export const AgregarRQModal = ({
         })),
         lstContactos: selectedContacts.join(","),
         lstArchivos,
+        idModalidadFact: modalidadFact === "" ? undefined : modalidadFact,
       };
 
       // 4. Enviar los datos al servidor
@@ -350,7 +361,18 @@ export const AgregarRQModal = ({
   const hasGestionErrors =
     errors.duracion?.message !== undefined ||
     errors.idModalidad?.message !== undefined ||
+    errors.idModalidadFact?.message !== undefined ||
     errors.idDuracion?.message !== undefined;
+
+  /** Validate rol */
+  const isRecruiter = (): boolean => {
+    const token = localStorage.getItem("token");
+    const rol = Utils.decodeJwt(token ?? "").roles[0];
+    return rol === "RECLUTADOR";
+  };
+
+  /**Modalidad facturación */
+  const modalidadesFact = paramsByMaestro[3] || [];
 
   return (
     <>
@@ -724,10 +746,26 @@ export const AgregarRQModal = ({
                                 <th scope="col" className="table-header-cell">
                                   Cantidad
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                  style={{
+                                    display: isRecruiter()
+                                      ? "none"
+                                      : "table-header-cell",
+                                  }}
+                                >
                                   Tarifa
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                  style={{
+                                    display: isRecruiter()
+                                      ? "none"
+                                      : "table-header-cell",
+                                  }}
+                                >
                                   Tipo Tarifa
                                 </th>
                                 <th
@@ -829,7 +867,14 @@ export const AgregarRQModal = ({
                                           </div>
                                         </div>
                                       </td>
-                                      <td className="table-cell">
+                                      <td
+                                        className="table-cell"
+                                        style={{
+                                          display: isRecruiter()
+                                            ? "none"
+                                            : "table-header-cell",
+                                        }}
+                                      >
                                         <input
                                           {...register(
                                             `lstVacantes.${index}.tarifa`
@@ -847,7 +892,14 @@ export const AgregarRQModal = ({
                                           readOnly
                                         />
                                       </td>
-                                      <td className="table-cell">
+                                      <td
+                                        className="table-cell"
+                                        style={{
+                                          display: isRecruiter()
+                                            ? "none"
+                                            : "table-cell",
+                                        }}
+                                      >
                                         <p>{tipoTarifa}</p>
                                       </td>
                                       <td className="table-cell">
@@ -986,6 +1038,32 @@ export const AgregarRQModal = ({
                           label: modalidad.string1,
                         }))}
                       />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="w-1/3 text-sm font-medium text-gray-700">
+                        Modalidad de facturación:
+                      </label>
+                      <div className="flex flex-col gap-2">
+                        {modalidadesFact.map((modalidad) => (
+                          <label
+                            key={modalidad.num1}
+                            className="inline-flex items-center space-x-2"
+                          >
+                            <input
+                              type="checkbox"
+                              value={modalidad.num1}
+                              {...register("idModalidadFact")}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                            />
+                            <span>{modalidad.string1}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {errors.idModalidadFact && (
+                        <span className="text-red-500 text-xs">
+                          {errors.idModalidadFact.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ),

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   EducationsSection,
   ExperiencesSection,
@@ -37,12 +37,15 @@ import {
   ARCHIVO_PDF,
   DOCUMENTO_CV,
   DOCUMENTO_FOTO_PERFIL,
-  MODALIDAD_PLANILLA,
-  MODALIDAD_RXH,
 } from "../../core/utilities/constants";
-import { NumberInput } from "../../core/components/ui/InputNumber";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
+import { usePdfSmartExtractor } from "../../core/hooks/usePdfToText";
+import { useFetchCVData } from "../../core/hooks/useFetchCVData";
+import { useAutoCompletTalForm } from "../../core/hooks/useAutoCompletTalFormt";
+import { useModal } from "../../core/context/ModalContext";
+import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
+import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -106,6 +109,7 @@ export const AddTalent = () => {
     watch,
     formState: { errors },
     reset,
+    setValue,
   } = methods;
 
   const watchCountryPhone = watch("codigoPais");
@@ -234,10 +238,73 @@ export const AddTalent = () => {
     }
   };
 
+  const { isModalOpen, openModal, closeModal } = useModal();
+
+  /** Analize CV with IA */
+  const { extractSmartText } = usePdfSmartExtractor();
+  const { fetchCVDetails } = useFetchCVData();
+  const { completeForm, idCiudad } = useAutoCompletTalForm();
+  const [canClose, setCanClose] = useState(false);
+  const [modalText, setModalText] = useState("");
+
+  useEffect(() => {
+    if (idCiudad) {
+      setValue("idCiudad", idCiudad);
+    }
+  }, [idCiudad, setValue]);
+
+  const handleAnalize = async () => {
+    if (cvFile) {
+      setCanClose(false);
+      setModalText("");
+      openModal(MODAL_AI_WORKING);
+      const text = await extractSmartText(cvFile);
+
+      if (!text) {
+        setCanClose(true);
+        setModalText("");
+        return;
+      }
+
+      const cvDetails = await fetchCVDetails(text);
+
+      // Autocompletar el formulario con los datos extraídos
+      if (cvDetails && cvDetails.result && cvDetails.result.idMensaje === 2) {
+        completeForm(
+          cvDetails,
+          methods.setValue,
+          paises,
+          ciudades,
+          habilidadesTecnicas
+        );
+        setModalText(
+          "CV analizado con éxito, por favor verifica los datos del formulario antes de enviar"
+        );
+      }
+    } else {
+      enqueueSnackbar({
+        message: "Por favor seleccione un archivo",
+        variant: "warning",
+      });
+    }
+    setCanClose(true);
+  };
+
   return (
     <FormProvider {...methods}>
       <Dashboard>
         {loadingAddTalent && <Loading opacity="opacity-50" />}
+        {isModalOpen(MODAL_AI_WORKING) && (
+          <ModalWorkingAI
+            lottieUrl="https://lottie.host/64faf884-b597-4df2-8e38-95c680989246/WLgLrfCVmO.json"
+            description={modalText !== "" ? modalText : undefined}
+            canClose={canClose}
+            onClose={() => {
+              closeModal(MODAL_AI_WORKING);
+              setCanClose(false);
+            }}
+          />
+        )}
         {/* main container */}
         <div className="md:px-8 md:pt-8 flex justify-center max-h-screen">
           {/* form container */}
@@ -251,6 +318,19 @@ export const AddTalent = () => {
                   <h3 className="text-sm">Ingresa datos del talento.</h3>
                 </div>
                 <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      reset(initialFormValues);
+                      setCvFile(null);
+                      setCvFileErrors("");
+                      setFotoFile(null);
+                      setFotoFileErrors("");
+                    }}
+                    className="rounded-lg text-white text-base bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                  >
+                    Limpiar
+                  </button>
                   <button
                     type="button"
                     onClick={onGoBackClick}
@@ -269,9 +349,21 @@ export const AddTalent = () => {
               <div className="px-8 overflow-y-auto w-full md:w-[40rem] md:h-[70vh]">
                 {/* files */}
                 <div>
-                  <h3 className="text-[#3f3f46] text-lg">
-                    Curriculum Vitae<span className="text-red-500">*</span>
-                  </h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-[#3f3f46] text-lg">
+                      Curriculum Vitae<span className="text-red-500">*</span>
+                    </h3>
+                    {cvFile && (
+                      <button
+                        className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                        type="button"
+                        onClick={handleAnalize}
+                      >
+                        Completar con IA
+                      </button>
+                    )}
+                  </div>
+
                   <FileInput<AddTalentType>
                     register={register}
                     errors={errors}
@@ -776,3 +868,6 @@ export const AddTalent = () => {
     </FormProvider>
   );
 };
+function usePdfToText(): { isLoading: any; extractSmartText: any } {
+  throw new Error("Function not implemented.");
+}

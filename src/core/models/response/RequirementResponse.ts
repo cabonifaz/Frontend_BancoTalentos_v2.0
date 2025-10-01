@@ -23,5 +23,6 @@ export interface RequirementResponse {
     duracion: number;
     idModalidad: number;
     idDuracion: number;
+    modalidadFact: string;
   };
 }
