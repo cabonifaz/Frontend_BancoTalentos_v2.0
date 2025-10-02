@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
 import { funnyDescriptions } from "../../utilities/ia.utils";
-import { findSourceMap } from "module";
 
 interface Props {
   title?: string;
   description?: string;
-  lottieUrl: string;
+  lottieUrl?: string;
   canClose?: boolean;
   onClose?: () => void;
+  canCloseMessage?: string;
 }
 
 export const ModalWorkingAI = ({
   title = "Analizando con IA",
   description,
-  lottieUrl,
+  lottieUrl = "https://lottie.host/64faf884-b597-4df2-8e38-95c680989246/WLgLrfCVmO.json",
   canClose = false,
   onClose,
+  canCloseMessage,
 }: Props) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,10 +71,13 @@ export const ModalWorkingAI = ({
         </div>
 
         {/* Descripción */}
-        {(description || randomDescription) && (
+        {(description || randomDescription) && !canCloseMessage && (
           <p className="text-gray-600 mt-4 font-medium">
             {description || randomDescription}
           </p>
+        )}
+        {canCloseMessage && (
+          <p className="text-gray-600 my-4 font-medium">{canCloseMessage}</p>
         )}
 
         {/* Botón Aceptar (solo si canClose) */}

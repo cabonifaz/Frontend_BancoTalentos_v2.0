@@ -1,14 +1,18 @@
-import { useState } from "react";
 import { axiosInstance } from "../services/axiosService";
 import { IACVResponse } from "../models/response/AICVResponse";
-import { enqueueSnackbar } from "notistack";
 
+/**
+ * Custom hook for fetching CV data from the AI analysis service.
+ * @returns {{ fetchCVDetails: (cvText: string) => Promise<IACVResponse> }} An object containing the fetchCVDetails function.
+ */
 export const useFetchCVData = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  /**
+   * Fetches CV details by sending the extracted CV text to the AI analysis endpoint.
+   * @param {string} cvText The extracted text content of the CV.
+   * @returns {Promise<IACVResponse>} A promise that resolves with the AI CV response data.
+   * @throws {Error} Throws an error if the processing fails or if the extracted information cannot be processed.
+   */
   const fetchCVDetails = async (cvText: string) => {
-    setIsLoading(true);
-
     try {
       const payload = { extractedText: cvText };
       const respose = await axiosInstance.post<IACVResponse>(
@@ -18,21 +22,13 @@ export const useFetchCVData = () => {
       const { result } = respose.data;
 
       if (result && result.idMensaje == 2) return respose.data;
-      else {
-        enqueueSnackbar({
-          message: "No se ha podido extraer la información del CV",
-          variant: "warning",
-        });
-      }
+      throw new Error();
     } catch (error) {
-      enqueueSnackbar({
-        message: "Ha ocurrido un error analizando el CV",
-        variant: "warning",
-      });
-    } finally {
-      setIsLoading(false);
+      throw new Error(
+        "Lo sentimos, la información extraida no se pudo procesar, intente de nuevo"
+      );
     }
   };
 
-  return { isLoading, fetchCVDetails };
+  return { fetchCVDetails };
 };

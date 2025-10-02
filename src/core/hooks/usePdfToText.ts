@@ -1,23 +1,36 @@
-import { useState } from "react";
 import { pdfjsLib } from "../utilities/pdfjs-worker";
 import Tesseract from "tesseract.js";
-import { enqueueSnackbar } from "notistack";
 
-type ExtractLogger = (info: {
-  page: number;
-  totalPages: number;
-  status: string;
-  progress?: number;
-}) => void;
+type ExtractLogger = (
+  info: {
+    page: number;
+    totalPages: number;
+    status: string;
+    progress?: number;
+  }
+) => void;
 
+/**
+ * `usePdfSmartExtractor` es un hook personalizado que proporciona una función para extraer texto de un archivo PDF de manera inteligente.
+ * Utiliza `pdfjs-dist` para la extracción de texto nativo y `Tesseract.js` para aplicar OCR en caso de que el PDF contenga imágenes o texto no seleccionable.
+ * Permite monitorear el progreso de la extracción a través de una función de `logger` opcional.
+ *
+ * @returns {{extractSmartText: (file: File, logger?: ExtractLogger) => Promise<string>}} Un objeto que contiene la función `extractSmartText`.
+ */
 export const usePdfSmartExtractor = () => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  /**
+   * Extrae texto de un archivo PDF, combinando la extracción de texto nativo con OCR si es necesario.
+   * El OCR se aplica solo si la página tiene imágenes o si el texto nativo es muy escaso.
+   *
+   * @param {File} file - El archivo PDF a procesar.
+   * @param {ExtractLogger} [logger] - Función de callback opcional para reportar el progreso de la extracción.
+   * @returns {Promise<string>} Una promesa que resuelve con el texto completo extraído del PDF.
+   * @throws {Error} Si no se puede extraer información del CV (ej. archivo corrupto, error de procesamiento).
+   */
   const extractSmartText = async (
     file: File,
     logger?: ExtractLogger
-  ): Promise<string | null> => {
-    setIsLoading(true);
+  ): Promise<string> => {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -114,16 +127,9 @@ export const usePdfSmartExtractor = () => {
         .trim();
       return finalText;
     } catch (error) {
-      enqueueSnackbar({
-        message: "Error al procesar el PDF",
-        variant: "warning",
-      });
-      console.error("Extractor error:", error);
-      return null;
-    } finally {
-      setIsLoading(false);
+      throw new Error("No se pudo extraer información del CV");
     }
   };
 
-  return { isLoading, extractSmartText };
+  return { extractSmartText };
 };
