@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Param } from "../../models/interfaces/Param";
-import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import {
+  Controller,
+  SubmitHandler,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePostHook } from "../../hooks/usePostHook";
 import { Tabs } from "../ui/Tabs";
@@ -28,6 +33,7 @@ import {
   DURACION_RQ,
   ESTADO_ATENDIDO,
   MODALIDAD_RQ,
+  TIPO_MODALIDAD,
 } from "../../utilities/constants";
 import { enqueueSnackbar } from "notistack";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
@@ -38,9 +44,6 @@ import { getCvFile } from "../../services/apiService";
 import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
 import { useModal } from "../../context/ModalContext";
 import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
-import { axiosInstanceFMI } from "../../services/axiosService";
-import { downloadAnyFile } from "../../utilities/file-utils";
-import { FileRqResponse } from "../../models/response/FileRqResponse";
 import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
 
 interface Archivo {
@@ -94,7 +97,9 @@ export const ModalDetallesRQV2 = ({
     number | null
   >(null);
 
-  const { paramsByMaestro } = useParams(`${DURACION_RQ}, ${MODALIDAD_RQ}`);
+  const { paramsByMaestro } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}`
+  );
   const {
     tarifario,
     fetchTarifario,
@@ -103,6 +108,7 @@ export const ModalDetallesRQV2 = ({
 
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
+  const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
 
   const {
     register,
@@ -124,6 +130,7 @@ export const ModalDetallesRQV2 = ({
       lstVacantes: [],
       lstArchivos: [],
       duracion: 1,
+      idModalidadFact: [],
     },
   });
 
@@ -473,6 +480,7 @@ export const ModalDetallesRQV2 = ({
           estado: data.idEstadoRQ,
           duracion: Number(data.duracion),
           lstVacantes: vacantesParaEnviar,
+          idModalidadFact: data.idModalidadFact?.join(","),
         };
 
         const response = await postData("/fmi/requirement/update", payload);
@@ -567,6 +575,19 @@ export const ModalDetallesRQV2 = ({
     setContactToEdit(contact);
     setIsModalRQContactOPen(true);
   };
+
+  /** Deserealizar las modalidades de facturacion */
+  useEffect(() => {
+    const rqResponse = requirement?.requerimiento;
+    if (rqResponse?.modalidadFact) {
+      const modalidadesSeleccionadas = rqResponse?.modalidadFact
+        .split(",")
+        .map((m: string) => Number(m.trim()))
+        .filter((m: any) => !isNaN(m));
+      setValue("idModalidadFact", modalidadesSeleccionadas);
+    }
+  }, [requirement, setValue]);
+
   /**
    * Fetch CV file for talent
    */
@@ -599,6 +620,13 @@ export const ModalDetallesRQV2 = ({
 
   const handleDownloadRqFile = (rqFile: number) => {
     downloadFile(rqFile);
+  };
+
+  /** Validate rol */
+  const isRecruiter = (): boolean => {
+    const token = localStorage.getItem("token");
+    const rol = Utils.decodeJwt(token ?? "").roles[0];
+    return rol === "RECLUTADOR";
   };
 
   return (
@@ -1002,10 +1030,29 @@ export const ModalDetallesRQV2 = ({
                                   <th className="table-header-cell">
                                     Cantidad
                                   </th>
-                                  <th className="table-header-cell">Tarifa</th>
-                                  <th className="table-header-cell">
-                                    Tipo Tarifa
+
+                                  <th
+                                    className="table-header-cell"
+                                    style={{
+                                      display: isRecruiter()
+                                        ? "none"
+                                        : "table-header-cell",
+                                    }}
+                                  >
+                                    Tarifa
                                   </th>
+
+                                  <th
+                                    className="table-header-cell"
+                                    style={{
+                                      display: isRecruiter()
+                                        ? "none"
+                                        : "table-header-cell",
+                                    }}
+                                  >
+                                    Tipo tarifa
+                                  </th>
+
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -1204,7 +1251,15 @@ export const ModalDetallesRQV2 = ({
                                             </div>
                                           </div>
                                         </td>
-                                        <td className="table-cell">
+
+                                        <td
+                                          className="table-cell"
+                                          style={{
+                                            display: isRecruiter()
+                                              ? "none"
+                                              : "table-cell",
+                                          }}
+                                        >
                                           <input
                                             {...register(
                                               `lstVacantes.${index}.tarifa`
@@ -1224,9 +1279,18 @@ export const ModalDetallesRQV2 = ({
                                             readOnly
                                           />
                                         </td>
-                                        <td className="table-cell">
+
+                                        <td
+                                          className="table-cell"
+                                          style={{
+                                            display: isRecruiter()
+                                              ? "none"
+                                              : "table-cell",
+                                          }}
+                                        >
                                           {tipoTarifa}
                                         </td>
+
                                         <td className="table-cell">
                                           {isEditingVacantesData && (
                                             <button
@@ -1567,6 +1631,60 @@ export const ModalDetallesRQV2 = ({
                             label: modalidad.string1,
                           }))}
                         />
+                      </div>
+                      <div className="flex items-center">
+                        <label className="w-1/3 text-sm font-medium text-gray-700">
+                          Modalidad de facturación:
+                        </label>
+                        <Controller
+                          name="idModalidadFact"
+                          control={control}
+                          render={({ field }) => (
+                            <div className="mt-4 flex flex-col gap-2">
+                              {modalidadesFact.map((modalidad) => (
+                                <label
+                                  key={modalidad.num1}
+                                  className="inline-flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    value={modalidad.num1}
+                                    disabled={!isEditingGestionData}
+                                    checked={
+                                      field.value?.includes(modalidad.num1) ||
+                                      false
+                                    }
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      const value = modalidad.num1;
+
+                                      if (checked) {
+                                        field.onChange([
+                                          ...(field.value || []),
+                                          value,
+                                        ]);
+                                      } else {
+                                        field.onChange(
+                                          field.value?.filter(
+                                            (v: number) => v !== value
+                                          )
+                                        );
+                                      }
+                                    }}
+                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                  />
+                                  <span>{modalidad.string1}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        />
+
+                        {errors.idModalidadFact && (
+                          <span className="text-red-500 text-xs">
+                            {errors.idModalidadFact.message}
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex-1"></div>
