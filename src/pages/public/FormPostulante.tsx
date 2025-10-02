@@ -36,6 +36,7 @@ import {
   DOCUMENTO_CV,
   ARCHIVO_IMAGEN,
   DOCUMENTO_FOTO_PERFIL,
+  FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
@@ -51,7 +52,7 @@ import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "2, 12, 13, 15, 16, 19, 20, 31"
+    "2, 12, 13, 15, 16, 19, 20, 31, 40"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -67,7 +68,7 @@ export const FormPostulante = () => {
   const habilidadesTecnicas = paramsByMaestro[19] || [];
   const coins = paramsByMaestro[2] || [];
   const disponibilidades = paramsByMaestro[31] || [];
-  // const habilidadesBlandas = paramsByMaestro[20] || [];
+  const frasesIA = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
     BaseResponseFMI,
@@ -343,6 +344,7 @@ export const FormPostulante = () => {
       {isModalOpen(MODAL_AI_WORKING) && (
         <ModalWorkingAI
           canClose={canClose}
+          randomPhrases={frasesIA}
           onClose={() => closeModal(MODAL_AI_WORKING)}
           canCloseMessage={canCloseMessage}
         />

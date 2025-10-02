@@ -37,6 +37,7 @@ import {
   ARCHIVO_PDF,
   DOCUMENTO_CV,
   DOCUMENTO_FOTO_PERFIL,
+  FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
@@ -50,7 +51,7 @@ import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 export const AddTalent = () => {
   const navigate = useNavigate();
   const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32,31"
+    "12,13,2,19,20,15,16,32,31,40"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -66,8 +67,8 @@ export const AddTalent = () => {
   const habilidadesBlandas = paramsByMaestro[20] || [];
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
-  const modalidadFacturacion = paramsByMaestro[32] || [];
   const disponibilidades = paramsByMaestro[31] || [];
+  const frasesIa = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
     BaseResponse,
@@ -291,6 +292,7 @@ export const AddTalent = () => {
         {loadingAddTalent && <Loading opacity="opacity-50" />}
         {isModalOpen(MODAL_AI_WORKING) && (
           <ModalWorkingAI
+            randomPhrases={frasesIa}
             canCloseMessage={canCloseMessage}
             canClose={canClose}
             onClose={() => {
@@ -862,6 +864,3 @@ export const AddTalent = () => {
     </FormProvider>
   );
 };
-function usePdfToText(): { isLoading: any; extractSmartText: any } {
-  throw new Error("Function not implemented.");
-}

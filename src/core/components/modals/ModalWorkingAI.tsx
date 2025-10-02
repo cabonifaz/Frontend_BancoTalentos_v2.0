@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
-import { funnyDescriptions } from "../../utilities/ia.utils";
+import { Param } from "../../models";
 
 interface Props {
   title?: string;
-  description?: string;
   lottieUrl?: string;
   canClose?: boolean;
   onClose?: () => void;
   canCloseMessage?: string;
+  randomPhrases: Param[];
 }
 
 export const ModalWorkingAI = ({
   title = "Analizando con IA",
-  description,
   lottieUrl = "https://lottie.host/64faf884-b597-4df2-8e38-95c680989246/WLgLrfCVmO.json",
   canClose = false,
   onClose,
   canCloseMessage,
+  randomPhrases: frasesIA,
 }: Props) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,18 +40,18 @@ export const ModalWorkingAI = ({
   }, [lottieUrl]);
 
   useEffect(() => {
-    if (!description) {
-      const firstIndex = Math.floor(Math.random() * funnyDescriptions.length);
+    if (frasesIA?.length > 0 && !canCloseMessage) {
+      const firstIndex = Math.floor(Math.random() * frasesIA.length);
+      setRandomDescription(frasesIA[firstIndex].string1);
+
       const interval = setInterval(() => {
-        const randomIndex = Math.floor(
-          Math.random() * funnyDescriptions.length
-        );
-        setRandomDescription(funnyDescriptions[randomIndex]);
+        const randomIndex = Math.floor(Math.random() * frasesIA.length);
+        setRandomDescription(frasesIA[randomIndex].string1);
       }, 3500);
-      setRandomDescription(funnyDescriptions[firstIndex]);
+
       return () => clearInterval(interval);
     }
-  }, [description]);
+  }, [frasesIA]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -70,14 +70,16 @@ export const ModalWorkingAI = ({
           )}
         </div>
 
-        {/* Descripción */}
-        {(description || randomDescription) && !canCloseMessage && (
-          <p className="text-gray-600 mt-4 font-medium">
-            {description || randomDescription}
-          </p>
-        )}
-        {canCloseMessage && (
-          <p className="text-gray-600 my-4 font-medium">{canCloseMessage}</p>
+        {/* Mensaje dinámico */}
+        {canCloseMessage ? (
+          <div className="my-4">
+            <p className="text-gray-800 font-semibold">{canCloseMessage}</p>
+            <p className="text-gray-500 text-sm mt-2 italic">
+              {randomDescription}
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-600 my-4 font-medium">{randomDescription}</p>
         )}
 
         {/* Botón Aceptar (solo si canClose) */}
