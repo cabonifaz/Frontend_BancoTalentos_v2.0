@@ -32,6 +32,7 @@ import { useParams } from "../../context/ParamsContext";
 import {
   DURACION_RQ,
   ESTADO_ATENDIDO,
+  HABILIDADES_TECNICAS,
   MODALIDAD_RQ,
   TIPO_MODALIDAD,
 } from "../../utilities/constants";
@@ -41,10 +42,14 @@ import { useApi } from "../../hooks/useApi";
 import { FileResponse } from "../../models";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { getCvFile } from "../../services/apiService";
-import { MODAL_DETALLES_RQ } from "../../utilities/modalsIds";
+import {
+  MODAL_DETAILS_VAC_SKILLS,
+  MODAL_DETALLES_RQ,
+} from "../../utilities/modalsIds";
 import { useModal } from "../../context/ModalContext";
 import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
 import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
+import { ModalDetailsVacSkills } from "./ModalDetailVacSkills";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -97,8 +102,8 @@ export const ModalDetallesRQV2 = ({
     number | null
   >(null);
 
-  const { paramsByMaestro } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}`
+  const { paramsByMaestro, refetchParams } = useParams(
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}`
   );
   const {
     tarifario,
@@ -109,6 +114,7 @@ export const ModalDetallesRQV2 = ({
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const techSkillsParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
 
   const {
     register,
@@ -186,7 +192,7 @@ export const ModalDetallesRQV2 = ({
     );
   };
 
-  const { closeModal, isModalOpen } = useModal();
+  const { closeModal, isModalOpen, openModal } = useModal();
 
   const handleProfileChange = (index: number, value: string) => {
     const currentValue = getValues(`lstVacantes.${index}`);
@@ -629,10 +635,45 @@ export const ModalDetallesRQV2 = ({
     return rol === "RECLUTADOR";
   };
 
+  /** Get the initial values  Tech skills for each profile */
+  const [idVac, setIdVac] = useState<number | undefined>();
+  const availableTechSkills = techSkillsParams.map((skill) => ({
+    id: skill.num1,
+    label: skill.string1,
+  }));
+
+  /**Modal Skills close */
+  const handleCloseModalSkills = () => {
+    closeModal(MODAL_DETAILS_VAC_SKILLS);
+    setIdVac(undefined);
+  };
+
+  const handleOpenModal = (idVac: number) => {
+    if (!idVac || idVac === 0) {
+      enqueueSnackbar({
+        message: "Selecciona una vacante para agregar habilidades técnicas.",
+        variant: "warning",
+      });
+      return;
+    }
+    setIdVac(idVac);
+    openModal(MODAL_DETAILS_VAC_SKILLS);
+  };
+
   return (
     <>
       {(postloading || deleteLoading || downloadingFile || isLoading) && (
         <Loading opacity="opacity-60" />
+      )}
+      {isModalOpen(MODAL_DETAILS_VAC_SKILLS) && (
+        <ModalDetailsVacSkills
+          onClose={handleCloseModalSkills}
+          availableSkills={availableTechSkills}
+          refetchAvailableSkills={() =>
+            refetchParams(`${HABILIDADES_TECNICAS}`)
+          }
+          idVac={idVac ?? 0}
+        />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
@@ -1052,7 +1093,9 @@ export const ModalDetallesRQV2 = ({
                                   >
                                     Tipo tarifa
                                   </th>
-
+                                  <th className="table-header-cell text-center">
+                                    Otros
+                                  </th>
                                   <th className="table-header-cell"></th>
                                 </tr>
                               </thead>
@@ -1291,18 +1334,50 @@ export const ModalDetallesRQV2 = ({
                                           {tipoTarifa}
                                         </td>
 
+                                        <td className="table-cell text-center relative group">
+                                          <div className="flex items-center gap-3 justify-center">
+                                            <button
+                                              type="button"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              title="Agregar carreras"
+                                            >
+                                              <img
+                                                className="w-6 h-6"
+                                                src="/assets/ic_student.png"
+                                                alt="admin-settings-male"
+                                              />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              title="Agregar habilidades"
+                                              onClick={() => {
+                                                const idVacante =
+                                                  field.idRequerimientoVacante;
+                                                handleOpenModal(idVacante);
+                                              }}
+                                            >
+                                              <img
+                                                src="/assets/ic_skills.png"
+                                                alt="icon add"
+                                                className="w-6 h-6"
+                                              />
+                                            </button>
+                                          </div>
+                                        </td>
+
                                         <td className="table-cell">
                                           {isEditingVacantesData && (
                                             <button
                                               type="button"
                                               disabled={!isEditingVacantesData}
-                                              className="ms-4 text-xl w-fit"
+                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               onClick={() =>
                                                 handleRemoveVacante(index)
                                               }
                                             >
                                               <img
-                                                src="/assets/ic_delete_bdt.svg"
+                                                src="/assets/ic_remove.png"
                                                 alt="icon remove"
                                                 className="w-6 h-6"
                                               />
