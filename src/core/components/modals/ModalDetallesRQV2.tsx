@@ -32,6 +32,7 @@ import { useParams } from "../../context/ParamsContext";
 import {
   DURACION_RQ,
   ESTADO_ATENDIDO,
+  GRADO_ESTUDIO,
   HABILIDADES_TECNICAS,
   MODALIDAD_RQ,
   TIPO_MODALIDAD,
@@ -45,11 +46,13 @@ import { getCvFile } from "../../services/apiService";
 import {
   MODAL_DETAILS_VAC_SKILLS,
   MODAL_DETALLES_RQ,
+  MODAL_UPDATE_CAREER,
 } from "../../utilities/modalsIds";
 import { useModal } from "../../context/ModalContext";
 import { NumberInputFMIBase } from "../ui/NumberInputFMIBase";
 import { useDownloadRqFile } from "../../hooks/useDownloadRqFile";
 import { ModalDetailsVacSkills } from "./ModalDetailVacSkills";
+import { ModalDetailsVacCarreras } from "./ModalUpdateCareer";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -103,7 +106,7 @@ export const ModalDetallesRQV2 = ({
   >(null);
 
   const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}`
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}`
   );
   const {
     tarifario,
@@ -115,6 +118,7 @@ export const ModalDetallesRQV2 = ({
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
   const techSkillsParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const {
     register,
@@ -651,13 +655,38 @@ export const ModalDetallesRQV2 = ({
   const handleOpenModal = (idVac: number) => {
     if (!idVac || idVac === 0) {
       enqueueSnackbar({
-        message: "Selecciona una vacante para agregar habilidades técnicas.",
+        message:
+          "Selecciona una y/o guarda la vacante para agregar habilidades técnicas.",
         variant: "warning",
       });
       return;
     }
     setIdVac(idVac);
     openModal(MODAL_DETAILS_VAC_SKILLS);
+  };
+
+  /** Handle ModalUpdate Careers */
+  const availableDegrees = paramsDegrees.map((param) => ({
+    id: param.num1,
+    label: param.string1,
+  }));
+
+  const openModalCareers = (idVac: number) => {
+    if (!idVac || idVac === 0) {
+      enqueueSnackbar({
+        message:
+          "Selecciona una y/o guarda vacante para agregar habilidades técnicas.",
+        variant: "warning",
+      });
+      return;
+    }
+    setIdVac(idVac);
+    openModal(MODAL_UPDATE_CAREER);
+  };
+
+  const closeModalCareers = () => {
+    setIdVac(undefined);
+    closeModal(MODAL_UPDATE_CAREER);
   };
 
   return (
@@ -675,6 +704,15 @@ export const ModalDetallesRQV2 = ({
           idVac={idVac ?? 0}
         />
       )}
+
+      {isModalOpen(MODAL_UPDATE_CAREER) && (
+        <ModalDetailsVacCarreras
+          idVac={idVac ?? 0}
+          onClose={closeModalCareers}
+          availableDegrees={availableDegrees}
+        />
+      )}
+
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
         <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
           <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
@@ -1340,6 +1378,11 @@ export const ModalDetallesRQV2 = ({
                                               type="button"
                                               className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               title="Agregar carreras"
+                                              onClick={() => {
+                                                const idVacante =
+                                                  field.idRequerimientoVacante;
+                                                openModalCareers(idVacante);
+                                              }}
                                             >
                                               <img
                                                 className="w-6 h-6"

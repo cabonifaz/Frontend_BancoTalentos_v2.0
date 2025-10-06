@@ -48,6 +48,7 @@ export const PROYECTO_SERVICIO = "36";
 export const OBJETO_CONTRATO = "37";
 export const FRASES_IA_MAESTRO = "40";
 export const HABILIDADES_TECNICAS = "19";
+export const GRADO_ESTUDIO = "38";
 
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
