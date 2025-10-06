@@ -70,6 +70,7 @@ export const ModalDetailsVacSkills = ({
   /*First get the actual skills of the vacancy */
   useEffect(() => {
     fetchSkills();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /*Handle Remove skill*/

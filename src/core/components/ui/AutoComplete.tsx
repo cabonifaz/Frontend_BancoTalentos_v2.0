@@ -40,6 +40,7 @@ export const Autocomplete = ({
   useEffect(() => {
     setFiltered(options);
     setQuery("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [options]);
 
   return (
