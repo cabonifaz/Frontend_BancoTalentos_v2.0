@@ -42,3 +42,4 @@ export * from "./schemas/NewRQSchema";
 export * from "./schemas/AddFileSchema";
 export * from "./schemas/DataFormSchema";
 export * from "./schemas/AddPostulanteSchema";
+export * from "./errors/app.error";

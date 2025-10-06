@@ -37,6 +37,7 @@ import {
   ARCHIVO_PDF,
   DOCUMENTO_CV,
   DOCUMENTO_FOTO_PERFIL,
+  FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
@@ -50,7 +51,7 @@ import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 export const AddTalent = () => {
   const navigate = useNavigate();
   const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32,31"
+    "12,13,2,19,20,15,16,32,31,40"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -66,8 +67,8 @@ export const AddTalent = () => {
   const habilidadesBlandas = paramsByMaestro[20] || [];
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
-  const modalidadFacturacion = paramsByMaestro[32] || [];
   const disponibilidades = paramsByMaestro[31] || [];
+  const frasesIa = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
     BaseResponse,
@@ -245,7 +246,7 @@ export const AddTalent = () => {
   const { fetchCVDetails } = useFetchCVData();
   const { completeForm, idCiudad } = useAutoCompletTalForm();
   const [canClose, setCanClose] = useState(false);
-  const [modalText, setModalText] = useState("");
+  const [canCloseMessage, setCanCloseMessage] = useState<string | undefined>();
 
   useEffect(() => {
     if (idCiudad) {
@@ -254,40 +255,35 @@ export const AddTalent = () => {
   }, [idCiudad, setValue]);
 
   const handleAnalize = async () => {
-    if (cvFile) {
-      setCanClose(false);
-      setModalText("");
-      openModal(MODAL_AI_WORKING);
-      const text = await extractSmartText(cvFile);
-
-      if (!text) {
-        setCanClose(true);
-        setModalText("");
-        return;
-      }
-
-      const cvDetails = await fetchCVDetails(text);
-
-      // Autocompletar el formulario con los datos extraídos
-      if (cvDetails && cvDetails.result && cvDetails.result.idMensaje === 2) {
-        completeForm(
-          cvDetails,
-          methods.setValue,
-          paises,
-          ciudades,
-          habilidadesTecnicas
-        );
-        setModalText(
-          "CV analizado con éxito, por favor verifica los datos del formulario antes de enviar"
-        );
-      }
-    } else {
-      enqueueSnackbar({
-        message: "Por favor seleccione un archivo",
+    if (!cvFile) {
+      enqueueSnackbar("Por favor, suba un CV para analizar", {
         variant: "warning",
       });
+      return;
     }
-    setCanClose(true);
+
+    try {
+      // Open modal
+      setCanClose(false);
+      setCanCloseMessage(undefined);
+      openModal(MODAL_AI_WORKING);
+
+      // Extract information from file
+      const cvData = await extractSmartText(cvFile);
+
+      // Extract data using AI
+      const cvDetails = await fetchCVDetails(cvData);
+
+      // Autocomplete form
+      completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
+      setCanCloseMessage(
+        "Formulario completado, revise los campos antes de enviar"
+      );
+    } catch (error: any) {
+      setCanCloseMessage(error?.message || "Error al analizar el CV");
+    } finally {
+      setCanClose(true);
+    }
   };
 
   return (
@@ -296,8 +292,8 @@ export const AddTalent = () => {
         {loadingAddTalent && <Loading opacity="opacity-50" />}
         {isModalOpen(MODAL_AI_WORKING) && (
           <ModalWorkingAI
-            lottieUrl="https://lottie.host/64faf884-b597-4df2-8e38-95c680989246/WLgLrfCVmO.json"
-            description={modalText !== "" ? modalText : undefined}
+            randomPhrases={frasesIa}
+            canCloseMessage={canCloseMessage}
             canClose={canClose}
             onClose={() => {
               closeModal(MODAL_AI_WORKING);
@@ -868,6 +864,3 @@ export const AddTalent = () => {
     </FormProvider>
   );
 };
-function usePdfToText(): { isLoading: any; extractSmartText: any } {
-  throw new Error("Function not implemented.");
-}

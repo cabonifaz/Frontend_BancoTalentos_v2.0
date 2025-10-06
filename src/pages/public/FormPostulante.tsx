@@ -1,5 +1,5 @@
 import { useParams } from "../../core/context/ParamsContext";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
 import {
@@ -15,7 +15,6 @@ import {
   ExperiencesSection,
   FileInput,
   LanguagesSection,
-  SoftSkillsSection,
   TechSkillsSection,
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
@@ -37,17 +36,23 @@ import {
   DOCUMENTO_CV,
   ARCHIVO_IMAGEN,
   DOCUMENTO_FOTO_PERFIL,
+  FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
 import { validateFile } from "../../core/utilities/validation";
-import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
 import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
+import { usePdfSmartExtractor } from "../../core/hooks/usePdfToText";
+import { useFetchCVData } from "../../core/hooks/useFetchCVData";
+import { useCompleteExtForm } from "../../core/hooks/useCompleteExtForm";
+import { useModal } from "../../core/context/ModalContext";
+import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
+import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "2, 12, 13, 15, 16, 19, 20, 31"
+    "2, 12, 13, 15, 16, 19, 20, 31, 40"
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -63,7 +68,7 @@ export const FormPostulante = () => {
   const habilidadesTecnicas = paramsByMaestro[19] || [];
   const coins = paramsByMaestro[2] || [];
   const disponibilidades = paramsByMaestro[31] || [];
-  // const habilidadesBlandas = paramsByMaestro[20] || [];
+  const frasesIA = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
   const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
     BaseResponseFMI,
@@ -123,6 +128,7 @@ export const FormPostulante = () => {
     watch,
     formState: { errors },
     reset,
+    setValue,
   } = methods;
 
   const watchCountryPhone = watch("codigoPais");
@@ -286,10 +292,62 @@ export const FormPostulante = () => {
     }
   };
 
+  /** Analizar CV con IA */
+  const { extractSmartText } = usePdfSmartExtractor();
+  const { fetchCVDetails } = useFetchCVData();
+  const { completeForm, idCiudad } = useCompleteExtForm();
+  const { isModalOpen, closeModal, openModal } = useModal();
+  const [canClose, setCanClose] = useState<boolean>(false);
+  const [canCloseMessage, setCanCloseMessage] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (idCiudad && idCiudad !== 0) setValue("idCiudad", idCiudad);
+  }, [idCiudad, setValue]);
+
+  const handleAnalize = async () => {
+    if (!cvFile) {
+      enqueueSnackbar("Por favor, suba un CV para analizar", {
+        variant: "warning",
+      });
+      return;
+    }
+
+    try {
+      // Open modal
+      setCanClose(false);
+      setCanCloseMessage(undefined);
+      openModal(MODAL_AI_WORKING);
+
+      // Extract information from file
+      const cvData = await extractSmartText(cvFile);
+
+      // Extract data using AI
+      const cvDetails = await fetchCVDetails(cvData);
+
+      // Autocomplete form
+      completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
+      setCanCloseMessage(
+        "Formulario completado, revise los campos antes de enviar"
+      );
+    } catch (error: any) {
+      setCanCloseMessage(error?.message || "Error al analizar el CV");
+    } finally {
+      setCanClose(true);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
       {(loadingAddPostulante || loadingAddTalent || loadingParams) && (
         <Loading opacity="opacity-60" />
+      )}
+      {isModalOpen(MODAL_AI_WORKING) && (
+        <ModalWorkingAI
+          canClose={canClose}
+          randomPhrases={frasesIA}
+          onClose={() => closeModal(MODAL_AI_WORKING)}
+          canCloseMessage={canCloseMessage}
+        />
       )}
       <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center">
         {/* Background geometric elements */}
@@ -317,7 +375,32 @@ export const FormPostulante = () => {
                 <div className="px-8 overflow-y-auto w-full md:h-[70vh]">
                   {/* files */}
                   <div>
-                    <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[#3f3f46] text-lg">
+                        Curriculum Vitae
+                      </h3>
+                      <button
+                        className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                        type="button"
+                        onClick={() => {
+                          reset(initialFormValuesPostulante);
+                          setCvFile(null);
+                          setCvFileErrors("");
+                        }}
+                      >
+                        Limpiar
+                      </button>
+                      {cvFile && (
+                        <button
+                          className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                          type="button"
+                          onClick={handleAnalize}
+                        >
+                          Completar con IA
+                        </button>
+                      )}
+                    </div>
+
                     <FileInput<AddPostulanteType>
                       register={register}
                       errors={errors}
@@ -330,6 +413,7 @@ export const FormPostulante = () => {
                     {cvFileErrors !== "" && (
                       <p className="text-red-400 text-sm">{cvFileErrors}</p>
                     )}
+
                     <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
                     <FileInput<AddPostulanteType>
                       register={register}
