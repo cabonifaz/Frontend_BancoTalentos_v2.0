@@ -13,8 +13,13 @@ import * as models from "../models";
 export const loginApp = ({
   username,
   password,
-}: models.LoginParams): Promise<AxiosResponse<models.LoginResponse>> => {
-  return axiosInstanceNoToken.post("/bdt/auth/login", { username, password });
+}: models.LoginParams): Promise<
+  AxiosResponse<models.LoginResponse>
+> => {
+  return axiosInstanceNoToken.post("/bdt/auth/login", {
+    username,
+    password,
+  });
 };
 
 // user
@@ -31,7 +36,9 @@ export const getTalents = (
   params: models.TalentParams
 ): Promise<AxiosResponse<models.TalentsResponse>> => {
   const queryString = Utils.buildQueryString(params);
-  const url = `/bdt/talent/list${queryString ? `?${queryString}` : ""}`;
+  const url = `/bdt/talent/list${
+    queryString ? `?${queryString}` : ""
+  }`;
   return axiosInstance.get(url);
 };
 
@@ -47,9 +54,19 @@ export const addTalent = (
   data: models.AddTalentParams
 ): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
   const token =
-    localStorage.getItem("authToken") || localStorage.getItem("token") || "";
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    "";
 
-  return axiosInstance.post("/bdt/talent/addOrUpdateTalent", data);
+  return axiosInstanceNoToken.post(
+    "/bdt/talent/addOrUpdateTalent",
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };
 
 export const addTalentToFav = (data: {
@@ -142,7 +159,10 @@ export const updateTalentAvailability = (
 export const addOrUpdateTalentExperience = (
   data: models.AddOrUpdateExperienceParams
 ): Promise<AxiosResponse<models.BaseResponse>> => {
-  return axiosInstance.post("/bdt/talent/addOrUpdateExperience", data);
+  return axiosInstance.post(
+    "/bdt/talent/addOrUpdateExperience",
+    data
+  );
 };
 
 export const deleteTalenteExperience = (
@@ -163,7 +183,9 @@ export const addOrUpdateTalentEducation = (
 export const deleteTalenteEducation = (
   idEducacion: number
 ): Promise<AxiosResponse<models.BaseResponse>> => {
-  return axiosInstance.post("/bdt/talent/deleteEducation", { id: idEducacion });
+  return axiosInstance.post("/bdt/talent/deleteEducation", {
+    id: idEducacion,
+  });
 };
 
 // language
@@ -176,7 +198,9 @@ export const addOrUpdateTalentLanguage = (
 export const deleteTalenteLanguage = (
   idIdioma: number
 ): Promise<AxiosResponse<models.BaseResponse>> => {
-  return axiosInstance.post("/bdt/talent/deleteLanguage", { id: idIdioma });
+  return axiosInstance.post("/bdt/talent/deleteLanguage", {
+    id: idIdioma,
+  });
 };
 
 // feedback
@@ -189,7 +213,9 @@ export const addOrUpdateTalentFeedback = (
 export const deleteTalenteFeedback = (
   idFeedback: number
 ): Promise<AxiosResponse<models.FeedbackResponse>> => {
-  return axiosInstance.post("/bdt/talent/deleteFeedback", { id: idFeedback });
+  return axiosInstance.post("/bdt/talent/deleteFeedback", {
+    id: idFeedback,
+  });
 };
 
 // user
@@ -233,7 +259,9 @@ export const updateRequirement = (
 export const deleteReqFile = (
   id: number
 ): Promise<AxiosResponse<models.BaseResponse>> => {
-  return axiosInstanceFMI.delete(`/fmi/requirement/file/remove?idRqFile=${id}`);
+  return axiosInstanceFMI.delete(
+    `/fmi/requirement/file/remove?idRqFile=${id}`
+  );
 };
 
 export const addReqFiles = (
@@ -255,9 +283,13 @@ export const addPostulanteService = (
 ): Promise<AxiosResponse<models.BaseResponseFMI>> => {
   const token = localStorage.getItem("tempToken") || "";
 
-  return axiosInstanceNoTokenFMI.post("/fmi/postulant/register", data, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  return axiosInstanceNoTokenFMI.post(
+    "/fmi/postulant/register",
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 };
