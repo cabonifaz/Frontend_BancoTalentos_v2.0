@@ -1,4 +1,4 @@
-import { axiosInstance } from "../services/axiosService";
+import { axiosInstanceNoToken } from "../services/axiosService";
 import { IACVResponse } from "../models/response/AICVResponse";
 
 /**
@@ -15,7 +15,7 @@ export const useFetchCVData = () => {
   const fetchCVDetails = async (cvText: string) => {
     try {
       const payload = { extractedText: cvText };
-      const respose = await axiosInstance.post<IACVResponse>(
+      const respose = await axiosInstanceNoToken.post<IACVResponse>(
         "bdt/ia/analyze/cv",
         payload
       );
