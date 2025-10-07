@@ -41,7 +41,10 @@ import { enqueueSnackbar } from "notistack";
 import { useFetchTarifario } from "../../hooks/useFetchTarifario";
 import { useApi } from "../../hooks/useApi";
 import { FileResponse } from "../../models";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../utilities/errorHandler";
 import { getCvFile } from "../../services/apiService";
 import {
   MODAL_DETAILS_VAC_SKILLS,
@@ -81,8 +84,10 @@ export const ModalDetallesRQV2 = ({
 }: Props) => {
   const [archivos, setArchivos] = useState<Archivo[]>([]);
   const [isEditingRQData, setIsEditingRQData] = useState(false);
-  const [isEditingGestionData, setIsEditingGestionData] = useState(false);
-  const [isEditingVacantesData, setIsEditingVacantesData] = useState(false);
+  const [isEditingGestionData, setIsEditingGestionData] =
+    useState(false);
+  const [isEditingVacantesData, setIsEditingVacantesData] =
+    useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
   const { postData, postloading } = usePostHook();
@@ -93,13 +98,21 @@ export const ModalDetallesRQV2 = ({
   } = useFetchRequirement(RQ?.idRequerimiento || null);
   const { deleteData, deleteLoading } = useDeleteHook();
 
-  const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
+  const [isModalRQContactOPen, setIsModalRQContactOPen] =
+    useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
+  const [contactToEdit, setContactToEdit] =
+    useState<ReqContacto | null>(null);
 
-  const [cantidadesVacantes, setCantidadesVacantes] = useState<string[]>([]);
-  const [originalVacantes, setOriginalVacantes] = useState<Array<any>>([]);
-  const [originalCantidades, setOriginalCantidades] = useState<string[]>([]);
+  const [cantidadesVacantes, setCantidadesVacantes] = useState<
+    string[]
+  >([]);
+  const [originalVacantes, setOriginalVacantes] = useState<
+    Array<any>
+  >([]);
+  const [originalCantidades, setOriginalCantidades] = useState<
+    string[]
+  >([]);
   const [restoreKey, setRestoreKey] = useState(0);
   const [idClienteForTarifario, setIdClienteForTarifario] = useState<
     number | null
@@ -117,7 +130,8 @@ export const ModalDetallesRQV2 = ({
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
-  const techSkillsParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const techSkillsParams =
+    paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const {
@@ -219,7 +233,8 @@ export const ModalDetallesRQV2 = ({
           ?.tarifa.toFixed(2) || "-";
 
       const moneda =
-        tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
+        tarifario.find((item) => item.idPerfil === idPerfil)
+          ?.moneda || "S/.";
 
       setValue(
         `lstVacantes.${index}.tarifa`,
@@ -249,9 +264,12 @@ export const ModalDetallesRQV2 = ({
     );
 
     if (vacantes.length === 1) {
-      enqueueSnackbar("El Requerimiento debe tener al menos un vacante.", {
-        variant: "warning",
-      });
+      enqueueSnackbar(
+        "El Requerimiento debe tener al menos un vacante.",
+        {
+          variant: "warning",
+        }
+      );
       return;
     }
 
@@ -272,7 +290,9 @@ export const ModalDetallesRQV2 = ({
       });
     } else {
       remove(index);
-      setCantidadesVacantes((prev) => prev.filter((_, i) => i !== index));
+      setCantidadesVacantes((prev) =>
+        prev.filter((_, i) => i !== index)
+      );
     }
   };
 
@@ -283,17 +303,21 @@ export const ModalDetallesRQV2 = ({
     if (currentVacantes.length <= 0) return true;
 
     if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
-      return errors.lstVacantes.some((vacanteError: any) => vacanteError);
+      return errors.lstVacantes.some(
+        (vacanteError: any) => vacanteError
+      );
     }
 
     return false;
   };
 
   const getVacantesErrorMessage = (errors: any) => {
-    if (errors.lstVacantes?.message) return errors.lstVacantes.message;
+    if (errors.lstVacantes?.message)
+      return errors.lstVacantes.message;
     if (totalVacantes <= 0 && errors.idCliente?.message !== undefined)
       return "Agrega al menos una vacante.";
-    if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
+    if (currentVacantes.length <= 0)
+      return "Agrega al menos una vacante.";
     return "Revisa los campos de vacantes.";
   };
 
@@ -315,7 +339,10 @@ export const ModalDetallesRQV2 = ({
       setValue("titulo", requirement.requerimiento.titulo);
       setValue(
         "fechaSolicitud",
-        format(parseISO(requirement.requerimiento.fechaSolicitud), "yyyy-MM-dd")
+        format(
+          parseISO(requirement.requerimiento.fechaSolicitud),
+          "yyyy-MM-dd"
+        )
       );
       setValue(
         "fechaVencimiento",
@@ -331,27 +358,27 @@ export const ModalDetallesRQV2 = ({
       setValue("idEstadoRQ", requirement.requerimiento.idEstado);
       setClienteSeleccionado(requirement.requerimiento.cliente);
 
-      const archivosFormateados = requirement.requerimiento.lstRqArchivo.map(
-        (archivo) => ({
+      const archivosFormateados =
+        requirement.requerimiento.lstRqArchivo.map((archivo) => ({
           idRequerimientoArchivo: archivo.idRequerimientoArchivo,
           name: archivo.nombreArchivo,
           size: 0,
           file: new File([], archivo.nombreArchivo),
-        })
-      );
+        }));
 
       setArchivos(archivosFormateados);
       setValueFiles("lstArchivos", archivosFormateados);
 
-      const vacantesIniciales = requirement.requerimiento.lstRqVacantes.map(
-        (vacante) => {
+      const vacantesIniciales =
+        requirement.requerimiento.lstRqVacantes.map((vacante) => {
           const tarifa =
             tarifario
               .find((item) => item.idPerfil === vacante.idPerfil)
               ?.tarifa.toFixed(2) || "-";
           const moneda =
-            tarifario.find((item) => item.idPerfil === vacante.idPerfil)
-              ?.moneda || "S/.";
+            tarifario.find(
+              (item) => item.idPerfil === vacante.idPerfil
+            )?.moneda || "S/.";
 
           return {
             idRequerimientoVacante: vacante.idRequerimientoVacante,
@@ -360,18 +387,21 @@ export const ModalDetallesRQV2 = ({
             idEstado: 0,
             tarifa: `${moneda} ${Utils.formatCoin(Number(tarifa))}`,
           };
-        }
-      );
+        });
 
       setValue(
         "lstVacantes",
-        vacantesIniciales.map((v) => ({ ...v, cantidad: Number(v.cantidad) }))
+        vacantesIniciales.map((v) => ({
+          ...v,
+          cantidad: Number(v.cantidad),
+        }))
       );
       setOriginalVacantes(vacantesIniciales);
 
-      const cantidadesIniciales = requirement.requerimiento.lstRqVacantes.map(
-        (vacante) => String(vacante.cantidad)
-      );
+      const cantidadesIniciales =
+        requirement.requerimiento.lstRqVacantes.map((vacante) =>
+          String(vacante.cantidad)
+        );
       setCantidadesVacantes(cantidadesIniciales);
       setOriginalCantidades(cantidadesIniciales);
       setRestoreKey((prev) => prev + 1);
@@ -391,21 +421,33 @@ export const ModalDetallesRQV2 = ({
     }
   }, [idClienteForTarifario, fetchTarifario]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files) {
-      const nuevosArchivos = Array.from(event.target.files).map((file) => ({
-        idRequerimientoArchivo: 0,
-        name: file.name,
-        size: file.size,
-        file,
-      }));
+      const nuevosArchivos = Array.from(event.target.files).map(
+        (file) => ({
+          idRequerimientoArchivo: 0,
+          name: file.name,
+          size: file.size,
+          file,
+        })
+      );
 
-      setArchivos((prevArchivos) => [...prevArchivos, ...nuevosArchivos]);
-      setValueFiles("lstArchivos", nuevosArchivos, { shouldValidate: true });
+      setArchivos((prevArchivos) => [
+        ...prevArchivos,
+        ...nuevosArchivos,
+      ]);
+      setValueFiles("lstArchivos", nuevosArchivos, {
+        shouldValidate: true,
+      });
     }
   };
 
-  const handleRemoveFile = async (index: number, idArchivo: number) => {
+  const handleRemoveFile = async (
+    index: number,
+    idArchivo: number
+  ) => {
     const updatedArchivos = archivos.filter((_, i) => i !== index);
 
     if (idArchivo !== 0) {
@@ -419,10 +461,14 @@ export const ModalDetallesRQV2 = ({
       return;
     }
     setArchivos(updatedArchivos);
-    setValueFiles("lstArchivos", updatedArchivos, { shouldValidate: true });
+    setValueFiles("lstArchivos", updatedArchivos, {
+      shouldValidate: true,
+    });
   };
 
-  const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleClienteChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const selectedClienteId = Number(event.target.value);
     const selectedClienteText =
       clientes.find(
@@ -433,7 +479,9 @@ export const ModalDetallesRQV2 = ({
     fetchRequirement();
   };
 
-  const onSubmitAddFiles: SubmitHandler<AddFilesSchemaType> = async (data) => {
+  const onSubmitAddFiles: SubmitHandler<AddFilesSchemaType> = async (
+    data
+  ) => {
     if (RQ) {
       // new files only
       const nuevosArchivos = data.lstArchivos.filter(
@@ -445,7 +493,8 @@ export const ModalDetallesRQV2 = ({
           const base64 = await Utils.fileToBase64(archivo.file);
           const { nombreArchivo, extensionArchivo } =
             Utils.getFileNameAndExtension(archivo.name);
-          const idTipoArchivo = Utils.getTipoArchivoId(extensionArchivo);
+          const idTipoArchivo =
+            Utils.getTipoArchivoId(extensionArchivo);
           return {
             string64: base64,
             nombreArchivo,
@@ -460,17 +509,23 @@ export const ModalDetallesRQV2 = ({
         lstArchivos,
       };
 
-      const response = await postData("/fmi/requirement/file/save", payload);
+      const response = await postData(
+        "/fmi/requirement/file/save",
+        payload
+      );
       if (response.idTipoMensaje === 2) {
         fetchRequirement();
       }
     }
   };
 
-  const onSubmit: SubmitHandler<UpdateBaseRQSchemaType> = async (data) => {
+  const onSubmit: SubmitHandler<UpdateBaseRQSchemaType> = async (
+    data
+  ) => {
     try {
       const idCliente = Number(data.idCliente);
-      const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } = data;
+      const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } =
+        data;
 
       const vacantesParaEnviar = data.lstVacantes
         .filter((vacante) => vacante.idEstado !== 0)
@@ -493,7 +548,10 @@ export const ModalDetallesRQV2 = ({
           idModalidadFact: data.idModalidadFact?.join(","),
         };
 
-        const response = await postData("/fmi/requirement/update", payload);
+        const response = await postData(
+          "/fmi/requirement/update",
+          payload
+        );
 
         if (response.idTipoMensaje === 2) {
           fetchRequirement();
@@ -528,8 +586,8 @@ export const ModalDetallesRQV2 = ({
           .find((item) => item.idPerfil === vacante.idPerfil)
           ?.tarifa.toFixed(2) || "-";
       const moneda =
-        tarifario.find((item) => item.idPerfil === vacante.idPerfil)?.moneda ||
-        "S/.";
+        tarifario.find((item) => item.idPerfil === vacante.idPerfil)
+          ?.moneda || "S/.";
 
       setValue(
         `lstVacantes.${index}.tarifa`,
@@ -550,7 +608,10 @@ export const ModalDetallesRQV2 = ({
 
   useEffect(() => {
     setTotalVacantes(
-      cantidadesVacantes.reduce((sum, cantidad) => sum + Number(cantidad), 0)
+      cantidadesVacantes.reduce(
+        (sum, cantidad) => sum + Number(cantidad),
+        0
+      )
     );
   }, [cantidadesVacantes]);
 
@@ -601,29 +662,29 @@ export const ModalDetallesRQV2 = ({
   /**
    * Fetch CV file for talent
    */
-  const { loading: downloadingFile, fetch } = useApi<FileResponse, number>(
-    getCvFile,
-    {
-      onError: (error) => handleError(error, enqueueSnackbar),
-      onSuccess: (response) =>
-        handleResponse({
-          response: response,
-          showSuccessMessage: false,
-          enqueueSnackbar: enqueueSnackbar,
-        }),
-    }
-  );
+  const { loading: downloadingFile, fetch } = useApi<
+    FileResponse,
+    number
+  >(getCvFile, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) =>
+      handleResponse({
+        response: response,
+        showSuccessMessage: false,
+        enqueueSnackbar: enqueueSnackbar,
+      }),
+  });
 
   const openFile = (index: number) => {
     if (requirement?.requerimiento.lstRqTalento[index].idCvFile) {
-      fetch(requirement?.requerimiento.lstRqTalento[index].idCvFile).then(
-        (response) => {
-          if (response.data.result.idMensaje === 2) {
-            const archivoB64 = response.data.archivo;
-            Utils.openPdfDocument(archivoB64);
-          }
+      fetch(
+        requirement?.requerimiento.lstRqTalento[index].idCvFile
+      ).then((response) => {
+        if (response.data.result.idMensaje === 2) {
+          const archivoB64 = response.data.archivo;
+          Utils.openPdfDocument(archivoB64);
         }
-      );
+      });
     }
   };
   const [isLoading, downloadFile] = useDownloadRqFile();
@@ -639,6 +700,7 @@ export const ModalDetallesRQV2 = ({
     return rol === "RECLUTADOR";
   };
 
+  // @marker modal skills
   /** Get the initial values  Tech skills for each profile */
   const [idVac, setIdVac] = useState<number | undefined>();
   const availableTechSkills = techSkillsParams.map((skill) => ({
@@ -650,6 +712,7 @@ export const ModalDetallesRQV2 = ({
   const handleCloseModalSkills = () => {
     closeModal(MODAL_DETAILS_VAC_SKILLS);
     setIdVac(undefined);
+    fetchRequirement();
   };
 
   const handleOpenModal = (idVac: number) => {
@@ -663,6 +726,14 @@ export const ModalDetallesRQV2 = ({
     }
     setIdVac(idVac);
     openModal(MODAL_DETAILS_VAC_SKILLS);
+  };
+
+  const getTotalSkillsForVacancy = (vacancyId: number) => {
+    const vacancy = requirement?.requerimiento.lstRqVacantes.find(
+      (v) => v.idRequerimientoVacante === vacancyId
+    );
+    if (!vacancy) return 0;
+    return vacancy.totalHabilidades;
   };
 
   /** Handle ModalUpdate Careers */
@@ -687,13 +758,23 @@ export const ModalDetallesRQV2 = ({
   const closeModalCareers = () => {
     setIdVac(undefined);
     closeModal(MODAL_UPDATE_CAREER);
+    fetchRequirement();
+  };
+
+  const getTotalCareersForVacancy = (vacancyId: number) => {
+    const vacancy = requirement?.requerimiento.lstRqVacantes.find(
+      (v) => v.idRequerimientoVacante === vacancyId
+    );
+    if (!vacancy) return 0;
+    return vacancy.totalCarreras;
   };
 
   return (
     <>
-      {(postloading || deleteLoading || downloadingFile || isLoading) && (
-        <Loading opacity="opacity-60" />
-      )}
+      {(postloading ||
+        deleteLoading ||
+        downloadingFile ||
+        isLoading) && <Loading opacity="opacity-60" />}
       {isModalOpen(MODAL_DETAILS_VAC_SKILLS) && (
         <ModalDetailsVacSkills
           onClose={handleCloseModalSkills}
@@ -840,7 +921,10 @@ export const ModalDetallesRQV2 = ({
                               className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                             >
                               {estadoOptions.map((option) => (
-                                <option key={option.num1} value={option.num1}>
+                                <option
+                                  key={option.num1}
+                                  value={option.num1}
+                                >
                                   {option.string1}
                                 </option>
                               ))}
@@ -878,7 +962,9 @@ export const ModalDetallesRQV2 = ({
                             type="submit"
                             disabled={!isEditingRQData}
                             className={`btn ${
-                              isEditingRQData ? "btn-primary" : "btn-disabled"
+                              isEditingRQData
+                                ? "btn-primary"
+                                : "btn-disabled"
                             }`}
                           >
                             Actualizar
@@ -899,7 +985,9 @@ export const ModalDetallesRQV2 = ({
                         Cliente:
                       </label>
                       <select
-                        {...register("idCliente", { valueAsNumber: true })}
+                        {...register("idCliente", {
+                          valueAsNumber: true,
+                        })}
                         disabled={true}
                         aria-readonly={true}
                         className="px-3 py-2 border-none outline-none appearance-none"
@@ -944,25 +1032,46 @@ export const ModalDetallesRQV2 = ({
                           <table className="table">
                             <thead>
                               <tr className="table-header">
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   ID
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Nombres
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Apellidos
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Celular
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Correo
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Cargo
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Asignado
                                 </th>
                                 <th
@@ -973,10 +1082,14 @@ export const ModalDetallesRQV2 = ({
                             </thead>
                             <tbody>
                               {(
-                                requirement?.requerimiento?.lstRqContactos || []
+                                requirement?.requerimiento
+                                  ?.lstRqContactos || []
                               ).length <= 0 ? (
                                 <tr>
-                                  <td colSpan={8} className="table-empty">
+                                  <td
+                                    colSpan={8}
+                                    className="table-empty"
+                                  >
                                     No hay contactos disponibles.
                                   </td>
                                 </tr>
@@ -1012,7 +1125,9 @@ export const ModalDetallesRQV2 = ({
                                           type="checkbox"
                                           name="contact-asig"
                                           id="contact-asig"
-                                          checked={contacto.asignado === 1}
+                                          checked={
+                                            contacto.asignado === 1
+                                          }
                                           readOnly={true}
                                           className="input-checkbox-readonly"
                                         />
@@ -1022,7 +1137,9 @@ export const ModalDetallesRQV2 = ({
                                           <button
                                             type="button"
                                             onClick={() =>
-                                              handleEditContact(contacto)
+                                              handleEditContact(
+                                                contacto
+                                              )
                                             }
                                             className="w-7 h-7"
                                           >
@@ -1140,7 +1257,10 @@ export const ModalDetallesRQV2 = ({
                               <tbody>
                                 {fields.length <= 0 ? (
                                   <tr>
-                                    <td colSpan={4} className="table-empty">
+                                    <td
+                                      colSpan={4}
+                                      className="table-empty"
+                                    >
                                       No hay vacantes disponibles.
                                     </td>
                                   </tr>
@@ -1192,24 +1312,32 @@ export const ModalDetallesRQV2 = ({
                                     const availableProfiles =
                                       getAvailableProfiles(index);
                                     const currentProfile =
-                                      currentVacantes[index]?.idPerfil;
+                                      currentVacantes[index]
+                                        ?.idPerfil;
                                     const showCurrentProfile =
                                       currentProfile === 0 ||
                                       availableProfiles.some(
-                                        (p) => p.idPerfil === currentProfile
+                                        (p) =>
+                                          p.idPerfil ===
+                                          currentProfile
                                       ) ||
                                       !tarifario.some(
-                                        (p) => p.idPerfil === currentProfile
+                                        (p) =>
+                                          p.idPerfil ===
+                                          currentProfile
                                       );
 
-                                    const optionsToShow = showCurrentProfile
-                                      ? [...availableProfiles]
-                                      : [
-                                          ...availableProfiles,
-                                          ...tarifario.filter(
-                                            (p) => p.idPerfil === currentProfile
-                                          ),
-                                        ];
+                                    const optionsToShow =
+                                      showCurrentProfile
+                                        ? [...availableProfiles]
+                                        : [
+                                            ...availableProfiles,
+                                            ...tarifario.filter(
+                                              (p) =>
+                                                p.idPerfil ===
+                                                currentProfile
+                                            ),
+                                          ];
 
                                     const tipoTarifa =
                                       tarifario.find(
@@ -1221,7 +1349,10 @@ export const ModalDetallesRQV2 = ({
                                       )?.tipoTarifa || "-";
 
                                     return (
-                                      <tr key={index} className="table-row">
+                                      <tr
+                                        key={index}
+                                        className="table-row"
+                                      >
                                         <td className="table-cell">
                                           <select
                                             {...register(
@@ -1248,21 +1379,28 @@ export const ModalDetallesRQV2 = ({
                                                 ? "Cargando perfiles..."
                                                 : "Seleccione un perfil"}
                                             </option>
-                                            {optionsToShow.map((perfil) => (
-                                              <option
-                                                key={perfil.idPerfil}
-                                                value={perfil.idPerfil}
-                                              >
-                                                {perfil.perfil}
-                                              </option>
-                                            ))}
+                                            {optionsToShow.map(
+                                              (perfil) => (
+                                                <option
+                                                  key={
+                                                    perfil.idPerfil
+                                                  }
+                                                  value={
+                                                    perfil.idPerfil
+                                                  }
+                                                >
+                                                  {perfil.perfil}
+                                                </option>
+                                              )
+                                            )}
                                           </select>
                                           {errors.lstVacantes?.[index]
                                             ?.idPerfil && (
                                             <p className="text-red-500 text-xs mt-1">
                                               {
-                                                errors.lstVacantes[index]
-                                                  ?.idPerfil?.message
+                                                errors.lstVacantes[
+                                                  index
+                                                ]?.idPerfil?.message
                                               }
                                             </p>
                                           )}
@@ -1275,14 +1413,17 @@ export const ModalDetallesRQV2 = ({
                                                 control={control}
                                                 name={`lstVacantes.${index}.cantidad`}
                                                 defaultValue={Number(
-                                                  originalCantidades[index] || 1
+                                                  originalCantidades[
+                                                    index
+                                                  ] || 1
                                                 )}
                                                 disabled={
                                                   !isEditingVacantesData
                                                 }
                                                 onChange={(value) => {
                                                   const numValue =
-                                                    Number(value) || 0;
+                                                    Number(value) ||
+                                                    0;
                                                   const currentValue =
                                                     getValues(
                                                       `lstVacantes.${index}`
@@ -1290,7 +1431,8 @@ export const ModalDetallesRQV2 = ({
                                                   if (
                                                     currentValue.idRequerimientoVacante >
                                                       0 &&
-                                                    currentValue.idEstado === 0
+                                                    currentValue.idEstado ===
+                                                      0
                                                   ) {
                                                     setValue(
                                                       `lstVacantes.${index}.idEstado`,
@@ -1299,11 +1441,14 @@ export const ModalDetallesRQV2 = ({
                                                   }
                                                   setCantidadesVacantes(
                                                     (prev) => {
-                                                      const newCantidades = [
-                                                        ...prev,
-                                                      ];
-                                                      newCantidades[index] =
-                                                        String(numValue);
+                                                      const newCantidades =
+                                                        [...prev];
+                                                      newCantidades[
+                                                        index
+                                                      ] =
+                                                        String(
+                                                          numValue
+                                                        );
                                                       return newCantidades;
                                                     }
                                                   );
@@ -1313,18 +1458,23 @@ export const ModalDetallesRQV2 = ({
                                                 }}
                                                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                                               />
-                                              {errors.lstVacantes?.[index]
-                                                ?.cantidad && (
+                                              {errors.lstVacantes?.[
+                                                index
+                                              ]?.cantidad && (
                                                 <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
                                                   {
-                                                    errors.lstVacantes[index]
-                                                      ?.cantidad?.message
+                                                    errors
+                                                      .lstVacantes[
+                                                      index
+                                                    ]?.cantidad
+                                                      ?.message
                                                   }
                                                 </p>
                                               )}
                                             </div>
                                             <div className="ms-4 flex items-center">
-                                              {field.idEstado === 1 ? (
+                                              {field.idEstado ===
+                                              1 ? (
                                                 <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2">
                                                   Nuevo
                                                 </span>
@@ -1376,12 +1526,14 @@ export const ModalDetallesRQV2 = ({
                                           <div className="flex items-center gap-3 justify-center">
                                             <button
                                               type="button"
-                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               title="Agregar carreras"
                                               onClick={() => {
                                                 const idVacante =
                                                   field.idRequerimientoVacante;
-                                                openModalCareers(idVacante);
+                                                openModalCareers(
+                                                  idVacante
+                                                );
                                               }}
                                             >
                                               <img
@@ -1389,15 +1541,22 @@ export const ModalDetallesRQV2 = ({
                                                 src="/assets/ic_student.png"
                                                 alt="admin-settings-male"
                                               />
+                                              <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                                                {getTotalCareersForVacancy(
+                                                  field.idRequerimientoVacante
+                                                )}
+                                              </span>
                                             </button>
                                             <button
                                               type="button"
-                                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                              className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               title="Agregar habilidades"
                                               onClick={() => {
                                                 const idVacante =
                                                   field.idRequerimientoVacante;
-                                                handleOpenModal(idVacante);
+                                                handleOpenModal(
+                                                  idVacante
+                                                );
                                               }}
                                             >
                                               <img
@@ -1405,6 +1564,11 @@ export const ModalDetallesRQV2 = ({
                                                 alt="icon add"
                                                 className="w-6 h-6"
                                               />
+                                              <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                                                {getTotalSkillsForVacancy(
+                                                  field.idRequerimientoVacante
+                                                )}
+                                              </span>
                                             </button>
                                           </div>
                                         </td>
@@ -1413,10 +1577,14 @@ export const ModalDetallesRQV2 = ({
                                           {isEditingVacantesData && (
                                             <button
                                               type="button"
-                                              disabled={!isEditingVacantesData}
+                                              disabled={
+                                                !isEditingVacantesData
+                                              }
                                               className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                               onClick={() =>
-                                                handleRemoveVacante(index)
+                                                handleRemoveVacante(
+                                                  index
+                                                )
                                               }
                                             >
                                               <img
@@ -1469,7 +1637,9 @@ export const ModalDetallesRQV2 = ({
                         <button
                           type="button"
                           onClick={() =>
-                            document.getElementById("fileInput")?.click()
+                            document
+                              .getElementById("fileInput")
+                              ?.click()
                           }
                           className="btn btn-text"
                         >
@@ -1577,28 +1747,52 @@ export const ModalDetallesRQV2 = ({
                           <table className="table custom-scroll">
                             <thead>
                               <tr className="table-header">
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   CV
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Nombres y apellidos
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Doc. Identidad
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Celular
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Correo
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Situación
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Estado
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Perfil
                                 </th>
                               </tr>
@@ -1607,7 +1801,10 @@ export const ModalDetallesRQV2 = ({
                               {requirement?.requerimiento.lstRqTalento
                                 .length === 0 ? (
                                 <tr>
-                                  <td colSpan={7} className="table-empty">
+                                  <td
+                                    colSpan={7}
+                                    className="table-empty"
+                                  >
                                     No hay postulantes disponibles.
                                   </td>
                                 </tr>
@@ -1622,7 +1819,9 @@ export const ModalDetallesRQV2 = ({
                                         <button
                                           type="button"
                                           className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
-                                          onClick={() => openFile(index)}
+                                          onClick={() =>
+                                            openFile(index)
+                                          }
                                         >
                                           <img
                                             src="/assets/ic_show_pass.svg"
@@ -1769,11 +1968,13 @@ export const ModalDetallesRQV2 = ({
                                     value={modalidad.num1}
                                     disabled={!isEditingGestionData}
                                     checked={
-                                      field.value?.includes(modalidad.num1) ||
-                                      false
+                                      field.value?.includes(
+                                        modalidad.num1
+                                      ) || false
                                     }
                                     onChange={(e) => {
-                                      const checked = e.target.checked;
+                                      const checked =
+                                        e.target.checked;
                                       const value = modalidad.num1;
 
                                       if (checked) {

@@ -23,20 +23,27 @@ export const AddCareerModal = ({
   onClose,
 }: CareerModalProps) => {
   const [careerName, setCareerName] = useState("");
-  const [selectedDegreeId, setSelectedDegreeId] = useState<number | "">("");
-  const [careers, setCareers] = useState<CareerProps[]>(initialCareers);
+  const [selectedDegreeId, setSelectedDegreeId] = useState<
+    number | ""
+  >("");
+  const [careers, setCareers] =
+    useState<CareerProps[]>(initialCareers);
 
   const handleAddCareer = () => {
     const trimmedName = careerName.trim();
 
     if (!trimmedName || !selectedDegreeId) {
-      showWarningSnack("Debes ingresar una carrera y seleccionar un grado.");
+      showWarningSnack(
+        "Debes ingresar una carrera y seleccionar un grado."
+      );
       return;
     }
 
     // Evita duplicados por nombre (case-insensitive)
     if (
-      careers.some((c) => c.label.toLowerCase() === trimmedName.toLowerCase())
+      careers.some(
+        (c) => c.label.toLowerCase() === trimmedName.toLowerCase()
+      )
     ) {
       showWarningSnack("La carrera ya fue agregada.");
       return;
@@ -55,11 +62,6 @@ export const AddCareerModal = ({
   };
 
   const handleSave = () => {
-    if (careers.length === 0) {
-      showWarningSnack("Agrega al menos una carrera antes de guardar.");
-      return;
-    }
-
     onSave(careers);
     onClose();
   };
@@ -76,7 +78,11 @@ export const AddCareerModal = ({
           onClick={onClose}
           className="absolute top-4 right-4 focus:outline-none"
         >
-          <img src="/assets/ic_close_x.svg" alt="close" className="w-6 h-6" />
+          <img
+            src="/assets/ic_close_x.svg"
+            alt="close"
+            className="w-6 h-6"
+          />
         </button>
 
         {/* Inputs */}
@@ -126,7 +132,9 @@ export const AddCareerModal = ({
                   className="flex justify-between items-center border rounded px-3 py-2 bg-gray-50"
                 >
                   <div>
-                    <span className="font-medium">{career.label}</span>{" "}
+                    <span className="font-medium">
+                      {career.label}
+                    </span>{" "}
                     <span className="text-sm text-gray-500">
                       ({degree?.label ?? "Sin grado"})
                     </span>
@@ -163,7 +171,11 @@ export const AddCareerModal = ({
             >
               Cancelar
             </button>
-            <button type="button" onClick={handleSave} className="btn btn-blue">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="btn btn-blue"
+            >
               Guardar
             </button>
           </div>

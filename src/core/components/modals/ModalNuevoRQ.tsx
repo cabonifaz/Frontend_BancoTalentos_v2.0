@@ -1,6 +1,15 @@
-import React, { FormEvent, useEffect, useMemo, useState } from "react";
+import React, {
+  FormEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Param } from "../../models/interfaces/Param";
-import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import {
+  SubmitHandler,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   newRQSchema,
@@ -60,7 +69,8 @@ export const AgregarRQModal = ({
   const { postData, postloading } = usePostHook();
   const [clienteSeleccionado, setClienteSeleccionado] = useState("");
   const [autogenRQ, setAutogenRQ] = useState(false);
-  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] =
+    useState(false);
 
   /** Select skills for Vacante*/
   const [selectedTechSkills, setSelectedTechSkills] = useState<
@@ -77,10 +87,14 @@ export const AgregarRQModal = ({
     loading: loadingContacts,
     fetchContacts,
   } = useFetchClientContacts();
-  const [selectedContacts, setSelectedContacts] = useState<number[]>([]);
-  const [isModalRQContactOPen, setIsModalRQContactOPen] = useState(false);
+  const [selectedContacts, setSelectedContacts] = useState<number[]>(
+    []
+  );
+  const [isModalRQContactOPen, setIsModalRQContactOPen] =
+    useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [contactToEdit, setContactToEdit] = useState<ReqContacto | null>(null);
+  const [contactToEdit, setContactToEdit] =
+    useState<ReqContacto | null>(null);
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO}`
   );
@@ -93,7 +107,8 @@ export const AgregarRQModal = ({
 
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
-  const habilidadesTecnicas = paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const habilidadesTecnicas =
+    paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const {
@@ -172,15 +187,19 @@ export const AgregarRQModal = ({
   };
 
   const handleProfileChange = (index: number, value: string) => {
-    const idPerfilAnterior = getValues(`lstVacantes.${index}.idPerfil`);
+    const idPerfilAnterior = getValues(
+      `lstVacantes.${index}.idPerfil`
+    );
     const idPerfil = Number(value);
     setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
 
     const tarifa =
-      tarifario.find((item) => item.idPerfil === idPerfil)?.tarifa.toFixed(2) ||
-      "-";
+      tarifario
+        .find((item) => item.idPerfil === idPerfil)
+        ?.tarifa.toFixed(2) || "-";
     const moneda =
-      tarifario.find((item) => item.idPerfil === idPerfil)?.moneda || "S/.";
+      tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
+      "S/.";
 
     setValue(
       `lstVacantes.${index}.tarifa`,
@@ -212,7 +231,9 @@ export const AgregarRQModal = ({
     const idPerfil = getValues(`lstVacantes.${index}.idPerfil`);
 
     remove(index);
-    setCantidadesVacantes((prev) => prev.filter((_, i) => i !== index));
+    setCantidadesVacantes((prev) =>
+      prev.filter((_, i) => i !== index)
+    );
 
     // Eliminar las habilidades usando el idPerfil
     if (idPerfil && idPerfil !== 0) {
@@ -230,25 +251,38 @@ export const AgregarRQModal = ({
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files) {
-      const nuevosArchivos = Array.from(event.target.files).map((file) => ({
-        name: file.name,
-        size: file.size,
-        file,
-      }));
-      setArchivos((prevArchivos) => [...prevArchivos, ...nuevosArchivos]);
-      setValue("lstArchivos", nuevosArchivos, { shouldValidate: true });
+      const nuevosArchivos = Array.from(event.target.files).map(
+        (file) => ({
+          name: file.name,
+          size: file.size,
+          file,
+        })
+      );
+      setArchivos((prevArchivos) => [
+        ...prevArchivos,
+        ...nuevosArchivos,
+      ]);
+      setValue("lstArchivos", nuevosArchivos, {
+        shouldValidate: true,
+      });
     }
   };
 
   const handleRemoveFile = (index: number) => {
     const updatedArchivos = archivos.filter((_, i) => i !== index);
     setArchivos(updatedArchivos);
-    setValue("lstArchivos", updatedArchivos, { shouldValidate: true });
+    setValue("lstArchivos", updatedArchivos, {
+      shouldValidate: true,
+    });
   };
 
-  const handleClienteChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleClienteChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const selectedClienteId = Number(event.target.value);
     const selectedClienteText =
       clientes.find(
@@ -295,7 +329,8 @@ export const AgregarRQModal = ({
           const base64 = await Utils.fileToBase64(archivo.file);
           const { nombreArchivo, extensionArchivo } =
             Utils.getFileNameAndExtension(archivo.name);
-          const idTipoArchivo = Utils.getTipoArchivoId(extensionArchivo);
+          const idTipoArchivo =
+            Utils.getTipoArchivoId(extensionArchivo);
           return {
             string64: base64,
             nombreArchivo,
@@ -309,17 +344,17 @@ export const AgregarRQModal = ({
       const modalidadFact = data.idModalidadFact?.join(",");
 
       /** Map lstVacantes to VacanteSkill */
-      const lstVacanteSkills = Object.entries(selectedTechSkills).flatMap(
-        ([idPerfilStr, skills]) => {
-          const idPerfil = Number(idPerfilStr);
-          return skills.map((skill) => ({
-            // Backend waits for this structure
-            idPerfil: idPerfil,
-            idSkill: skill?.id,
-            anios: skill?.years,
-          }));
-        }
-      );
+      const lstVacanteSkills = Object.entries(
+        selectedTechSkills
+      ).flatMap(([idPerfilStr, skills]) => {
+        const idPerfil = Number(idPerfilStr);
+        return skills.map((skill) => ({
+          // Backend waits for this structure
+          idPerfil: idPerfil,
+          idSkill: skill?.id,
+          anios: skill?.years,
+        }));
+      });
 
       // map selected skills @done
       const mappedCareers = Object.entries(selectedCareers).flatMap(
@@ -347,13 +382,17 @@ export const AgregarRQModal = ({
         })),
         lstContactos: selectedContacts.join(","),
         lstArchivos,
-        idModalidadFact: modalidadFact === "" ? undefined : modalidadFact,
+        idModalidadFact:
+          modalidadFact === "" ? undefined : modalidadFact,
         lstVacanteSkills,
         lstCarreras: mappedCareers,
       };
 
       // 4. Enviar los datos al servidor
-      const response = await postData("/fmi/requirement/save", payload);
+      const response = await postData(
+        "/fmi/requirement/save",
+        payload
+      );
 
       if (response.idTipoMensaje === 2) {
         onClose();
@@ -381,21 +420,27 @@ export const AgregarRQModal = ({
     if (currentVacantes.length <= 0) return true;
 
     if (errors.lstVacantes && Array.isArray(errors.lstVacantes)) {
-      return errors.lstVacantes.some((vacanteError: any) => vacanteError);
+      return errors.lstVacantes.some(
+        (vacanteError: any) => vacanteError
+      );
     }
 
     return false;
   };
 
   const getVacantesErrorMessage = (errors: any) => {
-    if (errors.lstVacantes?.message) return errors.lstVacantes.message;
+    if (errors.lstVacantes?.message)
+      return errors.lstVacantes.message;
     if (totalVacantes <= 0 && errors.idCliente?.message !== undefined)
       return "Agrega al menos una vacante.";
-    if (currentVacantes.length <= 0) return "Agrega al menos una vacante.";
+    if (currentVacantes.length <= 0)
+      return "Agrega al menos una vacante.";
     return "Revisa los campos de vacantes.";
   };
 
-  const [cantidadesVacantes, setCantidadesVacantes] = useState<number[]>([]);
+  const [cantidadesVacantes, setCantidadesVacantes] = useState<
+    number[]
+  >([]);
   const [totalVacantes, setTotalVacantes] = useState(0);
 
   useEffect(() => {
@@ -457,9 +502,12 @@ export const AgregarRQModal = ({
   /**Modalidad facturación */
   const modalidadesFact = paramsByMaestro[3] || [];
 
+  // @marker skills modal
   /** Modal de Habilidades Técnicas */
   const { isModalOpen, openModal, closeModal } = useModal();
-  const [currentProfile, setCurrentProfile] = useState<number | null>(null);
+  const [currentProfile, setCurrentProfile] = useState<number | null>(
+    null
+  );
 
   const techSkills = habilidadesTecnicas.map((skill) => ({
     id: skill.num1,
@@ -469,7 +517,8 @@ export const AgregarRQModal = ({
   const handleOpenModal = (profileId: number) => {
     if (!profileId || profileId === 0) {
       enqueueSnackbar({
-        message: "Selecciona un perfil para agregar habilidades técnicas.",
+        message:
+          "Selecciona un perfil para agregar habilidades técnicas.",
         variant: "warning",
       });
       return;
@@ -512,10 +561,18 @@ export const AgregarRQModal = ({
     closeModal(MODAL_ADD_TECH_SKILL);
   };
 
+  const getTotalSkillsForProfile = (profileId: number): number => {
+    if (!profileId || profileId === 0) return 0;
+    return selectedTechSkills[profileId]?.length || 0;
+  };
+
+  // @marker careers modal
   /**
    * Control ModalAddCareer
    */
-  const [careerProfile, setCareerProfile] = useState<number | null>(null);
+  const [careerProfile, setCareerProfile] = useState<number | null>(
+    null
+  );
 
   const availableDegrees = paramsDegrees.map((param) => ({
     id: param.num1,
@@ -553,9 +610,16 @@ export const AgregarRQModal = ({
     return selectedCareers[careerProfile] || [];
   };
 
+  const getTotalCareersForProfile = (profileId: number): number => {
+    if (!profileId || profileId === 0) return 0;
+    return selectedCareers[profileId]?.length || 0;
+  };
+
   return (
     <>
-      {(postloading || loadingTarifario) && <Loading opacity="opacity-60" />}
+      {(postloading || loadingTarifario) && (
+        <Loading opacity="opacity-60" />
+      )}
       {isModalOpen(MODAL_ADD_TECH_SKILL) && (
         <TechSkillsModal
           onClose={handleCloseModalSkills}
@@ -649,7 +713,9 @@ export const AgregarRQModal = ({
                                 setAutogenRQ(e.target.checked);
                                 setValue(
                                   "codigoRQ",
-                                  e.target.checked ? "Autogenerado" : ""
+                                  e.target.checked
+                                    ? "Autogenerado"
+                                    : ""
                                 );
                                 clearErrors("codigoRQ");
                               }}
@@ -701,12 +767,19 @@ export const AgregarRQModal = ({
                               Estado:
                             </label>
                             <select
-                              {...register("idEstado", { valueAsNumber: true })}
+                              {...register("idEstado", {
+                                valueAsNumber: true,
+                              })}
                               className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                             >
-                              <option value={0}>Seleccione un estado</option>
+                              <option value={0}>
+                                Seleccione un estado
+                              </option>
                               {estadoOptions.map((option) => (
-                                <option key={option.num1} value={option.num1}>
+                                <option
+                                  key={option.num1}
+                                  value={option.num1}
+                                >
                                   {option.string1}
                                 </option>
                               ))}
@@ -739,7 +812,10 @@ export const AgregarRQModal = ({
 
                       {/* Botones de acción */}
                       <div className="flex justify-end space-x-4 mt-6 me-1">
-                        <button type="submit" className="btn btn-primary">
+                        <button
+                          type="submit"
+                          className="btn btn-primary"
+                        >
                           Agregar RQ
                         </button>
                       </div>
@@ -759,7 +835,9 @@ export const AgregarRQModal = ({
                         Cliente:
                       </label>
                       <select
-                        {...register("idCliente", { valueAsNumber: true })}
+                        {...register("idCliente", {
+                          valueAsNumber: true,
+                        })}
                         onChange={handleClienteChange}
                         className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5]"
                       >
@@ -803,25 +881,46 @@ export const AgregarRQModal = ({
                           <table className="table">
                             <thead>
                               <tr className="table-header">
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   ID
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Nombres
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Apellidos
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Celular
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Correo
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Cargo
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Asignado
                                 </th>
                                 <th
@@ -833,7 +932,10 @@ export const AgregarRQModal = ({
                             <tbody>
                               {contactos.length <= 0 ? (
                                 <tr>
-                                  <td colSpan={8} className="table-empty">
+                                  <td
+                                    colSpan={8}
+                                    className="table-empty"
+                                  >
                                     No hay contactos disponibles.
                                   </td>
                                 </tr>
@@ -884,7 +986,9 @@ export const AgregarRQModal = ({
                                         <button
                                           type="button"
                                           onClick={() =>
-                                            handleEditContact(contacto)
+                                            handleEditContact(
+                                              contacto
+                                            )
                                           }
                                           className="w-7 h-7"
                                         >
@@ -938,10 +1042,16 @@ export const AgregarRQModal = ({
                           <table className="table">
                             <thead>
                               <tr className="table-header">
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Perfil profesional
                                 </th>
-                                <th scope="col" className="table-header-cell">
+                                <th
+                                  scope="col"
+                                  className="table-header-cell"
+                                >
                                   Cantidad
                                 </th>
                                 <th
@@ -981,7 +1091,10 @@ export const AgregarRQModal = ({
                             <tbody>
                               {fields.length <= 0 ? (
                                 <tr>
-                                  <td colSpan={4} className="table-empty">
+                                  <td
+                                    colSpan={4}
+                                    className="table-empty"
+                                  >
                                     No hay vacantes disponibles.
                                   </td>
                                 </tr>
@@ -994,20 +1107,25 @@ export const AgregarRQModal = ({
                                   const showCurrentProfile =
                                     currentProfile === 0 ||
                                     availableProfiles.some(
-                                      (p) => p.idPerfil === currentProfile
+                                      (p) =>
+                                        p.idPerfil === currentProfile
                                     ) ||
                                     !tarifario.some(
-                                      (p) => p.idPerfil === currentProfile
+                                      (p) =>
+                                        p.idPerfil === currentProfile
                                     );
 
-                                  const optionsToShow = showCurrentProfile
-                                    ? [...availableProfiles]
-                                    : [
-                                        ...availableProfiles,
-                                        ...tarifario.filter(
-                                          (p) => p.idPerfil === currentProfile
-                                        ),
-                                      ];
+                                  const optionsToShow =
+                                    showCurrentProfile
+                                      ? [...availableProfiles]
+                                      : [
+                                          ...availableProfiles,
+                                          ...tarifario.filter(
+                                            (p) =>
+                                              p.idPerfil ===
+                                              currentProfile
+                                          ),
+                                        ];
 
                                   const tipoTarifa =
                                     tarifario.find(
@@ -1019,7 +1137,10 @@ export const AgregarRQModal = ({
                                     )?.tipoTarifa || "-";
 
                                   return (
-                                    <tr key={field.id} className="table-row">
+                                    <tr
+                                      key={field.id}
+                                      className="table-row"
+                                    >
                                       <td className="table-cell">
                                         <select
                                           {...register(
@@ -1038,21 +1159,26 @@ export const AgregarRQModal = ({
                                           <option value={0}>
                                             Seleccione un perfil
                                           </option>
-                                          {optionsToShow.map((perfil) => (
-                                            <option
-                                              key={perfil.idPerfil}
-                                              value={perfil.idPerfil}
-                                            >
-                                              {perfil.perfil}
-                                            </option>
-                                          ))}
+                                          {optionsToShow.map(
+                                            (perfil) => (
+                                              <option
+                                                key={perfil.idPerfil}
+                                                value={
+                                                  perfil.idPerfil
+                                                }
+                                              >
+                                                {perfil.perfil}
+                                              </option>
+                                            )
+                                          )}
                                         </select>
                                         {errors.lstVacantes?.[index]
                                           ?.idPerfil && (
                                           <p className="text-red-500 text-xs mt-1">
                                             {
-                                              errors.lstVacantes[index]
-                                                ?.idPerfil?.message
+                                              errors.lstVacantes[
+                                                index
+                                              ]?.idPerfil?.message
                                             }
                                           </p>
                                         )}
@@ -1064,8 +1190,9 @@ export const AgregarRQModal = ({
                                               control={control}
                                               name={`lstVacantes.${index}.cantidad`}
                                               error={
-                                                errors.lstVacantes?.[index]
-                                                  ?.cantidad?.message
+                                                errors.lstVacantes?.[
+                                                  index
+                                                ]?.cantidad?.message
                                               }
                                             />
                                           </div>
@@ -1110,10 +1237,12 @@ export const AgregarRQModal = ({
                                         <div className="flex items-center gap-3 justify-center">
                                           <button
                                             type="button"
-                                            className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                            className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                             title="Agregar carreras"
                                             onClick={() =>
-                                              openModalAddCareer(currentProfile)
+                                              openModalAddCareer(
+                                                currentProfile
+                                              )
                                             }
                                           >
                                             <img
@@ -1121,13 +1250,21 @@ export const AgregarRQModal = ({
                                               src="/assets/ic_student.png"
                                               alt="admin-settings-male"
                                             />
+                                            {/**@marker skills careers */}
+                                            <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                                              {getTotalCareersForProfile(
+                                                currentProfile
+                                              )}
+                                            </span>
                                           </button>
                                           <button
                                             type="button"
-                                            className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
+                                            className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400"
                                             title="Agregar habilidades"
                                             onClick={() => {
-                                              handleOpenModal(currentProfile);
+                                              handleOpenModal(
+                                                currentProfile
+                                              );
                                             }}
                                           >
                                             <img
@@ -1135,6 +1272,11 @@ export const AgregarRQModal = ({
                                               alt="icon add"
                                               className="w-6 h-6"
                                             />
+                                            <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+                                              {getTotalSkillsForProfile(
+                                                currentProfile
+                                              )}
+                                            </span>
                                           </button>
                                         </div>
                                       </td>
@@ -1179,7 +1321,9 @@ export const AgregarRQModal = ({
                         <button
                           type="button"
                           onClick={() =>
-                            document.getElementById("fileInput")?.click()
+                            document
+                              .getElementById("fileInput")
+                              ?.click()
                           }
                           className="btn btn-text"
                         >
