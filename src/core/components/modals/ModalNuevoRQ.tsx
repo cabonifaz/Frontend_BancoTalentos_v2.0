@@ -30,6 +30,7 @@ import {
   GRADO_ESTUDIO,
   HABILIDADES_TECNICAS,
   MODALIDAD_RQ,
+  TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
 } from "../../utilities/constants";
 import { useParams } from "../../context/ParamsContext";
@@ -48,6 +49,7 @@ interface Archivo {
   name: string;
   size: number;
   file: File;
+  idTipoArchivoRQ: number;
 }
 
 type SkillsPayload = BaseSkillProps & { idPerfil: number };
@@ -95,8 +97,10 @@ export const AgregarRQModal = ({
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [contactToEdit, setContactToEdit] =
     useState<ReqContacto | null>(null);
+  // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO}`
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
+    ${TIPO_ARCHIVOS_RQ}`
   );
 
   const {
@@ -110,6 +114,11 @@ export const AgregarRQModal = ({
   const habilidadesTecnicas =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
+  const fileTypes = paramsByMaestro[TIPO_ARCHIVOS_RQ] || [];
+  const fileOptions = fileTypes.map((type) => ({
+    id: type.num1,
+    label: type.string1,
+  }));
 
   const {
     register,
@@ -255,19 +264,22 @@ export const AgregarRQModal = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (event.target.files) {
+      // @marker new files
       const nuevosArchivos = Array.from(event.target.files).map(
         (file) => ({
           name: file.name,
           size: file.size,
           file,
+          idTipoArchivoRQ: 0,
         })
       );
-      setArchivos((prevArchivos) => [
-        ...prevArchivos,
-        ...nuevosArchivos,
-      ]);
-      setValue("lstArchivos", nuevosArchivos, {
-        shouldValidate: true,
+
+      setArchivos((prevArchivos) => {
+        const actualizados = [...prevArchivos, ...nuevosArchivos];
+        setValue("lstArchivos", actualizados, {
+          shouldValidate: true,
+        });
+        return actualizados;
       });
     }
   };
@@ -336,6 +348,7 @@ export const AgregarRQModal = ({
             nombreArchivo,
             extensionArchivo,
             idTipoArchivo,
+            idTipoArchivoRQ: archivo.idTipoArchivoRQ,
           };
         }) || []
       );
@@ -1341,21 +1354,78 @@ export const AgregarRQModal = ({
                       />
                     </div>
                     <div className="mt-2 flex-1 overflow-y-auto">
+                      {/**@marker files map */}
                       {archivos.map((archivo, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1"
+                          className="flex items-center justify-between gap-4 p-2 bg-gray-50 rounded-md mb-1"
                         >
                           <span className="text-sm text-gray-700 truncate flex-1 mr-2">
                             {archivo.name}
                           </span>
+                          <label className="flex  text-sm text-gray-600 gap-3 items-center">
+                            <span className="flex items-center gap-2">
+                              Tipo de archivo
+                              {errors?.lstArchivos?.[index]
+                                ?.idTipoArchivoRQ && (
+                                <span className="text-red-500 text-xs font-medium">
+                                  *{" "}
+                                  {
+                                    errors?.lstArchivos?.[index]
+                                      ?.idTipoArchivoRQ?.message
+                                  }
+                                </span>
+                              )}
+                            </span>
+                            <select
+                              className="w-60 px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-400 cursor-pointer"
+                              defaultValue={0}
+                              {...register(
+                                `lstArchivos.${index}.idTipoArchivoRQ`,
+                                {
+                                  valueAsNumber: true,
+                                }
+                              )}
+                              onChange={(e) => {
+                                const nuevoTipo = Number(
+                                  e.target.value
+                                );
+                                setArchivos((prev) => {
+                                  const actualizados = [...prev];
+                                  actualizados[index] = {
+                                    ...actualizados[index],
+                                    idTipoArchivoRQ: nuevoTipo,
+                                  };
+                                  setValue(
+                                    "lstArchivos",
+                                    actualizados,
+                                    { shouldValidate: true }
+                                  );
+                                  return actualizados;
+                                });
+                              }}
+                            >
+                              <option value={0} disabled>
+                                Elija un tipo
+                              </option>
+                              {fileOptions.map((option) => (
+                                <option
+                                  value={option.id}
+                                  key={option.id}
+                                >
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
                           <button
                             type="button"
                             onClick={() => handleRemoveFile(index)}
                             className="text-red-500 hover:text-red-600 focus:outline-none"
                           >
                             <img
-                              src="/assets/ic_delete_bdt.svg"
+                              src="/assets/ic_remove.png"
                               alt="icon close"
                               className="w-5 h-5"
                             />

@@ -70,6 +70,12 @@ export const newRQSchema = z
           name: z.string(),
           size: z.number(),
           file: z.instanceof(File),
+          idTipoArchivoRQ: z.coerce
+            .number({
+              required_error: "Elija un tipo de archivo",
+              invalid_type_error: "Elija un tipo de archivo",
+            })
+            .min(1, "Elija un tipo de archivo"),
         })
       )
       .optional(),
