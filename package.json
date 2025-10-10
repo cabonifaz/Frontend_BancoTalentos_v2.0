@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@react-pdf/renderer": "^4.3.1",
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/react": "13.4.0",
     "@testing-library/user-event": "13.5.0",
@@ -15,6 +16,7 @@
     "banco-talentos-frontend": "file:",
     "cra-template-typescript": "1.2.0",
     "date-fns": "^4.1.0",
+    "franc-min": "^6.2.0",
     "lottie-react": "^2.4.1",
     "notistack": "^3.0.2",
     "pdfjs-dist": "^5.4.149",

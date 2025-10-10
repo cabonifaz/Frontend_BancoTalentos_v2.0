@@ -5,7 +5,10 @@ import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
 import { TalentAvailabilityParams } from "../../models/params/TalentUpdateParams";
 import { updateTalentAvailability } from "../../services/apiService";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
 import { validateText } from "../../utilities/validation";
@@ -18,9 +21,9 @@ interface Props {
 
 // Opciones desde local, para evitar hacer demasiadas llamadas a la API
 const availabilityOptions = [
-  { idParametro: 188, string1: "Presencial" },
-  { idParametro: 189, string1: "Remoto" },
-  { idParametro: 190, string1: "Híbrido" },
+  { idParametro: 1, string1: "Presencial" },
+  { idParametro: 2, string1: "Remoto" },
+  { idParametro: 3, string1: "Híbrido" },
 ];
 
 export const ModalAvailability = ({
@@ -30,9 +33,8 @@ export const ModalAvailability = ({
 }: Props) => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { closeModal } = useModal();
-  const [selectedAvailabilities, setSelectedAvailabilities] = useState<
-    number[]
-  >([]);
+  const [selectedAvailabilities, setSelectedAvailabilities] =
+    useState<number[]>([]);
 
   const { loading, fetch: updateData } = useApi<
     BaseResponse,
@@ -82,7 +84,10 @@ export const ModalAvailability = ({
 
     if (!isValid || !idTalento) return;
 
-    const availabilityString = selectedAvailabilities.join(",");
+    const filteredAvailabilities = selectedAvailabilities.filter(
+      (id) => id <= 3
+    );
+    const availabilityString = filteredAvailabilities.join(",");
 
     updateData({
       idTalento: idTalento,
@@ -128,12 +133,17 @@ export const ModalAvailability = ({
             Disponibilidad
           </label>
           {availabilityOptions.map((d) => (
-            <label className="flex items-center gap-2" key={d.idParametro}>
+            <label
+              className="flex items-center gap-2"
+              key={d.idParametro}
+            >
               <input
                 type="checkbox"
                 value={d.idParametro}
                 className="w-4 h-4"
-                checked={selectedAvailabilities.includes(d.idParametro)}
+                checked={selectedAvailabilities.includes(
+                  d.idParametro
+                )}
                 onChange={() => handleCheckboxChange(d.idParametro)}
               />
               <span>{d.string1}</span>
@@ -141,7 +151,9 @@ export const ModalAvailability = ({
           ))}
 
           {errors.availability && (
-            <p className="text-red-500 text-sm mt-2">{errors.availability}</p>
+            <p className="text-red-500 text-sm mt-2">
+              {errors.availability}
+            </p>
           )}
         </div>
       </div>

@@ -9,6 +9,8 @@ export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
 export const DOCUMENTO_CERT_DIP = 99;
+export const DOCUMENTO_CV_FR_ES = 5;
+export const DOCUMENTO_CV_FR_EN = 6;
 
 // RQ STATE
 export const ESTADO_REGISTRADO = 1;
@@ -49,6 +51,7 @@ export const OBJETO_CONTRATO = "37";
 export const FRASES_IA_MAESTRO = "40";
 export const HABILIDADES_TECNICAS = "19";
 export const GRADO_ESTUDIO = "38";
+export const TIPO_ARCHIVOS_RQ = "41";
 
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;

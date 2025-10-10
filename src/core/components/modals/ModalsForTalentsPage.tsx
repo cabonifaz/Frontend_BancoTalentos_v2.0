@@ -13,6 +13,7 @@ import { ModalEditPhoto } from "./ModalEditPhoto";
 import { ModalEducation } from "./ModalEducation";
 import { ModalExperience } from "./ModalExperience";
 import { ModalFeedback } from "./ModalFeedback";
+import { ModalFractalCV } from "./modal-generatecv/ModalFractalCV";
 import { ModalLanguage } from "./ModalLanguage";
 import { ModalResume } from "./ModalResume";
 import { ModalSalary } from "./ModalSalary";
@@ -30,8 +31,12 @@ interface Props {
   educationRef: React.MutableRefObject<Education | null>;
   languageRef: React.MutableRefObject<Language | null>;
   feedbackRef: React.MutableRefObject<Feedback | null>;
+  cvLang?: "ES" | "EN";
   fetchTalentDets: (id: number) => void;
-  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
+  updateTalentList?: (
+    idTalento: number,
+    fields: Partial<Talent>
+  ) => void;
 }
 
 export const ModalsForTalentsPage = ({
@@ -43,8 +48,10 @@ export const ModalsForTalentsPage = ({
   languageRef,
   feedbackRef,
   updateTalentList,
+  cvLang,
 }: Props) => {
-  const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
+  const handleUpdate = (idTalento: number) =>
+    fetchTalentDets(idTalento);
 
   return (
     <>
@@ -52,6 +59,13 @@ export const ModalsForTalentsPage = ({
         cvData={talentDet?.files.find(
           (file) => file.idTipoDocumento === DOCUMENTO_CV
         )}
+      />
+
+      <ModalFractalCV
+        talentDet={talentDet}
+        talent={talent}
+        language={cvLang}
+        onUpdate={handleUpdate}
       />
 
       <ModalContact
@@ -76,8 +90,9 @@ export const ModalsForTalentsPage = ({
       <ModalUploadResume
         idTalento={talent?.idTalento}
         idArchivo={
-          talentDet?.files.find((file) => file.idTipoDocumento === DOCUMENTO_CV)
-            ?.idArchivo
+          talentDet?.files.find(
+            (file) => file.idTipoDocumento === DOCUMENTO_CV
+          )?.idArchivo
         }
         onUpdate={handleUpdate}
       />
@@ -95,11 +110,20 @@ export const ModalsForTalentsPage = ({
         updateTalentList={updateTalentList}
       />
 
-      <ModalUploadCert idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalUploadCert
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
-      <ModalTechSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalTechSkills
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
-      <ModalSoftSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalSoftSkills
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
       <ModalSummary
         idTalento={talent?.idTalento}
