@@ -9,6 +9,8 @@ export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
 export const DOCUMENTO_CERT_DIP = 99;
+export const DOCUMENTO_CV_FR_ES = 5;
+export const DOCUMENTO_CV_FR_EN = 6;
 
 // RQ STATE
 export const ESTADO_REGISTRADO = 1;
