@@ -17,9 +17,9 @@ import { useTranslateTalentData } from "../../../hooks/useTranslateTalentData";
 import { TalentForFractalCV } from "../../../models/interfaces/TalentDataForFractal";
 import { UploadTalentFileRequest } from "../../../models/requests/talent";
 import {
-  useAddTalentFile,
+  useAddLangCV,
   useFetchFile,
-  useUpdateTalentFile,
+  useUpdateCVLang,
 } from "../../../hooks";
 import {
   ARCHIVO_PDF,
@@ -142,9 +142,9 @@ export const ModalFractalCV = ({
   const { getPDFWorker, isLoading: converting } = usePDFFromReact();
   const { isLoading: isTranslating, translateTalentData } =
     useTranslateTalentData();
-  const { isLoading: isUploading, addFile } = useAddTalentFile();
+  const { isLoading: isUploading, addFile } = useAddLangCV();
   const { isLoading: isUpdating, addFile: updateFile } =
-    useUpdateTalentFile();
+    useUpdateCVLang();
 
   // === Función para generar el PDF (sin guardar) ===
   const handleGenerate = async () => {
@@ -168,7 +168,6 @@ export const ModalFractalCV = ({
         );
         cvData = translated.promptResponse;
         setTalentForCV(cvData);
-        notifySuccess("Traducción correcta, generando CV...");
       }
 
       // Generar PDF en base64
@@ -180,9 +179,7 @@ export const ModalFractalCV = ({
       );
 
       setGeneratedPDF(encodedPDF);
-      notifySuccess(
-        "CV generado correctamente. Revisa la vista previa."
-      );
+      notifySuccess("CV generado correctamente");
       setShowPreview(true);
     } catch (error) {
       if (error instanceof AppError) notifyError(error.message);
@@ -203,7 +200,7 @@ export const ModalFractalCV = ({
         nombreArchivo: `${getFullname().replace(
           /\s+/g,
           "_"
-        )}_CV_${language}.pdf`,
+        )}_CV_${language}`,
         extensionArchivo: "pdf",
         idTipoArchivo: ARCHIVO_PDF,
         idTipoDocumento: idTipoDocumento,

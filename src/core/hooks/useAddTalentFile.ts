@@ -3,14 +3,14 @@ import { AppError, BaseResponse } from "../models";
 import { UploadTalentFileRequest } from "../models/requests/talent";
 import { axiosInstance } from "../services/axiosService";
 
-export const useAddTalentFile = () => {
+export const useAddLangCV = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const addFile = async (request: UploadTalentFileRequest) => {
     setIsLoading(true);
     try {
       const response = await axiosInstance.post<BaseResponse>(
-        "bdt/talent/uploadTalentFile",
+        "bdt/talent/uploadcvlang",
         request
       );
 
