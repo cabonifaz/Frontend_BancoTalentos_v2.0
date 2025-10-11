@@ -35,6 +35,7 @@ import {
   GRADO_ESTUDIO,
   HABILIDADES_TECNICAS,
   MODALIDAD_RQ,
+  TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
 } from "../../utilities/constants";
 import { enqueueSnackbar } from "notistack";
@@ -63,6 +64,7 @@ interface Archivo {
   size: number;
   file: File;
   link?: string;
+  idTipoArchivoRq?: number;
 }
 
 interface Props {
@@ -119,7 +121,8 @@ export const ModalDetallesRQV2 = ({
   >(null);
 
   const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}`
+    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
+    ${TIPO_ARCHIVOS_RQ}`
   );
   const {
     tarifario,
@@ -127,12 +130,18 @@ export const ModalDetallesRQV2 = ({
     loading: loadingTarifario,
   } = useFetchTarifario();
 
+  // @marker params
   const duracionRQ = paramsByMaestro[DURACION_RQ] || [];
   const modalidadRQ = paramsByMaestro[MODALIDAD_RQ] || [];
   const modalidadesFact = paramsByMaestro[TIPO_MODALIDAD] || [];
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
+  const fileTypes = paramsByMaestro[TIPO_ARCHIVOS_RQ] || [];
+  const fileOptions = fileTypes.map((type) => ({
+    id: type.num1,
+    label: type.string1,
+  }));
 
   const {
     register,
@@ -321,13 +330,18 @@ export const ModalDetallesRQV2 = ({
     return "Revisa los campos de vacantes.";
   };
 
-  const { handleSubmit: handleSubmitFiles, setValue: setValueFiles } =
-    useForm<AddFilesSchemaType>({
-      resolver: zodResolver(addFilesSchema),
-      defaultValues: {
-        lstArchivos: [],
-      },
-    });
+  const {
+    handleSubmit: handleSubmitFiles,
+    setValue: setValueFiles,
+    register: registerFile,
+    getValues: getValuesFiles,
+    formState: { errors: fileErrors },
+  } = useForm<AddFilesSchemaType>({
+    resolver: zodResolver(addFilesSchema),
+    defaultValues: {
+      lstArchivos: [],
+    },
+  });
 
   useEffect(() => {
     if (requirement) {
@@ -364,10 +378,19 @@ export const ModalDetallesRQV2 = ({
           name: archivo.nombreArchivo,
           size: 0,
           file: new File([], archivo.nombreArchivo),
+          idTipoArchivoRq: archivo.idTipoArchivoRq,
         }));
 
       setArchivos(archivosFormateados);
       setValueFiles("lstArchivos", archivosFormateados);
+
+      // Asegura que cada campo individual también esté sincronizado
+      archivosFormateados.forEach((archivo, index) => {
+        setValueFiles(
+          `lstArchivos.${index}.idTipoArchivoRq`,
+          archivo.idTipoArchivoRq
+        );
+      });
 
       const vacantesIniciales =
         requirement.requerimiento.lstRqVacantes.map((vacante) => {
@@ -431,16 +454,23 @@ export const ModalDetallesRQV2 = ({
           name: file.name,
           size: file.size,
           file,
+          idTipoArchivoRq: 0,
         })
       );
 
+      const currentFormArchivos = getValuesFiles("lstArchivos") || [];
       setArchivos((prevArchivos) => [
         ...prevArchivos,
         ...nuevosArchivos,
       ]);
-      setValueFiles("lstArchivos", nuevosArchivos, {
-        shouldValidate: true,
-      });
+      setValueFiles(
+        "lstArchivos",
+        [...currentFormArchivos, ...nuevosArchivos],
+        {
+          shouldValidate: true,
+        }
+      );
+      event.target.value = "";
     }
   };
 
@@ -500,6 +530,7 @@ export const ModalDetallesRQV2 = ({
             nombreArchivo,
             extensionArchivo,
             idTipoArchivo,
+            idTipoArchivoRQ: archivo.idTipoArchivoRq,
           };
         }) || []
       );
@@ -1658,6 +1689,7 @@ export const ModalDetallesRQV2 = ({
 
                       {/* Lista de archivos */}
                       <div className="mt-2 flex-1 overflow-y-auto mb-4">
+                        {/**@marker files maps */}
                         {archivos.map((archivo, index) => (
                           <div
                             key={index}
@@ -1673,7 +1705,7 @@ export const ModalDetallesRQV2 = ({
                               className="text-blue-500 hover:text-blue-600 focus:outline-none"
                             >
                               <img
-                                src="/assets/ic_show_pass.svg"
+                                src="/assets/ic_preview_file.png"
                                 alt="icon preview"
                                 className="w-5 h-5"
                               />
@@ -1686,18 +1718,82 @@ export const ModalDetallesRQV2 = ({
                                 Nuevo
                               </span>
                             )}
+                            <div className="flex flex-col">
+                              <select
+                                {...registerFile(
+                                  `lstArchivos.${index}.idTipoArchivoRq`,
+                                  {
+                                    valueAsNumber: true,
+                                  }
+                                )}
+                                onChange={(e) => {
+                                  const value = Number(
+                                    e.target.value
+                                  );
+
+                                  // Actualiza react-hook-form
+                                  setValueFiles(
+                                    `lstArchivos.${index}.idTipoArchivoRq`,
+                                    value,
+                                    {
+                                      shouldValidate: true,
+                                    }
+                                  );
+
+                                  // Actualiza el estado local
+                                  setArchivos((prev) => {
+                                    const updated = [...prev];
+                                    updated[index] = {
+                                      ...updated[index],
+                                      idTipoArchivoRq: value,
+                                    };
+                                    return updated;
+                                  });
+                                }}
+                                value={
+                                  getValuesFiles(
+                                    `lstArchivos.${index}.idTipoArchivoRq`
+                                  ) || 0
+                                }
+                                className="w-60 px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-400 cursor-pointer"
+                                disabled={
+                                  archivo.idRequerimientoArchivo !== 0
+                                }
+                              >
+                                <option value={0} disabled>
+                                  Elija un tipo
+                                </option>
+                                {fileOptions.map((option) => (
+                                  <option
+                                    value={option.id}
+                                    key={option.id}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              {fileErrors.lstArchivos?.[index]
+                                ?.idTipoArchivoRq && (
+                                <p className="text-red-500 text-xs mt-1">
+                                  {
+                                    fileErrors.lstArchivos?.[index]
+                                      ?.idTipoArchivoRq?.message
+                                  }
+                                </p>
+                              )}
+                            </div>
                             <button
                               type="button"
                               onClick={() =>
                                 handleRemoveFile(
                                   index,
-                                  archivo.idRequerimientoArchivo
+                                  archivo.idRequerimientoArchivo || 0
                                 )
                               }
                               className="text-red-500 hover:text-red-600 focus:outline-none"
                             >
                               <img
-                                src="/assets/ic_delete_bdt.svg"
+                                src="/assets/ic_remove.png"
                                 alt="icon close"
                                 className="w-5 h-5"
                               />
