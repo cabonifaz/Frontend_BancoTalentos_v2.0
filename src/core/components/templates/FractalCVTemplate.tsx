@@ -25,12 +25,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     color: "#111111",
     fontSize: 10,
-    paddingTop: 70, // Espacio para el header fijo
-    paddingBottom: 70, // Espacio para el footer fijo
+    paddingTop: 70,
+    paddingBottom: 70,
     paddingHorizontal: 40,
     lineHeight: 1.4,
   },
-  // Header fijo en todas las páginas
   headerFixed: {
     position: "absolute",
     top: 0,
@@ -72,7 +71,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  // Footer fijo en todas las páginas
   footerFixed: {
     position: "absolute",
     bottom: 20,
@@ -104,14 +102,12 @@ const styles = StyleSheet.create({
   },
 });
 
-// === Componente Header (se repite automáticamente) ===
 const Header = () => (
   <View style={styles.headerFixed} fixed>
     <Image src="/assets/header-fr.png" style={styles.headerImage} />
   </View>
 );
 
-// === Componente Footer (se repite automáticamente) ===
 const Footer: React.FC<{ language: "ES" | "EN" }> = ({
   language,
 }) => {
@@ -140,7 +136,6 @@ const Footer: React.FC<{ language: "ES" | "EN" }> = ({
   );
 };
 
-// === Componente principal PDF ===
 export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
   talent,
   language = "ES",
@@ -149,14 +144,24 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
 }) => {
   const t = (es: string, en: string) => (language === "ES" ? es : en);
 
+  // Determinamos qué secciones tienen contenido
+  const hasWorkExperience =
+    sorteWorkExperience && sorteWorkExperience.length > 0;
+  const hasEducation =
+    talent?.educaciones && talent.educaciones.length > 0;
+  const hasCertifications =
+    talent?.certificaciones && talent.certificaciones.length > 0;
+  const hasLanguages = talent?.idiomas && talent.idiomas.length > 0;
+
+  // Contador para la numeración dinámica
+  let sectionNumber = 1;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Header />
-        {/* === Nombre === */}
         <Text style={styles.fullname}>{fullname}</Text>
 
-        {/* === Descripción === */}
         <Text style={styles.paragraph}>
           {talent?.descripcion ||
             t(
@@ -165,14 +170,15 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
             )}
         </Text>
 
-        {/* === 1. Experiencia laboral === */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("1. Experiencia laboral", "1. Work Experience")}
-          </Text>
+        {/* === Experiencia laboral === */}
+        {hasWorkExperience && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {sectionNumber++}.{" "}
+              {t("Experiencia laboral", "Work Experience")}
+            </Text>
 
-          {sorteWorkExperience && sorteWorkExperience.length > 0 ? (
-            sorteWorkExperience.map((exp) => (
+            {sorteWorkExperience.map((exp) => (
               <View
                 key={exp.idExperiencia}
                 style={styles.itemContainer}
@@ -190,30 +196,18 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 </View>
                 <Text style={styles.paragraph}>{exp.funciones}</Text>
               </View>
-            ))
-          ) : (
-            <Text
-              style={[
-                styles.paragraph,
-                { fontStyle: "italic", color: "#666" },
-              ]}
-            >
-              {t(
-                "No se registran experiencias laborales.",
-                "No work experience recorded."
-              )}
+            ))}
+          </View>
+        )}
+
+        {/* === Educación === */}
+        {hasEducation && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {sectionNumber++}. {t("Educación", "Education")}
             </Text>
-          )}
-        </View>
 
-        {/* === 2. Educación === */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("2. Educación", "2. Education")}
-          </Text>
-
-          {talent?.educaciones && talent.educaciones.length > 0 ? (
-            talent.educaciones.map((ed, index) => (
+            {talent?.educaciones?.map((ed, index) => (
               <View
                 key={index}
                 style={styles.itemContainer}
@@ -232,31 +226,19 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                   </Text>
                 </View>
               </View>
-            ))
-          ) : (
-            <Text
-              style={[
-                styles.paragraph,
-                { fontStyle: "italic", color: "#666" },
-              ]}
-            >
-              {t(
-                "No se registran estudios.",
-                "No education records."
-              )}
+            ))}
+          </View>
+        )}
+
+        {/* === Certificaciones === */}
+        {hasCertifications && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {sectionNumber++}.{" "}
+              {t("Certificaciones", "Certifications")}
             </Text>
-          )}
-        </View>
 
-        {/* === 3. Certificaciones === */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("3. Certificaciones", "3. Certifications")}
-          </Text>
-
-          {talent?.certificaciones &&
-          talent.certificaciones.length > 0 ? (
-            talent.certificaciones.map((c, index) => (
+            {talent.certificaciones.map((c, index) => (
               <View
                 key={index}
                 style={styles.itemContainer}
@@ -271,31 +253,19 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                   </Text>
                 </View>
               </View>
-            ))
-          ) : (
-            <Text
-              style={[
-                styles.paragraph,
-                { fontStyle: "italic", color: "#666" },
-              ]}
-            >
-              {t(
-                "No se registran certificaciones.",
-                "No certifications recorded."
-              )}
+            ))}
+          </View>
+        )}
+
+        {/* === Idiomas === */}
+        {hasLanguages && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {sectionNumber++}. {t("Idiomas", "Languages")}
             </Text>
-          )}
-        </View>
 
-        {/* === 4. Idiomas === */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {t("4. Idiomas", "4. Languages")}
-          </Text>
-
-          {talent?.idiomas && talent.idiomas.length > 0 ? (
             <View>
-              {talent.idiomas.map((lan, index) => (
+              {talent?.idiomas?.map((lan, index) => (
                 <View key={index} style={styles.listItem}>
                   <Text style={styles.bullet}>•</Text>
                   <Text>
@@ -304,20 +274,9 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 </View>
               ))}
             </View>
-          ) : (
-            <Text
-              style={[
-                styles.paragraph,
-                { fontStyle: "italic", color: "#666" },
-              ]}
-            >
-              {t(
-                "No se registran idiomas.",
-                "No languages recorded."
-              )}
-            </Text>
-          )}
-        </View>
+          </View>
+        )}
+
         <Footer language={language} />
       </Page>
     </Document>
