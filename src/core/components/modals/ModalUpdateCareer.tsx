@@ -32,7 +32,9 @@ export const ModalDetailsVacCarreras = ({
   onClose,
 }: ModalDetailsVacCarrerasProps) => {
   const [carreras, setCarreras] = useState<VacanteCarrera[]>([]);
-  const [modalMode, setModalMode] = useState<MODAL_MODES>(MODAL_MODES.NORMAL);
+  const [modalMode, setModalMode] = useState<MODAL_MODES>(
+    MODAL_MODES.NORMAL
+  );
   const [newCareer, setNewCareer] = useState("");
 
   const { fetchCarreras, isLoading } = useFetchVacCarreras();
@@ -58,7 +60,9 @@ export const ModalDetailsVacCarreras = ({
   /** Cambiar modo */
   const toggleEditMode = () => {
     setModalMode((prev) =>
-      prev === MODAL_MODES.EDIT ? MODAL_MODES.NORMAL : MODAL_MODES.EDIT
+      prev === MODAL_MODES.EDIT
+        ? MODAL_MODES.NORMAL
+        : MODAL_MODES.EDIT
     );
   };
 
@@ -67,7 +71,9 @@ export const ModalDetailsVacCarreras = ({
     const name = newCareer.trim().toUpperCase();
     if (!name) return;
 
-    const exists = carreras.find((c) => c.carrera.toUpperCase() === name);
+    const exists = carreras.find(
+      (c) => c.carrera.toUpperCase() === name
+    );
 
     if (exists && exists.idEstadoRegistro === 1) {
       showWarningSnack("La carrera ya fue agregada");
@@ -78,7 +84,9 @@ export const ModalDetailsVacCarreras = ({
       // Reactivar carrera
       setCarreras((prev) =>
         prev.map((c) =>
-          c.carrera.toUpperCase() === name ? { ...c, idEstadoRegistro: 1 } : c
+          c.carrera.toUpperCase() === name
+            ? { ...c, idEstadoRegistro: 1 }
+            : c
         )
       );
       setNewCareer("");
@@ -119,10 +127,15 @@ export const ModalDetailsVacCarreras = ({
   };
 
   /** Actualizar grado de estudios */
-  const handleChangeGrado = (nombreCarrera: string, idGrado: number) => {
+  const handleChangeGrado = (
+    nombreCarrera: string,
+    idGrado: number
+  ) => {
     setCarreras((prev) =>
       prev.map((c) =>
-        c.carrera === nombreCarrera ? { ...c, idGradoEstudios: idGrado } : c
+        c.carrera === nombreCarrera
+          ? { ...c, idGradoEstudios: idGrado }
+          : c
       )
     );
   };
@@ -131,7 +144,9 @@ export const ModalDetailsVacCarreras = ({
   const handleUpdate = () => {
     update(idVac, carreras)
       .then((res) => {
-        showSuccessSnack(res?.mensaje || "Carreras actualizadas correctamente");
+        showSuccessSnack(
+          res?.mensaje || "Carreras actualizadas correctamente"
+        );
         loadCarreras();
         toggleEditMode();
       })
@@ -142,12 +157,16 @@ export const ModalDetailsVacCarreras = ({
   };
 
   /** Filtrar carreras activas */
-  const activeCarreras = carreras.filter((c) => c.idEstadoRegistro === 1);
+  const activeCarreras = carreras.filter(
+    (c) => c.idEstadoRegistro === 1
+  );
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <div className="bg-white rounded-lg shadow-2xl p-6 w-full md:w-[90%] lg:w-[700px] min-h-[400px] max-h-[80vh] overflow-y-auto relative">
-        {(isLoading || isUpdating) && <Loading opacity="opacity-60" />}
+        {(isLoading || isUpdating) && (
+          <Loading opacity="opacity-60" />
+        )}
 
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -157,6 +176,7 @@ export const ModalDetailsVacCarreras = ({
 
           <div className="flex gap-2">
             <button
+              type="button"
               className="btn btn-outline-blue flex gap-2 items-center"
               onClick={toggleEditMode}
             >
@@ -191,9 +211,15 @@ export const ModalDetailsVacCarreras = ({
               placeholder="Escribe el nombre de una carrera..."
               value={newCareer}
               onChange={(e) => setNewCareer(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddCareer()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && handleAddCareer()
+              }
             />
-            <button onClick={handleAddCareer} className="btn btn-blue">
+            <button
+              type="button"
+              onClick={handleAddCareer}
+              className="btn btn-blue"
+            >
               Agregar
             </button>
           </div>
@@ -215,7 +241,10 @@ export const ModalDetailsVacCarreras = ({
                     className="border rounded px-2 py-1 text-sm"
                     value={c.idGradoEstudios ?? 0}
                     onChange={(e) =>
-                      handleChangeGrado(c.carrera, Number(e.target.value))
+                      handleChangeGrado(
+                        c.carrera,
+                        Number(e.target.value)
+                      )
                     }
                   >
                     <option value={0}>Seleccione un grado</option>
@@ -227,8 +256,9 @@ export const ModalDetailsVacCarreras = ({
                   </select>
                 ) : (
                   <span className="text-sm text-gray-600">
-                    {availableDegrees.find((g) => g.id === c.idGradoEstudios)
-                      ?.label || "Sin grado"}
+                    {availableDegrees.find(
+                      (g) => g.id === c.idGradoEstudios
+                    )?.label || "Sin grado"}
                   </span>
                 )}
 
@@ -257,7 +287,11 @@ export const ModalDetailsVacCarreras = ({
         {/* Footer */}
         {modalMode === MODAL_MODES.EDIT && (
           <div className="mt-6 flex justify-end">
-            <button onClick={handleUpdate} className="btn btn-blue">
+            <button
+              type="button"
+              onClick={handleUpdate}
+              className="btn btn-blue"
+            >
               Guardar cambios
             </button>
           </div>

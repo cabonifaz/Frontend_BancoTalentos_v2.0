@@ -47,12 +47,15 @@ export const ModalDetailsVacSkills = ({
   const [skills, setSkills] = useState<VacanteSkill[]>();
   const [newSkillName, setNewSkillName] = useState("");
   const [skillCreated, setSkillCreated] = useState(false);
-  const [modalMode, setModalMode] = useState<MODAL_MODES>(MODAL_MODES.NORMAL);
+  const [modalMode, setModalMode] = useState<MODAL_MODES>(
+    MODAL_MODES.NORMAL
+  );
 
   /**Change modal mode */
   const changeModalMode = (mode: MODAL_MODES) => setModalMode(mode);
   const changeEditMode = () => {
-    if (modalMode === MODAL_MODES.EDIT) changeModalMode(MODAL_MODES.NORMAL);
+    if (modalMode === MODAL_MODES.EDIT)
+      changeModalMode(MODAL_MODES.NORMAL);
     else changeModalMode(MODAL_MODES.EDIT);
   };
 
@@ -62,8 +65,12 @@ export const ModalDetailsVacSkills = ({
     fetchTechSkills(idVac)
       .then((res) => setSkills(res))
       .catch((error) => {
-        if (error instanceof AppError) showWarningSnack(error.message);
-        else showWarningSnack("Error al obtener las habilidades técnicas");
+        if (error instanceof AppError)
+          showWarningSnack(error.message);
+        else
+          showWarningSnack(
+            "Error al obtener las habilidades técnicas"
+          );
       });
   };
 
@@ -80,7 +87,10 @@ export const ModalDetailsVacSkills = ({
         prev
           ?.map((skill) => {
             // Case 1: already exist in bd
-            if (skill.idHabilidad === idHabilidad && skill.idVacanteHabilidad) {
+            if (
+              skill.idHabilidad === idHabilidad &&
+              skill.idVacanteHabilidad
+            ) {
               if (skill.idEstadoRegistro === 1) {
                 return { ...skill, idEstadoRegistro: 0 }; // set as removed
               }
@@ -105,7 +115,9 @@ export const ModalDetailsVacSkills = ({
     if (!skills) return;
 
     // Buscar si ya existe la habilidad
-    const existingSkill = skills.find((s) => s.idHabilidad === option.id);
+    const existingSkill = skills.find(
+      (s) => s.idHabilidad === option.id
+    );
 
     if (existingSkill) {
       if (existingSkill.idEstadoRegistro === 1) {
@@ -140,7 +152,9 @@ export const ModalDetailsVacSkills = ({
   const handleYearsChange = (idHabilidad: number, years: number) => {
     setSkills((prev) =>
       prev?.map((skill) =>
-        skill.idHabilidad === idHabilidad ? { ...skill, anios: years } : skill
+        skill.idHabilidad === idHabilidad
+          ? { ...skill, anios: years }
+          : skill
       )
     );
   };
@@ -158,7 +172,10 @@ export const ModalDetailsVacSkills = ({
       })
       .catch((e) => {
         if (e instanceof AppError) showWarningSnack(e.message);
-        else showWarningSnack("Error al actualizar las habilidades técnicas");
+        else
+          showWarningSnack(
+            "Error al actualizar las habilidades técnicas"
+          );
       });
   };
 
@@ -168,7 +185,8 @@ export const ModalDetailsVacSkills = ({
     onClose();
   };
 
-  const { createNewTechSkill, isLoading: isCreating } = useCreateNewTechSkill();
+  const { createNewTechSkill, isLoading: isCreating } =
+    useCreateNewTechSkill();
   const [autoQuery, setAutoQuery] = useState("");
   const handleCreateNewOne = async (skillName: string) => {
     // Skill already exists
@@ -184,12 +202,18 @@ export const ModalDetailsVacSkills = ({
       .then((res) => {
         const { baseResponse, idSkill } = res.data;
         showSuccessSnack(baseResponse.mensaje);
-        availableSkills.push({ id: idSkill, label: skillName.toUpperCase() });
+        availableSkills.push({
+          id: idSkill,
+          label: skillName.toUpperCase(),
+        });
         setSkillCreated(true);
         changeModalMode(MODAL_MODES.EDIT);
         setAutoQuery("");
+        refetchAvailableSkills();
       })
-      .catch((err) => handleAppError(err, "Error al crear la nueva habilidad"));
+      .catch((err) =>
+        handleAppError(err, "Error al crear la nueva habilidad")
+      );
   };
 
   const handleCancelNewSkill = () => {
@@ -201,16 +225,19 @@ export const ModalDetailsVacSkills = ({
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <div className="bg-white rounded-lg shadow-2xl p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-y-auto relative">
         {(isLoading || isUpdating || isCreating) && (
-          <Loading opacity="opacity-60" />
+          <Loading opacity="opacity-50" />
         )}
         <div
-          style={{ display: modalMode === MODAL_MODES.ADD ? "none" : "block" }}
+          style={{
+            display: modalMode === MODAL_MODES.ADD ? "none" : "block",
+          }}
         >
           <h2 className="text-lg font-bold mb-4">
             Lista de habilidades para esta vacante
           </h2>
           <div className="flex justify-end my-2">
             <button
+              type="button"
               className="btn btn-outline-blue flex gap-2 items-center"
               onClick={changeEditMode}
             >
@@ -262,10 +289,17 @@ export const ModalDetailsVacSkills = ({
                       disabled={modalMode !== MODAL_MODES.EDIT}
                       value={skill.anios}
                       onChange={(e) => {
-                        const numValue = parseInt(e.target.value) || 0;
-                        handleYearsChange(skill.idHabilidad, numValue);
+                        const numValue =
+                          parseInt(e.target.value) || 0;
+                        handleYearsChange(
+                          skill.idHabilidad,
+                          numValue
+                        );
                         if (e.target.value.startsWith("0"))
-                          e.target.value = e.target.value.replace("0", "");
+                          e.target.value = e.target.value.replace(
+                            "0",
+                            ""
+                          );
                       }}
                       onFocus={(e) => e.target.select()}
                     />
@@ -275,7 +309,9 @@ export const ModalDetailsVacSkills = ({
                     className="text-red-500 hover:text-red-700 ml-3"
                     title="Eliminar habilidad"
                     disabled={modalMode !== MODAL_MODES.EDIT}
-                    onClick={() => handleRemoveSkill(skill.idHabilidad)}
+                    onClick={() =>
+                      handleRemoveSkill(skill.idHabilidad)
+                    }
                   >
                     <img
                       src="/assets/ic_close_x.svg"
@@ -323,8 +359,8 @@ export const ModalDetailsVacSkills = ({
                 Crea una nueva habilidad
               </h2>
               <p className="text-sm text-gray-500 mt-2">
-                Descuida, tu progreso no se perderá. Al guardar podrás volver a
-                seleccionar o presiona cancelar
+                Descuida, tu progreso no se perderá. Al guardar podrás
+                volver a seleccionar o presiona cancelar
               </p>
             </div>
 

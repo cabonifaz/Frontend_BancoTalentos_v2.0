@@ -13,6 +13,25 @@ const vacanteSchema = z.object({
   tarifa: z.string().optional().nullable(),
 });
 
+// Subschema: Skills por vacante
+const vacanteSkillSchema = z.object({
+  idPerfil: z.number(),
+  idSkill: z.number(),
+  anios: z.coerce
+    .number({
+      invalid_type_error: "Los años deben ser un número",
+    })
+    .min(0)
+    .optional(),
+});
+
+// Subschema: Carreras por vacante
+const vacanteCareerSchema = z.object({
+  idPerfil: z.number(),
+  carrera: z.string().min(1, "La carrera es obligatoria"),
+  idGrado: z.number().min(1, "Debe elegir un grado"),
+});
+
 export const newRQSchema = z
   .object({
     idCliente: z
@@ -64,6 +83,13 @@ export const newRQSchema = z
     lstVacantes: z
       .array(vacanteSchema)
       .min(1, "Debe agregar 1 vacante como mínimo"),
+
+    // Control de vacantes y carreras
+    lstVacanteSkills: z.array(vacanteSkillSchema).optional(),
+    lstCarreras: z.array(vacanteCareerSchema).optional(),
+
+    lstContactos: z.array(z.number()).optional(),
+
     lstArchivos: z
       .array(
         z.object({
