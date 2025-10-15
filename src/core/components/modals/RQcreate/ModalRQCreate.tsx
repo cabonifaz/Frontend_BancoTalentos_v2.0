@@ -32,7 +32,6 @@ import { TabManagement } from "./tabs/TabManagment";
 import { Utils } from "../../../utilities/utils";
 import { usePostHook } from "../../../hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
-import { useEffect } from "react";
 
 interface TabLabelProps {
   label: string;

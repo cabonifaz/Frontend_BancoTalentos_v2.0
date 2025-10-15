@@ -1,6 +1,7 @@
 import { useFormContext } from "react-hook-form";
-import { newRQSchemaType, Param } from "../../../../models";
+import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
 import { useEffect, useState } from "react";
+import { Param } from "../../../../models";
 
 interface TabProps {
   rqStates: Param[];

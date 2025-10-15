@@ -1,9 +1,6 @@
 import { useModal } from "../../../../context/ModalContext";
 import { useApi } from "../../../../hooks/useApi";
-import {
-  FileResponse,
-  RequirementResponse,
-} from "../../../../models";
+import { FileResponse } from "../../../../models";
 import { ReqTalento } from "../../../../models/interfaces/ReqTalento";
 import { getCvFile } from "../../../../services/apiService";
 import { ESTADO_ATENDIDO } from "../../../../utilities/constants";
