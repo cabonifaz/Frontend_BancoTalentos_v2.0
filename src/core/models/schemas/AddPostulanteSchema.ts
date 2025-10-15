@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { emptyToNull, emptyToUndef, trim, trimLower } from "./Validations";
+import {
+  emptyToNull,
+  emptyToUndef,
+  trim,
+  trimLower,
+} from "./Validations";
 
 const salaryExpectationSchema = z
   .object({
@@ -40,7 +45,8 @@ const salaryExpectationSchema = z
       if (min !== undefined && max !== undefined && max < min) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "El salario máximo debe ser mayor o igual al mínimo",
+          message:
+            "El salario máximo debe ser mayor o igual al mínimo",
           path: ["max"],
         });
       }
@@ -54,20 +60,28 @@ export const AddPostulanteSchema = z.object({
       .string()
       .min(1, { message: "El Doc. de identidad es requerido" })
       .max(30, {
-        message: "El Doc. de identidad no puede tener más de 30 caracteres",
+        message:
+          "El Doc. de identidad no puede tener más de 30 caracteres",
       })
       .regex(/^[a-zA-Z0-9]+$/, {
-        message: "El Doc. de identidad solo puede contener letras y números",
+        message:
+          "El Doc. de identidad solo puede contener letras y números",
       })
   ),
 
-  nombres: z.preprocess(trim, z.string().min(1, "El nombre es requerido")),
+  nombres: z.preprocess(
+    trim,
+    z.string().min(1, "El nombre es requerido")
+  ),
   apellidoPaterno: z.preprocess(
     trim,
     z.string().min(1, "El apellido paterno es requerido")
   ),
   // opcional y nullable; "" -> null
-  apellidoMaterno: z.preprocess(emptyToNull, z.string().optional().nullable()),
+  apellidoMaterno: z.preprocess(
+    emptyToNull,
+    z.string().optional().nullable()
+  ),
 
   email: z.preprocess(
     trimLower,
@@ -133,9 +147,16 @@ export const AddPostulanteSchema = z.object({
 
   habilidadesTecnicas: z.array(
     z.object({
-      idHabilidad: z.coerce.number().min(1, "Seleccione una habilidad técnica"),
-      anios: z.coerce.number().min(0, "Los años de experiencia son requeridos"),
-      habilidad: z.preprocess(emptyToNull, z.string().optional().nullable()),
+      idHabilidad: z.coerce
+        .number()
+        .min(1, "Seleccione una habilidad técnica"),
+      anios: z.coerce
+        .number()
+        .min(0, "Los años de experiencia son requeridos"),
+      habilidad: z.preprocess(
+        emptyToNull,
+        z.string().optional().nullable()
+      ),
     })
   ),
 
@@ -169,6 +190,7 @@ export const AddPostulanteSchema = z.object({
           // opcional; "" -> undefined para que el refine funcione bien
           fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
           flActualidad: z.coerce.boolean().optional().default(false),
+          funciones: z.string().optional(),
         })
         .refine((data) => data.flActualidad || !!data.fechaFin, {
           message: "La fecha de fin es requerida",
@@ -182,7 +204,8 @@ export const AddPostulanteSchema = z.object({
             return fin > inicio;
           },
           {
-            message: "La fecha de fin debe ser mayor a la fecha de inicio",
+            message:
+              "La fecha de fin debe ser mayor a la fecha de inicio",
             path: ["fechaFin"],
           }
         )
@@ -202,7 +225,10 @@ export const AddPostulanteSchema = z.object({
             trim,
             z.string().min(1, "La carrera es requerida")
           ),
-          grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
+          grado: z.preprocess(
+            trim,
+            z.string().min(1, "El grado es requerido")
+          ),
           fechaInicio: z.preprocess(
             trim,
             z.string().min(1, "La fecha de inicio es requerida")
@@ -222,7 +248,8 @@ export const AddPostulanteSchema = z.object({
             return fin > inicio;
           },
           {
-            message: "La fecha de fin debe ser mayor a la fecha de inicio",
+            message:
+              "La fecha de fin debe ser mayor a la fecha de inicio",
             path: ["fechaFin"],
           }
         )
@@ -235,7 +262,9 @@ export const AddPostulanteSchema = z.object({
       z.object({
         idIdioma: z.coerce.number().min(1, "Seleccione un idioma"),
         idNivel: z.coerce.number().min(1, "Seleccione un nivel"),
-        estrellas: z.coerce.number().min(0, "Las estrellas son requeridas"),
+        estrellas: z.coerce
+          .number()
+          .min(0, "Las estrellas son requeridas"),
       })
     )
     .optional(),

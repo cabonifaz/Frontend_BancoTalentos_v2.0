@@ -12,21 +12,34 @@ import {
   Loading,
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../core/utilities/errorHandler";
 import { ClientListResponse } from "../../core/models/response/ClientsResponse";
-import { getClients, getRequirements } from "../../core/services/apiService";
+import {
+  getClients,
+  getRequirements,
+} from "../../core/services/apiService";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
 import { Dashboard } from "./Dashboard";
 import { useNavigate } from "react-router-dom";
-import { ESTADO_ATENDIDO, ESTADO_RQ } from "../../core/utilities/constants";
+import {
+  ESTADO_ATENDIDO,
+  ESTADO_RQ,
+} from "../../core/utilities/constants";
 import { useModal } from "../../core/context/ModalContext";
 import { AgregarRQModal } from "../../core/components/modals/ModalNuevoRQ";
 import {
+  MODAL_CREATE_RQ,
+  MODAL_DETAILS_RQ,
   MODAL_DETALLES_RQ,
   MODAL_NUEVO_RQ,
 } from "../../core/utilities/modalsIds";
 import { ModalDetallesRQV2 } from "../../core/components/modals/ModalDetallesRQV2";
+import { ModalRQDetails } from "../../core/components/modals/RQdetails";
+import { ModalRQCreate } from "../../core/components/modals/RQcreate";
 
 interface SearchProps {
   nPag: number | null;
@@ -42,11 +55,20 @@ export const Requirements = () => {
   const hasFetchedClients = useRef(false);
   const hasFetchedReqs = useRef(false);
 
-  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const [selectedEstado, setSelectedEstado] = useState<number | null>(null);
-  const [selectedCliente, setSelectedCliente] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedRQ, setSelectedRQ] = useState<RequirementItem | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(
+    null
+  );
+  const [selectedEstado, setSelectedEstado] = useState<number | null>(
+    null
+  );
+  const [selectedCliente, setSelectedCliente] = useState<
+    number | null
+  >(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    null
+  );
+  const [selectedRQ, setSelectedRQ] =
+    useState<RequirementItem | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const { paramsByMaestro, loading: loadingParams } = useParams(
@@ -116,7 +138,9 @@ export const Requirements = () => {
   };
 
   const handleEstadoChangeFilter = (selectedValues: string[]) => {
-    const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
+    const newValue = selectedValues[0]
+      ? Number(selectedValues[0])
+      : null;
     setSelectedEstado(newValue);
     setCurrentPage(1);
     executeSearch({
@@ -127,7 +151,9 @@ export const Requirements = () => {
   };
 
   const handleClienteChangeFilter = (selectedValues: string[]) => {
-    const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
+    const newValue = selectedValues[0]
+      ? Number(selectedValues[0])
+      : null;
     setSelectedCliente(newValue);
     setCurrentPage(1);
     executeSearch({
@@ -171,7 +197,9 @@ export const Requirements = () => {
               : selectedCliente,
           buscar: RequerimientoRef.current?.value || null,
           estado:
-            overrides.estado !== undefined ? overrides.estado : selectedEstado,
+            overrides.estado !== undefined
+              ? overrides.estado
+              : selectedEstado,
           fechaSolicitud:
             overrides.fechaSolicitud !== undefined
               ? overrides.fechaSolicitud
@@ -181,7 +209,13 @@ export const Requirements = () => {
         });
       }
     },
-    [loadingReqs, search, selectedCliente, selectedDate, selectedEstado]
+    [
+      loadingReqs,
+      search,
+      selectedCliente,
+      selectedDate,
+      selectedEstado,
+    ]
   );
 
   useEffect(() => {
@@ -203,7 +237,7 @@ export const Requirements = () => {
 
   const openDetallesRQModal = (req: RequirementItem) => {
     setSelectedRQ(req);
-    openModal(MODAL_DETALLES_RQ);
+    openModal(MODAL_DETAILS_RQ);
   };
 
   const updateRQData = () => {
@@ -212,7 +246,9 @@ export const Requirements = () => {
   };
 
   const handleAsignarClick = (idRequerimiento: number) => {
-    navigate("/dashboard/tableAsignarTalento", { state: { idRequerimiento } });
+    navigate("/dashboard/tableAsignarTalento", {
+      state: { idRequerimiento },
+    });
   };
 
   const getAlertIconPath = (idAlerta: number): string => {
@@ -255,17 +291,17 @@ export const Requirements = () => {
       )}
 
       {/** Agregar Modal RQ */}
-      {isModalOpen(MODAL_NUEVO_RQ) && (
+      {/* {isModalOpen(MODAL_NUEVO_RQ) && (
         <AgregarRQModal
           onClose={() => closeModal(MODAL_NUEVO_RQ)}
           updateRQData={updateRQData}
           estadoOptions={rqState}
           clientes={clientesResponse?.clientes || []}
         />
-      )}
+      )} */}
 
       {/** Detalles Modal RQ */}
-      {isModalOpen(MODAL_DETALLES_RQ) && (
+      {/* {isModalOpen(MODAL_DETALLES_RQ) && (
         <ModalDetallesRQV2
           onClose={() => closeModal(MODAL_DETALLES_RQ)}
           RQ={selectedRQ}
@@ -273,6 +309,27 @@ export const Requirements = () => {
           estadoOptions={rqState}
           clientes={clientesResponse?.clientes || []}
           handleAsignar={handleAsignarClick}
+        />
+      )} */}
+
+      {/**Modal Details V3 */}
+      {isModalOpen(MODAL_DETAILS_RQ) && (
+        <ModalRQDetails
+          rqId={selectedRQ?.idRequerimiento || 0}
+          rqStates={rqState}
+          onClose={() => closeModal(MODAL_DETAILS_RQ)}
+          clients={clientesResponse?.clientes || []}
+          handleAssingPost={handleAsignarClick}
+          updateRQData={updateRQData}
+        />
+      )}
+
+      {isModalOpen(MODAL_CREATE_RQ) && (
+        <ModalRQCreate
+          rqStates={rqState}
+          clients={clientesResponse?.clientes || []}
+          onClose={() => closeModal(MODAL_CREATE_RQ)}
+          updateRQData={updateRQData}
         />
       )}
 
@@ -285,7 +342,7 @@ export const Requirements = () => {
             <button
               type="button"
               className="btn btn-blue p-3 h-12"
-              onClick={() => openModal(MODAL_NUEVO_RQ)}
+              onClick={() => openModal(MODAL_CREATE_RQ)}
             >
               Nuevo RQ
             </button>
@@ -330,7 +387,9 @@ export const Requirements = () => {
                     setOpenDropdown(openDropdown === 0 ? null : 0)
                   }
                   selectedValues={
-                    selectedCliente ? [selectedCliente.toString()] : []
+                    selectedCliente
+                      ? [selectedCliente.toString()]
+                      : []
                   }
                   onChange={handleClienteChangeFilter}
                 />
@@ -350,7 +409,10 @@ export const Requirements = () => {
                   }
                   onChange={handleEstadoChangeFilter}
                 />
-                <DateFilter label="Fecha" onDateSelected={handleDateSelected} />
+                <DateFilter
+                  label="Fecha"
+                  onDateSelected={handleDateSelected}
+                />
               </div>
             </div>
           </div>
@@ -364,8 +426,12 @@ export const Requirements = () => {
                     <th className="table-header-cell">ID</th>
                     <th className="table-header-cell">Cliente</th>
                     <th className="table-header-cell">Título</th>
-                    <th className="table-header-cell">Requerimiento</th>
-                    <th className="table-header-cell">Fecha Solicitud</th>
+                    <th className="table-header-cell">
+                      Requerimiento
+                    </th>
+                    <th className="table-header-cell">
+                      Fecha Solicitud
+                    </th>
                     <th className="table-header-cell">Estado</th>
                     <th className="table-header-cell">
                       Confirmados / Vacantes
@@ -375,7 +441,8 @@ export const Requirements = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {(ReqsResponse?.requerimientos || []).length <= 0 ? (
+                  {(ReqsResponse?.requerimientos || []).length <=
+                  0 ? (
                     <tr>
                       <td colSpan={8} className="table-empty">
                         No hay requerimientos disponibles.
@@ -383,26 +450,40 @@ export const Requirements = () => {
                     </tr>
                   ) : (
                     ReqsResponse?.requerimientos?.map((req) => (
-                      <tr key={req.idRequerimiento} className="table-row">
-                        <td className="table-cell">{req.idRequerimiento}</td>
+                      <tr
+                        key={req.idRequerimiento}
+                        className="table-row"
+                      >
+                        <td className="table-cell">
+                          {req.idRequerimiento}
+                        </td>
                         <td className="table-cell">{req.cliente}</td>
                         <td className="table-cell">{req.titulo}</td>
                         <td className="table-cell">{req.codigoRQ}</td>
-                        <td className="table-cell">{req.fechaSolicitud}</td>
+                        <td className="table-cell">
+                          {req.fechaSolicitud}
+                        </td>
                         <td className="table-cell">{req.estado}</td>
                         <td className="table-cell text-center">
                           <div className="min-w-full flex justify-center">
                             <div className="w-fit relative group">
                               <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit">
-                                {req.vacantesCubiertas} / {req.vacantes}
+                                {req.vacantesCubiertas} /{" "}
+                                {req.vacantes}
                               </p>
                               <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                {req?.lstPerfiles?.map((perfil, index) => (
-                                  <p className="text-start" key={index}>
-                                    {perfil.vacantesCubiertas} /{" "}
-                                    {perfil.vacantesTotales} {perfil.perfil}
-                                  </p>
-                                ))}
+                                {req?.lstPerfiles?.map(
+                                  (perfil, index) => (
+                                    <p
+                                      className="text-start"
+                                      key={index}
+                                    >
+                                      {perfil.vacantesCubiertas} /{" "}
+                                      {perfil.vacantesTotales}{" "}
+                                      {perfil.perfil}
+                                    </p>
+                                  )
+                                )}
                                 <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
                               </div>
                             </div>
@@ -413,7 +494,9 @@ export const Requirements = () => {
                             onClick={() =>
                               handleAsignarClick(req.idRequerimiento)
                             }
-                            disabled={req.idEstado === ESTADO_ATENDIDO}
+                            disabled={
+                              req.idEstado === ESTADO_ATENDIDO
+                            }
                             className={`btn btn-actions ${
                               req.idEstado === ESTADO_ATENDIDO
                                 ? "btn-disabled"
@@ -430,19 +513,20 @@ export const Requirements = () => {
                           </button>
                         </td>
                         <td className="table-cell">
-                          {req?.idAlerta !== null && req?.idAlerta > 0 && (
-                            <div className="relative inline-block group">
-                              <img
-                                src={getAlertIconPath(req.idAlerta)}
-                                alt="icon estado alerta RQ"
-                                className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                              />
-                              <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                Vence: {req.fechaVencimiento}
-                                <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                          {req?.idAlerta !== null &&
+                            req?.idAlerta > 0 && (
+                              <div className="relative inline-block group">
+                                <img
+                                  src={getAlertIconPath(req.idAlerta)}
+                                  alt="icon estado alerta RQ"
+                                  className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                />
+                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                  Vence: {req.fechaVencimiento}
+                                  <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </td>
                       </tr>
                     ))
@@ -470,7 +554,8 @@ export const Requirements = () => {
 
                   {/* Información de página actual */}
                   <span className="text-sm">
-                    Página {currentPage} de {ReqsResponse?.totalPaginas || 0}
+                    Página {currentPage} de{" "}
+                    {ReqsResponse?.totalPaginas || 0}
                   </span>
 
                   {/* Botón Siguiente */}
@@ -481,7 +566,9 @@ export const Requirements = () => {
                         : "btn-blue"
                     }`}
                     onClick={handleNextPage}
-                    disabled={currentPage >= (ReqsResponse?.totalPaginas || 0)}
+                    disabled={
+                      currentPage >= (ReqsResponse?.totalPaginas || 0)
+                    }
                   >
                     Siguiente
                   </button>
