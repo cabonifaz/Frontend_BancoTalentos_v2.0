@@ -39,13 +39,16 @@ export const ExperiencesSection = <F extends FieldValues>({
   const [defaultCompanies, setDefaultCompanies] = useState<
     Record<number, boolean>
   >({});
-  const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
+  const [currentDates, setCurrentDates] = useState<
+    Record<number, boolean>
+  >({});
 
   const hasAppendedInitial = useRef(false);
 
   useEffect(() => {
     if (empresaValue && typeof empresaValue === "string") {
-      const isFractal = empresaValue.trim().toLowerCase() === "fractal";
+      const isFractal =
+        empresaValue.trim().toLowerCase() === "fractal";
       setDefaultCompanies((prev) => ({ ...prev, 0: isFractal }));
     } else {
       // Cuando no hay empresaValue o está vacío, desmarcar el checkbox
@@ -142,7 +145,9 @@ export const ExperiencesSection = <F extends FieldValues>({
               <Controller
                 name={`experiencias.${index}.empresa` as Path<F>}
                 control={control}
-                render={({ field: { value, onChange, ...fieldProps } }) => (
+                render={({
+                  field: { value, onChange, ...fieldProps },
+                }) => (
                   <input
                     {...fieldProps}
                     value={value || ""}
@@ -159,7 +164,10 @@ export const ExperiencesSection = <F extends FieldValues>({
 
               {(errors as any).experiencias?.[index]?.empresa && (
                 <p className="text-red-400 text-sm">
-                  {(errors as any).experiencias[index]?.empresa?.message}
+                  {
+                    (errors as any).experiencias[index]?.empresa
+                      ?.message
+                  }
                 </p>
               )}
 
@@ -174,7 +182,12 @@ export const ExperiencesSection = <F extends FieldValues>({
                       id={`currentCompany-${index}`}
                       checked={isFractal || defaultCompanies[index]}
                       onChange={(e) => {
-                        handleCurrentCompanyChange(e, index, onChange, value);
+                        handleCurrentCompanyChange(
+                          e,
+                          index,
+                          onChange,
+                          value
+                        );
                       }}
                       className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
                     />
@@ -213,7 +226,42 @@ export const ExperiencesSection = <F extends FieldValues>({
               />
               {(errors as any).experiencias?.[index]?.puesto && (
                 <p className="text-red-400 text-sm">
-                  {(errors as any).experiencias[index]?.puesto?.message}
+                  {
+                    (errors as any).experiencias[index]?.puesto
+                      ?.message
+                  }
+                </p>
+              )}
+            </div>
+
+            {/* Funciones */}
+            <div className="flex flex-col my-2">
+              <label
+                htmlFor={`experiencias.${index}.funciones`}
+                className="text-[#71717A] text-sm px-1"
+              >
+                Funciones
+              </label>
+              <Controller
+                name={`experiencias.${index}.funciones` as Path<F>}
+                control={control}
+                render={({ field }) => (
+                  <textarea
+                    {...field}
+                    id={`experiencias.${index}.funciones`}
+                    placeholder="Funciones"
+                    autoComplete="organization-title"
+                    rows={5}
+                    className="h-24 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] resize-y"
+                  />
+                )}
+              />
+              {(errors as any).experiencias?.[index]?.funciones && (
+                <p className="text-red-400 text-sm">
+                  {
+                    (errors as any).experiencias[index]?.funciones
+                      ?.message
+                  }
                 </p>
               )}
             </div>
@@ -225,10 +273,13 @@ export const ExperiencesSection = <F extends FieldValues>({
                   htmlFor={`experiencias.${index}.fechaInicio`}
                   className="text-[#71717A] text-sm px-1"
                 >
-                  Mes y año de inicio<span className="text-red-400">*</span>
+                  Mes y año de inicio
+                  <span className="text-red-400">*</span>
                 </label>
                 <Controller
-                  name={`experiencias.${index}.fechaInicio` as Path<F>}
+                  name={
+                    `experiencias.${index}.fechaInicio` as Path<F>
+                  }
                   control={control}
                   render={({ field }) => (
                     <input
@@ -240,15 +291,21 @@ export const ExperiencesSection = <F extends FieldValues>({
                     />
                   )}
                 />
-                {(errors as any).experiencias?.[index]?.fechaInicio && (
+                {(errors as any).experiencias?.[index]
+                  ?.fechaInicio && (
                   <p className="text-red-400 text-sm">
-                    {(errors as any).experiencias[index]?.fechaInicio?.message}
+                    {
+                      (errors as any).experiencias[index]?.fechaInicio
+                        ?.message
+                    }
                   </p>
                 )}
 
                 <div className="px-1 flex items-center gap-2 mt-2 w-fit">
                   <Controller
-                    name={`experiencias.${index}.flActualidad` as Path<F>}
+                    name={
+                      `experiencias.${index}.flActualidad` as Path<F>
+                    }
                     control={control}
                     render={({ field }) => (
                       <input
@@ -318,7 +375,10 @@ export const ExperiencesSection = <F extends FieldValues>({
                 />
                 {(errors as any).experiencias?.[index]?.fechaFin && (
                   <p className="text-red-400 text-sm">
-                    {(errors as any).experiencias[index]?.fechaFin?.message}
+                    {
+                      (errors as any).experiencias[index]?.fechaFin
+                        ?.message
+                    }
                   </p>
                 )}
               </div>
