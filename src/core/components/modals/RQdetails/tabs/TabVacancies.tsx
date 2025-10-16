@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { Utils } from "../../../../utilities/utils";
@@ -31,8 +31,11 @@ interface TabProps {
   tariff: Tarifa[];
   vacancies: ReqVacante[];
   isEditing: boolean;
+  availableTechSkills: { id: number; label: string }[];
+  availableDegrees: { id: number; label: string }[];
   fetchRequirement: () => void;
-  setIsEditing: (value: boolean) => void;
+  toggleEdit: () => void;
+  refetchParams: (param: string) => void;
 }
 
 export const TabVacancies = ({
@@ -40,39 +43,16 @@ export const TabVacancies = ({
   vacancies,
   isEditing,
   fetchRequirement,
-  setIsEditing,
+  toggleEdit,
+  availableDegrees,
+  availableTechSkills,
+  refetchParams,
 }: TabProps) => {
-  // @marker params
-  const { paramsByMaestro, refetchParams } = useParams(
-    `${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}`
-  );
-  const techSkillsParams =
-    paramsByMaestro[HABILIDADES_TECNICAS] || [];
-  const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
-
-  const availableTechSkills = techSkillsParams.map((skill) => ({
-    id: skill.num1,
-    label: skill.string1,
-  }));
-  const availableDegrees = paramsDegrees.map((param) => ({
-    id: param.num1,
-    label: param.string1,
-  }));
-
   // @marker base states
   const [vacQuant, setVacQuant] = useState<string[]>([]);
   const [originQuant, setOriginQuant] = useState<string[]>([]);
   const { closeModal, isModalOpen, openModal } = useModal();
   const [idVac, setIdVac] = useState<number | undefined>();
-  const [initialVacancies, setInitialVacancies] = useState<
-    ReqVacante[]
-  >([]);
-
-  useEffect(() => {
-    if (vacancies && vacancies.length > 0) {
-      setInitialVacancies(JSON.parse(JSON.stringify(vacancies)));
-    }
-  }, [vacancies]);
 
   // @marker form handlers
   const {
@@ -83,7 +63,6 @@ export const TabVacancies = ({
     clearErrors,
     watch,
     control,
-    reset,
   } = useFormContext<UpdateBaseRQSchemaType>();
 
   const { fields, append, remove, update } = useFieldArray({
@@ -139,19 +118,6 @@ export const TabVacancies = ({
     }
 
     clearErrors(`lstVacantes.${index}.idPerfil`);
-  };
-
-  //@marker handlers
-  const handleEdit = () => {
-    if (isEditing) {
-      // Si está en modo edición y el usuario cancela, restauramos
-      reset({
-        ...getValues(),
-        lstVacantes: initialVacancies,
-      });
-    }
-
-    setIsEditing(!isEditing);
   };
 
   const handleAddVacancy = () => {
@@ -274,7 +240,7 @@ export const TabVacancies = ({
         <div className="flex items-center justify-between my-2">
           <button
             type="button"
-            onClick={handleEdit}
+            onClick={toggleEdit}
             className="focus:outline-none ms-2"
           >
             <img

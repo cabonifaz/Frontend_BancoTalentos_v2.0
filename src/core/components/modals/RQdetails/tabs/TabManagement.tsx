@@ -2,7 +2,6 @@ import { Controller, useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
-import { useRef, useState } from "react";
 import { Param } from "../../../../models";
 
 interface TabProps {
@@ -10,7 +9,7 @@ interface TabProps {
   paymentModes: Param[];
   rqMode: Param[];
   isEditing: boolean;
-  setIsEditing: (value: boolean) => void;
+  handleToggleEdit: () => void;
 }
 
 export const TabManagment = ({
@@ -18,33 +17,12 @@ export const TabManagment = ({
   paymentModes,
   rqMode,
   isEditing,
-  setIsEditing,
+  handleToggleEdit,
 }: TabProps) => {
   const {
     formState: { errors },
     control,
-    watch,
-    reset,
   } = useFormContext<UpdateBaseRQSchemaType>();
-  const originalValuesRef = useRef<UpdateBaseRQSchemaType | null>(
-    null
-  );
-
-  const currentValues = watch();
-
-  const handleEdit = () => {
-    if (isEditing) {
-      // Si ya está en modo edición, cancelamos y restauramos valores
-      if (originalValuesRef.current) {
-        reset(originalValuesRef.current);
-      }
-      setIsEditing(false);
-    } else {
-      // Guardamos los valores actuales antes de editar
-      originalValuesRef.current = currentValues;
-      setIsEditing(true);
-    }
-  };
 
   return (
     <div className="h-full flex flex-col px-4">
@@ -53,7 +31,7 @@ export const TabManagment = ({
         <div className="flex justify-end mb-1">
           <button
             type="button"
-            onClick={handleEdit}
+            onClick={handleToggleEdit}
             className="focus:outline-none"
           >
             <img
