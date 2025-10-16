@@ -41,10 +41,13 @@ export const TechSkillsModal = ({
   refetchAvailableSkills,
   initialSkills = [],
 }: TechSkillsModalProps) => {
-  const [skills, setSkills] = useState<BaseSkillProps[]>(initialSkills);
+  const [skills, setSkills] =
+    useState<BaseSkillProps[]>(initialSkills);
   const [newSkillName, setNewSkillName] = useState("");
   const [skillCreated, setSkillCreated] = useState(false);
-  const [modalMode, setModalMode] = useState<"add" | "normal">("normal");
+  const [modalMode, setModalMode] = useState<"add" | "normal">(
+    "normal"
+  );
 
   const handleAddSkill = (option: { id: number; label: string }) => {
     if (skills.some((s) => s.id === option.id)) {
@@ -79,12 +82,15 @@ export const TechSkillsModal = ({
   };
 
   /** Create new skills */
-  const { createNewTechSkill, isLoading: isCreating } = useCreateNewTechSkill();
+  const { createNewTechSkill, isLoading: isCreating } =
+    useCreateNewTechSkill();
   const [autoQuery, setAutoQuery] = useState("");
 
   const handleCreateNewOne = async (skillName: string) => {
     // Skill already exists
-    if (availableSkills.some((s) => s.label === skillName.toUpperCase())) {
+    if (
+      availableSkills.some((s) => s.label === skillName.toUpperCase())
+    ) {
       showWarningSnack(`La habilidad ${skillName} ya existe`);
       return;
     }
@@ -102,6 +108,7 @@ export const TechSkillsModal = ({
       });
       setSkillCreated(true);
       setAutoQuery("");
+      refetchAvailableSkills();
     } catch (error: any) {
       handleAppError(error, "Error al crear la habilidad técnica");
     }
@@ -116,7 +123,9 @@ export const TechSkillsModal = ({
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-y-auto relative">
         {isCreating && <Loading opacity="opacity-60" />}
-        <div style={{ display: modalMode === "add" ? "none" : "block" }}>
+        <div
+          style={{ display: modalMode === "add" ? "none" : "block" }}
+        >
           <h2 className="text-lg font-bold mb-4">
             Agregar habilidades técnicas
           </h2>
@@ -157,10 +166,14 @@ export const TechSkillsModal = ({
                       min={0}
                       value={skill.years}
                       onChange={(e) => {
-                        const numValue = parseInt(e.target.value) || 0;
+                        const numValue =
+                          parseInt(e.target.value) || 0;
                         handleYearsChange(skill.id, numValue);
                         if (e.target.value.startsWith("0"))
-                          e.target.value = e.target.value.replace("0", "");
+                          e.target.value = e.target.value.replace(
+                            "0",
+                            ""
+                          );
                       }}
                       onFocus={(e) => e.target.select()}
                       className="w-16 border rounded px-2 py-1 focus:ring focus:ring-blue-300 text-center"
@@ -223,8 +236,8 @@ export const TechSkillsModal = ({
                 Crea una nueva habilidad
               </h2>
               <p className="text-sm text-gray-500 mt-2">
-                Descuida, tu progreso no se perderá. Al guardar podrás volver a
-                seleccionar o presiona cancelar
+                Descuida, tu progreso no se perderá. Al guardar podrás
+                volver a seleccionar o presiona cancelar
               </p>
             </div>
 

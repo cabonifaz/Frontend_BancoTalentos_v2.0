@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const vacanteSchema = z.object({
   idRequerimientoVacante: z.number(),
-  idPerfil: z.number(),
+  idPerfil: z.number().min(1, "Selecione un perfil válido"),
   cantidad: z.coerce
     .number({
       required_error: "La cantidad es obligatoria",
@@ -17,7 +17,9 @@ export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
     codigoRQ: z.string().optional(),
-    fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
+    fechaSolicitud: z
+      .string()
+      .min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z.string().min(1, "La descripción es obligatoria"),
     titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
@@ -90,4 +92,6 @@ export const UpdateBaseRQSchema = z
     }
   });
 
-export type UpdateBaseRQSchemaType = z.infer<typeof UpdateBaseRQSchema>;
+export type UpdateBaseRQSchemaType = z.infer<
+  typeof UpdateBaseRQSchema
+>;

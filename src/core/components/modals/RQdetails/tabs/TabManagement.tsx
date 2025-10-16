@@ -1,0 +1,160 @@
+import { Controller, useFormContext } from "react-hook-form";
+import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
+import { DropdownForm } from "../../../forms";
+import { NumberInput } from "../../../ui/InputNumber";
+import { Param } from "../../../../models";
+
+interface TabProps {
+  rqDurationOptions: Param[];
+  paymentModes: Param[];
+  rqMode: Param[];
+  isEditing: boolean;
+  handleToggleEdit: () => void;
+}
+
+export const TabManagment = ({
+  rqDurationOptions,
+  paymentModes,
+  rqMode,
+  isEditing,
+  handleToggleEdit,
+}: TabProps) => {
+  const {
+    formState: { errors },
+    control,
+  } = useFormContext<UpdateBaseRQSchemaType>();
+
+  return (
+    <div className="h-full flex flex-col px-4">
+      <div className="flex flex-col h-[calc(570px-120px)]">
+        {/* Contenido del formulario */}
+        <div className="flex justify-end mb-1">
+          <button
+            type="button"
+            onClick={handleToggleEdit}
+            className="focus:outline-none"
+          >
+            <img
+              src="/assets/ic_edit.svg"
+              alt="Editar"
+              className="w-7 h-7"
+            />
+          </button>
+        </div>
+
+        <div className="flex items-center mb-6">
+          <label className="w-1/3 text-sm font-medium text-gray-700">
+            Duración:
+          </label>
+          <div className="flex gap-4 w-2/3">
+            <div className="flex flex-col gap-1">
+              <NumberInput<UpdateBaseRQSchemaType>
+                control={control}
+                name="duracion"
+                isDisabled={!isEditing}
+                error={errors?.duracion?.message}
+              />
+            </div>
+            <DropdownForm
+              name="idDuracion"
+              control={control}
+              error={errors.idDuracion}
+              required={false}
+              flex={true}
+              disabled={!isEditing}
+              options={rqDurationOptions.map((d) => ({
+                value: d.num1,
+                label: d.string1,
+              }))}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center">
+          <label className="w-1/3 text-sm font-medium text-gray-700">
+            Modalidad:
+          </label>
+          <DropdownForm
+            name="idModalidad"
+            control={control}
+            error={errors.idModalidad}
+            required={false}
+            flex={true}
+            disabled={!isEditing}
+            options={rqMode.map((modalidad) => ({
+              value: modalidad.num1,
+              label: modalidad.string1,
+            }))}
+          />
+        </div>
+        <div className="flex items-center">
+          <label className="w-1/3 text-sm font-medium text-gray-700">
+            Modalidad de facturación:
+          </label>
+          <Controller
+            name="idModalidadFact"
+            control={control}
+            render={({ field }) => (
+              <div className="mt-4 flex flex-col gap-2">
+                {paymentModes.map((mode) => (
+                  <label
+                    key={mode.num1}
+                    className="inline-flex items-center space-x-2"
+                  >
+                    <input
+                      type="checkbox"
+                      value={mode.num1}
+                      disabled={!isEditing}
+                      checked={
+                        field.value?.includes(mode.num1) || false
+                      }
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        const value = mode.num1;
+
+                        if (checked) {
+                          field.onChange([
+                            ...(field.value || []),
+                            value,
+                          ]);
+                        } else {
+                          field.onChange(
+                            field.value?.filter(
+                              (v: number) => v !== value
+                            )
+                          );
+                        }
+                      }}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                    />
+                    <span>{mode.string1}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          />
+
+          {errors.idModalidadFact && (
+            <span className="text-red-500 text-xs">
+              {errors.idModalidadFact.message}
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1"></div>
+
+        <div className="flex justify-end mt-4">
+          <button
+            type="submit"
+            disabled={!isEditing}
+            className={`btn text-sm ${
+              isEditing ? "btn-primary" : "btn-disabled"
+            }`}
+          >
+            Actualizar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

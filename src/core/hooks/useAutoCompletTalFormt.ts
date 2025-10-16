@@ -32,16 +32,28 @@ export const useAutoCompletTalForm = () => {
       if (data.nombres !== null && data.nombres !== undefined) {
         setValue("nombres", data.nombres);
       }
-      if (data.apellidoPaterno !== null && data.apellidoPaterno !== undefined) {
+      if (
+        data.apellidoPaterno !== null &&
+        data.apellidoPaterno !== undefined
+      ) {
         setValue("apellidoPaterno", data.apellidoPaterno);
       }
-      if (data.apellidoMaterno !== null && data.apellidoMaterno !== undefined) {
+      if (
+        data.apellidoMaterno !== null &&
+        data.apellidoMaterno !== undefined
+      ) {
         setValue("apellidoMaterno", data.apellidoMaterno);
       }
-      if (data.docIdentidad !== null && data.docIdentidad !== undefined) {
+      if (
+        data.docIdentidad !== null &&
+        data.docIdentidad !== undefined
+      ) {
         setValue("dni", data.docIdentidad);
       }
-      if (data.contacto?.email !== null && data.contacto?.email !== undefined) {
+      if (
+        data.contacto?.email !== null &&
+        data.contacto?.email !== undefined
+      ) {
         setValue("email", data.contacto.email);
       }
 
@@ -70,15 +82,24 @@ export const useAutoCompletTalForm = () => {
       }
 
       // Descripción/presentación
-      if (data.presentacion !== null && data.presentacion !== undefined) {
+      if (
+        data.presentacion !== null &&
+        data.presentacion !== undefined
+      ) {
         setValue("descripcion", data.presentacion);
       }
 
       // Redes sociales
       if (data.social) {
-        if (data.social.linkedin !== null && data.social.linkedin !== undefined)
+        if (
+          data.social.linkedin !== null &&
+          data.social.linkedin !== undefined
+        )
           setValue("linkedin", data.social.linkedin);
-        if (data.social.github !== null && data.social.github !== undefined)
+        if (
+          data.social.github !== null &&
+          data.social.github !== undefined
+        )
           setValue("github", data.social.github);
       }
 
@@ -86,9 +107,12 @@ export const useAutoCompletTalForm = () => {
       if (data.tecSkills && data.tecSkills.length > 0) {
         const mappedTechSkills = data.tecSkills
           .map((skill) => {
-            const id = getTechSkillId(skill.nombreHabilidad, techSkills);
+            const id = getTechSkillId(
+              skill.nombreHabilidad,
+              techSkills
+            );
 
-            if (id === 0) return undefined;
+            //if (id === 0) return undefined;
             return {
               idHabilidad: id,
               anios: skill.aniosExperiencia,

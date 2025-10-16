@@ -38,7 +38,10 @@ import {
   DOCUMENTO_FOTO_PERFIL,
   FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
@@ -70,18 +73,19 @@ export const FormPostulante = () => {
   const disponibilidades = paramsByMaestro[31] || [];
   const frasesIA = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
-  const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
-    BaseResponseFMI,
-    AddPostulanteParams
-  >(addPostulanteService, {
-    onError: (error) => handleError(error, enqueueSnackbar),
-    onSuccess: (response) =>
-      handleResponse({
-        response: response,
-        showSuccessMessage: true,
-        enqueueSnackbar: enqueueSnackbar,
-      }),
-  });
+  const { loading: loadingAddPostulante, fetch: addPostulante } =
+    useApi<BaseResponseFMI, AddPostulanteParams>(
+      addPostulanteService,
+      {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) =>
+          handleResponse({
+            response: response,
+            showSuccessMessage: true,
+            enqueueSnackbar: enqueueSnackbar,
+          }),
+      }
+    );
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
     InsertUpdateResponse,
@@ -99,26 +103,7 @@ export const FormPostulante = () => {
   const methods = useForm<AddPostulanteType>({
     resolver: zodResolver(AddPostulanteSchema),
     mode: "onChange",
-    defaultValues: {
-      /* montoInicialPlanilla: 0,
-      montoFinalPlanilla: 0,
-      montoInicialRxH: 0,
-      montoFinalRxH: 0,
-      idMoneda: 0, */
-      disponibilidad: [],
-      salaryExpectations: {
-        rxh: {
-          coin: undefined,
-          min: undefined,
-          max: undefined,
-        },
-        planilla: {
-          coin: undefined,
-          min: undefined,
-          max: undefined,
-        },
-      },
-    },
+    defaultValues: initialFormValuesPostulante,
   });
 
   const {
@@ -156,9 +141,15 @@ export const FormPostulante = () => {
     // Validación manual de foto
     const photoFile = data.foto?.[0];
     if (photoFile && photoFile instanceof File) {
-      const { isValid } = validateFile(photoFile, ["png", "jpeg", "jpg"]);
+      const { isValid } = validateFile(photoFile, [
+        "png",
+        "jpeg",
+        "jpg",
+      ]);
       if (!isValid) {
-        setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
+        setFotoFileErrors(
+          "La foto debe ser un archivo PNG, JPEG o JPG"
+        );
         return;
       }
     }
@@ -177,12 +168,14 @@ export const FormPostulante = () => {
       salaryExpectations,
       ...filterData
     } = data;
-    const phone = countryCode.current?.textContent + " " + telefono.trim();
+    const phone =
+      countryCode.current?.textContent + " " + telefono.trim();
 
     const cleanExperiencias = experiencias.map((exp) => ({
       ...exp,
       flActualidad: exp.flActualidad ? 1 : 0,
       fechaFin: exp.flActualidad ? null : exp.fechaFin,
+      funciones: exp.funciones,
     }));
 
     const cleanEducaciones = educaciones?.map((edu) => ({
@@ -212,7 +205,9 @@ export const FormPostulante = () => {
         educaciones: cleanEducaciones,
         cvArchivo: {
           stringB64: cvBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(cvFile?.name),
+          nombreArchivo: Utils.getFileNameWithoutExtension(
+            cvFile?.name
+          ),
           extensionArchivo: "pdf",
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
@@ -220,8 +215,11 @@ export const FormPostulante = () => {
         fotoArchivo: fotoBase64
           ? {
               stringB64: fotoBase64,
-              nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-              extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+              nombreArchivo: Utils.getFileNameWithoutExtension(
+                fotoFile?.name
+              ),
+              extensionArchivo:
+                Utils.detectarFormatoDesdeBase64(fotoBase64),
               idTipoArchivo: ARCHIVO_IMAGEN,
               idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
             }
@@ -235,7 +233,10 @@ export const FormPostulante = () => {
           const idTalent = response.data.idNuevo;
           const ubicacion = `${
             paises.find((item) => item.num1 === data.idPais)?.string1
-          }, ${ciudades.find((item) => item.num1 === data.idCiudad)?.string1}`;
+          }, ${
+            ciudades.find((item) => item.num1 === data.idCiudad)
+              ?.string1
+          }`;
 
           if (idTalent) {
             addPostulante({
@@ -274,7 +275,9 @@ export const FormPostulante = () => {
         }
       });
     } catch (error) {
-      enqueueSnackbar("error al cargar archivos", { variant: "warning" });
+      enqueueSnackbar("error al cargar archivos", {
+        variant: "warning",
+      });
     }
   };
 
@@ -298,7 +301,9 @@ export const FormPostulante = () => {
   const { completeForm, idCiudad } = useCompleteExtForm();
   const { isModalOpen, closeModal, openModal } = useModal();
   const [canClose, setCanClose] = useState<boolean>(false);
-  const [canCloseMessage, setCanCloseMessage] = useState<string | undefined>();
+  const [canCloseMessage, setCanCloseMessage] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
     if (idCiudad && idCiudad !== 0) setValue("idCiudad", idCiudad);
@@ -325,7 +330,13 @@ export const FormPostulante = () => {
       const cvDetails = await fetchCVDetails(cvData);
 
       // Autocomplete form
-      completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
+      completeForm(
+        cvDetails,
+        setValue,
+        paises,
+        ciudades,
+        habilidadesTecnicas
+      );
       setCanCloseMessage(
         "Formulario completado, revise los campos antes de enviar"
       );
@@ -338,9 +349,9 @@ export const FormPostulante = () => {
 
   return (
     <FormProvider {...methods}>
-      {(loadingAddPostulante || loadingAddTalent || loadingParams) && (
-        <Loading opacity="opacity-60" />
-      )}
+      {(loadingAddPostulante ||
+        loadingAddTalent ||
+        loadingParams) && <Loading opacity="opacity-60" />}
       {isModalOpen(MODAL_AI_WORKING) && (
         <ModalWorkingAI
           canClose={canClose}
@@ -360,7 +371,10 @@ export const FormPostulante = () => {
           <div className="relative pb-2">
             <div className="border border-gray-200 border-b-0 rounded-t-lg shadow-sm p-8 bg-white relative z-10">
               <div className="flex justify-center">
-                <img src="/assets/fractal-logo-BDT.png" alt="fractal logo" />
+                <img
+                  src="/assets/fractal-logo-BDT.png"
+                  alt="fractal logo"
+                />
               </div>
               <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
                 Registro de Postulante
@@ -407,25 +421,35 @@ export const FormPostulante = () => {
                       name="cv"
                       initialText="Sube un archivo"
                       acceptedTypes=".pdf"
-                      onChange={(file) => handleFileChange("cv", file)}
+                      onChange={(file) =>
+                        handleFileChange("cv", file)
+                      }
                       value={cvFile}
                     />
                     {cvFileErrors !== "" && (
-                      <p className="text-red-400 text-sm">{cvFileErrors}</p>
+                      <p className="text-red-400 text-sm">
+                        {cvFileErrors}
+                      </p>
                     )}
 
-                    <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+                    <h3 className="text-[#3f3f46] text-lg">
+                      Foto de perfil
+                    </h3>
                     <FileInput<AddPostulanteType>
                       register={register}
                       errors={errors}
                       name="foto"
                       initialText="Sube una foto"
                       acceptedTypes=".png, .jpeg, .jpg"
-                      onChange={(file) => handleFileChange("foto", file)}
+                      onChange={(file) =>
+                        handleFileChange("foto", file)
+                      }
                       value={fotoFile}
                     />
                     {fotoFileErrors !== "" && (
-                      <p className="text-red-400 text-sm">{fotoFileErrors}</p>
+                      <p className="text-red-400 text-sm">
+                        {fotoFileErrors}
+                      </p>
                     )}
                   </div>
                   {/* Data */}
@@ -438,7 +462,8 @@ export const FormPostulante = () => {
                         htmlFor="dni"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Doc. Identidad<span className="text-red-400">*</span>
+                        Doc. Identidad
+                        <span className="text-red-400">*</span>
                       </label>
                       <input
                         {...register("dni")}
@@ -478,7 +503,8 @@ export const FormPostulante = () => {
                         htmlFor="lastname-f"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Apellido paterno<span className="text-red-400">*</span>
+                        Apellido paterno
+                        <span className="text-red-400">*</span>
                       </label>
                       <input
                         {...register("apellidoPaterno")}
@@ -518,17 +544,23 @@ export const FormPostulante = () => {
                         htmlFor="countrycode"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Número de Celular<span className="text-red-400">*</span>
+                        Número de Celular
+                        <span className="text-red-400">*</span>
                       </label>
                       <select
                         id="countrycode"
                         autoComplete="tel-country-code"
-                        {...register("codigoPais", { valueAsNumber: true })}
+                        {...register("codigoPais", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
                         {paises.map((pais) => (
-                          <option key={pais.idParametro} value={pais.num1}>
+                          <option
+                            key={pais.idParametro}
+                            value={pais.num1}
+                          >
                             {pais.string1}
                           </option>
                         ))}
@@ -545,8 +577,9 @@ export const FormPostulante = () => {
                         >
                           {watchCountryPhone
                             ? `${
-                                paises.find((p) => p.num1 === watchCountryPhone)
-                                  ?.string3 || "00"
+                                paises.find(
+                                  (p) => p.num1 === watchCountryPhone
+                                )?.string3 || "00"
                               }`
                             : "+00"}
                         </p>
@@ -626,11 +659,15 @@ export const FormPostulante = () => {
                     </div>*/}
                     <div className="flex flex-col gap-2">
                       <label className="text-[#636d7c] text-sm px-1">
-                        Disponibilidad <span className="text-red-400">*</span>
+                        Disponibilidad{" "}
+                        <span className="text-red-400">*</span>
                       </label>
 
                       {disponibilidades?.map((d) => (
-                        <label className="flex items-center gap-2" key={d.num1}>
+                        <label
+                          className="flex items-center gap-2"
+                          key={d.num1}
+                        >
                           <input
                             type="checkbox"
                             value={d.num1}
@@ -663,12 +700,17 @@ export const FormPostulante = () => {
                       <select
                         id="country"
                         autoComplete="country"
-                        {...register("idPais", { valueAsNumber: true })}
+                        {...register("idPais", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
                         {paises.map((pais) => (
-                          <option key={pais.idParametro} value={pais.num1}>
+                          <option
+                            key={pais.idParametro}
+                            value={pais.num1}
+                          >
                             {pais.string1}
                           </option>
                         ))}
@@ -689,12 +731,19 @@ export const FormPostulante = () => {
                       <select
                         id="city"
                         autoComplete="address-level2"
-                        {...register("idCiudad", { valueAsNumber: true })}
+                        {...register("idCiudad", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
-                        <option value={0}>Seleccione una ciudad</option>
+                        <option value={0}>
+                          Seleccione una ciudad
+                        </option>
                         {ciudadesFiltradas.map((ciudad) => (
-                          <option key={ciudad.idParametro} value={ciudad.num1}>
+                          <option
+                            key={ciudad.idParametro}
+                            value={ciudad.num1}
+                          >
                             {ciudad.string1}
                           </option>
                         ))}
@@ -816,7 +865,9 @@ export const FormPostulante = () => {
                               checked={field.value === true}
                               onChange={() => field.onChange(true)}
                             />
-                            <span className="ml-2 text-gray-700">Sí</span>
+                            <span className="ml-2 text-gray-700">
+                              Sí
+                            </span>
                           </label>
                           <label className="flex items-center cursor-pointer">
                             <input
@@ -825,7 +876,9 @@ export const FormPostulante = () => {
                               checked={field.value === false}
                               onChange={() => field.onChange(false)}
                             />
-                            <span className="ml-2 text-gray-700">No</span>
+                            <span className="ml-2 text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                         {errors.tieneEquipo && (
@@ -840,10 +893,9 @@ export const FormPostulante = () => {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      disabled={!isDirty || !isValid || registerRef.current}
+                      disabled={!isValid || registerRef.current}
                       className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
                                         ${
-                                          !isDirty ||
                                           !isValid ||
                                           registerRef.current
                                             ? "btn-disabled"

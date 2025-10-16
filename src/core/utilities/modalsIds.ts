@@ -10,3 +10,5 @@ export const MODAL_DETAILS_VAC_SKILLS = "modalDetailsVacSkills";
 export const MODAL_ADD_CAREER = "modalAddCareer";
 export const MODAL_UPDATE_CAREER = "modalUpdateCareer";
 export const MODAL_FRACTAL_CV = "modalFractalCV";
+export const MODAL_DETAILS_RQ = "modalDetailsRQ";
+export const MODAL_CREATE_RQ = "modalCreateRQ";
