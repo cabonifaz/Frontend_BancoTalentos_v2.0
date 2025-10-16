@@ -67,9 +67,12 @@ export const useCompleteExtForm = () => {
       if (data.tecSkills && data.tecSkills.length > 0) {
         const mappedTechSkills = data.tecSkills
           .map((skill) => {
-            const id = getTechSkillId(skill.nombreHabilidad, techSkills);
+            const id = getTechSkillId(
+              skill.nombreHabilidad,
+              techSkills
+            );
 
-            if (id === 0) return undefined;
+            // if (id === 0) return undefined;
             return {
               idHabilidad: id,
               anios: skill.aniosExperiencia,
@@ -118,7 +121,9 @@ export const useCompleteExtForm = () => {
         setValue("idiomas", mappedLanguages);
       }
     } catch (error) {
-      throw new Error("Error al completar el formulario automáticamente");
+      throw new Error(
+        "Error al completar el formulario automáticamente"
+      );
     }
   };
 

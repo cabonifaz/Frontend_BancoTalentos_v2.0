@@ -153,6 +153,10 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
     talent?.certificaciones && talent.certificaciones.length > 0;
   const hasLanguages = talent?.idiomas && talent.idiomas.length > 0;
 
+  const hasTechSkills =
+    talent?.habilidadesTecnicas &&
+    talent.habilidadesTecnicas.length > 0;
+
   // Contador para la numeración dinámica
   let sectionNumber = 1;
 
@@ -252,6 +256,25 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                     {formatDateByLang(c.fechaFin, language)}
                   </Text>
                 </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* === Habilidades Técnicas === */}
+        {hasTechSkills && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {sectionNumber++}.{" "}
+              {t("Habilidades Técnicas", "Technical Skills")}
+            </Text>
+            {talent.habilidadesTecnicas?.map((c, index) => (
+              <View key={index} style={styles.listItem}>
+                <Text style={styles.bullet}>•</Text>
+                <Text>
+                  {c.nombreHabilidad} - {c.aniosExperiencia}{" "}
+                  {t("años", "years")}
+                </Text>
               </View>
             ))}
           </View>

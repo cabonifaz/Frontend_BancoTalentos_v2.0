@@ -149,7 +149,7 @@ export const AddPostulanteSchema = z.object({
     z.object({
       idHabilidad: z.coerce
         .number()
-        .min(1, "Seleccione una habilidad técnica"),
+        .min(0, "Seleccione una habilidad técnica"), // 0 para crear nuevas habilidades en caso de que no existan
       anios: z.coerce
         .number()
         .min(0, "Los años de experiencia son requeridos"),

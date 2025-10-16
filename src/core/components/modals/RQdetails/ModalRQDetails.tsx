@@ -66,6 +66,19 @@ export const ModalRQDetails = ({
   const paymentModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const rqMode = paramsByMaestro[MODALIDAD_RQ] || [];
 
+  const techSkillsParams =
+    paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
+
+  const availableTechSkills = techSkillsParams.map((skill) => ({
+    id: skill.num1,
+    label: skill.string1,
+  }));
+  const availableDegrees = paramsDegrees.map((param) => ({
+    id: param.num1,
+    label: param.string1,
+  }));
+
   // @marker form hadlers
   const methods = useForm<UpdateBaseRQSchemaType>({
     resolver: zodResolver(UpdateBaseRQSchema),
@@ -97,7 +110,7 @@ export const ModalRQDetails = ({
   const {
     tarifario,
     fetchTarifario,
-    loading: loadingTarifario,
+    loading: loadTariff,
   } = useFetchTarifario();
 
   // Sync RQ form
@@ -182,6 +195,73 @@ export const ModalRQDetails = ({
     }
   }, [res]);
 
+  const handleToggleEdit = () => {
+    const req = res?.requerimiento;
+
+    if (!req) return;
+
+    // map vacancies
+    const mappedVacancies = req.lstRqVacantes.map((v) => {
+      const tariffFound = tarifario.find(
+        (item) => item.idPerfil === v.idPerfil
+      );
+
+      const tarifa = tariffFound
+        ? tariffFound.tarifa.toFixed(2)
+        : "-";
+
+      const moneda = tariffFound?.moneda || "S/.";
+
+      return {
+        idRequerimientoVacante: v.idRequerimientoVacante,
+        idPerfil: v.idPerfil,
+        cantidad: Number(v.cantidad),
+        idEstado: 0,
+        tarifa:
+          tarifa === "-"
+            ? "S/. -"
+            : `${moneda} ${Utils.formatCoin(Number(tarifa))}`,
+      };
+    });
+
+    const mappedFiles = req.lstRqArchivo.map((file) => ({
+      idRequerimientoArchivo: file.idRequerimientoArchivo,
+      name: file.nombreArchivo,
+      size: 0,
+      file: new File([], file.nombreArchivo),
+      idTipoArchivoRq: file.idTipoArchivoRq,
+    }));
+
+    setInitialFiles(mappedFiles);
+
+    // Decode Fact modes
+    const factModes = (req?.modalidadFact ?? "")
+      .split(",")
+      .map((m: string) => Number(m.trim()))
+      .filter((m: any) => !isNaN(m));
+
+    reset({
+      codigoRQ: req.codigoRQ ?? "",
+      titulo: req.titulo ?? "",
+      descripcion: req.descripcion ?? "",
+      idDuracion: req.idDuracion,
+      fechaSolicitud: req.fechaSolicitud
+        ? formatISODate(req.fechaSolicitud)
+        : "",
+      fechaVencimiento: req.fechaVencimiento
+        ? formatISODate(req.fechaVencimiento)
+        : "",
+      idEstadoRQ: req.idEstado ?? 0,
+      idCliente: req.idCliente ?? 0,
+      duracion: req.duracion ?? 0,
+      lstVacantes: mappedVacancies,
+      lstArchivos: mappedFiles,
+      idModalidad: req.idModalidad,
+      idModalidadFact: factModes,
+    });
+    setIsEditing(!isEditing);
+  };
+
   const totalVacs =
     res?.requerimiento.lstRqVacantes.reduce(
       (sum, vacante) => sum + Number(vacante.cantidad || 0),
@@ -201,6 +281,7 @@ export const ModalRQDetails = ({
           idPerfil: vacante.idPerfil,
           cantidad: vacante.cantidad,
           idEstado: vacante.idEstado,
+          tarifaFinal: null, // Para que base de datos no se actualice la tarifa
         }));
 
       const payload = {
@@ -234,7 +315,7 @@ export const ModalRQDetails = ({
 
   return (
     <>
-      {(reqLoading || postloading) && (
+      {(reqLoading || postloading || loadTariff) && (
         <Loading opacity="opacity-20" />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -253,12 +334,9 @@ export const ModalRQDetails = ({
                     label: "Datos RQ",
                     children: (
                       <TabRQData
-                        rqId={rqId}
-                        requirement={res || undefined}
                         rqStates={rqStates}
                         isEditing={isEditing}
-                        fetchRequirement={fetchRequirement}
-                        setIsEditing={setIsEditing}
+                        handleToggleEdit={handleToggleEdit}
                       />
                     ),
                   },
@@ -290,7 +368,10 @@ export const ModalRQDetails = ({
                       <TabVacancies
                         tariff={tarifario}
                         isEditing={isEditing}
-                        setIsEditing={setIsEditing}
+                        toggleEdit={handleToggleEdit}
+                        availableDegrees={availableDegrees}
+                        availableTechSkills={availableTechSkills}
+                        refetchParams={refetchParams}
                         vacancies={
                           res?.requerimiento.lstRqVacantes || []
                         }
@@ -327,7 +408,7 @@ export const ModalRQDetails = ({
                     children: (
                       <TabManagment
                         isEditing={isEditing}
-                        setIsEditing={setIsEditing}
+                        handleToggleEdit={handleToggleEdit}
                         rqDurationOptions={rqDurationOptions}
                         paymentModes={paymentModes}
                         rqMode={rqMode}
