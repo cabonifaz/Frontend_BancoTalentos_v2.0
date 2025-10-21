@@ -94,6 +94,7 @@ export const ModalRQDetails = ({
       idModalidadFact: [],
       lstVacantes: [],
       lstArchivos: [],
+      contrato: undefined,
     },
   });
 
@@ -165,6 +166,16 @@ export const ModalRQDetails = ({
         .map((m: string) => Number(m.trim()))
         .filter((m: any) => !isNaN(m));
 
+      // Duracion de contrato, si no tiene duracion de contrato (valores en 0)
+      const idDuracionContrato =
+        req.idDuracionContrato === null
+          ? undefined
+          : req.idDuracionContrato;
+      const duracionContrato =
+        req.duracionContrato === null
+          ? undefined
+          : req.duracionContrato;
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -183,6 +194,10 @@ export const ModalRQDetails = ({
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
         idModalidadFact: factModes,
+        contrato: {
+          idDuration: idDuracionContrato,
+          duration: duracionContrato,
+        },
       });
     }
   }, [res, reset]);
@@ -240,6 +255,16 @@ export const ModalRQDetails = ({
       .map((m: string) => Number(m.trim()))
       .filter((m: any) => !isNaN(m));
 
+    // Duracion de contrato, si no tiene duracion de contrato (valores en 0)
+    const idDuracionContrato =
+      req.idDuracionContrato === null
+        ? undefined
+        : req.idDuracionContrato;
+    const duracionContrato =
+      req.duracionContrato === null
+        ? undefined
+        : req.duracionContrato;
+
     reset({
       codigoRQ: req.codigoRQ ?? "",
       titulo: req.titulo ?? "",
@@ -258,6 +283,10 @@ export const ModalRQDetails = ({
       lstArchivos: mappedFiles,
       idModalidad: req.idModalidad,
       idModalidadFact: factModes,
+      contrato: {
+        idDuration: idDuracionContrato,
+        duration: duracionContrato,
+      },
     });
     setIsEditing(!isEditing);
   };
@@ -284,6 +313,10 @@ export const ModalRQDetails = ({
           tarifaFinal: null, // Para que base de datos no se actualice la tarifa
         }));
 
+      // Flat detalles de duracion de contrato
+      const idDuracionContrato = data.contrato?.idDuration;
+      const duracionContrato = data.contrato?.duration;
+
       const payload = {
         ...cleanData,
         idRequerimiento: rqId,
@@ -293,6 +326,8 @@ export const ModalRQDetails = ({
         duracion: Number(data.duracion),
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
+        idDuracionContrato: idDuracionContrato,
+        duracionContrato: duracionContrato,
       };
 
       const response = await postData(

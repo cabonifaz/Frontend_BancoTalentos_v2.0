@@ -13,6 +13,24 @@ const vacanteSchema = z.object({
   tarifa: z.string().optional().nullable(),
 });
 
+// Subschema: Duración de contrato
+const contractDurationSchema = z
+  .object({
+    idDuration: z
+      .number({
+        required_error: "Elija una duración",
+        invalid_type_error: "Elija una duración",
+      })
+      .min(1, "Elige una duración"),
+    duration: z.coerce
+      .number({
+        invalid_type_error:
+          "La duración de contrato debe ser un número",
+      })
+      .min(1, "La duración de contrato debe ser mayor a 0"),
+  })
+  .optional();
+
 export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
@@ -36,6 +54,7 @@ export const UpdateBaseRQSchema = z
         invalid_type_error: "Elija una duración",
       })
       .min(1, "Elija una duración"),
+    contrato: contractDurationSchema,
     idModalidad: z
       .number({
         required_error: "Elija una modalidad",

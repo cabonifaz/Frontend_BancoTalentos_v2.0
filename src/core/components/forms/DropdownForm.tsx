@@ -1,3 +1,4 @@
+import { all } from "axios";
 import { useMemo } from "react";
 import {
   Control,
@@ -19,6 +20,8 @@ interface Props {
   disabled?: boolean;
   clearErrorsFrom?: string[];
   defaultValue?: number;
+  allowEmpty?: boolean; // Nueva prop para campos opcionales
+  allowEmptyMessage?: string; // Mensaje para la opción vacía
 }
 
 const DropdownForm = ({
@@ -34,20 +37,31 @@ const DropdownForm = ({
   clearErrors,
   clearErrorsFrom,
   defaultValue,
+  allowEmpty = false,
+  allowEmptyMessage,
 }: Props) => {
   const safeDefault = useMemo(() => {
+    // Si allowEmpty es true, no forzar un valor por defecto
+    if (allowEmpty) return undefined;
+
     if (!options || options.length === 0) return 0;
     const found = options.find((opt) => opt.value === defaultValue);
     return found ? found.value : options[0].value;
-  }, [options, defaultValue]);
+  }, [options, defaultValue, allowEmpty]);
 
   return (
     <>
-      <div className={`${flex ? "flex-1" : "flex flex-1 gap-4 items-center"}`}>
+      <div
+        className={`${
+          flex ? "flex-1" : "flex flex-1 gap-4 items-center"
+        }`}
+      >
         {label && (
           <label
             htmlFor={name}
-            className={`text-nowrap ${word_wrap ? "w-[11rem]" : "min-w-[11rem]"}`}
+            className={`text-nowrap ${
+              word_wrap ? "w-[11rem]" : "min-w-[11rem]"
+            }`}
           >
             {label}
             {required && <span className="text-red-400">*</span>}
@@ -61,9 +75,13 @@ const DropdownForm = ({
               <select
                 id={name}
                 {...field}
-                value={field.value ?? safeDefault}
+                value={field.value ?? (allowEmpty ? "" : safeDefault)}
                 onChange={(e) => {
-                  field.onChange(Number(e.target.value));
+                  const value =
+                    e.target.value === ""
+                      ? undefined
+                      : Number(e.target.value);
+                  field.onChange(value);
                   if (clearErrors) {
                     clearErrors(name);
                     clearErrorsFrom?.forEach((path) => {
@@ -74,7 +92,9 @@ const DropdownForm = ({
                 disabled={disabled}
                 className="input w-full h-12 disabled:text-gray-400"
               >
-                <option value={0}>Elige una opción</option>
+                <option value="">
+                  {allowEmptyMessage || "Elige una opción"}
+                </option>
                 {options.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
