@@ -92,7 +92,7 @@ const DropdownForm = ({
                 disabled={disabled}
                 className="input w-full h-12 disabled:text-gray-400"
               >
-                <option disabled value="">
+                <option value="">
                   {allowEmptyMessage || "Elige una opción"}
                 </option>
                 {options.map((option) => (
