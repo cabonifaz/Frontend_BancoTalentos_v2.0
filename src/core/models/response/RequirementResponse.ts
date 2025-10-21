@@ -24,5 +24,7 @@ export interface RequirementResponse {
     idModalidad: number;
     idDuracion: number;
     modalidadFact: string;
+    idDuracionContrato?: number;
+    duracionContrato?: number;
   };
 }
