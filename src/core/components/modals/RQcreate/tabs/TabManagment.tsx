@@ -96,7 +96,7 @@ export const TabManagement = ({
         </div>
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
-            Modalidad de facturación:
+            Modalidad de contrato:
           </label>
           <div className="flex flex-col gap-2">
             {factModes.map((mod) => (
