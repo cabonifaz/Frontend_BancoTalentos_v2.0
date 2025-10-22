@@ -30,6 +30,7 @@ const vacanteCareerSchema = z.object({
   idPerfil: z.number(),
   carrera: z.string().min(1, "La carrera es obligatoria"),
   idGrado: z.number().min(1, "Debe elegir un grado"),
+  isOptional: z.boolean(),
 });
 
 // Subschema: Duración de contrato

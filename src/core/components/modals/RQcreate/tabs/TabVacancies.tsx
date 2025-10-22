@@ -99,6 +99,7 @@ export const TabVacancies = ({
           idPerfil,
           carrera: c.label,
           idGrado: c.degreeId,
+          isOptional: c.isOptional,
         }));
       }
     );
