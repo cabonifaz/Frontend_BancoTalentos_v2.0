@@ -1,5 +1,9 @@
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { DropdownForm, InputForm, SalaryStructureForm } from "../forms";
+import {
+  DropdownForm,
+  InputForm,
+  SalaryStructureForm,
+} from "../forms";
 import { Tabs } from "../ui/Tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,14 +27,23 @@ import { AsignarTalentoType } from "../../models";
 import { useEffect, useState } from "react";
 import { useFetchParams } from "../../hooks/useFetchParams";
 import { Utils } from "../../utilities/utils";
+import { addDays, addWeeks, addMonths, format } from "date-fns";
 
 interface Props {
   onClose: () => void;
   onConfirm: (talento: AsignarTalentoType) => void;
   currentTalent?: AsignarTalentoType | null;
+  durationContract?: number;
+  durationContractId?: number;
 }
 
-export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
+export const ModalIngreso = ({
+  onClose,
+  currentTalent,
+  onConfirm,
+  durationContract,
+  durationContractId,
+}: Props) => {
   const {
     paramsByMaestro,
     loading: paramLoading,
@@ -40,7 +53,7 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
 
   useEffect(() => {
     fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`,
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`
     );
   }, [fetchParams]);
 
@@ -52,15 +65,17 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       ?.string1 || "";
 
   const proyectoServicio =
-    paramsByMaestro[PROYECTO_SERVICIO]?.find((item) => item.num1 === 1)
-      ?.string1 || "";
+    paramsByMaestro[PROYECTO_SERVICIO]?.find(
+      (item) => item.num1 === 1
+    )?.string1 || "";
 
   const objetoContrato =
     paramsByMaestro[OBJETO_CONTRATO]?.find((item) => item.num1 === 1)
       ?.string1 || "";
 
   const defaultUnit = Utils.getPriorityValueFromParams(unitValues);
-  const defaultReason = Utils.getPriorityValueFromParams(reasonValues);
+  const defaultReason =
+    Utils.getPriorityValueFromParams(reasonValues);
 
   const {
     control,
@@ -95,10 +110,63 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
       ubicacion: currentTalent?.ubicacion || "",
       idSedeDeclarar:
         sedeSunatList.find(
-          (sede) => sede.nombre === currentTalent?.sedeDeclarar,
+          (sede) => sede.nombre === currentTalent?.sedeDeclarar
         )?.idSede || 0,
     },
   });
+
+  // Watch para la fecha de inicio de contrato
+  const fchInicioContrato = useWatch({
+    control,
+    name: "fchInicioContrato",
+  });
+
+  // Función para calcular la fecha de término basada en la duración del contrato
+  const calculateEndDate = (
+    startDate: string,
+    duration: number,
+    durationTypeId: number
+  ) => {
+    if (!startDate || !duration || !durationTypeId) return "";
+
+    const start = new Date(startDate);
+    let endDate: Date;
+
+    switch (durationTypeId) {
+      case 1: // Días
+        endDate = addDays(start, duration);
+        break;
+      case 2: // Semanas
+        endDate = addWeeks(start, duration);
+        break;
+      case 3: // Meses
+        endDate = addMonths(start, duration);
+        break;
+      default:
+        return "";
+    }
+
+    return format(endDate, "yyyy-MM-dd");
+  };
+
+  // Efecto para calcular automáticamente la fecha de término
+  useEffect(() => {
+    if (fchInicioContrato && durationContract && durationContractId) {
+      const endDate = calculateEndDate(
+        fchInicioContrato,
+        durationContract,
+        durationContractId
+      );
+      if (endDate) {
+        setValue("fchTerminoContrato", endDate);
+      }
+    }
+  }, [
+    fchInicioContrato,
+    durationContract,
+    durationContractId,
+    setValue,
+  ]);
 
   // cargar valores por defecto desde parametros
   useEffect(() => {
@@ -124,10 +192,12 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
         sedeDeclarar:
           data.declararSunat === 2
             ? ""
-            : sedeSunatList.find((sede) => sede.idSede === data.idSedeDeclarar)
-                ?.nombre,
+            : sedeSunatList.find(
+                (sede) => sede.idSede === data.idSedeDeclarar
+              )?.nombre,
         area:
-          unitValues.find((unit) => data.idArea === unit.num1)?.string1 || "",
+          unitValues.find((unit) => data.idArea === unit.num1)
+            ?.string1 || "",
         tieneEquipo: data.tieneEquipo ? 1 : 0,
         ingreso: 1,
         confirmado: true,
@@ -143,15 +213,15 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
     name: "idModalidadContrato",
   });
 
-  const [enabledSalaryFields, setEnabledSalaryFields] = useState<string[]>([
-    "montoBase",
-  ]);
+  const [enabledSalaryFields, setEnabledSalaryFields] = useState<
+    string[]
+  >(["montoBase"]);
 
   useEffect(() => {
     if (!watchedModalidad || !modalityValues) return;
 
     const selectedModality = modalityValues.find(
-      (m) => m.num1 === watchedModalidad,
+      (m) => m.num1 === watchedModalidad
     );
 
     if (!selectedModality) return;
@@ -267,7 +337,9 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                             ¿Cuenta con equipo?{" "}
                             <span className="text-red-500">*</span>
                             <div>
-                              <p className="text-sm text-zinc-500">(Laptop)</p>
+                              <p className="text-sm text-zinc-500">
+                                (Laptop)
+                              </p>
                             </div>
                           </label>
                           <div className="flex items-center gap-6">
@@ -279,7 +351,9 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                                 onChange={() => field.onChange(true)}
                                 // disabled
                               />
-                              <span className="ml-2 text-gray-700">Sí</span>
+                              <span className="ml-2 text-gray-700">
+                                Sí
+                              </span>
                             </label>
                             <label className="flex items-center cursor-pointer">
                               <input
@@ -289,7 +363,9 @@ export const ModalIngreso = ({ onClose, currentTalent, onConfirm }: Props) => {
                                 onChange={() => field.onChange(false)}
                                 // disabled
                               />
-                              <span className="ml-2 text-gray-700">No</span>
+                              <span className="ml-2 text-gray-700">
+                                No
+                              </span>
                             </label>
                           </div>
                           {errors.tieneEquipo && (

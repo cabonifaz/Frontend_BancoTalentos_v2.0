@@ -4,7 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Loading } from "../../core/components";
 import BackButton from "../../core/components/ui/BackButton";
-import { DropdownForm, FormRow, InputForm } from "../../core/components/forms";
+import {
+  DropdownForm,
+  FormRow,
+  InputForm,
+} from "../../core/components/forms";
 import { useParams } from "../../core/context/ParamsContext";
 import { useApi } from "../../core/hooks/useApi";
 import {
@@ -14,7 +18,10 @@ import {
   SaveTalentFMIParams,
   TalentoFMI,
 } from "../../core/models";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../core/utilities/errorHandler";
 import { enqueueSnackbar } from "notistack";
 import { saveTalentFMI } from "../../core/services/apiService";
 import useFetchTalento from "../../core/hooks/useFetchTalento";
@@ -23,10 +30,61 @@ import { format } from "date-fns";
 const PantallaDatos = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento } = (location.state as { talento: TalentoFMI }) || {};
+  const { talento, contract } =
+    (location.state as {
+      talento: TalentoFMI;
+      contract: {
+        duracionContrato: number;
+        idDuracionContrato: number;
+      };
+    }) || {};
 
-  const { paramsByMaestro, loading: loadingParams } = useParams("5, 2, 3");
-  const { talentoDetails, loading } = useFetchTalento(talento.idTalento); // fmi
+  // Función para convertir la duración del contrato al formato del formulario
+  const convertContractDuration = (
+    duration: number,
+    durationTypeId: number
+  ) => {
+    if (!duration || !durationTypeId) {
+      return { convertedDuration: 0, convertedTypeId: 1 };
+    }
+
+    switch (durationTypeId) {
+      case 1: // Días -> convertir a meses (aproximado: 30 días = 1 mes)
+        const monthsFromDays = Math.ceil(duration / 30);
+        return {
+          convertedDuration: monthsFromDays,
+          convertedTypeId: 1, // meses en este formulario
+        };
+
+      case 2: // Semanas -> convertir a meses (aproximado: 4 semanas = 1 mes)
+        const monthsFromWeeks = Math.ceil(duration / 4);
+        return {
+          convertedDuration: monthsFromWeeks,
+          convertedTypeId: 1, // meses en este formulario
+        };
+
+      case 3: // Meses -> mantener como meses
+        return {
+          convertedDuration: duration,
+          convertedTypeId: 1, // meses en este formulario
+        };
+
+      default:
+        return { convertedDuration: 0, convertedTypeId: 1 };
+    }
+  };
+
+  const { convertedDuration, convertedTypeId } =
+    convertContractDuration(
+      contract?.duracionContrato || 0,
+      contract?.idDuracionContrato || 0
+    );
+
+  const { paramsByMaestro, loading: loadingParams } =
+    useParams("5, 2, 3");
+  const { talentoDetails, loading } = useFetchTalento(
+    talento.idTalento
+  ); // fmi
 
   const { loading: loadingSaveTalent, fetch: saveTalent } = useApi<
     BaseResponseFMI,
@@ -62,8 +120,8 @@ const PantallaDatos = () => {
       telefono: "",
       dni: "",
       email: "",
-      tiempoContrato: 0,
-      idTiempoContrato: 0,
+      tiempoContrato: convertedDuration,
+      idTiempoContrato: convertedTypeId,
       fechaInicioLabores: "",
       // cargo: "",
       remuneracion: 0,
@@ -82,10 +140,13 @@ const PantallaDatos = () => {
         telefono: talentoDetails?.celular || "",
         dni: talentoDetails?.dni || "",
         email: talentoDetails?.email || "",
-        tiempoContrato: talentoDetails?.tiempoContrato || 0,
-        idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
+        tiempoContrato: convertedDuration,
+        idTiempoContrato: convertedTypeId,
         fechaInicioLabores: talentoDetails?.fechaInicioLabores
-          ? format(new Date(talentoDetails.fechaInicioLabores), "yyyy-MM-dd")
+          ? format(
+              new Date(talentoDetails.fechaInicioLabores),
+              "yyyy-MM-dd"
+            )
           : format(new Date(), "yyyy-MM-dd"),
         // cargo: talentoDetails?.cargo || "",
         remuneracion: talentoDetails?.remuneracion || 0,
@@ -94,7 +155,7 @@ const PantallaDatos = () => {
         ubicacion: talentoDetails?.ubicacion || "",
       });
     }
-  }, [talentoDetails, reset]);
+  }, [talentoDetails, reset, convertedDuration, convertedTypeId]);
 
   const saveData: SubmitHandler<DataFormType> = async (data) => {
     const { apellidoMaterno, ...cleanData } = data;
@@ -121,7 +182,10 @@ const PantallaDatos = () => {
       {loadingSaveTalent && <Loading opacity="opacity-60" />}
       <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
         {/* Data form */}
-        <form onSubmit={handleSubmit(saveData)} className="flex flex-col gap-8">
+        <form
+          onSubmit={handleSubmit(saveData)}
+          className="flex flex-col gap-8"
+        >
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />
             Datos Personales
@@ -262,7 +326,9 @@ const PantallaDatos = () => {
             </button>
             <button
               type="submit"
-              className={`btn ${isDirty ? "btn-primary" : "btn-disabled"}`}
+              className={`btn ${
+                isDirty ? "btn-primary" : "btn-disabled"
+              }`}
               disabled={!isDirty}
             >
               Guardar
