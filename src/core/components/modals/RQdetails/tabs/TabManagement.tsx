@@ -44,7 +44,7 @@ export const TabManagment = ({
 
         <div className="flex items-center mb-6">
           <label className="w-1/3 text-sm font-medium text-gray-700">
-            Duración:
+            Duración de RQ:
           </label>
           <div className="flex gap-4 w-2/3">
             <div className="flex flex-col gap-1">
@@ -118,7 +118,7 @@ export const TabManagment = ({
         </div>
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
-            Modalidad de facturación:
+            Modalidad de contrato:
           </label>
           <Controller
             name="idModalidadFact"
