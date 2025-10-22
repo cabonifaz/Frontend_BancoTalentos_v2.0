@@ -527,10 +527,6 @@ const TalentTable: React.FC = () => {
 
       if (response.data.idTipoMensaje === 2) {
         setRequerimiento(response.data.requerimiento);
-        console.log(
-          "Requerimiento data:",
-          response.data.requerimiento
-        );
 
         // Formatear fecha
         if (response.data.requerimiento.fechaSolicitud) {
@@ -760,7 +756,15 @@ const TalentTable: React.FC = () => {
 
   // Actualizar talento
   const handleUpdateTalent = (talent: AsignarTalentoType) => {
-    navigate("/dashboard/formDatos", { state: { talento: talent } });
+    navigate("/dashboard/formDatos", {
+      state: {
+        talento: talent,
+        contract: {
+          duracionContrato: requerimiento?.duracionContrato || 0,
+          idDuracionContrato: requerimiento?.idDuracionContrato || 0,
+        },
+      },
+    });
   };
 
   // Verificar confirmación
