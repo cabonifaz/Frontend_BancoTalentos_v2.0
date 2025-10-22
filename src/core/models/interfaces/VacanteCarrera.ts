@@ -5,4 +5,5 @@ export interface VacanteCarrera {
   carrera: string;
   idGradoEstudios: number;
   idEstadoRegistro?: number;
+  isOptional?: boolean;
 }
