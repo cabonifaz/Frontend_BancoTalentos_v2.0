@@ -144,6 +144,7 @@ export const ModalDetailsVacSkills = ({
       habilidad: option.label,
       idEstadoRegistro: 1, // Activa
       anios: 1, // Valor inicial
+      isOptional: false,
     };
 
     setSkills([...skills, newSkill]);
@@ -154,6 +155,19 @@ export const ModalDetailsVacSkills = ({
       prev?.map((skill) =>
         skill.idHabilidad === idHabilidad
           ? { ...skill, anios: years }
+          : skill
+      )
+    );
+  };
+
+  const handleOptionalChange = (
+    idHabilidad: number,
+    isOptional: boolean
+  ) => {
+    setSkills((prev) =>
+      prev?.map((skill) =>
+        skill.idHabilidad === idHabilidad
+          ? { ...skill, isOptional }
           : skill
       )
     );
@@ -263,65 +277,148 @@ export const ModalDetailsVacSkills = ({
           </button>
 
           <div className="flex flex-col gap-4">
-            <Autocomplete
-              options={availableSkills}
-              onSelect={handleAddSkill}
-              disabled={modalMode !== MODAL_MODES.EDIT}
-              placeholder="Buscar o seleccionar habilidad..."
-              value={autoQuery}
-              onQueryChange={setAutoQuery}
-            />
+            {/* Sección de búsqueda */}
+            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50">
+              <Autocomplete
+                options={availableSkills}
+                onSelect={handleAddSkill}
+                disabled={modalMode !== MODAL_MODES.EDIT}
+                placeholder="Buscar o seleccionar habilidad..."
+                value={autoQuery}
+                onQueryChange={setAutoQuery}
+              />
+            </div>
 
-            <ul className="flex flex-wrap gap-2">
-              {filterActiveSkills(skills || []).map((skill) => (
-                <li
-                  key={skill.idHabilidad}
-                  className="flex justify-between items-center border rounded px-3 py-2 bg-gray-50 gap-2"
-                >
-                  <span className="flex-1">{skill.habilidad}</span>
+            {/* Lista de habilidades mejorada */}
+            <div className="min-h-[200px] overflow-y-scroll relative pb-20">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Habilidades seleccionadas (
+                {filterActiveSkills(skills || []).length})
+              </h3>
+              {filterActiveSkills(skills || []).length > 0 ? (
+                <div className="grid gap-3">
+                  {filterActiveSkills(skills || []).map((skill) => (
+                    <div
+                      key={skill.idHabilidad}
+                      className={`group flex items-center justify-between p-4 border-2 rounded-xl transition-all duration-200 ${
+                        skill.isOptional
+                          ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                          : "bg-white border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {/* Lado izquierdo: Nombre y badge */}
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">
+                            {skill.habilidad}
+                          </span>
+                          {skill.isOptional ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Opcional
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Obligatorio
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm">Años: </label>
-                    <input
-                      className="w-16 border rounded px-2 py-1 focus:ring focus:ring-blue-300 text-center"
-                      type="number"
-                      min={0}
-                      disabled={modalMode !== MODAL_MODES.EDIT}
-                      value={skill.anios}
-                      onChange={(e) => {
-                        const numValue =
-                          parseInt(e.target.value) || 0;
-                        handleYearsChange(
-                          skill.idHabilidad,
-                          numValue
-                        );
-                        if (e.target.value.startsWith("0"))
-                          e.target.value = e.target.value.replace(
-                            "0",
-                            ""
-                          );
-                      }}
-                      onFocus={(e) => e.target.select()}
-                    />
-                  </div>
+                      {/* Centro: Años de experiencia */}
+                      <div className="flex items-center gap-2 mx-4">
+                        <label className="text-sm font-medium text-gray-700">
+                          Años:
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          disabled={modalMode !== MODAL_MODES.EDIT}
+                          value={skill.anios}
+                          onChange={(e) => {
+                            const numValue =
+                              parseInt(e.target.value) || 0;
+                            handleYearsChange(
+                              skill.idHabilidad,
+                              numValue
+                            );
+                            if (e.target.value.startsWith("0"))
+                              e.target.value = e.target.value.replace(
+                                "0",
+                                ""
+                              );
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                      </div>
 
-                  <button
-                    className="text-red-500 hover:text-red-700 ml-3"
-                    title="Eliminar habilidad"
-                    disabled={modalMode !== MODAL_MODES.EDIT}
-                    onClick={() =>
-                      handleRemoveSkill(skill.idHabilidad)
-                    }
-                  >
-                    <img
-                      src="/assets/ic_close_x.svg"
-                      alt="icon close"
-                      className="w-4 h-4"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
+                      {/* Lado derecho: Switch opcional y botón eliminar */}
+                      <div className="flex items-center gap-3">
+                        {/* Switch para cambiar estado opcional */}
+                        {modalMode === MODAL_MODES.EDIT && (
+                          <label className="inline-flex items-center cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={skill.isOptional || false}
+                                onChange={(e) =>
+                                  handleOptionalChange(
+                                    skill.idHabilidad,
+                                    e.target.checked
+                                  )
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`block w-8 h-5 rounded-full transition-colors duration-200 ${
+                                  skill.isOptional
+                                    ? "bg-blue-600"
+                                    : "bg-gray-300"
+                                }`}
+                              >
+                                <div
+                                  className={`dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 ${
+                                    skill.isOptional
+                                      ? "transform translate-x-3"
+                                      : ""
+                                  }`}
+                                ></div>
+                              </div>
+                            </div>
+                            <span className="ml-2 text-xs font-medium text-gray-600">
+                              Opcional
+                            </span>
+                          </label>
+                        )}
+
+                        {/* Botón eliminar */}
+                        {modalMode === MODAL_MODES.EDIT && (
+                          <button
+                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200"
+                            title="Eliminar habilidad"
+                            onClick={() =>
+                              handleRemoveSkill(skill.idHabilidad)
+                            }
+                          >
+                            <img
+                              src="/assets/ic_close_x.svg"
+                              alt="icon close"
+                              className="w-4 h-4"
+                            />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                  <p className="text-gray-500 text-sm">
+                    No hay habilidades seleccionadas
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="absolute bottom-4 left-0 right-0 flex items-center justify-between px-4">
