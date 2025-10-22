@@ -23,6 +23,7 @@ const vacanteSkillSchema = z.object({
     })
     .min(0)
     .optional(),
+  isOptional: z.boolean(),
 });
 
 // Subschema: Carreras por vacante
