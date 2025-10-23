@@ -77,13 +77,15 @@ export const newRQSchema = z
         required_error: "La duración es obligatoria",
         invalid_type_error: "La duración debe ser un número",
       })
-      .min(1, "La duración debe ser mayor a 0"),
+      .min(1, "La duración debe ser mayor a 0")
+      .optional(),
     idDuracion: z
       .number({
         required_error: "Elija una duración",
         invalid_type_error: "Elija una duración",
       })
-      .min(1, "Elige una duración"),
+      .min(1, "Elige una duración")
+      .optional(),
     idModalidad: z
       .number({
         required_error: "Elija una modalidad",
@@ -110,6 +112,9 @@ export const newRQSchema = z
 
     // Duración de contrato
     contrato: contractDurationSchema,
+
+    // Tiene duración
+    tieneDuracion: z.boolean(),
 
     lstArchivos: z
       .array(
@@ -150,6 +155,23 @@ export const newRQSchema = z
           path: ["fechaVencimiento"],
         });
       }
+    }
+
+    // Validación de duración si tieneDuracion es true
+    if (data.tieneDuracion && !data.duracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["duracion"],
+      });
+    }
+
+    if (data.tieneDuracion && !data.idDuracion) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "La duración es obligatoria si tiene duración",
+        path: ["idDuracion"],
+      });
     }
   });
 

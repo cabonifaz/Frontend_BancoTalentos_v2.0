@@ -120,6 +120,7 @@ export const ModalRQCreate = ({
         duration: 1,
         idDuration: 0,
       },
+      tieneDuracion: true,
     },
   });
 
