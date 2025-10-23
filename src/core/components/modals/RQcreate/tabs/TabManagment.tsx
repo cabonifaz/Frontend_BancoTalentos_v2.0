@@ -29,6 +29,12 @@ export const TabManagement = ({
     clearErrors,
   } = useFormContext<newRQSchemaType>();
 
+  // Observar cambios en las modalidades de contrato seleccionadas
+  const selectedModalidades = useWatch({
+    control,
+    name: "idModalidadFact",
+  });
+
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
       clearErrors(["duracion", "idDuracion"]);
@@ -36,6 +42,38 @@ export const TabManagement = ({
       setValue("idDuracion", undefined);
     }
   };
+
+  // Determinar qué tabla mostrar basándose en las modalidades seleccionadas
+  const getTableVisibility = () => {
+    if (!selectedModalidades || selectedModalidades.length === 0) {
+      return { showFirstTable: false, showSecondTable: false };
+    }
+
+    // Convertir selectedModalidades a números para comparación
+    const selectedIds = selectedModalidades.map(
+      (id: string | number) =>
+        typeof id === "string" ? parseInt(id, 10) : id
+    );
+
+    // IDs específicos de cada tipo según tu lista
+    const planillaIds = [2, 3]; // Planilla - Reg. general, Planilla - Tiempo parcial
+    const serviciosIds = [1, 4, 5]; // Locación de servicios, Prácticas Pre-profesionales, Prácticas Profesionales
+
+    // Verificar si hay modalidades de cada tipo seleccionadas
+    const hasPlanilla = selectedIds.some((id) =>
+      planillaIds.includes(id)
+    );
+    const hasServicios = selectedIds.some((id) =>
+      serviciosIds.includes(id)
+    );
+
+    return {
+      showFirstTable: hasServicios, // Mostrar tabla servicios si hay IDs de servicios
+      showSecondTable: hasPlanilla, // Mostrar tabla planilla si hay IDs de planilla
+    };
+  };
+
+  const { showFirstTable, showSecondTable } = getTableVisibility();
 
   return (
     <div className="h-full flex flex-col px-4 overflow-scroll">
@@ -203,18 +241,26 @@ export const TabManagement = ({
             )}
           </div>
 
-          {/* Tablas de faturacion */}
-          <div className="space-y-6 mt-6">
-            <BillingTable
-              title="Tabla de Facturación 1"
-              className=""
-            />
+          {/* Tablas de facturación condicionalmente visibles */}
+          {(showFirstTable || showSecondTable) && (
+            <div className="space-y-6 mt-6">
+              {showFirstTable && (
+                <BillingTable
+                  title="Tabla de Facturación - Servicios"
+                  className=""
+                  declaredInSunat={false}
+                />
+              )}
 
-            <BillingTable
-              title="Tabla de Facturación 2"
-              className=""
-            />
-          </div>
+              {showSecondTable && (
+                <BillingTable
+                  title="Tabla de Facturación - Planilla"
+                  className=""
+                  declaredInSunat={true}
+                />
+              )}
+            </div>
+          )}
 
           <div className="flex-1"></div>
         </div>

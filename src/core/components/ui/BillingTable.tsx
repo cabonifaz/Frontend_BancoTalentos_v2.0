@@ -3,11 +3,13 @@ import React from "react";
 interface BillingTableProps {
   title: string;
   className?: string;
+  declaredInSunat?: boolean;
 }
 
 export const BillingTable: React.FC<BillingTableProps> = ({
   title,
   className = "",
+  declaredInSunat = false,
 }) => {
   // Datos de ejemplo para la tabla
   const sampleData = [
@@ -55,9 +57,13 @@ export const BillingTable: React.FC<BillingTableProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Declarado en SUNAT?
           </label>
-          <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-            <option value="si">Sí</option>
-            <option value="no">No</option>
+          <select
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+            disabled={true}
+          >
+            <option value={declaredInSunat ? 1 : 0}>
+              {declaredInSunat ? "Sí" : "No"}
+            </option>
           </select>
         </div>
         <div>
