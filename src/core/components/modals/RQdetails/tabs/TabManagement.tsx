@@ -1,4 +1,8 @@
-import { Controller, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
@@ -22,10 +26,20 @@ export const TabManagment = ({
   const {
     formState: { errors },
     control,
+    clearErrors,
+    setValue,
   } = useFormContext<UpdateBaseRQSchemaType>();
 
+  const handleDurationChange = (checked: boolean) => {
+    if (!checked) {
+      clearErrors(["duracion", "idDuracion"]);
+      setValue("duracion", undefined);
+      setValue("idDuracion", undefined);
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col px-4">
+    <div className="h-full flex flex-col px-4 overflow-scroll">
       <div className="flex flex-col h-[calc(570px-120px)]">
         {/* Contenido del formulario */}
         <div className="flex justify-end mb-1">
@@ -42,33 +56,106 @@ export const TabManagment = ({
           </button>
         </div>
 
+        {/* Switch de tiene duración */}
         <div className="flex items-center mb-6">
           <label className="w-1/3 text-sm font-medium text-gray-700">
-            Duración de RQ:
+            Tiene duración:
           </label>
-          <div className="flex gap-4 w-2/3">
-            <div className="flex flex-col gap-1">
-              <NumberInput<UpdateBaseRQSchemaType>
-                control={control}
-                name="duracion"
-                isDisabled={!isEditing}
-                error={errors?.duracion?.message}
-              />
-            </div>
-            <DropdownForm
-              name="idDuracion"
+
+          <div className="flex items-center gap-4 w-2/3">
+            <Controller
+              name="tieneDuracion"
               control={control}
-              error={errors.idDuracion}
-              required={false}
-              flex={true}
-              disabled={!isEditing}
-              options={rqDurationOptions.map((d) => ({
-                value: d.num1,
-                label: d.string1,
-              }))}
+              render={({ field }) => (
+                <>
+                  <label className="inline-flex items-center cursor-pointer relative">
+                    <input
+                      type="checkbox"
+                      checked={field.value || false}
+                      disabled={!isEditing}
+                      onChange={(e) => {
+                        if (isEditing) {
+                          field.onChange(e.target.checked);
+                          handleDurationChange(e.target.checked);
+                        }
+                      }}
+                      className="sr-only peer"
+                      aria-label="Tiene duración"
+                    />
+                    {/* Fondo del switch */}
+                    <div
+                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                        field.value ? "bg-blue-600" : "bg-gray-200"
+                      } ${!isEditing ? "opacity-60" : ""}`}
+                    />
+                    {/* Bolita deslizante */}
+                    <span
+                      className={`absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${
+                        field.value
+                          ? "translate-x-5"
+                          : "translate-x-0"
+                      } ${!isEditing ? "opacity-60" : ""}`}
+                    />
+                  </label>
+
+                  {/* Texto visible usando field.value directamente */}
+                  <span className="text-sm text-gray-700">
+                    {field.value
+                      ? "Tiene duración"
+                      : "No tiene duración"}
+                  </span>
+                </>
+              )}
             />
+
+            {errors.tieneDuracion && (
+              <span className="text-red-500 text-xs ml-3">
+                {errors.tieneDuracion.message}
+              </span>
+            )}
           </div>
         </div>
+
+        {/* Campos de duración condicionales */}
+        <Controller
+          name="tieneDuracion"
+          control={control}
+          render={({ field }) => (
+            <>
+              {field.value && (
+                <div className="flex items-center mb-6">
+                  <label className="w-1/3 text-sm font-medium text-gray-700">
+                    Duración de RQ:
+                  </label>
+                  <div className="flex gap-4 w-2/3">
+                    <div className="flex flex-col gap-1">
+                      <NumberInput<UpdateBaseRQSchemaType>
+                        control={control}
+                        name="duracion"
+                        isDisabled={!isEditing}
+                        error={errors?.duracion?.message}
+                      />
+                    </div>
+                    <DropdownForm
+                      name="idDuracion"
+                      control={control}
+                      error={errors.idDuracion}
+                      required={false}
+                      allowEmpty={true}
+                      flex={true}
+                      disabled={!isEditing}
+                      options={rqDurationOptions.map((d) => ({
+                        value: d.num1,
+                        label: d.string1,
+                      }))}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        />
+
         <div className="flex items-center mb-6">
           <label className="w-1/3 text-sm font-medium text-gray-700">
             Duración de contrato:

@@ -38,7 +38,7 @@ export const TabManagement = ({
 
   return (
     <>
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4 overflow-scroll">
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
             Tiene duración:
