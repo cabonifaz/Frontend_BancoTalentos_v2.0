@@ -36,8 +36,6 @@ export const ModalDetailsVacCarreras = ({
     MODAL_MODES.NORMAL
   );
   const [newCareer, setNewCareer] = useState("");
-  const [newCareerIsOptional, setNewCareerIsOptional] =
-    useState(false);
 
   const { fetchCarreras, isLoading } = useFetchVacCarreras();
   const { isUpdating, update } = useUpdateVacCarreras();
@@ -102,12 +100,11 @@ export const ModalDetailsVacCarreras = ({
       carrera: name,
       idGradoEstudios: 0, // valor inicial: "Seleccione un grado"
       idEstadoRegistro: 1,
-      isOptional: newCareerIsOptional,
+      isOptional: false,
     };
 
     setCarreras((prev) => [...prev, newCarrera]);
     setNewCareer("");
-    setNewCareerIsOptional(false);
   };
 
   /** Eliminar carrera */
@@ -239,40 +236,6 @@ export const ModalDetailsVacCarreras = ({
               >
                 Agregar
               </button>
-            </div>
-
-            {/* Switch para carrera opcional */}
-            <div className="flex items-center gap-2">
-              <label className="inline-flex items-center cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={newCareerIsOptional}
-                    onChange={(e) =>
-                      setNewCareerIsOptional(e.target.checked)
-                    }
-                    className="sr-only"
-                  />
-                  <div
-                    className={`block w-10 h-6 rounded-full transition-colors duration-200 ${
-                      newCareerIsOptional
-                        ? "bg-blue-600"
-                        : "bg-gray-300"
-                    }`}
-                  >
-                    <div
-                      className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ${
-                        newCareerIsOptional
-                          ? "transform translate-x-4"
-                          : ""
-                      }`}
-                    ></div>
-                  </div>
-                </div>
-                <span className="ml-3 text-sm font-medium text-gray-700">
-                  Carrera opcional
-                </span>
-              </label>
             </div>
           </div>
         )}
