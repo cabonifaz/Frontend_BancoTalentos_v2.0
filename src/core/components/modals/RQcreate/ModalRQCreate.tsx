@@ -121,6 +121,26 @@ export const ModalRQCreate = ({
         idDuration: 0,
       },
       tieneDuracion: true,
+      facturacionPlanilla: {
+        grupoModalidad: 2, // Planilla
+        declaraSuntat: true,
+        sedeDeclaraSunat: "sede-principal",
+        montoBase: 0,
+        montoMovilidad: 0,
+        montoMesual: 0,
+        montoTrimestral: 0,
+        montoSemestral: 0,
+      },
+      facturacionServicios: {
+        grupoModalidad: 1, // Servicios
+        declaraSuntat: false,
+        sedeDeclaraSunat: "sede-principal",
+        montoBase: 0,
+        montoMovilidad: 0,
+        montoMesual: 0,
+        montoTrimestral: 0,
+        montoSemestral: 0,
+      },
     },
   });
 

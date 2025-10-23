@@ -1,44 +1,31 @@
 import React from "react";
+import { Controller, useFormContext } from "react-hook-form";
+import { newRQSchemaType } from "../../models/schemas/NewRQSchemaV1";
 
 interface BillingTableProps {
   title: string;
   className?: string;
-  declaredInSunat?: boolean;
+  fieldName: "facturacionPlanilla" | "facturacionServicios";
 }
 
 export const BillingTable: React.FC<BillingTableProps> = ({
   title,
   className = "",
-  declaredInSunat = false,
+  fieldName,
 }) => {
-  // Datos de ejemplo para la tabla
-  const sampleData = [
-    {
-      concepto: "Monto Base",
-      valor: "1500",
-      checked: true,
-    },
-    {
-      concepto: "Monto Movilidad",
-      valor: "0",
-      checked: true,
-    },
-    {
-      concepto: "Monto Mensual",
-      valor: "0",
-      checked: true,
-    },
-    {
-      concepto: "Monto Trimestral",
-      valor: "0",
-      checked: true,
-    },
-    {
-      concepto: "Monto Semestral",
-      valor: "0",
-      checked: true,
-    },
-  ];
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<newRQSchemaType>();
+
+  // Configuración de campos de montos
+  const montoFields = [
+    { name: "montoBase", label: "Monto Base" },
+    { name: "montoMovilidad", label: "Monto Movilidad" },
+    { name: "montoMesual", label: "Monto Mensual" },
+    { name: "montoTrimestral", label: "Monto Trimestral" },
+    { name: "montoSemestral", label: "Monto Semestral" },
+  ] as const;
 
   return (
     <div
@@ -57,55 +44,83 @@ export const BillingTable: React.FC<BillingTableProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Declarado en SUNAT?
           </label>
-          <select
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={true}
-          >
-            <option value={declaredInSunat ? 1 : 0}>
-              {declaredInSunat ? "Sí" : "No"}
-            </option>
-          </select>
+          <Controller
+            name={`${fieldName}.declaraSuntat`}
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                disabled={true}
+                value={field.value ? 1 : 0}
+                onChange={(e) =>
+                  field.onChange(e.target.value === "1")
+                }
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value={1}>Sí</option>
+                <option value={0}>No</option>
+              </select>
+            )}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Sede a declarar
           </label>
-          <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-            <option value="sede-principal">Sede Principal</option>
-            <option value="sede-secundaria">Sede Secundaria</option>
-          </select>
+          <Controller
+            name={`${fieldName}.sedeDeclaraSunat`}
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                value={field.value || "sede-principal"}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="sede-principal">Sede Principal</option>
+                <option value="oficina-cliente">
+                  Oficina del Cliente
+                </option>
+              </select>
+            )}
+          />
         </div>
       </div>
 
       {/* Tabla de montos */}
       <div className="space-y-4">
-        {sampleData.map((item, index) => (
-          <div key={index} className="flex items-center space-x-4">
-            {/* Checkbox */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={item.checked}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                readOnly
-              />
-            </div>
-
+        {montoFields.map((montoField) => (
+          <div
+            key={montoField.name}
+            className="flex items-center space-x-4"
+          >
             {/* Label del concepto */}
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700">
-                {item.concepto}
+                {montoField.label}
               </label>
             </div>
 
             {/* Input del valor */}
-            <div className="w-24">
-              <input
-                type="number"
-                value={item.valor}
-                className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
-                readOnly
+            <div className="w-32">
+              <Controller
+                name={`${fieldName}.${montoField.name}`}
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                  />
+                )}
               />
+              {errors[fieldName]?.[montoField.name] && (
+                <span className="text-red-500 text-xs mt-1 block">
+                  {errors[fieldName]?.[montoField.name]?.message}
+                </span>
+              )}
             </div>
           </div>
         ))}

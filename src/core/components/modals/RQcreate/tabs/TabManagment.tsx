@@ -8,7 +8,6 @@ import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
 import { BillingTable } from "../../../ui/BillingTable";
 import { Param } from "../../../../models";
-import { useState } from "react";
 
 interface TabProps {
   rqDuration: Param[];
@@ -248,7 +247,7 @@ export const TabManagement = ({
                 <BillingTable
                   title="Tabla de Facturación - Servicios"
                   className=""
-                  declaredInSunat={false}
+                  fieldName="facturacionServicios"
                 />
               )}
 
@@ -256,7 +255,7 @@ export const TabManagement = ({
                 <BillingTable
                   title="Tabla de Facturación - Planilla"
                   className=""
-                  declaredInSunat={true}
+                  fieldName="facturacionPlanilla"
                 />
               )}
             </div>
