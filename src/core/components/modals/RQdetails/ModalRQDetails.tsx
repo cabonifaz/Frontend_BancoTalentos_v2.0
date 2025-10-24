@@ -206,7 +206,6 @@ export const ModalRQDetails = ({
         titulo: req.titulo ?? "",
         descripcion: req.descripcion ?? "",
         tieneDuracion: hasDuration,
-        idDuracion: req.idDuracion,
         fechaSolicitud: req.fechaSolicitud
           ? formatISODate(req.fechaSolicitud)
           : "",
@@ -215,7 +214,9 @@ export const ModalRQDetails = ({
           : "",
         idEstadoRQ: req.idEstado ?? 0,
         idCliente: req.idCliente ?? 0,
-        duracion: req.duracion ?? 0,
+        // Duración condicional
+        duracion: hasDuration ? req.duracion : 1,
+        idDuracion: hasDuration ? req.idDuracion : 0,
         lstVacantes: mappedVacancies,
         lstArchivos: mappedFiles,
         idModalidad: req.idModalidad,
@@ -320,7 +321,6 @@ export const ModalRQDetails = ({
       titulo: req.titulo ?? "",
       descripcion: req.descripcion ?? "",
       tieneDuracion: hasDuration,
-      idDuracion: req.idDuracion,
       fechaSolicitud: req.fechaSolicitud
         ? formatISODate(req.fechaSolicitud)
         : "",
@@ -329,7 +329,8 @@ export const ModalRQDetails = ({
         : "",
       idEstadoRQ: req.idEstado ?? 0,
       idCliente: req.idCliente ?? 0,
-      duracion: req.duracion ?? 0,
+      idDuracion: hasDuration ? req.idDuracion : 1,
+      duracion: hasDuration ? req.duracion : 1,
       lstVacantes: mappedVacancies,
       lstArchivos: mappedFiles,
       idModalidad: req.idModalidad,
@@ -369,13 +370,18 @@ export const ModalRQDetails = ({
       const idDuracionContrato = data.contrato?.idDuration;
       const duracionContrato = data.contrato?.duration;
 
+      const { tieneDuracion } = data;
+
       const payload = {
         ...cleanData,
         idRequerimiento: rqId,
         idCliente: idCliente,
         cliente: res?.requerimiento.cliente,
         estado: data.idEstadoRQ,
-        duracion: Number(data.duracion),
+        duracion: tieneDuracion ? Number(data.duracion) : undefined,
+        idDuracion: tieneDuracion
+          ? Number(data.idDuracion)
+          : undefined,
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
         idDuracionContrato: idDuracionContrato,
@@ -400,6 +406,10 @@ export const ModalRQDetails = ({
       });
     }
   };
+
+  useEffect(() => {
+    console.log("Errors: ", methods.formState.errors);
+  }, [methods.formState.errors]);
 
   return (
     <>

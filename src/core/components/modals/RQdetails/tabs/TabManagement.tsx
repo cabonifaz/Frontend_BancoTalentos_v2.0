@@ -2,7 +2,6 @@ import {
   Controller,
   useFieldArray,
   useFormContext,
-  useWatch,
 } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { DropdownForm } from "../../../forms";
@@ -40,10 +39,17 @@ export const TabManagment = ({
   });
 
   const handleDurationChange = (checked: boolean) => {
+    /**
+     * Los valores 1, 1 son solo para saltarse la validación,
+     * estos valores no se enviarán al backend si tieneDuracion es false.
+     */
     if (!checked) {
-      setValue("duracion", undefined);
-      setValue("idDuracion", undefined);
+      setValue("duracion", 1);
+      setValue("idDuracion", 1);
       clearErrors(["duracion", "idDuracion"]);
+    } else {
+      setValue("duracion", 1);
+      setValue("idDuracion", 0);
     }
   };
 
