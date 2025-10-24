@@ -1,17 +1,21 @@
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../models/schemas/NewRQSchemaV1";
+import {
+  RQFacturacionDeclaraSunat,
+  RQFacturacionGrupoModalidad,
+} from "../../models/interfaces/RQFacturacion";
 
 interface BillingTableProps {
+  index: number;
   title: string;
-  className?: string;
-  fieldName: "facturacionPlanilla" | "facturacionServicios";
+  modalidadId: number;
 }
 
 export const BillingTable: React.FC<BillingTableProps> = ({
+  index,
   title,
-  className = "",
-  fieldName,
+  modalidadId,
 }) => {
   const {
     control,
@@ -22,15 +26,17 @@ export const BillingTable: React.FC<BillingTableProps> = ({
   const montoFields = [
     { name: "montoBase", label: "Monto Base" },
     { name: "montoMovilidad", label: "Monto Movilidad" },
-    { name: "montoMesual", label: "Monto Mensual" },
+    { name: "montoMensual", label: "Monto Mensual" },
     { name: "montoTrimestral", label: "Monto Trimestral" },
     { name: "montoSemestral", label: "Monto Semestral" },
   ] as const;
 
+  // Determinar el grupo de modalidad y configuración por defecto
+  const planillaIds = [2, 3];
+  const isPlanilla = planillaIds.includes(modalidadId);
+
   return (
-    <div
-      className={`border border-gray-300 rounded-lg p-4 ${className}`}
-    >
+    <div className={"border border-gray-300 rounded-lg p-4"}>
       {/* Header de la tabla */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
@@ -45,20 +51,22 @@ export const BillingTable: React.FC<BillingTableProps> = ({
             Declarado en SUNAT?
           </label>
           <Controller
-            name={`${fieldName}.declaraSuntat`}
+            name={`lstFacturacion.${index}.declaraSunat`}
             control={control}
+            defaultValue={isPlanilla ? 1 : 0}
             render={({ field }) => (
               <select
                 {...field}
                 disabled={true}
-                value={field.value ? 1 : 0}
-                onChange={(e) =>
-                  field.onChange(e.target.value === "1")
-                }
+                value={field.value || RQFacturacionDeclaraSunat.NO}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value={1}>Sí</option>
-                <option value={0}>No</option>
+                <option value={RQFacturacionDeclaraSunat.SI}>
+                  Sí
+                </option>
+                <option value={RQFacturacionDeclaraSunat.NO}>
+                  No
+                </option>
               </select>
             )}
           />
@@ -68,7 +76,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
             Sede a declarar
           </label>
           <Controller
-            name={`${fieldName}.sedeDeclaraSunat`}
+            name={`lstFacturacion.${index}.sedeSunat`}
             control={control}
             render={({ field }) => (
               <select
@@ -103,7 +111,9 @@ export const BillingTable: React.FC<BillingTableProps> = ({
             {/* Input del valor */}
             <div className="w-32">
               <Controller
-                name={`${fieldName}.${montoField.name}`}
+                name={
+                  `lstFacturacion.${index}.${montoField.name}` as any
+                }
                 control={control}
                 render={({ field }) => (
                   <input
@@ -116,9 +126,12 @@ export const BillingTable: React.FC<BillingTableProps> = ({
                   />
                 )}
               />
-              {errors[fieldName]?.[montoField.name] && (
+              {errors.lstFacturacion?.[index]?.[montoField.name] && (
                 <span className="text-red-500 text-xs mt-1 block">
-                  {errors[fieldName]?.[montoField.name]?.message}
+                  {
+                    errors.lstFacturacion?.[index]?.[montoField.name]
+                      ?.message
+                  }
                 </span>
               )}
             </div>

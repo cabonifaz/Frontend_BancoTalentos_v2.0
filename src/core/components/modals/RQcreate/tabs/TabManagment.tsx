@@ -1,13 +1,14 @@
 import {
   useFormContext,
-  useWatch,
   Controller,
+  useFieldArray,
 } from "react-hook-form";
 import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
 import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
 import { BillingTable } from "../../../ui/BillingTable";
 import { Param } from "../../../../models";
+import { useState } from "react";
 
 interface TabProps {
   rqDuration: Param[];
@@ -26,13 +27,17 @@ export const TabManagement = ({
     control,
     setValue,
     clearErrors,
+    getValues,
   } = useFormContext<newRQSchemaType>();
 
-  // Observar cambios en las modalidades de contrato seleccionadas
-  const selectedModalidades = useWatch({
+  const { fields, append, remove } = useFieldArray({
     control,
-    name: "idModalidadFact",
+    name: "lstFacturacion",
   });
+
+  const [selectedContractModes, setSelectedContractModes] = useState<
+    { idModalidad: number; label: string }[]
+  >([]);
 
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
@@ -42,37 +47,54 @@ export const TabManagement = ({
     }
   };
 
-  // Determinar qué tabla mostrar basándose en las modalidades seleccionadas
-  const getTableVisibility = () => {
-    if (!selectedModalidades || selectedModalidades.length === 0) {
-      return { showFirstTable: false, showSecondTable: false };
+  const handleChangeContractMode = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    label: string
+  ) => {
+    const value = parseInt(e.target.value, 10);
+    const checked = e.target.checked;
+    const current = getValues("lstFacturacion");
+
+    const declareSunatIds = [2, 3]; // IDs que indican que declara a SUNAT
+
+    const existsIndex = current?.findIndex(
+      (f) => f.idModalidad === value
+    );
+
+    if (checked && existsIndex === -1) {
+      /**
+       * Grupo Modalidad:
+       * 1 - RxH
+       * 2 - PLANILLA
+       * Se puede verificar en la Tabla Parametros con idMaestro = 3
+       */
+      append({
+        idModalidad: value,
+        idGrupoModalidad: declareSunatIds.includes(value) ? 2 : 1,
+        declaraSunat: declareSunatIds.includes(value) ? 1 : 0,
+        sedeSunat: "sede-principal",
+        montoBase: 0,
+        montoMovilidad: 0,
+        montoMensual: 0,
+        montoTrimestral: 0,
+        montoSemestral: 0,
+      });
+      setSelectedContractModes((p) => [
+        ...p,
+        { idModalidad: value, label },
+      ]);
+    } else if (!checked && existsIndex !== -1) {
+      remove(existsIndex);
+      setSelectedContractModes((p) =>
+        p.filter((mod) => mod.idModalidad !== value)
+      );
     }
-
-    // Convertir selectedModalidades a números para comparación
-    const selectedIds = selectedModalidades.map(
-      (id: string | number) =>
-        typeof id === "string" ? parseInt(id, 10) : id
-    );
-
-    // IDs específicos de cada tipo según tu lista
-    const planillaIds = [2, 3]; // Planilla - Reg. general, Planilla - Tiempo parcial
-    const serviciosIds = [1, 4, 5]; // Locación de servicios, Prácticas Pre-profesionales, Prácticas Profesionales
-
-    // Verificar si hay modalidades de cada tipo seleccionadas
-    const hasPlanilla = selectedIds.some((id) =>
-      planillaIds.includes(id)
-    );
-    const hasServicios = selectedIds.some((id) =>
-      serviciosIds.includes(id)
-    );
-
-    return {
-      showFirstTable: hasServicios, // Mostrar tabla servicios si hay IDs de servicios
-      showSecondTable: hasPlanilla, // Mostrar tabla planilla si hay IDs de planilla
-    };
   };
 
-  const { showFirstTable, showSecondTable } = getTableVisibility();
+  const findLabelForMode = (idModalidad: number) => {
+    const mode = factModes.find((mod) => mod.num1 === idModalidad);
+    return mode ? mode.string1 : "Desconocida";
+  };
 
   return (
     <div className="h-full flex flex-col px-4 overflow-scroll">
@@ -228,6 +250,9 @@ export const TabManagement = ({
                     value={mod.num1}
                     {...register("idModalidadFact")}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                    onChange={(e) =>
+                      handleChangeContractMode(e, mod.string1)
+                    }
                   />
                   <span>{mod.string1}</span>
                 </label>
@@ -240,28 +265,17 @@ export const TabManagement = ({
             )}
           </div>
 
-          {/* Tablas de facturación condicionalmente visibles */}
-          {(showFirstTable || showSecondTable) && (
-            <div className="space-y-6 mt-6">
-              {showFirstTable && (
-                <BillingTable
-                  title="Tabla de Facturación - Servicios"
-                  className=""
-                  fieldName="facturacionServicios"
-                />
-              )}
-
-              {showSecondTable && (
-                <BillingTable
-                  title="Tabla de Facturación - Planilla"
-                  className=""
-                  fieldName="facturacionPlanilla"
-                />
-              )}
-            </div>
-          )}
-
-          <div className="flex-1"></div>
+          {/* === Render dinámico de BillingTables === */}
+          <div className="mt-6 space-y-4">
+            {fields.map((field, index) => (
+              <BillingTable
+                key={field.id}
+                index={index}
+                modalidadId={field.idModalidad}
+                title={findLabelForMode(field.idModalidad)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

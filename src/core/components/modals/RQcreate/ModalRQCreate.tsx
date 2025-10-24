@@ -33,6 +33,7 @@ import { Utils } from "../../../utilities/utils";
 import { usePostHook } from "../../../hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
 import { useEffect } from "react";
+import { RQFacturacionCreate } from "../../../models/interfaces/RQFacturacion";
 
 interface TabLabelProps {
   label: string;
@@ -121,26 +122,7 @@ export const ModalRQCreate = ({
         idDuration: 0,
       },
       tieneDuracion: true,
-      facturacionPlanilla: {
-        grupoModalidad: 2, // Planilla
-        declaraSuntat: true,
-        sedeDeclaraSunat: "sede-principal",
-        montoBase: 0,
-        montoMovilidad: 0,
-        montoMesual: 0,
-        montoTrimestral: 0,
-        montoSemestral: 0,
-      },
-      facturacionServicios: {
-        grupoModalidad: 1, // Servicios
-        declaraSuntat: false,
-        sedeDeclaraSunat: "sede-principal",
-        montoBase: 0,
-        montoMovilidad: 0,
-        montoMesual: 0,
-        montoTrimestral: 0,
-        montoSemestral: 0,
-      },
+      lstFacturacion: [],
     },
   });
 
@@ -208,6 +190,11 @@ export const ModalRQCreate = ({
         duracionContrato: duration,
         idDuracionContrato: idDuration,
       };
+
+      /* if (true) {
+        console.log("Payload to submit: ", payload);
+        return;
+      } */
 
       // 4. Enviar los datos al servidor
       const response = await postData(
