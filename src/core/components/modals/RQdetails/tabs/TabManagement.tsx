@@ -41,9 +41,9 @@ export const TabManagment = ({
 
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
-      clearErrors(["duracion", "idDuracion"]);
       setValue("duracion", undefined);
       setValue("idDuracion", undefined);
+      clearErrors(["duracion", "idDuracion"]);
     }
   };
 
