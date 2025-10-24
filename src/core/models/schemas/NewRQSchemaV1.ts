@@ -53,7 +53,7 @@ const contractDurationSchema = z.object({
 const rqFacturacionSchema = z.object({
   idModalidad: z.coerce.number().default(0),
   idGrupoModalidad: z.coerce.number().default(0),
-  declaraSunat: z.coerce.number().default(0),
+  declaraSunat: z.coerce.boolean().default(false),
   sedeSunat: z.string().default("sede-principal"),
   montoBase: z.coerce
     .number()

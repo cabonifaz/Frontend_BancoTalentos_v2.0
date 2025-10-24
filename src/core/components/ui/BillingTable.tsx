@@ -53,12 +53,16 @@ export const BillingTable: React.FC<BillingTableProps> = ({
           <Controller
             name={`lstFacturacion.${index}.declaraSunat`}
             control={control}
-            defaultValue={isPlanilla ? 1 : 0}
+            defaultValue={isPlanilla}
             render={({ field }) => (
               <select
                 {...field}
                 disabled={true}
-                value={field.value || RQFacturacionDeclaraSunat.NO}
+                value={
+                  isPlanilla
+                    ? RQFacturacionDeclaraSunat.SI
+                    : RQFacturacionDeclaraSunat.NO
+                }
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value={RQFacturacionDeclaraSunat.SI}>

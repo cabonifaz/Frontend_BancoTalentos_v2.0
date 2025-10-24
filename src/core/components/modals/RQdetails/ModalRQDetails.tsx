@@ -97,6 +97,7 @@ export const ModalRQDetails = ({
       lstVacantes: [],
       lstArchivos: [],
       contrato: undefined,
+      lstFacturacion: [],
     },
   });
 
@@ -122,7 +123,6 @@ export const ModalRQDetails = ({
       const req = res.requerimiento;
 
       // Get Tarifario
-
       const clientId = req?.idCliente;
       if (clientId && clientId > 0) {
         fetchTarifario(clientId);
@@ -186,6 +186,21 @@ export const ModalRQDetails = ({
         req.idDuracion > 0
       );
 
+      // Mapear facturación
+      const mappedFacturacion =
+        req.lstRqFacturacion?.map((f) => ({
+          idModalidad: f.idModalidad ?? 0,
+          idGrupoModalidad: f.idGrupoModalidad ?? 0,
+          declaraSunat: Boolean(f.declaraSunat),
+          sedeSunat: f.sedeSunat ?? "sede-principal",
+          montoBase: Number(f.montoBase ?? 0),
+          montoMovilidad: Number(f.montoMovilidad ?? 0),
+          montoMensual: Number(f.montoMensual ?? 0),
+          montoTrimestral: Number(f.montoTrimestral ?? 0),
+          montoSemestral: Number(f.montoSemestral ?? 0),
+          idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
+        })) ?? [];
+
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -209,6 +224,7 @@ export const ModalRQDetails = ({
           idDuration: idDuracionContrato,
           duration: duracionContrato,
         },
+        lstFacturacion: mappedFacturacion,
       });
     }
   }, [res, reset]);
@@ -284,6 +300,21 @@ export const ModalRQDetails = ({
       req.idDuracion > 0
     );
 
+    // Mapear facturación
+    const mappedFacturacion =
+      req.lstRqFacturacion?.map((f) => ({
+        idModalidad: f.idModalidad ?? 0,
+        idGrupoModalidad: f.idGrupoModalidad ?? 0,
+        declaraSunat: Boolean(f.declaraSunat),
+        sedeSunat: f.sedeSunat ?? "sede-principal",
+        montoBase: Number(f.montoBase ?? 0),
+        montoMovilidad: Number(f.montoMovilidad ?? 0),
+        montoMensual: Number(f.montoMensual ?? 0),
+        montoTrimestral: Number(f.montoTrimestral ?? 0),
+        montoSemestral: Number(f.montoSemestral ?? 0),
+        idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
+      })) ?? [];
+
     reset({
       codigoRQ: req.codigoRQ ?? "",
       titulo: req.titulo ?? "",
@@ -307,6 +338,7 @@ export const ModalRQDetails = ({
         idDuration: idDuracionContrato,
         duration: duracionContrato,
       },
+      lstFacturacion: mappedFacturacion,
     });
     setIsEditing(!isEditing);
   };
@@ -348,6 +380,7 @@ export const ModalRQDetails = ({
         idModalidadFact: data.idModalidadFact?.join(","),
         idDuracionContrato: idDuracionContrato,
         duracionContrato: duracionContrato,
+        lstFacturacion: data.lstFacturacion,
       };
 
       const response = await postData(

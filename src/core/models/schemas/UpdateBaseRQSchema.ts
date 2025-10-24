@@ -31,6 +31,35 @@ const contractDurationSchema = z
   })
   .optional();
 
+// Subschema: Facturación por modalidad de contrato
+const rqFacturacionSchema = z.object({
+  idModalidad: z.coerce.number().default(0),
+  idGrupoModalidad: z.coerce.number().default(0),
+  declaraSunat: z.coerce.boolean().default(false),
+  sedeSunat: z.string().default("sede-principal"),
+  montoBase: z.coerce
+    .number()
+    .min(0, "El monto base no puede ser negativo")
+    .default(0),
+  montoMovilidad: z.coerce
+    .number()
+    .min(0, "El monto de movilidad no puede ser negativo")
+    .default(0),
+  montoMensual: z.coerce
+    .number()
+    .min(0, "El monto mensual no puede ser negativo")
+    .default(0),
+  montoTrimestral: z.coerce
+    .number()
+    .min(0, "El monto trimestral no puede ser negativo")
+    .default(0),
+  montoSemestral: z.coerce
+    .number()
+    .min(0, "El monto semestral no puede ser negativo")
+    .default(0),
+  idEstadoRegistro: z.coerce.number().default(1),
+});
+
 export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
@@ -87,6 +116,9 @@ export const UpdateBaseRQSchema = z
         })
       )
       .optional(),
+
+    // Facturación en base a las modalidades de contrato
+    lstFacturacion: z.array(rqFacturacionSchema).optional(),
   })
   .superRefine((data, ctx) => {
     // Validación de autogenRQ

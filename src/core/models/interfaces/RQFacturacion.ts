@@ -34,3 +34,8 @@ export type RQFacturacionCreate = Omit<
   | "idEstadoRegistro"
   | "idRequerimiento"
 >;
+
+export type RQFacturacionExtra = RQFacturacion & {
+  nombreModalidad: string;
+  nombreGrupoModalidad: string;
+};

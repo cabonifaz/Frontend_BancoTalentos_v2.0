@@ -8,7 +8,6 @@ import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
 import { BillingTable } from "../../../ui/BillingTable";
 import { Param } from "../../../../models";
-import { useState } from "react";
 
 interface TabProps {
   rqDuration: Param[];
@@ -34,10 +33,6 @@ export const TabManagement = ({
     control,
     name: "lstFacturacion",
   });
-
-  const [selectedContractModes, setSelectedContractModes] = useState<
-    { idModalidad: number; label: string }[]
-  >([]);
 
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
@@ -71,7 +66,7 @@ export const TabManagement = ({
       append({
         idModalidad: value,
         idGrupoModalidad: declareSunatIds.includes(value) ? 2 : 1,
-        declaraSunat: declareSunatIds.includes(value) ? 1 : 0,
+        declaraSunat: declareSunatIds.includes(value),
         sedeSunat: "sede-principal",
         montoBase: 0,
         montoMovilidad: 0,
@@ -79,15 +74,8 @@ export const TabManagement = ({
         montoTrimestral: 0,
         montoSemestral: 0,
       });
-      setSelectedContractModes((p) => [
-        ...p,
-        { idModalidad: value, label },
-      ]);
     } else if (!checked && existsIndex !== -1) {
       remove(existsIndex);
-      setSelectedContractModes((p) =>
-        p.filter((mod) => mod.idModalidad !== value)
-      );
     }
   };
 

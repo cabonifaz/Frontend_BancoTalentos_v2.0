@@ -1,5 +1,6 @@
 import {
   Controller,
+  useFieldArray,
   useFormContext,
   useWatch,
 } from "react-hook-form";
@@ -7,6 +8,7 @@ import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQS
 import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
 import { Param } from "../../../../models";
+import { BillingTable } from "../../../ui/BillingTable";
 
 interface TabProps {
   rqDurationOptions: Param[];
@@ -28,13 +30,62 @@ export const TabManagment = ({
     control,
     clearErrors,
     setValue,
+    getValues,
   } = useFormContext<UpdateBaseRQSchemaType>();
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "lstFacturacion",
+  });
 
   const handleDurationChange = (checked: boolean) => {
     if (!checked) {
       clearErrors(["duracion", "idDuracion"]);
       setValue("duracion", undefined);
       setValue("idDuracion", undefined);
+    }
+  };
+
+  const findLabelForMode = (idModalidad: number) => {
+    const mode = paymentModes.find((mod) => mod.num1 === idModalidad);
+    return mode ? mode.string1 : "Desconocida";
+  };
+
+  const handleChangeContractMode = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    label: string
+  ) => {
+    const value = parseInt(e.target.value, 10);
+    const checked = e.target.checked;
+    const current = getValues("lstFacturacion");
+
+    const declareSunatIds = [2, 3]; // IDs que indican que declara a SUNAT
+
+    const existsIndex = current?.findIndex(
+      (f) => f.idModalidad === value
+    );
+
+    if (checked && existsIndex === -1) {
+      /**
+       * Grupo Modalidad:
+       * 1 - RxH
+       * 2 - PLANILLA
+       * Se puede verificar en la Tabla Parametros con idMaestro = 3
+       */
+      append({
+        idModalidad: value,
+        idGrupoModalidad: declareSunatIds.includes(value) ? 2 : 1,
+        declaraSunat: declareSunatIds.includes(value),
+        sedeSunat: "sede-principal",
+        montoBase: 0,
+        montoMovilidad: 0,
+        montoMensual: 0,
+        montoTrimestral: 0,
+        montoSemestral: 0,
+        idEstadoRegistro: 1,
+      });
+    } else if (!checked && existsIndex !== -1) {
+      remove(existsIndex);
     }
   };
 
@@ -227,6 +278,7 @@ export const TabManagment = ({
                       onChange={(e) => {
                         const checked = e.target.checked;
                         const value = mode.num1;
+                        handleChangeContractMode(e, mode.string1);
 
                         if (checked) {
                           field.onChange([
@@ -255,6 +307,18 @@ export const TabManagment = ({
               {errors.idModalidadFact.message}
             </span>
           )}
+        </div>
+
+        {/* === Render dinámico de BillingTables === */}
+        <div className="mt-6 space-y-4">
+          {fields.map((field, index) => (
+            <BillingTable
+              key={field.id}
+              index={index}
+              modalidadId={field.idModalidad}
+              title={findLabelForMode(field.idModalidad)}
+            />
+          ))}
         </div>
 
         <div className="flex-1"></div>
