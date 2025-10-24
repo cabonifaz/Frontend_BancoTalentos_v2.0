@@ -32,6 +32,8 @@ import { TabManagement } from "./tabs/TabManagment";
 import { Utils } from "../../../utilities/utils";
 import { usePostHook } from "../../../hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
+import { useEffect } from "react";
+import { RQFacturacionCreate } from "../../../models/interfaces/RQFacturacion";
 
 interface TabLabelProps {
   label: string;
@@ -119,6 +121,8 @@ export const ModalRQCreate = ({
         duration: 1,
         idDuration: 0,
       },
+      tieneDuracion: true,
+      lstFacturacion: [],
     },
   });
 
@@ -181,6 +185,11 @@ export const ModalRQCreate = ({
         duracionContrato: duration,
         idDuracionContrato: idDuration,
       };
+
+      /* if (true) {
+        console.log("Payload to submit: ", payload);
+        return;
+      } */
 
       // 4. Enviar los datos al servidor
       const response = await postData(

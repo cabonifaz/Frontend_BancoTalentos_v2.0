@@ -83,6 +83,7 @@ export const TabVacancies = ({
         idPerfil,
         idSkill: skill.id,
         anios: skill.years,
+        isOptional: skill.isOptional,
       }));
     });
     setValue("lstVacanteSkills", lstVacanteSkills, {
@@ -99,6 +100,7 @@ export const TabVacancies = ({
           idPerfil,
           carrera: c.label,
           idGrado: c.degreeId,
+          isOptional: c.isOptional,
         }));
       }
     );
@@ -248,6 +250,7 @@ export const TabVacancies = ({
       id: skill.id,
       years: skill.years,
       label: skill?.label || "",
+      isOptional: skill.isOptional,
     }));
     setSelectedTechSkills((prev) => ({
       ...prev,
@@ -265,6 +268,7 @@ export const TabVacancies = ({
       id: skill.id,
       years: skill.years,
       label: skill?.label || "",
+      isOptional: skill.isOptional,
     }));
   };
 

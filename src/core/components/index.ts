@@ -23,5 +23,4 @@ export * from "./ui/LanguageSection";
 export * from "./ui/DateFilter";
 export * from "./ui/Tabs";
 export * from "./modals/ModalsForTalentsPage";
-export * from "./modals/ModalDetallesRQ";
 export * from "./ui/AutoComplete";
