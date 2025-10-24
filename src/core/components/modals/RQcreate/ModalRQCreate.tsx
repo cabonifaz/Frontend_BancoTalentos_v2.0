@@ -126,11 +126,6 @@ export const ModalRQCreate = ({
     },
   });
 
-  const { formState } = methods;
-  useEffect(() => {
-    console.log("Form Errors: ", formState.errors);
-  }, [formState.errors]);
-
   const onSubmit: SubmitHandler<newRQSchemaType> = async (data) => {
     try {
       // 1. Transformar el estado a número

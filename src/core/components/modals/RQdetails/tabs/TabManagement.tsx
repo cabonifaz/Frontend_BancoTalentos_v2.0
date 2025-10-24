@@ -9,6 +9,7 @@ import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
 import { Param } from "../../../../models";
 import { BillingTable } from "../../../ui/BillingTable";
+import { RQFacturacionGrupoModalidad } from "../../../../models/interfaces/RQFacturacion";
 
 interface TabProps {
   rqDurationOptions: Param[];
@@ -72,11 +73,14 @@ export const TabManagment = ({
        * 2 - PLANILLA
        * Se puede verificar en la Tabla Parametros con idMaestro = 3
        */
+      const declaraSunat = declareSunatIds.includes(value);
       append({
         idModalidad: value,
-        idGrupoModalidad: declareSunatIds.includes(value) ? 2 : 1,
-        declaraSunat: declareSunatIds.includes(value),
-        sedeSunat: "sede-principal",
+        idGrupoModalidad: declaraSunat
+          ? RQFacturacionGrupoModalidad.PLANILLA
+          : RQFacturacionGrupoModalidad.RxH,
+        declaraSunat: declaraSunat,
+        sedeSunat: declaraSunat ? "sede-principal" : "",
         montoBase: 0,
         montoMovilidad: 0,
         montoMensual: 0,
@@ -317,6 +321,7 @@ export const TabManagment = ({
               index={index}
               modalidadId={field.idModalidad}
               title={findLabelForMode(field.idModalidad)}
+              isEditable={isEditing}
             />
           ))}
         </div>

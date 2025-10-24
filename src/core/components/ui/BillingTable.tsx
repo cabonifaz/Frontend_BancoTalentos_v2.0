@@ -1,21 +1,20 @@
 import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../models/schemas/NewRQSchemaV1";
-import {
-  RQFacturacionDeclaraSunat,
-  RQFacturacionGrupoModalidad,
-} from "../../models/interfaces/RQFacturacion";
+import { RQFacturacionDeclaraSunat } from "../../models/interfaces/RQFacturacion";
 
 interface BillingTableProps {
   index: number;
   title: string;
   modalidadId: number;
+  isEditable?: boolean;
 }
 
 export const BillingTable: React.FC<BillingTableProps> = ({
   index,
   title,
   modalidadId,
+  isEditable = true,
 }) => {
   const {
     control,
@@ -48,7 +47,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Declarado en SUNAT?
+            ¿Declarado en SUNAT?
           </label>
           <Controller
             name={`lstFacturacion.${index}.declaraSunat`}
@@ -57,7 +56,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
             render={({ field }) => (
               <select
                 {...field}
-                disabled={true}
+                disabled={!isEditable}
                 value={
                   isPlanilla
                     ? RQFacturacionDeclaraSunat.SI
@@ -85,9 +84,11 @@ export const BillingTable: React.FC<BillingTableProps> = ({
             render={({ field }) => (
               <select
                 {...field}
-                value={field.value || "sede-principal"}
+                value={field.value || ""}
+                disabled={!isEditable}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
               >
+                <option value="">Selecione una opción</option>
                 <option value="sede-principal">Sede Principal</option>
                 <option value="oficina-cliente">
                   Oficina del Cliente
@@ -123,6 +124,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
                   <input
                     {...field}
                     type="number"
+                    disabled={!isEditable}
                     min="0"
                     step="0.01"
                     className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"

@@ -63,11 +63,12 @@ export const TabManagement = ({
        * 2 - PLANILLA
        * Se puede verificar en la Tabla Parametros con idMaestro = 3
        */
+      const declaraSunat = declareSunatIds.includes(value);
       append({
         idModalidad: value,
-        idGrupoModalidad: declareSunatIds.includes(value) ? 2 : 1,
-        declaraSunat: declareSunatIds.includes(value),
-        sedeSunat: "sede-principal",
+        idGrupoModalidad: declaraSunat ? 2 : 1,
+        declaraSunat: declaraSunat,
+        sedeSunat: declaraSunat ? "sede-principal" : "",
         montoBase: 0,
         montoMovilidad: 0,
         montoMensual: 0,
