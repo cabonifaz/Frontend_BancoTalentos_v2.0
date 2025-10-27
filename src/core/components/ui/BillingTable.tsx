@@ -44,7 +44,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
       </div>
 
       {/* Campos superiores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 hidden">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             ¿Declarado en SUNAT?
@@ -101,48 +101,59 @@ export const BillingTable: React.FC<BillingTableProps> = ({
 
       {/* Tabla de montos */}
       <div className="space-y-4">
-        {montoFields.map((montoField) => (
-          <div
-            key={montoField.name}
-            className="flex items-center space-x-4"
-          >
-            {/* Label del concepto */}
-            <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700">
-                {montoField.label}
-              </label>
-            </div>
+        {montoFields.map((montoField) => {
+          // Para modalidad 1 (Locación de servicios), solo mostrar montoBase
+          const isVisible =
+            modalidadId !== 1 || montoField.name === "montoBase";
 
-            {/* Input del valor */}
-            <div className="w-32">
-              <Controller
-                name={
-                  `lstFacturacion.${index}.${montoField.name}` as any
-                }
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    disabled={!isEditable}
-                    min="0"
-                    step="0.01"
-                    className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="0.00"
-                  />
-                )}
-              />
-              {errors.lstFacturacion?.[index]?.[montoField.name] && (
-                <span className="text-red-500 text-xs mt-1 block">
-                  {
-                    errors.lstFacturacion?.[index]?.[montoField.name]
-                      ?.message
+          return (
+            <div
+              key={montoField.name}
+              className={`flex items-center space-x-4 ${
+                !isVisible ? "hidden" : ""
+              }`}
+            >
+              {/* Label del concepto */}
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700">
+                  {montoField.label}
+                </label>
+              </div>
+
+              {/* Input del valor */}
+              <div className="w-32">
+                <Controller
+                  name={
+                    `lstFacturacion.${index}.${montoField.name}` as any
                   }
-                </span>
-              )}
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      {...field}
+                      type="number"
+                      disabled={!isEditable}
+                      min="0"
+                      step="0.01"
+                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0.00"
+                    />
+                  )}
+                />
+                {errors.lstFacturacion?.[index]?.[
+                  montoField.name
+                ] && (
+                  <span className="text-red-500 text-xs mt-1 block">
+                    {
+                      errors.lstFacturacion?.[index]?.[
+                        montoField.name
+                      ]?.message
+                    }
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
