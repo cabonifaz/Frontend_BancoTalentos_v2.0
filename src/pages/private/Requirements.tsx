@@ -30,14 +30,10 @@ import {
   ESTADO_RQ,
 } from "../../core/utilities/constants";
 import { useModal } from "../../core/context/ModalContext";
-import { AgregarRQModal } from "../../core/components/modals/ModalNuevoRQ";
 import {
   MODAL_CREATE_RQ,
   MODAL_DETAILS_RQ,
-  MODAL_DETALLES_RQ,
-  MODAL_NUEVO_RQ,
 } from "../../core/utilities/modalsIds";
-import { ModalDetallesRQV2 } from "../../core/components/modals/ModalDetallesRQV2";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails";
 import { ModalRQCreate } from "../../core/components/modals/RQcreate";
 
@@ -289,28 +285,6 @@ export const Requirements = () => {
       {(loadingClientes || loadingParams || loadingReqs) && (
         <Loading opacity="opacity-60" />
       )}
-
-      {/** Agregar Modal RQ */}
-      {/* {isModalOpen(MODAL_NUEVO_RQ) && (
-        <AgregarRQModal
-          onClose={() => closeModal(MODAL_NUEVO_RQ)}
-          updateRQData={updateRQData}
-          estadoOptions={rqState}
-          clientes={clientesResponse?.clientes || []}
-        />
-      )} */}
-
-      {/** Detalles Modal RQ */}
-      {/* {isModalOpen(MODAL_DETALLES_RQ) && (
-        <ModalDetallesRQV2
-          onClose={() => closeModal(MODAL_DETALLES_RQ)}
-          RQ={selectedRQ}
-          updateRQData={updateRQData}
-          estadoOptions={rqState}
-          clientes={clientesResponse?.clientes || []}
-          handleAsignar={handleAsignarClick}
-        />
-      )} */}
 
       {/**Modal Details V3 */}
       {isModalOpen(MODAL_DETAILS_RQ) && (

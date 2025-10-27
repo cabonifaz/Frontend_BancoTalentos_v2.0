@@ -2,6 +2,7 @@ import { ReqArchivo } from "../interfaces/ReqArchivo";
 import { ReqContacto } from "../interfaces/ReqContacto";
 import { ReqTalento } from "../interfaces/ReqTalento";
 import { ReqVacante } from "../interfaces/ReqVacante";
+import { RQFacturacion } from "../interfaces/RQFacturacion";
 
 export interface RequirementResponse {
   idTipoMensaje: number;
@@ -26,5 +27,6 @@ export interface RequirementResponse {
     modalidadFact: string;
     idDuracionContrato?: number;
     duracionContrato?: number;
+    lstRqFacturacion: RQFacturacion[];
   };
 }

@@ -4,6 +4,7 @@ import { enqueueSnackbar } from "notistack";
 export type CareerProps = {
   label: string;
   degreeId: number;
+  isOptional: boolean;
 };
 
 interface CareerModalProps {
@@ -26,6 +27,7 @@ export const AddCareerModal = ({
   const [selectedDegreeId, setSelectedDegreeId] = useState<
     number | ""
   >("");
+  const [isOptional, setIsOptional] = useState(false);
   const [careers, setCareers] =
     useState<CareerProps[]>(initialCareers);
 
@@ -51,10 +53,11 @@ export const AddCareerModal = ({
 
     setCareers([
       ...careers,
-      { label: trimmedName, degreeId: selectedDegreeId },
+      { label: trimmedName, degreeId: selectedDegreeId, isOptional },
     ]);
     setCareerName("");
     setSelectedDegreeId("");
+    setIsOptional(false);
   };
 
   const handleRemoveCareer = (label: string) => {
@@ -86,37 +89,84 @@ export const AddCareerModal = ({
         </button>
 
         {/* Inputs */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <input
-            type="text"
-            className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300"
-            placeholder="Nombre de la carrera..."
-            value={careerName}
-            onChange={(e) => setCareerName(e.target.value)}
-          />
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <input
+              type="text"
+              className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300"
+              placeholder="Nombre de la carrera..."
+              value={careerName}
+              onChange={(e) => setCareerName(e.target.value)}
+            />
 
-          <select
-            className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300"
-            value={selectedDegreeId}
-            onChange={(e) =>
-              setSelectedDegreeId(parseInt(e.target.value) || "")
-            }
-          >
-            <option value="">Selecciona un grado...</option>
-            {degreeOptions.map((degree) => (
-              <option key={degree.id} value={degree.id}>
-                {degree.label}
-              </option>
-            ))}
-          </select>
+            <select
+              className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300"
+              value={selectedDegreeId}
+              onChange={(e) =>
+                setSelectedDegreeId(parseInt(e.target.value) || "")
+              }
+            >
+              <option value="">Selecciona un grado...</option>
+              {degreeOptions.map((degree) => (
+                <option key={degree.id} value={degree.id}>
+                  {degree.label}
+                </option>
+              ))}
+            </select>
 
-          <button
-            type="button"
-            className="btn btn-blue shadow-sm"
-            onClick={handleAddCareer}
-          >
-            Agregar
-          </button>
+            <button
+              type="button"
+              className="btn btn-blue shadow-sm"
+              onClick={handleAddCareer}
+            >
+              Agregar
+            </button>
+          </div>
+
+          {/* Checkbox para carrera opcional */}
+          <div className="flex items-center gap-2">
+            <label className="inline-flex items-center cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={isOptional}
+                  onChange={(e) => setIsOptional(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className={`block w-10 h-6 rounded-full transition-colors duration-200 ${
+                    isOptional ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ${
+                      isOptional ? "transform translate-x-4" : ""
+                    }`}
+                  ></div>
+                </div>
+              </div>
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                Carrera opcional
+              </span>
+            </label>
+            <div className="group relative">
+              <svg
+                className="w-4 h-4 text-gray-400 cursor-help"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                Si está marcado, esta carrera será opcional para el
+                candidato
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Lista de carreras agregadas */}
@@ -129,15 +179,31 @@ export const AddCareerModal = ({
               return (
                 <li
                   key={`${career.label}-${index}`}
-                  className="flex justify-between items-center border rounded px-3 py-2 bg-gray-50"
+                  className={`flex justify-between items-center border rounded px-3 py-2 transition-colors ${
+                    career.isOptional
+                      ? "bg-blue-50 border-blue-200"
+                      : "bg-gray-50"
+                  }`}
                 >
-                  <div>
-                    <span className="font-medium">
-                      {career.label}
-                    </span>{" "}
-                    <span className="text-sm text-gray-500">
-                      ({degree?.label ?? "Sin grado"})
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <span className="font-medium">
+                        {career.label}
+                      </span>{" "}
+                      <span className="text-sm text-gray-500">
+                        ({degree?.label ?? "Sin grado"})
+                      </span>
+                    </div>
+                    {career.isOptional && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Opcional
+                      </span>
+                    )}
+                    {!career.isOptional && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Obligatorio
+                      </span>
+                    )}
                   </div>
 
                   <button

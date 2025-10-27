@@ -6,4 +6,5 @@ export interface VacanteSkill {
   habilidad: string;
   idEstadoRegistro?: number;
   anios: number;
+  isOptional: boolean;
 }

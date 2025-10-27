@@ -102,7 +102,7 @@ export const ModalIngreso = ({
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
-      fchTerminoContrato: currentTalent?.fchTerminoContrato || "",
+      fchTerminoContrato: "",
       proyectoServicio: proyectoServicio || "",
       objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
@@ -159,6 +159,13 @@ export const ModalIngreso = ({
       );
       if (endDate) {
         setValue("fchTerminoContrato", endDate);
+        /* console.log("Fecha de inicio:", fchInicioContrato);
+        console.log(
+          "Duración y tipo:",
+          durationContract,
+          durationContractId
+        );
+        console.log("Fecha de término calculada:", endDate); */
       }
     }
   }, [

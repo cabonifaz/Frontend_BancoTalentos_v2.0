@@ -31,6 +31,35 @@ const contractDurationSchema = z
   })
   .optional();
 
+// Subschema: Facturación por modalidad de contrato
+const rqFacturacionSchema = z.object({
+  idModalidad: z.coerce.number().default(0),
+  idGrupoModalidad: z.coerce.number().default(0),
+  declaraSunat: z.coerce.boolean().default(false),
+  sedeSunat: z.string().default("sede-principal"),
+  montoBase: z.coerce
+    .number()
+    .min(0, "El monto base no puede ser negativo")
+    .default(0),
+  montoMovilidad: z.coerce
+    .number()
+    .min(0, "El monto de movilidad no puede ser negativo")
+    .default(0),
+  montoMensual: z.coerce
+    .number()
+    .min(0, "El monto mensual no puede ser negativo")
+    .default(0),
+  montoTrimestral: z.coerce
+    .number()
+    .min(0, "El monto trimestral no puede ser negativo")
+    .default(0),
+  montoSemestral: z.coerce
+    .number()
+    .min(0, "El monto semestral no puede ser negativo")
+    .default(0),
+  idEstadoRegistro: z.coerce.number().default(1),
+});
+
 export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
@@ -42,18 +71,21 @@ export const UpdateBaseRQSchema = z
     titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
+    tieneDuracion: z.boolean(),
     duracion: z.coerce
       .number({
         required_error: "La duración es obligatoria",
         invalid_type_error: "La duración debe ser un número",
       })
-      .min(1, "La duración debe ser mayor a 0"),
+      .min(1, "La duración debe ser mayor a 0")
+      .optional(),
     idDuracion: z
       .number({
         required_error: "Elija una duración",
         invalid_type_error: "Elija una duración",
       })
-      .min(1, "Elija una duración"),
+      .min(1, "Elija una duración")
+      .optional(),
     contrato: contractDurationSchema,
     idModalidad: z
       .number({
@@ -84,6 +116,9 @@ export const UpdateBaseRQSchema = z
         })
       )
       .optional(),
+
+    // Facturación en base a las modalidades de contrato
+    lstFacturacion: z.array(rqFacturacionSchema).optional(),
   })
   .superRefine((data, ctx) => {
     // Validación de autogenRQ
@@ -93,6 +128,24 @@ export const UpdateBaseRQSchema = z
         message: "El RQ es obligatorio",
         path: ["codigoRQ"],
       });
+    }
+
+    // Validación condicional de duración
+    if (data.tieneDuracion) {
+      if (!data.duracion) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La duración es obligatoria",
+          path: ["duracion"],
+        });
+      }
+      if (!data.idDuracion) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Elija una duración",
+          path: ["idDuracion"],
+        });
+      }
     }
 
     // Validación de fechas (COMO EN TU EQUIPOFORMSCHEMA)
