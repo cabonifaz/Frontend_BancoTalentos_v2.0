@@ -12,7 +12,7 @@ import {
 } from "../../core/utilities/constants";
 import { Loading } from "../../core/components";
 import { AsignarTalentoType, ReqVacante } from "../../core/models";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, set } from "date-fns";
 import { ModalIngreso } from "../../core/components/modals/ModalIngreso";
 import { ModalSolicitudEquipo } from "../../core/components/modals/ModalSolicitudEquipo";
 
@@ -749,8 +749,12 @@ const TalentTable: React.FC = () => {
 
   // Remover talento
   const handleRemoveTalent = (id: number) => {
-    setLocalTalents((prev) =>
-      prev.filter((talent) => talent.idTalento !== id)
+    setLocalTalents((prevTalents) =>
+      prevTalents.map((talent) =>
+        talent.idTalento === id
+          ? { ...talent, idEstadoRegistro: 0 } // marcar eliminado
+          : talent
+      )
     );
   };
 
@@ -847,6 +851,7 @@ const TalentTable: React.FC = () => {
         // isFromApi: talent?.isFromAPI,
 
         solicitudEquipo: talent?.solicitudEquipo || null,
+        idEstadoRegistro: talent?.idEstadoRegistro,
       }));
 
       const payload = {
@@ -1042,16 +1047,19 @@ const TalentTable: React.FC = () => {
               <TableHeader />
               <tbody>
                 {localTalents.length > 0 ? (
-                  localTalents.map((talento) => (
-                    <TableRow
-                      key={talento.idTalento}
-                      talento={talento}
-                      onRemove={handleRemoveTalent}
-                      onUpdate={handleUpdateTalent}
-                      onConfirmChange={handleConfirmChange}
-                      disabled={buttonsDisabled}
-                    />
-                  ))
+                  localTalents.map(
+                    (talento) =>
+                      talento.idEstadoRegistro !== 0 && (
+                        <TableRow
+                          key={talento.idTalento}
+                          talento={talento}
+                          onRemove={handleRemoveTalent}
+                          onUpdate={handleUpdateTalent}
+                          onConfirmChange={handleConfirmChange}
+                          disabled={buttonsDisabled}
+                        />
+                      )
+                  )
                 ) : (
                   <tr>
                     <td

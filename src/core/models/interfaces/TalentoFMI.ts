@@ -56,6 +56,9 @@ export interface AsignarTalentoType {
   montoSemestral?: number;
 
   solicitudEquipo?: SolicitudEquipo;
+
+  // ID_ESTADO_REGISTRO para soft deletes
+  idEstadoRegistro?: number;
 }
 
 interface SolicitudEquipo {
