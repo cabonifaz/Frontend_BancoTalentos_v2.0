@@ -15,65 +15,62 @@ export const parseDate = (dateStr: string): number => {
   return new Date(year, month, day).getTime();
 };
 
+// Ordenar experiencias laborales de la más actual (FIN más reciente) a la más antigua
 export const sortWorkExperience = (
   experiences: Experience[]
 ): Experience[] => {
   return [...experiences].sort((a, b) => {
-    // 1. Los trabajos actuales (flActualidad = true) siempre van primero
+    // 1. Trabajos actuales primero
     if (a.flActualidad && !b.flActualidad) return -1;
     if (!a.flActualidad && b.flActualidad) return 1;
 
-    // 2. Si ambos son actuales, ordenar por fecha de inicio (el más reciente primero)
+    // 2. Si ambos son actuales, ordenar por fechaInicio descendente
     if (a.flActualidad && b.flActualidad) {
       const dateAInicio = parseDate(a.fechaInicio);
       const dateBInicio = parseDate(b.fechaInicio);
       return dateBInicio - dateAInicio;
     }
 
-    // 3. Para trabajos finalizados, usar fechaFin para comparar
+    // 3. Si ambos ya finalizaron, ordenar por fechaFin descendente (más reciente primero)
     const dateAFin = parseDate(a.fechaFin);
     const dateBFin = parseDate(b.fechaFin);
-
-    // Si las fechas de fin son diferentes, ordenar por fecha de fin
-    // Timestamp mayor = fecha más reciente = debe ir primero (return negativo si A > B)
     if (dateAFin !== dateBFin) {
-      return dateBFin - dateAFin; // Si B > A, retorna positivo (B va después, A primero) ✓
+      return dateBFin - dateAFin;
     }
 
-    // 4. Si las fechas de fin son iguales, ordenar por fecha de inicio
+    // 4. Si tienen la misma fechaFin, ordenar por fechaInicio descendente
     const dateAInicio = parseDate(a.fechaInicio);
     const dateBInicio = parseDate(b.fechaInicio);
-    return dateBInicio - dateAInicio; // Más reciente primero
+    return dateBInicio - dateAInicio;
   });
 };
 
+// Ordenar estudios de la más actual (FIN más reciente) a la más antigua
 export const sortEducation = (
   educations: Education[]
 ): Education[] => {
   return [...educations].sort((a, b) => {
-    // 1. Los estudios actuales (flActualidad = true) siempre van primero
+    // 1. Estudios actuales primero
     if (a.flActualidad && !b.flActualidad) return -1;
     if (!a.flActualidad && b.flActualidad) return 1;
 
-    // 2. Si ambos son actuales, ordenar por fecha de inicio (el más reciente primero)
+    // 2. Si ambos son actuales, ordenar por fechaInicio descendente
     if (a.flActualidad && b.flActualidad) {
       const dateAInicio = parseDate(a.fechaInicio);
       const dateBInicio = parseDate(b.fechaInicio);
       return dateBInicio - dateAInicio;
     }
 
-    // 3. Para estudios finalizados, usar fechaFin para comparar
+    // 3. Si ambos finalizaron, ordenar por fechaFin descendente
     const dateAFin = parseDate(a.fechaFin);
     const dateBFin = parseDate(b.fechaFin);
-
-    // Si las fechas de fin son diferentes, ordenar por fecha de fin
     if (dateAFin !== dateBFin) {
-      return dateBFin - dateAFin; // Más reciente primero
+      return dateBFin - dateAFin;
     }
 
-    // 4. Si las fechas de fin son iguales, ordenar por fecha de inicio
+    // 4. Si tienen la misma fechaFin, ordenar por fechaInicio descendente
     const dateAInicio = parseDate(a.fechaInicio);
     const dateBInicio = parseDate(b.fechaInicio);
-    return dateBInicio - dateAInicio; // Más reciente primero
+    return dateBInicio - dateAInicio;
   });
 };
