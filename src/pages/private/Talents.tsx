@@ -278,6 +278,7 @@ export const Talents = () => {
                   optionsPanelSize="w-72"
                   inputPosition="left"
                   isOpen={openDropdown === 0}
+                  searchable
                   onToggle={() =>
                     setOpenDropdown(openDropdown === 0 ? null : 0)
                   }
