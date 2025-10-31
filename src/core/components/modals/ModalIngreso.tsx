@@ -20,6 +20,7 @@ import {
   PROYECTO_SERVICIO,
   GROUP_MODALIDAD_LOC_SERVICIOS,
   GROUP_MODALIDAD_PLANILLA,
+  TIPO_MONEDA,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
@@ -53,13 +54,14 @@ export const ModalIngreso = ({
 
   useEffect(() => {
     fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`
     );
   }, [fetchParams]);
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
+  const currencyValues = paramsByMaestro[TIPO_MONEDA];
   const horarioTrabajo =
     paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)
       ?.string1 || "";
@@ -503,6 +505,18 @@ export const ModalIngreso = ({
                       options={sedeSunatList.map((sede) => ({
                         value: sede.idSede,
                         label: sede.nombre,
+                      }))}
+                      required={false}
+                    />
+                    <DropdownForm
+                      name="idSedeDeclarar"
+                      control={control}
+                      label="Tipo de moneda"
+                      error={errors.idSedeDeclarar}
+                      disabled={getValues("declararSunat") === 2}
+                      options={currencyValues.map((c) => ({
+                        value: c.num1,
+                        label: c.string1,
                       }))}
                       required={false}
                     />
