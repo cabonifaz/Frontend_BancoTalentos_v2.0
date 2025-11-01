@@ -867,7 +867,7 @@ const TalentTable: React.FC = () => {
 
       if (response.data.idTipoMensaje === 2) {
         setIsConfirmModalOpen(false);
-        showToast("Operación completada con éxito", "success");
+        showToast(response.data.mensaje, "success");
         fetchRequerimiento();
       } else {
         showToast(response.data.mensaje, "error");

@@ -61,7 +61,7 @@ export const ModalIngreso = ({
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
-  const currencyValues = paramsByMaestro[TIPO_MONEDA];
+  const currencyValues = paramsByMaestro[TIPO_MONEDA] || [];
   const horarioTrabajo =
     paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)
       ?.string1 || "";
@@ -110,6 +110,7 @@ export const ModalIngreso = ({
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
+      tipoMoneda: 0,
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar
@@ -161,6 +162,7 @@ export const ModalIngreso = ({
       );
       if (endDate) {
         setValue("fchTerminoContrato", endDate);
+        clearErrors("fchTerminoContrato");
         /* console.log("Fecha de inicio:", fchInicioContrato);
         console.log(
           "Duración y tipo:",
@@ -211,6 +213,7 @@ export const ModalIngreso = ({
         ingreso: 1,
         confirmado: true,
         isFromAPI: false,
+        idMoneda: data.tipoMoneda || 1,
       };
       onConfirm(updatedTalento);
       onClose();
@@ -509,16 +512,15 @@ export const ModalIngreso = ({
                       required={false}
                     />
                     <DropdownForm
-                      name="idSedeDeclarar"
+                      name="tipoMoneda"
                       control={control}
                       label="Tipo de moneda"
-                      error={errors.idSedeDeclarar}
-                      disabled={getValues("declararSunat") === 2}
+                      error={errors.tipoMoneda}
                       options={currencyValues.map((c) => ({
                         value: c.num1,
                         label: c.string1,
                       }))}
-                      required={false}
+                      required={true}
                     />
                     <div className="flex justify-center">
                       <SalaryStructureForm
