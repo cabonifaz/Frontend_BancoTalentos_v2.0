@@ -51,6 +51,13 @@ export const EntryFormSchema = z
         invalid_type_error: "Monto Semestral debe tener 2 decimales",
       })
       .optional(),
+
+    tipoMoneda: z.coerce
+      .number({
+        required_error: "Campo obligatorio",
+        invalid_type_error: "Campo obligatorio",
+      })
+      .min(1, "Debe seleccionar un tipo de moneda"),
     fchInicioContrato: z
       .string({
         invalid_type_error: "Campo obligatorio",
@@ -92,9 +99,10 @@ export const EntryFormSchema = z
       return inicio <= fin;
     },
     {
-      message: "La fecha de inicio no puede ser mayor que la fecha de fin",
+      message:
+        "La fecha de inicio no puede ser mayor que la fecha de fin",
       path: ["fchInicioContrato"],
-    },
+    }
   )
   .refine(
     (data) => {
@@ -106,9 +114,10 @@ export const EntryFormSchema = z
       return fin >= inicio;
     },
     {
-      message: "La fecha de fin no puede ser menor que la fecha de inicio",
+      message:
+        "La fecha de fin no puede ser menor que la fecha de inicio",
       path: ["fchTerminoContrato"],
-    },
+    }
   )
   .refine((data) => data.montoBase > 0, {
     message: "El monto base debe ser mayor a 0.",
@@ -117,7 +126,10 @@ export const EntryFormSchema = z
   .superRefine((data, ctx) => {
     if (data.declararSunat !== 2) {
       // En este caso es obligatorio
-      if (data.idSedeDeclarar === undefined || data.idSedeDeclarar === 0) {
+      if (
+        data.idSedeDeclarar === undefined ||
+        data.idSedeDeclarar === 0
+      ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Debe seleccionar la sede a declarar",

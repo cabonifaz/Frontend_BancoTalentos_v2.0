@@ -61,7 +61,7 @@ export const ModalFractalCV = ({
     if (!talentDet || !talent) return;
 
     // Format educations for lang support
-    const sortedEducations = sortEducation(talentDet.educaciones);
+    const sortedEducations = talentDet.educaciones;
     const educations =
       sortedEducations
         ?.filter((ed) => ed.grado !== "3") // Ignora las de tipo curso
@@ -78,7 +78,7 @@ export const ModalFractalCV = ({
           grado: Utils.formatDegree(ed.grado),
         })) || [];
 
-    const sortedExp = sortWorkExperience(talentDet.experiencias);
+    const sortedExp = talentDet.experiencias;
 
     const dataForCV: TalentForFractalCV = {
       descripcion: talentDet.descripcion,

@@ -20,6 +20,7 @@ import {
   PROYECTO_SERVICIO,
   GROUP_MODALIDAD_LOC_SERVICIOS,
   GROUP_MODALIDAD_PLANILLA,
+  TIPO_MONEDA,
 } from "../../utilities/constants";
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
@@ -53,13 +54,14 @@ export const ModalIngreso = ({
 
   useEffect(() => {
     fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}`
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`
     );
   }, [fetchParams]);
 
   const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
   const unitValues = paramsByMaestro[UNIDAD];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
+  const currencyValues = paramsByMaestro[TIPO_MONEDA] || [];
   const horarioTrabajo =
     paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)
       ?.string1 || "";
@@ -108,6 +110,7 @@ export const ModalIngreso = ({
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
+      tipoMoneda: 0,
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar
@@ -159,6 +162,7 @@ export const ModalIngreso = ({
       );
       if (endDate) {
         setValue("fchTerminoContrato", endDate);
+        clearErrors("fchTerminoContrato");
         /* console.log("Fecha de inicio:", fchInicioContrato);
         console.log(
           "Duración y tipo:",
@@ -209,6 +213,7 @@ export const ModalIngreso = ({
         ingreso: 1,
         confirmado: true,
         isFromAPI: false,
+        idMoneda: data.tipoMoneda || 1,
       };
       onConfirm(updatedTalento);
       onClose();
@@ -505,6 +510,17 @@ export const ModalIngreso = ({
                         label: sede.nombre,
                       }))}
                       required={false}
+                    />
+                    <DropdownForm
+                      name="tipoMoneda"
+                      control={control}
+                      label="Tipo de moneda"
+                      error={errors.tipoMoneda}
+                      options={currencyValues.map((c) => ({
+                        value: c.num1,
+                        label: c.string1,
+                      }))}
+                      required={true}
                     />
                     <div className="flex justify-center">
                       <SalaryStructureForm
