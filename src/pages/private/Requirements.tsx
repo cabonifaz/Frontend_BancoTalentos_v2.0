@@ -432,7 +432,13 @@ export const Requirements = () => {
                           {req.idRequerimiento}
                         </td>
                         <td className="table-cell">{req.cliente}</td>
-                        <td className="table-cell">{req.titulo}</td>
+                        <td className="table-cell">
+                          {req.titulo
+                            ? req.titulo.length > 50
+                              ? `${req.titulo.slice(0, 50)}...`
+                              : req.titulo
+                            : ""}
+                        </td>
                         <td className="table-cell">{req.codigoRQ}</td>
                         <td className="table-cell">
                           {req.fechaSolicitud}
