@@ -237,18 +237,6 @@ export const ModalRQCreate = ({
                   {
                     label: (
                       <TabLabel
-                        label="Datos RQ"
-                        hasError={
-                          !!methods.formState.errors.titulo ||
-                          !!methods.formState.errors.descripcion
-                        }
-                      />
-                    ),
-                    children: <TabData rqStates={rqStates} />,
-                  },
-                  {
-                    label: (
-                      <TabLabel
                         label="Cliente"
                         hasError={
                           methods.formState.errors.idCliente
@@ -263,6 +251,19 @@ export const ModalRQCreate = ({
                       />
                     ),
                   },
+                  {
+                    label: (
+                      <TabLabel
+                        label="Datos RQ"
+                        hasError={
+                          !!methods.formState.errors.titulo ||
+                          !!methods.formState.errors.descripcion
+                        }
+                      />
+                    ),
+                    children: <TabData rqStates={rqStates} />,
+                  },
+
                   {
                     label: (
                       <TabLabel

@@ -429,17 +429,7 @@ export const ModalRQDetails = ({
                 isDataLoading={reqLoading}
                 tabs={[
                   {
-                    label: "Datos RQ",
-                    children: (
-                      <TabRQData
-                        rqStates={rqStates}
-                        isEditing={isEditing}
-                        handleToggleEdit={handleToggleEdit}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Clientes",
+                    label: "Cliente",
                     children: (
                       <TabClient
                         rqId={rqId}
@@ -451,6 +441,17 @@ export const ModalRQDetails = ({
                       />
                     ),
                   },
+                  {
+                    label: "Datos RQ",
+                    children: (
+                      <TabRQData
+                        rqStates={rqStates}
+                        isEditing={isEditing}
+                        handleToggleEdit={handleToggleEdit}
+                      />
+                    ),
+                  },
+
                   {
                     label: (
                       <p className="flex gap-2">
