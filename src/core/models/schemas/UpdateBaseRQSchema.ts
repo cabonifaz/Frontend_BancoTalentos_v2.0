@@ -67,7 +67,10 @@ export const UpdateBaseRQSchema = z
     fechaSolicitud: z
       .string()
       .min(1, "La fecha de solicitud es obligatoria"),
-    descripcion: z.string().min(1, "La descripción es obligatoria"),
+    descripcion: z
+      .string()
+      .min(1, "La descripción es obligatoria")
+      .max(255, "La descripción no puede exceder los 255 caracteres"),
     titulo: z.string().min(1, "El título es obligatorio"),
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
