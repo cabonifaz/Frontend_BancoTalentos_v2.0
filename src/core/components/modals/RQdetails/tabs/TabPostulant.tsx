@@ -56,7 +56,7 @@ export const TabPostulant = ({
   };
 
   return (
-    <>
+    <div className="flex flex-col h-[calc(570px-120px)]">
       {downloadingFile && <Loading opacity="opacity-30" />}
       <div className="text-end">
         {rqState !== ESTADO_ATENDIDO && (
@@ -74,100 +74,93 @@ export const TabPostulant = ({
           </button>
         )}
       </div>
-      <div className="p-1 custom-scroll">
-        <div className="table-container custom-scroll">
-          <div className="table-wrapper custom-scroll">
-            <table className="table custom-scroll">
-              <thead>
-                <tr className="table-header">
-                  <th scope="col" className="table-header-cell">
-                    CV
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Nombres y apellidos
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Doc. Identidad
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Celular
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Correo
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Situación
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Estado
-                  </th>
-                  <th scope="col" className="table-header-cell">
-                    Perfil
-                  </th>
+      <div className="flex-1 overflow-auto custom-scroll min-h-0">
+        <table className="table w-full">
+          <thead>
+            <tr className="table-header">
+              <th scope="col" className="table-header-cell">
+                CV
+              </th>
+              <th scope="col" className="table-header-cell">
+                Nombres y apellidos
+              </th>
+              <th scope="col" className="table-header-cell">
+                Doc. Identidad
+              </th>
+              <th scope="col" className="table-header-cell">
+                Celular
+              </th>
+              <th scope="col" className="table-header-cell">
+                Correo
+              </th>
+              <th scope="col" className="table-header-cell">
+                Situación
+              </th>
+              <th scope="col" className="table-header-cell">
+                Estado
+              </th>
+              <th scope="col" className="table-header-cell">
+                Perfil
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {talents.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="table-empty">
+                  No hay postulantes disponibles.
+                </td>
+              </tr>
+            ) : (
+              talents.map((talent, index) => (
+                <tr key={talent.idTalento} className="table-row">
+                  <td className="text-center">
+                    <button
+                      type="button"
+                      className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
+                      onClick={() => openFile(index)}
+                    >
+                      <img
+                        src="/assets/ic_show_pass.svg"
+                        alt="icon eye"
+                        className="w-5 h-5"
+                      />
+                    </button>
+                  </td>
+                  <td className="table-cell">
+                    {talent.nombresTalento} {talent.apellidosTalento}
+                  </td>
+                  <td className="table-cell">{talent.dni}</td>
+                  <td className="table-cell">{talent.celular}</td>
+                  <td className="table-cell">{talent.email}</td>
+                  <td className="table-cell">{talent.situacion}</td>
+                  <td className="table-cell">
+                    <span
+                      className={`badge ${
+                        talent.estado?.toUpperCase() ===
+                        "DATOS COMPLETOS"
+                          ? "badge-green"
+                          : talent.estado?.toUpperCase() ===
+                            "OBSERVADO"
+                          ? "badge-yellow"
+                          : ""
+                      }`}
+                    >
+                      {(
+                        talent.estado ||
+                        (talent.idEstado === 1
+                          ? "DATOS COMPLETOS"
+                          : "OBSERVADO")
+                      ).toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="table-cell">{talent.perfil}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {talents.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="table-empty">
-                      No hay postulantes disponibles.
-                    </td>
-                  </tr>
-                ) : (
-                  talents.map((talent, index) => (
-                    <tr key={talent.idTalento} className="table-row">
-                      <td className="text-center">
-                        <button
-                          type="button"
-                          className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
-                          onClick={() => openFile(index)}
-                        >
-                          <img
-                            src="/assets/ic_show_pass.svg"
-                            alt="icon eye"
-                            className="w-5 h-5"
-                          />
-                        </button>
-                      </td>
-                      <td className="table-cell">
-                        {talent.nombresTalento}{" "}
-                        {talent.apellidosTalento}
-                      </td>
-                      <td className="table-cell">{talent.dni}</td>
-                      <td className="table-cell">{talent.celular}</td>
-                      <td className="table-cell">{talent.email}</td>
-                      <td className="table-cell">
-                        {talent.situacion}
-                      </td>
-                      <td className="table-cell">
-                        <span
-                          className={`badge ${
-                            talent.estado?.toUpperCase() ===
-                            "DATOS COMPLETOS"
-                              ? "badge-green"
-                              : talent.estado?.toUpperCase() ===
-                                "OBSERVADO"
-                              ? "badge-yellow"
-                              : ""
-                          }`}
-                        >
-                          {(
-                            talent.estado ||
-                            (talent.idEstado === 1
-                              ? "DATOS COMPLETOS"
-                              : "OBSERVADO")
-                          ).toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="table-cell">{talent.perfil}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
-    </>
+    </div>
   );
 };
