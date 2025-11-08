@@ -11,6 +11,7 @@ import { useDownloadRqFile } from "../../../../hooks/useDownloadRqFile";
 import { Utils } from "../../../../utilities/utils";
 import { usePostHook } from "../../../../hooks/usePostHook";
 import { Loading } from "../../../ui/Loading";
+import { allowedFileExtensions } from "../../../../utilities/file-utils";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -26,6 +27,7 @@ interface TabProps {
   fileOptions: Param[];
   initialFiles: any[];
   fetchRequirement: () => void;
+  extensionsParams: Param[];
 }
 
 export const TabFiles = ({
@@ -33,9 +35,11 @@ export const TabFiles = ({
   fileOptions,
   initialFiles,
   fetchRequirement,
+  extensionsParams,
 }: TabProps) => {
   // @marker base state
   const [files, setFiles] = useState<Archivo[]>(initialFiles);
+  const allowedFileTypes = allowedFileExtensions(extensionsParams);
   const { deleteData, deleteLoading } = useDeleteHook();
   const hasNewFiles = files.some(
     (f) => f.idRequerimientoArchivo === 0
@@ -93,8 +97,10 @@ export const TabFiles = ({
         const base64 = await Utils.fileToBase64(archivo.file);
         const { nombreArchivo, extensionArchivo } =
           Utils.getFileNameAndExtension(archivo.name);
-        const idTipoArchivo =
-          Utils.getTipoArchivoId(extensionArchivo);
+        const idTipoArchivo = Utils.getTipoArchivoId(
+          extensionArchivo,
+          extensionsParams
+        );
         return {
           string64: base64,
           nombreArchivo,
@@ -195,7 +201,7 @@ export const TabFiles = ({
             onChange={handleFileChange}
             className="hidden"
             id="fileInput"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
+            accept={allowedFileTypes}
           />
 
           {/* Lista de archivos */}

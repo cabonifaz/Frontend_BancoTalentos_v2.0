@@ -1,3 +1,5 @@
+import { Param } from "../models";
+
 export const downloadAnyFile = (file64: string, ext: string) => {
   // Limpiar la cadena base64
   const cleanBase64 = file64.replace(/\s/g, "");
@@ -26,4 +28,9 @@ export const downloadAnyFile = (file64: string, ext: string) => {
 
   // Liberamos la URL temporal
   URL.revokeObjectURL(url);
+};
+
+export const allowedFileExtensions = (filesFromParams: Param[]) => {
+  const extensions = filesFromParams.map((p) => `.${p.string2}`);
+  return extensions.join(", ");
 };

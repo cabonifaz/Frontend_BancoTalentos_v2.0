@@ -23,6 +23,7 @@ import {
   HABILIDADES_TECNICAS,
   GRADO_ESTUDIO,
   TIPO_ARCHIVOS_RQ,
+  TIPO_ARCHIVO,
 } from "../../../utilities/constants";
 import { useParams } from "../../../context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
@@ -52,7 +53,7 @@ export const ModalRQDetails = ({
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
   );
 
   // @marker base state
@@ -65,6 +66,7 @@ export const ModalRQDetails = ({
   const rqDurationOptions = paramsByMaestro[DURACION_RQ] || [];
   const paymentModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const rqMode = paramsByMaestro[MODALIDAD_RQ] || [];
+  const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
 
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -486,6 +488,7 @@ export const ModalRQDetails = ({
                         fileOptions={fileTypes}
                         initialFiles={initialFiles}
                         fetchRequirement={fetchRequirement}
+                        extensionsParams={fileExtensionsParams}
                       />
                     ),
                   },
