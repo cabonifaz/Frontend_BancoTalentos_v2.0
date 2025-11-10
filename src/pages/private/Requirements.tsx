@@ -354,7 +354,7 @@ export const Requirements = () => {
                   label="Cliente"
                   options={clientOptions}
                   optionsType="radio"
-                  optionsPanelSize="w-36"
+                  optionsPanelSize="w-80"
                   inputPosition="right"
                   isOpen={openDropdown === 0}
                   onToggle={() =>

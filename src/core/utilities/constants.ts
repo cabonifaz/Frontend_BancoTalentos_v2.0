@@ -48,6 +48,7 @@ export const FRASES_IA_MAESTRO = "40";
 export const HABILIDADES_TECNICAS = "19";
 export const GRADO_ESTUDIO = "38";
 export const TIPO_ARCHIVOS_RQ = "41";
+export const TIPO_ARCHIVO = "17";
 
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;

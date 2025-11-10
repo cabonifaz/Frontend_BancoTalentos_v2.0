@@ -44,7 +44,9 @@ export class Utils {
     const stars: ReactNode[] = [];
     for (let i = 0; i < 5; i++) {
       stars.push(
-        i < rating ? getFilledStar(`${i}`) : getOutlinedStar(`${i + 5}`)
+        i < rating
+          ? getFilledStar(`${i}`)
+          : getOutlinedStar(`${i + 5}`)
       );
     }
     return stars;
@@ -79,7 +81,10 @@ export class Utils {
       const jsonPayload = decodeURIComponent(
         atob(base64)
           .split("")
-          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .map(
+            (c) =>
+              `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`
+          )
           .join("")
       );
       return JSON.parse(jsonPayload);
@@ -103,7 +108,10 @@ export class Utils {
 
   static getImageSrc = (base64String: string) => {
     const formato = this.detectarFormatoDesdeBase64(base64String);
-    const base64WithPrefix = this.addBase64ImagePrefix(base64String, formato);
+    const base64WithPrefix = this.addBase64ImagePrefix(
+      base64String,
+      formato
+    );
 
     if (this.isValidImageBase64(base64WithPrefix)) {
       return base64WithPrefix;
@@ -127,7 +135,10 @@ export class Utils {
     );
   };
 
-  static addBase64ImagePrefix = (base64String: string, formato: string) => {
+  static addBase64ImagePrefix = (
+    base64String: string,
+    formato: string
+  ) => {
     if (base64String && !base64String.startsWith("data:image/")) {
       return `data:image/${formato};base64,${base64String}`;
     }
@@ -164,7 +175,9 @@ export class Utils {
     });
   };
 
-  static getFileNameWithoutExtension = (fileName: fileNameType): string => {
+  static getFileNameWithoutExtension = (
+    fileName: fileNameType
+  ): string => {
     if (!fileName) return "";
 
     const parts = fileName.split(".");
@@ -214,19 +227,19 @@ export class Utils {
     return { nombreArchivo, extensionArchivo };
   };
 
-  static getTipoArchivoId = (extension: string): number => {
-    switch (extension.toLowerCase()) {
-      case "pdf":
-        return TipoArchivo.PDF;
-      case "doc":
-      case "docx":
-        return TipoArchivo.WORD;
-      case "xls":
-      case "xlsx":
-        return TipoArchivo.EXCEL;
-      default:
-        throw new Error(`Tipo de archivo no soportado: ${extension}`);
-    }
+  static getTipoArchivoId = (
+    extension: string,
+    paramsFiles: Param[]
+  ): number => {
+    const matchedParam = paramsFiles.find(
+      (param) =>
+        param.string2.toLowerCase() === extension.toLowerCase()
+    );
+
+    if (matchedParam) return matchedParam.num1;
+    else
+      throw new Error(`Tipo de archivo no soportado: ${extension}, 
+        pida al administrador que lo agregue a la lista de tipos de archivo. En parámetros.`);
   };
 
   static formatDateToDMY = (dateString: string): string => {
@@ -272,7 +285,9 @@ export class Utils {
     }
   };
 
-  static formatDisponibilidad(mdIds: string | null | undefined): string {
+  static formatDisponibilidad(
+    mdIds: string | null | undefined
+  ): string {
     // Cotejar con la tabla maestro
     const modalidades: Record<number, string> = {
       1: "Presencial",
