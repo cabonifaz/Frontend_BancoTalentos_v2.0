@@ -23,6 +23,7 @@ import {
   HABILIDADES_TECNICAS,
   GRADO_ESTUDIO,
   TIPO_ARCHIVOS_RQ,
+  TIPO_ARCHIVO,
 } from "../../../utilities/constants";
 import { useParams } from "../../../context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
@@ -52,7 +53,7 @@ export const ModalRQDetails = ({
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
   );
 
   // @marker base state
@@ -65,6 +66,7 @@ export const ModalRQDetails = ({
   const rqDurationOptions = paramsByMaestro[DURACION_RQ] || [];
   const paymentModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const rqMode = paramsByMaestro[MODALIDAD_RQ] || [];
+  const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
 
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -417,7 +419,7 @@ export const ModalRQDetails = ({
         <Loading opacity="opacity-20" />
       )}
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] min-h-[570px] overflow-y-auto max-h-[570px] relative">
           <header className="flex items-center justify-between">
             <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
             <CloseModalButton onClick={onClose} />
@@ -429,17 +431,7 @@ export const ModalRQDetails = ({
                 isDataLoading={reqLoading}
                 tabs={[
                   {
-                    label: "Datos RQ",
-                    children: (
-                      <TabRQData
-                        rqStates={rqStates}
-                        isEditing={isEditing}
-                        handleToggleEdit={handleToggleEdit}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Clientes",
+                    label: "Cliente",
                     children: (
                       <TabClient
                         rqId={rqId}
@@ -451,6 +443,17 @@ export const ModalRQDetails = ({
                       />
                     ),
                   },
+                  {
+                    label: "Datos RQ",
+                    children: (
+                      <TabRQData
+                        rqStates={rqStates}
+                        isEditing={isEditing}
+                        handleToggleEdit={handleToggleEdit}
+                      />
+                    ),
+                  },
+
                   {
                     label: (
                       <p className="flex gap-2">
@@ -485,6 +488,7 @@ export const ModalRQDetails = ({
                         fileOptions={fileTypes}
                         initialFiles={initialFiles}
                         fetchRequirement={fetchRequirement}
+                        extensionsParams={fileExtensionsParams}
                       />
                     ),
                   },

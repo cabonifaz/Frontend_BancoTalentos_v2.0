@@ -2,6 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
 import { useState } from "react";
 import { Param } from "../../../../models";
+import { allowedFileExtensions } from "../../../../utilities/file-utils";
 
 interface Archivo {
   name: string;
@@ -12,9 +13,11 @@ interface Archivo {
 
 interface TabProps {
   fileOptions: { id: number; label: string }[];
+  filesParms: Param[];
 }
 
-export const TabFiles = ({ fileOptions }: TabProps) => {
+export const TabFiles = ({ fileOptions, filesParms }: TabProps) => {
+  const allowedFileTypes = allowedFileExtensions(filesParms);
   // @marker base state
   const [archivos, setArchivos] = useState<Archivo[]>([]);
 
@@ -82,7 +85,7 @@ export const TabFiles = ({ fileOptions }: TabProps) => {
             onChange={handleFileChange}
             className="hidden"
             id="fileInput"
-            accept=".pdf,.doc,.docx,.xls,.xlsx"
+            accept={allowedFileTypes}
           />
         </div>
         <div className="mt-2 flex-1 overflow-y-auto">

@@ -23,6 +23,7 @@ import {
   GRADO_ESTUDIO,
   HABILIDADES_TECNICAS,
   MODALIDAD_RQ,
+  TIPO_ARCHIVO,
   TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
 } from "../../../utilities/constants";
@@ -72,7 +73,7 @@ export const ModalRQCreate = ({
     loading: loadingParams,
   } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
-      ${TIPO_ARCHIVOS_RQ}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
   );
 
   const skillsByParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -81,6 +82,7 @@ export const ModalRQCreate = ({
   const rqDuration = paramsByMaestro[DURACION_RQ] || [];
   const rqModes = paramsByMaestro[MODALIDAD_RQ] || [];
   const factModes = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
 
   // @marker base states
   const techSkills = skillsByParams.map((s) => ({
@@ -137,8 +139,10 @@ export const ModalRQCreate = ({
           const base64 = await Utils.fileToBase64(f.file);
           const { nombreArchivo, extensionArchivo } =
             Utils.getFileNameAndExtension(f.name);
-          const idTipoArchivo =
-            Utils.getTipoArchivoId(extensionArchivo);
+          const idTipoArchivo = Utils.getTipoArchivoId(
+            extensionArchivo,
+            fileExtensionsParams
+          );
           return {
             string64: base64,
             nombreArchivo,
@@ -237,18 +241,6 @@ export const ModalRQCreate = ({
                   {
                     label: (
                       <TabLabel
-                        label="Datos RQ"
-                        hasError={
-                          !!methods.formState.errors.titulo ||
-                          !!methods.formState.errors.descripcion
-                        }
-                      />
-                    ),
-                    children: <TabData rqStates={rqStates} />,
-                  },
-                  {
-                    label: (
-                      <TabLabel
                         label="Cliente"
                         hasError={
                           methods.formState.errors.idCliente
@@ -263,6 +255,19 @@ export const ModalRQCreate = ({
                       />
                     ),
                   },
+                  {
+                    label: (
+                      <TabLabel
+                        label="Datos RQ"
+                        hasError={
+                          !!methods.formState.errors.titulo ||
+                          !!methods.formState.errors.descripcion
+                        }
+                      />
+                    ),
+                    children: <TabData rqStates={rqStates} />,
+                  },
+
                   {
                     label: (
                       <TabLabel
@@ -286,7 +291,12 @@ export const ModalRQCreate = ({
                   },
                   {
                     label: "Archivos",
-                    children: <TabFiles fileOptions={fileOptions} />,
+                    children: (
+                      <TabFiles
+                        fileOptions={fileOptions}
+                        filesParms={fileExtensionsParams}
+                      />
+                    ),
                   },
                   {
                     label: (

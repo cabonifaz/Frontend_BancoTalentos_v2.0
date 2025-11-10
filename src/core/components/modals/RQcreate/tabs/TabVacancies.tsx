@@ -16,6 +16,10 @@ import {
   MODAL_ADD_TECH_SKILL,
 } from "../../../../utilities/modalsIds";
 import { HABILIDADES_TECNICAS } from "../../../../utilities/constants";
+import {
+  SearchableSelect,
+  SearchableOption,
+} from "../../../ui/SearchableSelect";
 
 /** Validate rol */
 const isRecruiter = (): boolean => {
@@ -324,9 +328,9 @@ export const TabVacancies = ({
             Agregar
           </button>
         </div>
-        <div className="p-1 flex-1 overflow-y-auto">
-          <div className="table-container">
-            <div className="table-wrapper">
+        <div className="p-1 flex-1 overflow-visible">
+          <div className="table-container h-full">
+            <div className="table-wrapper h-full overflow-y-auto">
               <table className="table">
                 <thead>
                   <tr className="table-header">
@@ -411,32 +415,30 @@ export const TabVacancies = ({
                       return (
                         <tr key={field.id} className="table-row">
                           <td className="table-cell">
-                            <select
-                              {...register(
-                                `lstVacantes.${index}.idPerfil`,
-                                { valueAsNumber: true }
-                              )}
-                              onChange={(e) =>
+                            <SearchableSelect
+                              options={[
+                                {
+                                  value: 0,
+                                  label: "Seleccione un perfil",
+                                },
+                                ...optionsToShow.map((perfil) => ({
+                                  value: perfil.idPerfil,
+                                  label: perfil.perfil,
+                                })),
+                              ]}
+                              value={currentProfile || 0}
+                              onChange={(value) => {
                                 handleProfileChange(
                                   index,
-                                  e.target.value
-                                )
-                              }
-                              className="h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                              value={currentProfile}
-                            >
-                              <option value={0}>
-                                Seleccione un perfil
-                              </option>
-                              {optionsToShow.map((perfil) => (
-                                <option
-                                  key={perfil.idPerfil}
-                                  value={perfil.idPerfil}
-                                >
-                                  {perfil.perfil}
-                                </option>
-                              ))}
-                            </select>
+                                  value.toString()
+                                );
+                                setValue(
+                                  `lstVacantes.${index}.idPerfil`,
+                                  Number(value)
+                                );
+                              }}
+                              placeholder="Seleccione un perfil"
+                            />
                             {errors.lstVacantes?.[index]
                               ?.idPerfil && (
                               <p className="text-red-500 text-xs mt-1">
