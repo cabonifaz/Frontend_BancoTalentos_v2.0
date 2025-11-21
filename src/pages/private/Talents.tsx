@@ -41,6 +41,7 @@ import {
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 import { MODAL_FRACTAL_CV } from "../../core/utilities/modalsIds";
+import { useRemoveSkill } from "../../core/hooks/talents/useRemoveSkills";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -102,6 +103,9 @@ export const Talents = () => {
         enqueueSnackbar: enqueueSnackbar,
       }),
   });
+
+  const { isLoading, removeTechnicalSkill, removeSoftSkill } =
+    useRemoveSkill();
 
   const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
   const handlePaginate = (page: number) => setCurrentPage(page);
@@ -225,6 +229,50 @@ export const Talents = () => {
     return `https://${cleanUrl}`;
   };
 
+  const handleRemoveTechnicalSkill = async (
+    technicalId: number,
+    talentId: number
+  ) => {
+    const rs = await removeTechnicalSkill(technicalId);
+
+    if (!rs) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "No se obtuvo respuesta del servidor",
+      });
+      return;
+    }
+
+    const messageId = rs.idMensaje;
+    const variant = messageId != 2 ? "error" : "success";
+
+    enqueueSnackbar({ variant: variant, message: rs?.mensaje });
+
+    if (messageId == 2) fetchTalentDets(talentId);
+  };
+
+  const handleRemoveSoftSkill = async (
+    targetId: number,
+    talentId: number
+  ) => {
+    const rs = await removeSoftSkill(targetId);
+
+    if (!rs) {
+      enqueueSnackbar({
+        variant: "error",
+        message: "No se obtuvo respuesta del servidor",
+      });
+      return;
+    }
+
+    const messageId = rs.idMensaje;
+    const variant = messageId != 2 ? "error" : "success";
+
+    enqueueSnackbar({ variant: variant, message: rs?.mensaje });
+
+    if (messageId == 2) fetchTalentDets(talentId);
+  };
+
   const openFractalCVModal = (lang: "ES" | "EN") => {
     setCvLang(lang);
     openModal(MODAL_FRACTAL_CV);
@@ -234,6 +282,7 @@ export const Talents = () => {
 
   return (
     <div className="relative">
+      {isLoading && <Loading opacity="opacity-70" />}
       <Dashboard>
         <ModalsForTalentsPage
           talent={talent || undefined}
@@ -672,16 +721,34 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesTecnicas || []
                             ).map((item, index) => (
-                              <p
-                                key={index}
-                                className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
-                              >
-                                {`${item.nombreHabilidad} ${
-                                  item?.aniosExperiencia
-                                    ? ` - (${item.aniosExperiencia})`
-                                    : ""
-                                }`}
-                              </p>
+                              <>
+                                <p
+                                  key={item.idHabTec}
+                                  className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
+                                >
+                                  {`${item.nombreHabilidad} ${
+                                    item?.aniosExperiencia
+                                      ? ` - (${item.aniosExperiencia})`
+                                      : ""
+                                  }`}
+                                </p>
+                                <button
+                                  type="button"
+                                  title="Remover habilidad"
+                                >
+                                  <img
+                                    className="w-5 h-5"
+                                    src="assets/ic_remove.png"
+                                    alt="Remove icon"
+                                    onClick={() =>
+                                      handleRemoveTechnicalSkill(
+                                        item.idHabTec,
+                                        talent.idTalento
+                                      )
+                                    }
+                                  />
+                                </button>
+                              </>
                             ))}
                           </div>
                         </div>
@@ -709,12 +776,30 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesBlandas || []
                             ).map((item, index) => (
-                              <p
-                                key={index}
-                                className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
-                              >
-                                {item.nombreHabilidad}
-                              </p>
+                              <>
+                                <p
+                                  key={item.id}
+                                  className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
+                                >
+                                  {item.nombreHabilidad}
+                                </p>
+                                <button
+                                  type="button"
+                                  title="Remover habilidad"
+                                >
+                                  <img
+                                    className="w-5 h-5"
+                                    src="assets/ic_remove.png"
+                                    alt="Remove icon"
+                                    onClick={() =>
+                                      handleRemoveSoftSkill(
+                                        item.id,
+                                        talent.idTalento
+                                      )
+                                    }
+                                  />
+                                </button>
+                              </>
                             ))}
                           </div>
                         </div>
