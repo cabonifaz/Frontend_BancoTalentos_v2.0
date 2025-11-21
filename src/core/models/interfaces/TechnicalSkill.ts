@@ -1,4 +1,5 @@
 export interface TechnicalSkill {
+  idHabTec: number;
   nombreHabilidad: string;
   aniosExperiencia: number;
 }
