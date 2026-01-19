@@ -61,6 +61,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
               control={control}
               error={errors?.lstFacturacion?.[index]?.currencyType}
               required={false}
+              disabled={!isEditable}
               flex={true}
               clearErrors={clearErrors}
               options={currencyOptions.map((op) => ({
