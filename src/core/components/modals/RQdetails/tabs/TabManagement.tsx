@@ -16,6 +16,7 @@ interface TabProps {
   rqMode: Param[];
   isEditing: boolean;
   handleToggleEdit: () => void;
+  currencyOptions: Param[];
 }
 
 export const TabManagment = ({
@@ -24,6 +25,7 @@ export const TabManagment = ({
   rqMode,
   isEditing,
   handleToggleEdit,
+  currencyOptions,
 }: TabProps) => {
   const {
     formState: { errors },
@@ -60,7 +62,7 @@ export const TabManagment = ({
 
   const handleChangeContractMode = (
     e: React.ChangeEvent<HTMLInputElement>,
-    label: string
+    label: string,
   ) => {
     const value = parseInt(e.target.value, 10);
     const checked = e.target.checked;
@@ -69,7 +71,7 @@ export const TabManagment = ({
     const declareSunatIds = [2, 3]; // IDs que indican que declara a SUNAT
 
     const existsIndex = current?.findIndex(
-      (f) => f.idModalidad === value
+      (f) => f.idModalidad === value,
     );
 
     if (checked && existsIndex === -1) {
@@ -298,8 +300,8 @@ export const TabManagment = ({
                         } else {
                           field.onChange(
                             field.value?.filter(
-                              (v: number) => v !== value
-                            )
+                              (v: number) => v !== value,
+                            ),
                           );
                         }
                       }}
@@ -328,6 +330,7 @@ export const TabManagment = ({
               modalidadId={field.idModalidad}
               title={findLabelForMode(field.idModalidad)}
               isEditable={isEditing}
+              currencyOptions={currencyOptions}
             />
           ))}
         </div>

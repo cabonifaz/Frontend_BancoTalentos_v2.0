@@ -7,7 +7,11 @@ import {
   UpdateBaseRQSchemaType,
 } from "../../../models/schemas/UpdateBaseRQSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Param } from "../../../models";
+import {
+  Param,
+  RequerimientosResponse,
+  RequirementResponse,
+} from "../../../models";
 import { TabRQData } from "./tabs/TabRQData";
 import { useFetchRequirement } from "../../../hooks/useFetchRequirement";
 import { formatISODate } from "../../../utilities/date.utils";
@@ -24,6 +28,7 @@ import {
   GRADO_ESTUDIO,
   TIPO_ARCHIVOS_RQ,
   TIPO_ARCHIVO,
+  TIPO_MONEDA,
 } from "../../../utilities/constants";
 import { useParams } from "../../../context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
@@ -53,7 +58,7 @@ export const ModalRQDetails = ({
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
   );
 
   // @marker base state
@@ -67,6 +72,7 @@ export const ModalRQDetails = ({
   const paymentModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const rqMode = paramsByMaestro[MODALIDAD_RQ] || [];
   const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
+  const currencyOptions = paramsByMaestro[TIPO_MONEDA] || [];
 
   const techSkillsParams =
     paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -119,6 +125,37 @@ export const ModalRQDetails = ({
     loading: loadTariff,
   } = useFetchTarifario();
 
+  const mapFacturacion = (res: RequirementResponse) => {
+    const req = res.requerimiento;
+
+    const mapped =
+      req.lstRqFacturacion?.map((f) => ({
+        idModalidad: f.idModalidad ?? 0,
+        idGrupoModalidad: f.idGrupoModalidad ?? 0,
+
+        currencyType: f.currencyType,
+
+        minBaseAmount: f.minBaseAmount,
+        maxBaseAmount: f.maxBaseAmount,
+
+        minTravelAllowance: f.minTravelAllowance,
+        maxTravelAllowance: f.maxTravelAllowance,
+
+        minMonthlyAmount: f.minMonthlyAmount,
+        maxMonthlyAmount: f.minMonthlyAmount,
+
+        minQuarterlyAmount: f.minQuarterlyAmount,
+        maxQuarterlyAmount: f.maxQuarterlyAmount,
+
+        minSemiAnnualAmount: f.minSemiAnnualAmount,
+        maxSemiAnnualAmount: f.maxSemiAnnualAmount,
+
+        idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
+      })) ?? [];
+
+    return mapped;
+  };
+
   // Sync RQ form
   useEffect(() => {
     if (res?.requerimiento) {
@@ -133,7 +170,7 @@ export const ModalRQDetails = ({
       // map vacancies
       const mappedVacancies = req.lstRqVacantes.map((v) => {
         const tariffFound = tarifario.find(
-          (item) => item.idPerfil === v.idPerfil
+          (item) => item.idPerfil === v.idPerfil,
         );
 
         const tarifa = tariffFound
@@ -188,21 +225,6 @@ export const ModalRQDetails = ({
         req.idDuracion > 0
       );
 
-      // Mapear facturación
-      const mappedFacturacion =
-        req.lstRqFacturacion?.map((f) => ({
-          idModalidad: f.idModalidad ?? 0,
-          idGrupoModalidad: f.idGrupoModalidad ?? 0,
-          declaraSunat: Boolean(f.declaraSunat),
-          sedeSunat: f.sedeSunat ?? "sede-principal",
-          montoBase: Number(f.montoBase ?? 0),
-          montoMovilidad: Number(f.montoMovilidad ?? 0),
-          montoMensual: Number(f.montoMensual ?? 0),
-          montoTrimestral: Number(f.montoTrimestral ?? 0),
-          montoSemestral: Number(f.montoSemestral ?? 0),
-          idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
-        })) ?? [];
-
       reset({
         codigoRQ: req.codigoRQ ?? "",
         titulo: req.titulo ?? "",
@@ -227,7 +249,7 @@ export const ModalRQDetails = ({
           idDuration: idDuracionContrato,
           duration: duracionContrato,
         },
-        lstFacturacion: mappedFacturacion,
+        lstFacturacion: mapFacturacion(res),
       });
     }
   }, [res, reset]);
@@ -248,7 +270,7 @@ export const ModalRQDetails = ({
     // map vacancies
     const mappedVacancies = req.lstRqVacantes.map((v) => {
       const tariffFound = tarifario.find(
-        (item) => item.idPerfil === v.idPerfil
+        (item) => item.idPerfil === v.idPerfil,
       );
 
       const tarifa = tariffFound
@@ -303,21 +325,6 @@ export const ModalRQDetails = ({
       req.idDuracion > 0
     );
 
-    // Mapear facturación
-    const mappedFacturacion =
-      req.lstRqFacturacion?.map((f) => ({
-        idModalidad: f.idModalidad ?? 0,
-        idGrupoModalidad: f.idGrupoModalidad ?? 0,
-        declaraSunat: Boolean(f.declaraSunat),
-        sedeSunat: f.sedeSunat ?? "sede-principal",
-        montoBase: Number(f.montoBase ?? 0),
-        montoMovilidad: Number(f.montoMovilidad ?? 0),
-        montoMensual: Number(f.montoMensual ?? 0),
-        montoTrimestral: Number(f.montoTrimestral ?? 0),
-        montoSemestral: Number(f.montoSemestral ?? 0),
-        idEstadoRegistro: Number(f.idEstadoRegistro ?? 1),
-      })) ?? [];
-
     reset({
       codigoRQ: req.codigoRQ ?? "",
       titulo: req.titulo ?? "",
@@ -341,7 +348,7 @@ export const ModalRQDetails = ({
         idDuration: idDuracionContrato,
         duration: duracionContrato,
       },
-      lstFacturacion: mappedFacturacion,
+      lstFacturacion: mapFacturacion(res),
     });
     setIsEditing(!isEditing);
   };
@@ -349,7 +356,7 @@ export const ModalRQDetails = ({
   const totalVacs =
     res?.requerimiento.lstRqVacantes.reduce(
       (sum, vacante) => sum + Number(vacante.cantidad || 0),
-      0
+      0,
     ) ?? 0;
 
   const onSubmit = async (data: UpdateBaseRQSchemaType) => {
@@ -393,7 +400,7 @@ export const ModalRQDetails = ({
 
       const response = await postData(
         "/fmi/requirement/update",
-        payload
+        payload,
       );
 
       if (response.idTipoMensaje === 2) {
@@ -514,6 +521,7 @@ export const ModalRQDetails = ({
                         rqDurationOptions={rqDurationOptions}
                         paymentModes={paymentModes}
                         rqMode={rqMode}
+                        currencyOptions={currencyOptions}
                       />
                     ),
                   },

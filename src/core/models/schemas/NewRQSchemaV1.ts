@@ -53,27 +53,59 @@ const contractDurationSchema = z.object({
 const rqFacturacionSchema = z.object({
   idModalidad: z.coerce.number().default(0),
   idGrupoModalidad: z.coerce.number().default(0),
-  declaraSunat: z.coerce.boolean().default(false),
-  sedeSunat: z.string().default("sede-principal"),
-  montoBase: z.coerce
+
+  // Base Amounts
+  minBaseAmount: z.coerce
     .number()
-    .min(0, "El monto base no puede ser negativo")
+    .min(0, "Este valor no puede ser negativo")
     .default(0),
-  montoMovilidad: z.coerce
+  maxBaseAmount: z.coerce
     .number()
-    .min(0, "El monto de movilidad no puede ser negativo")
+    .min(0, "Este valor no puede ser negativo")
     .default(0),
-  montoMensual: z.coerce
+
+  // Travel Allowance / Mobility
+  minTravelAllowance: z.coerce
     .number()
-    .min(0, "El monto mensual no puede ser negativo")
+    .min(0, "Este valor no puede ser negativo"),
+  maxTravelAllowance: z.coerce
+    .number()
+    .min(0, "Este valor no puede ser negativo")
     .default(0),
-  montoTrimestral: z.coerce
+
+  // Monthly Frequency
+  minMonthlyAmount: z.coerce
     .number()
-    .min(0, "El monto trimestral no puede ser negativo")
+    .min(0, "Este valor no puede ser negativo")
     .default(0),
-  montoSemestral: z.coerce
+  maxMonthlyAmount: z.coerce
     .number()
-    .min(0, "El monto semestral no puede ser negativo")
+    .min(0, "Este valor no puede ser negativo")
+    .default(0),
+
+  // Quarterly Frequency (Every 3 months)
+  minQuarterlyAmount: z.coerce
+    .number()
+    .min(0, "Este valor no puede ser negativo")
+    .default(0),
+  maxQuarterlyAmount: z.coerce
+    .number()
+    .min(0, "Este valor no puede ser negativo")
+    .default(0),
+
+  // Semi-Annual Frequency (Every 6 months)
+  minSemiAnnualAmount: z.coerce
+    .number()
+    .min(0, "Este valor no puede ser negativo")
+    .default(0),
+  maxSemiAnnualAmount: z.coerce
+    .number()
+    .min(0, "Este valor no puede ser negativo")
+    .default(0),
+
+  currencyType: z.coerce
+    .number()
+    .min(0, "Se necesita selecionar una moneda")
     .default(0),
 });
 
@@ -127,7 +159,7 @@ export const newRQSchema = z
         z.coerce.number({
           required_error: "Elija una modalidad de pago",
           invalid_type_error: "Elija una modalidad de pago",
-        })
+        }),
       )
       .optional(),
     lstVacantes: z
@@ -161,7 +193,7 @@ export const newRQSchema = z
               invalid_type_error: "Elija un tipo de archivo",
             })
             .min(1, "Elija un tipo de archivo"),
-        })
+        }),
       )
       .optional(),
   })
