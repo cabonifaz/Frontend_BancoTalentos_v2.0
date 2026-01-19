@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { emptyToNull, emptyToUndef, trim, trimLower } from "./Validations";
+import { sanitizeText } from "../../utilities/textUtils";
 
 const salaryExpectationSchema = z
   .object({
@@ -82,7 +83,20 @@ export const AddTalentSchema = z.object({
   linkedin: z.preprocess(emptyToUndef, z.string().optional()),
   github: z.preprocess(emptyToUndef, z.string().optional()),
 
-  descripcion: z.string().optional(),
+  descripcion: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return val;
+      return sanitizeText(val);
+    })
+    .pipe(
+      z.string().refine(
+        (val) => !val || val.length <= 5000,
+        { message: "La presentación no puede exceder los 5000 caracteres" }
+      )
+    ),
+
   disponibilidad: z
     .array(z.string())
     .min(1, "Debes selecionar al menos una disponibilidad"),
@@ -161,7 +175,21 @@ export const AddTalentSchema = z.object({
             trim,
             z.string().min(1, "El puesto es requerido")
           ),
-          funciones: z.string().optional(),
+          
+          funciones: z
+            .string()
+            .optional()
+            .transform((val) => {
+              if (!val) return val;
+              return sanitizeText(val);
+            })
+            .pipe(
+              z.string().refine(
+                (val) => !val || val.length <= 5000,
+                { message: "Las funciones no pueden exceder los 5000 caracteres" }
+              )
+            ),
+
           fechaInicio: z.preprocess(
             trim,
             z.string().min(1, "La fecha de inicio es requerida")

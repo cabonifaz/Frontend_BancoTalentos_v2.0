@@ -47,6 +47,7 @@ import { useAutoCompletTalForm } from "../../core/hooks/useAutoCompletTalFormt";
 import { useModal } from "../../core/context/ModalContext";
 import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
+import { processText } from "../../core/utilities/textUtils";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ export const AddTalent = () => {
   // const watchCity = watch("idCiudad");
 
   const ciudadesFiltradas = watchCountry
-    ? ciudades.filter((ciudad) => ciudad.num2 === watchCountry)
+    ? ciudades.filter((ciudad:any) => ciudad.num2 === watchCountry)
     : [];
 
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
@@ -544,19 +545,58 @@ export const AddTalent = () => {
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="description"
-                      className="text-[#636d7c] text-sm px-1"
-                    >
-                      Presentación
-                      {/*<span className="text-red-500">*</span>*/}
-                    </label>
-                    <textarea
-                      {...register("descripcion")}
-                      id="description"
-                      className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                      placeholder="Presentación"
-                    ></textarea>
+                    <div className="flex justify-between items-center px-1">
+                      <label
+                        htmlFor="description"
+                        className="text-[#636d7c] text-sm"
+                      >
+                        Presentación
+                        {/*<span className="text-red-500">*</span>*/}
+                      </label>
+                      {/* CONTADOR DE CARACTERES */}
+                      <span className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}>
+                        {watch("descripcion")?.length || 0} / 5000
+                      </span>
+                    </div>
+                     {/*{<div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                     </svg>
+                     { <span>Los emojis y espacios extras se eliminarán automáticamente</span> }
+                    </div>*/}
+                    <Controller
+                      name="descripcion"
+                      control={control}
+                      render={({ field }) => (
+                        <textarea
+                          {...field}
+                          id="description"
+                          className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5] transition-colors"
+                          placeholder="Cuéntanos sobre este talento..."
+                          onBlur={(e) => {
+                            const { text, wasSanitized, wasTruncated } = processText(e.target.value, 5000);
+                            
+                            if (text !== e.target.value) {
+                              field.onChange(text);
+                              
+                              if (wasTruncated) {
+                                enqueueSnackbar(
+                                  "La presentación se interrumpió a los 5.000 caracteres",
+                                  { variant: "warning" }
+                                );
+                              } else if (wasSanitized) {
+                                enqueueSnackbar(
+                                  "Se limpiaron caracteres especiales de la presentación",
+                                  { variant: "info" }
+                                );
+                              }
+                            }
+                            
+                            field.onBlur();
+                          }}
+                        />
+                      )}
+                    />
                     {errors.descripcion && (
                       <p className="text-red-400 text-sm">
                         {errors.descripcion.message}
