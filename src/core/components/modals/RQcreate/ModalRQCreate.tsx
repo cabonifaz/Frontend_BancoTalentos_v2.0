@@ -26,6 +26,7 @@ import {
   TIPO_ARCHIVO,
   TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
+  TIPO_MONEDA,
 } from "../../../utilities/constants";
 import { useParams } from "../../../context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
@@ -73,7 +74,7 @@ export const ModalRQCreate = ({
     loading: loadingParams,
   } = useParams(
     `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}`
+      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
   );
 
   const skillsByParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
@@ -83,6 +84,7 @@ export const ModalRQCreate = ({
   const rqModes = paramsByMaestro[MODALIDAD_RQ] || [];
   const factModes = paramsByMaestro[TIPO_MODALIDAD] || [];
   const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
+  const currencyOptions = paramsByMaestro[TIPO_MONEDA] || [];
 
   // @marker base states
   const techSkills = skillsByParams.map((s) => ({
@@ -141,7 +143,7 @@ export const ModalRQCreate = ({
             Utils.getFileNameAndExtension(f.name);
           const idTipoArchivo = Utils.getTipoArchivoId(
             extensionArchivo,
-            fileExtensionsParams
+            fileExtensionsParams,
           );
           return {
             string64: base64,
@@ -150,7 +152,7 @@ export const ModalRQCreate = ({
             idTipoArchivo,
             idTipoArchivoRQ: f.idTipoArchivoRQ,
           };
-        }) || []
+        }) || [],
       );
 
       /** Modalidad fact */
@@ -198,7 +200,7 @@ export const ModalRQCreate = ({
       // 4. Enviar los datos al servidor
       const response = await postData(
         "/fmi/requirement/save",
-        payload
+        payload,
       );
 
       if (response.idTipoMensaje === 2) {
@@ -310,6 +312,7 @@ export const ModalRQCreate = ({
                         rqDuration={rqDuration}
                         rqModes={rqModes}
                         factModes={factModes}
+                        currencyTypes={currencyOptions}
                       />
                     ),
                   },

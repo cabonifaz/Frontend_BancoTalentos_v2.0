@@ -18,13 +18,24 @@ export interface RQFacturacion {
   idRequerimiento: number;
   idModalidad: number;
   idGrupoModalidad: RQFacturacionGrupoModalidad;
-  declaraSunat: RQFacturacionDeclaraSunat;
-  sedeSunat: string;
-  montoBase: number;
-  montoMovilidad: number;
-  montoMensual: number;
-  montoTrimestral: number;
+  currencyType: number;
+
+  minBaseAmount: number;
+  maxBaseAmount: number;
+
+  minTravelAllowance: number;
+  maxTravelAllowance: number;
+
+  minMonthlyAmount: number;
+  maxMonthlyAmount: number;
+
+  minQuarterlyAmount: number;
+  maxQuarterlyAmount: number;
+
+  minSemiAnnualAmount: number;
+  maxSemiAnnualAmount: number;
   montoSemestral: number;
+
   idEstadoRegistro: RQFacturacionEstadoRegistro;
 }
 

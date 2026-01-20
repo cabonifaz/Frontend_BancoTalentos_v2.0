@@ -32,33 +32,108 @@ const contractDurationSchema = z
   .optional();
 
 // Subschema: Facturación por modalidad de contrato
-const rqFacturacionSchema = z.object({
-  idModalidad: z.coerce.number().default(0),
-  idGrupoModalidad: z.coerce.number().default(0),
-  declaraSunat: z.coerce.boolean().default(false),
-  sedeSunat: z.string().default("sede-principal"),
-  montoBase: z.coerce
-    .number()
-    .min(0, "El monto base no puede ser negativo")
-    .default(0),
-  montoMovilidad: z.coerce
-    .number()
-    .min(0, "El monto de movilidad no puede ser negativo")
-    .default(0),
-  montoMensual: z.coerce
-    .number()
-    .min(0, "El monto mensual no puede ser negativo")
-    .default(0),
-  montoTrimestral: z.coerce
-    .number()
-    .min(0, "El monto trimestral no puede ser negativo")
-    .default(0),
-  montoSemestral: z.coerce
-    .number()
-    .min(0, "El monto semestral no puede ser negativo")
-    .default(0),
-  idEstadoRegistro: z.coerce.number().default(1),
-});
+const rqFacturacionSchema = z
+  .object({
+    idModalidad: z.coerce.number().default(0),
+    idGrupoModalidad: z.coerce.number().default(0),
+
+    // Base Amounts
+    minBaseAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+    maxBaseAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+
+    // Travel Allowance / Mobility
+    minTravelAllowance: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo"),
+    maxTravelAllowance: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+
+    // Monthly Frequency
+    minMonthlyAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+    maxMonthlyAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+
+    // Quarterly Frequency (Every 3 months)
+    minQuarterlyAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+    maxQuarterlyAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+
+    // Semi-Annual Frequency (Every 6 months)
+    minSemiAnnualAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+    maxSemiAnnualAmount: z.coerce
+      .number()
+      .min(0, "Este valor no puede ser negativo")
+      .default(0),
+
+    currencyType: z.coerce
+      .number()
+      .min(1, "Se necesita selecionar una moneda")
+      .default(0),
+    idEstadoRegistro: z.coerce.number().default(1),
+  })
+  .superRefine((data, ctx) => {
+    // Función auxiliar para validar pares
+    const validateRange = (
+      min: number,
+      max: number,
+      path: string,
+    ) => {
+      if (max > 0 && max < min) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El monto máximo no puede ser menor al mínimo",
+          path: [path],
+        });
+      }
+    };
+
+    validateRange(
+      data.minBaseAmount,
+      data.maxBaseAmount,
+      "maxBaseAmount",
+    );
+    validateRange(
+      data.minTravelAllowance,
+      data.maxTravelAllowance,
+      "maxTravelAllowance",
+    );
+    validateRange(
+      data.minMonthlyAmount,
+      data.maxMonthlyAmount,
+      "maxMonthlyAmount",
+    );
+    validateRange(
+      data.minQuarterlyAmount,
+      data.maxQuarterlyAmount,
+      "maxQuarterlyAmount",
+    );
+    validateRange(
+      data.minSemiAnnualAmount,
+      data.maxSemiAnnualAmount,
+      "maxSemiAnnualAmount",
+    );
+  });
 
 export const UpdateBaseRQSchema = z
   .object({
@@ -101,7 +176,7 @@ export const UpdateBaseRQSchema = z
         z.coerce.number({
           required_error: "Elija una modalidad de pago",
           invalid_type_error: "Elija una modalidad de pago",
-        })
+        }),
       )
       .optional(),
     fechaVencimiento: z
@@ -116,7 +191,7 @@ export const UpdateBaseRQSchema = z
           name: z.string(),
           size: z.number(),
           file: z.instanceof(File),
-        })
+        }),
       )
       .optional(),
 
