@@ -6,6 +6,8 @@ import {
   trimLower,
 } from "./Validations";
 
+import { sanitizeText } from "../../utilities/textUtils";
+
 const salaryExpectationSchema = z
   .object({
     coin: z.number().int().positive().optional(),
@@ -97,7 +99,19 @@ export const AddPostulanteSchema = z.object({
   linkedin: z.preprocess(emptyToUndef, z.string().optional()),
   github: z.preprocess(emptyToUndef, z.string().optional()),
 
-  descripcion: z.string().optional(),
+  descripcion: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val) return val;
+      return sanitizeText(val);
+    })
+    .pipe(
+      z.string().refine(
+        (val) => !val || val.length <= 5000,
+        { message: "La presentación no puede exceder los 5000 caracteres" }
+      )
+    ),
 
   disponibilidad: z
     .array(z.string())
@@ -190,7 +204,20 @@ export const AddPostulanteSchema = z.object({
           // opcional; "" -> undefined para que el refine funcione bien
           fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
           flActualidad: z.coerce.boolean().optional().default(false),
-          funciones: z.string().optional(),
+          
+          funciones: z
+            .string()
+            .optional()
+            .transform((val) => {
+              if (!val) return val;
+              return sanitizeText(val);
+            })
+            .pipe(
+              z.string().refine(
+                (val) => !val || val.length <= 5000,
+                { message: "Las funciones no pueden exceder los 5000 caracteres" }
+              )
+            ),
         })
         .refine((data) => data.flActualidad || !!data.fechaFin, {
           message: "La fecha de fin es requerida",

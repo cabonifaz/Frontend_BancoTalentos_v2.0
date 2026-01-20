@@ -2,126 +2,100 @@ import React from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../models/schemas/NewRQSchemaV1";
 import { RQFacturacionDeclaraSunat } from "../../models/interfaces/RQFacturacion";
+import { Param } from "../../models/interfaces/Param";
+import { DropdownForm } from "../forms";
 
 interface BillingTableProps {
   index: number;
   title: string;
   modalidadId: number;
   isEditable?: boolean;
+  currencyOptions: Param[];
 }
-
 export const BillingTable: React.FC<BillingTableProps> = ({
   index,
   title,
   modalidadId,
   isEditable = true,
+  currencyOptions,
 }) => {
   const {
     control,
     formState: { errors },
+    clearErrors,
   } = useFormContext<newRQSchemaType>();
 
   // Configuración de campos de montos
   const montoFields = [
-    { name: "montoBase", label: "Monto Base" },
-    { name: "montoMovilidad", label: "Monto Movilidad" },
-    { name: "montoMensual", label: "Monto Mensual" },
-    { name: "montoTrimestral", label: "Monto Trimestral" },
-    { name: "montoSemestral", label: "Monto Semestral" },
+    { name: "minBaseAmount", label: "M. Básico Min" },
+    { name: "maxBaseAmount", label: "M. Básico Max" },
+
+    { name: "minTravelAllowance", label: "M. Movilidad Min" },
+    { name: "maxTravelAllowance", label: "M. Movilidad Max" },
+
+    { name: "minMonthlyAmount", label: "M. Mensual Min" },
+    { name: "maxMonthlyAmount", label: "M. Mensual Max" },
+
+    { name: "minQuarterlyAmount", label: "M. Trimestral Min" },
+    { name: "maxQuarterlyAmount", label: "M. Trimestral Max" },
+
+    { name: "minSemiAnnualAmount", label: "M. Semestral Min" },
+    { name: "maxSemiAnnualAmount", label: "M. Semestral Max" },
   ] as const;
 
-  // Determinar el grupo de modalidad y configuración por defecto
-  const planillaIds = [2, 3];
-  const isPlanilla = planillaIds.includes(modalidadId);
+  const universalFields = ["minBaseAmount", "maxBaseAmount"];
 
   return (
     <div className={"border border-gray-300 rounded-lg p-4"}>
       {/* Header de la tabla */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">
-          {title}
-        </h3>
-      </div>
+        <h3 className="text-lg font-bold text-gray-800">{title}</h3>
 
-      {/* Campos superiores */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 hidden">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ¿Declarado en SUNAT?
+        <div className="flex items-center">
+          <label className="w-1/3 text-sm font-semibold text-gray-700">
+            Tipo de moneda:
           </label>
-          <Controller
-            name={`lstFacturacion.${index}.declaraSunat`}
-            control={control}
-            defaultValue={isPlanilla}
-            render={({ field }) => (
-              <select
-                {...field}
-                disabled={!isEditable}
-                value={
-                  isPlanilla
-                    ? RQFacturacionDeclaraSunat.SI
-                    : RQFacturacionDeclaraSunat.NO
-                }
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={RQFacturacionDeclaraSunat.SI}>
-                  Sí
-                </option>
-                <option value={RQFacturacionDeclaraSunat.NO}>
-                  No
-                </option>
-              </select>
-            )}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Sede a declarar
-          </label>
-          <Controller
-            name={`lstFacturacion.${index}.sedeSunat`}
-            control={control}
-            render={({ field }) => (
-              <select
-                {...field}
-                value={field.value || ""}
-                disabled={!isEditable}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Selecione una opción</option>
-                <option value="sede-principal">Sede Principal</option>
-                <option value="oficina-cliente">
-                  Oficina del Cliente
-                </option>
-              </select>
-            )}
-          />
+          <div className="flex gap-4 w-2/3">
+            <DropdownForm
+              name={`lstFacturacion.${index}.currencyType`}
+              control={control}
+              error={errors?.lstFacturacion?.[index]?.currencyType}
+              required={false}
+              disabled={!isEditable}
+              flex={true}
+              clearErrors={clearErrors}
+              options={currencyOptions.map((op) => ({
+                label: op.string1,
+                value: op.num1,
+              }))}
+            />
+          </div>
         </div>
       </div>
 
       {/* Tabla de montos */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {montoFields.map((montoField) => {
-          // Para modalidad 1 (Locación de servicios), solo mostrar montoBase
-          const isVisible =
-            modalidadId !== 1 || montoField.name === "montoBase";
+          const isUniversalField = universalFields.includes(
+            montoField.name,
+          );
+          const isVisible = isUniversalField || modalidadId !== 1;
 
           return (
             <div
               key={montoField.name}
-              className={`flex items-center space-x-4 ${
-                !isVisible ? "hidden" : ""
+              className={`${
+                !isVisible ? "hidden" : "flex flex-col gap-1"
               }`}
             >
-              {/* Label del concepto */}
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700">
-                  {montoField.label}
-                </label>
-              </div>
+              {/* Label Row */}
+              <label className="text-sm font-semibold text-gray-700">
+                {montoField.label}
+              </label>
 
-              {/* Input del valor */}
-              <div className="w-32">
+              {/* Input & Error Row */}
+              <div>
+                {}
                 <Controller
                   name={
                     `lstFacturacion.${index}.${montoField.name}` as any
@@ -130,19 +104,20 @@ export const BillingTable: React.FC<BillingTableProps> = ({
                   render={({ field }) => (
                     <input
                       {...field}
+                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 text-right"
                       type="number"
                       disabled={!isEditable}
                       min="0"
                       step="0.01"
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
                       placeholder="0.00"
+                      value={field.value ?? ""}
                     />
                   )}
                 />
                 {errors.lstFacturacion?.[index]?.[
                   montoField.name
                 ] && (
-                  <span className="text-red-500 text-xs mt-1 block">
+                  <span className="text-red-500 text-xs mt-1 block leading-tight">
                     {
                       errors.lstFacturacion?.[index]?.[
                         montoField.name

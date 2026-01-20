@@ -16,6 +16,7 @@ interface TabProps {
   rqMode: Param[];
   isEditing: boolean;
   handleToggleEdit: () => void;
+  currencyOptions: Param[];
 }
 
 export const TabManagment = ({
@@ -24,6 +25,7 @@ export const TabManagment = ({
   rqMode,
   isEditing,
   handleToggleEdit,
+  currencyOptions,
 }: TabProps) => {
   const {
     formState: { errors },
@@ -58,9 +60,29 @@ export const TabManagment = ({
     return mode ? mode.string1 : "Desconocida";
   };
 
+  const createDefaultBillingItem = (
+    idModalidad: number,
+    isPlanilla: boolean,
+  ) => ({
+    idModalidad,
+    idGrupoModalidad: isPlanilla ? 2 : 1,
+    currencyType: 0,
+    minBaseAmount: 0,
+    maxBaseAmount: 0,
+    minTravelAllowance: 0,
+    maxTravelAllowance: 0,
+    minMonthlyAmount: 0,
+    maxMonthlyAmount: 0,
+    minQuarterlyAmount: 0,
+    maxQuarterlyAmount: 0,
+    minSemiAnnualAmount: 0,
+    maxSemiAnnualAmount: 0,
+    idEstadoRegistro: 1,
+  });
+
   const handleChangeContractMode = (
     e: React.ChangeEvent<HTMLInputElement>,
-    label: string
+    label: string,
   ) => {
     const value = parseInt(e.target.value, 10);
     const checked = e.target.checked;
@@ -69,7 +91,7 @@ export const TabManagment = ({
     const declareSunatIds = [2, 3]; // IDs que indican que declara a SUNAT
 
     const existsIndex = current?.findIndex(
-      (f) => f.idModalidad === value
+      (f) => f.idModalidad === value,
     );
 
     if (checked && existsIndex === -1) {
@@ -80,20 +102,7 @@ export const TabManagment = ({
        * Se puede verificar en la Tabla Parametros con idMaestro = 3
        */
       const declaraSunat = declareSunatIds.includes(value);
-      append({
-        idModalidad: value,
-        idGrupoModalidad: declaraSunat
-          ? RQFacturacionGrupoModalidad.PLANILLA
-          : RQFacturacionGrupoModalidad.RxH,
-        declaraSunat: declaraSunat,
-        sedeSunat: declaraSunat ? "sede-principal" : "",
-        montoBase: 0,
-        montoMovilidad: 0,
-        montoMensual: 0,
-        montoTrimestral: 0,
-        montoSemestral: 0,
-        idEstadoRegistro: 1,
-      });
+      append(createDefaultBillingItem(value, declaraSunat));
     } else if (!checked && existsIndex !== -1) {
       remove(existsIndex);
     }
@@ -298,8 +307,8 @@ export const TabManagment = ({
                         } else {
                           field.onChange(
                             field.value?.filter(
-                              (v: number) => v !== value
-                            )
+                              (v: number) => v !== value,
+                            ),
                           );
                         }
                       }}
@@ -328,6 +337,7 @@ export const TabManagment = ({
               modalidadId={field.idModalidad}
               title={findLabelForMode(field.idModalidad)}
               isEditable={isEditing}
+              currencyOptions={currencyOptions}
             />
           ))}
         </div>
