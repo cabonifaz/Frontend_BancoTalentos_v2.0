@@ -27,21 +27,21 @@ export const BillingTable: React.FC<BillingTableProps> = ({
 
   // Configuración de campos de montos
   const montoFields = [
-    { name: "minBaseAmount", label: "M. Básico Min" },
-    { name: "maxBaseAmount", label: "M. Básico Max" },
+      { name: "minBaseAmount", label: "M. Básico Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
+      { name: "maxBaseAmount", label: "M. Básico Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
 
-    { name: "minTravelAllowance", label: "M. Movilidad Min" },
-    { name: "maxTravelAllowance", label: "M. Movilidad Max" },
+      { name: "minTravelAllowance", label: "M. Movilidad Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
+      { name: "maxTravelAllowance", label: "M. Movilidad Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
 
-    { name: "minMonthlyAmount", label: "M. Mensual Min" },
-    { name: "maxMonthlyAmount", label: "M. Mensual Max" },
+      { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
+      { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
 
-    { name: "minQuarterlyAmount", label: "M. Trimestral Min" },
-    { name: "maxQuarterlyAmount", label: "M. Trimestral Max" },
+      { name: "minQuarterlyAmount", label: "M. Trimestral Min", bgColor: "bg-sky-100 border-2 border-sky-500" },
+      { name: "maxQuarterlyAmount", label: "M. Trimestral Max", bgColor: "bg-sky-100 border-2 border-sky-500" },
 
-    { name: "minSemiAnnualAmount", label: "M. Semestral Min" },
-    { name: "maxSemiAnnualAmount", label: "M. Semestral Max" },
-  ] as const;
+      { name: "minSemiAnnualAmount", label: "M. Semestral Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
+      { name: "maxSemiAnnualAmount", label: "M. Semestral Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
+    ] as const;
 
   const universalFields = ["minBaseAmount", "maxBaseAmount"];
 
@@ -94,8 +94,7 @@ export const BillingTable: React.FC<BillingTableProps> = ({
               </label>
 
               {/* Input & Error Row */}
-              <div>
-                {}
+              <div className={`rounded-md p-2 ${montoField.bgColor}`}>
                 <Controller
                   name={
                     `lstFacturacion.${index}.${montoField.name}` as any
