@@ -33,8 +33,8 @@ export const BillingTable: React.FC<BillingTableProps> = ({
       { name: "minTravelAllowance", label: "M. Movilidad Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
       { name: "maxTravelAllowance", label: "M. Movilidad Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
 
-      { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
-      { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
+      { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-green-100 border-2 border-green-500" },
+      { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-green-100 border-2 border-green-500" },
 
       { name: "minQuarterlyAmount", label: "M. Trimestral Min", bgColor: "bg-sky-100 border-2 border-sky-500" },
       { name: "maxQuarterlyAmount", label: "M. Trimestral Max", bgColor: "bg-sky-100 border-2 border-sky-500" },
