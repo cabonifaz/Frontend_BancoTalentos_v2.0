@@ -27,23 +27,59 @@ export const BillingTable: React.FC<BillingTableProps> = ({
 
   // Configuración de campos de montos
   const montoFields = [
-      { name: "minBaseAmount", label: "M. Básico Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
-      { name: "maxBaseAmount", label: "M. Básico Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
+    { 
+      groupName: "baseAmount",
+      groupLabel: "M. Básico",
+      bgColor: "bg-sky-100",
+      borderColor: "border-sky-600",
+      fields: [
+        { name: "minBaseAmount", label: "Min" },
+        { name: "maxBaseAmount", label: "Max" }
+      ]
+    },
+    { 
+      groupName: "travelAllowance",
+      groupLabel: "M. Movilidad",
+      bgColor: "bg-orange-100",
+      borderColor: "border-orange-600",
+      fields: [
+        { name: "minTravelAllowance", label: "Min" },
+        { name: "maxTravelAllowance", label: "Max" }
+      ]
+    },
+    { 
+      groupName: "monthlyAmount",
+      groupLabel: "M. Mensual",
+      bgColor: "bg-blue-100",
+      borderColor: "border-blue-600",
+      fields: [
+        { name: "minMonthlyAmount", label: "Min" },
+        { name: "maxMonthlyAmount", label: "Max" }
+      ]
+    },
+    { 
+      groupName: "quarterlyAmount",
+      groupLabel: "M. Trimestral",
+      bgColor: "bg-emerald-100",
+      borderColor: "border-emerald-600",
+      fields: [
+        { name: "minQuarterlyAmount", label: "Min" },
+        { name: "maxQuarterlyAmount", label: "Max" }
+      ]
+    },
+    { 
+      groupName: "semiAnnualAmount",
+      groupLabel: "M. Semestral",
+      bgColor: "bg-orange-100",
+      borderColor: "border-orange-500",
+      fields: [
+        { name: "minSemiAnnualAmount", label: "Min" },
+        { name: "maxSemiAnnualAmount", label: "Max" }
+      ]
+    }
+  ];
 
-      { name: "minTravelAllowance", label: "M. Movilidad Min", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
-      { name: "maxTravelAllowance", label: "M. Movilidad Max", bgColor: "bg-emerald-100 border-2 border-emerald-500" },
-
-      { name: "minMonthlyAmount", label: "M. Mensual Min", bgColor: "bg-green-100 border-2 border-green-500" },
-      { name: "maxMonthlyAmount", label: "M. Mensual Max", bgColor: "bg-green-100 border-2 border-green-500" },
-
-      { name: "minQuarterlyAmount", label: "M. Trimestral Min", bgColor: "bg-sky-100 border-2 border-sky-500" },
-      { name: "maxQuarterlyAmount", label: "M. Trimestral Max", bgColor: "bg-sky-100 border-2 border-sky-500" },
-
-      { name: "minSemiAnnualAmount", label: "M. Semestral Min", bgColor: "bg-blue-100 border-2 border-blue-500" },
-      { name: "maxSemiAnnualAmount", label: "M. Semestral Max", bgColor: "bg-blue-100 border-2 border-blue-500" },
-    ] as const;
-
-  const universalFields = ["minBaseAmount", "maxBaseAmount"];
+  const universalFields = ["baseAmount"];
 
   return (
     <div className={"border border-gray-300 rounded-lg p-4"}>
@@ -75,55 +111,50 @@ export const BillingTable: React.FC<BillingTableProps> = ({
 
       {/* Tabla de montos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {montoFields.map((montoField) => {
-          const isUniversalField = universalFields.includes(
-            montoField.name,
-          );
-          const isVisible = isUniversalField || modalidadId !== 1;
+         {montoFields.map((group) => {
+          const isUniversalGroup = universalFields.includes(group.groupName);
+          const isVisible = isUniversalGroup || modalidadId !== 1;
 
           return (
             <div
-              key={montoField.name}
-              className={`${
-                !isVisible ? "hidden" : "flex flex-col gap-1"
-              }`}
+              key={group.groupName}
+              className={`${!isVisible ? "hidden" : "flex flex-col gap-2"}`}
             >
-              {/* Label Row */}
+              {/* Label del grupo */}
               <label className="text-sm font-semibold text-gray-700">
-                {montoField.label}
+                {group.groupLabel}
               </label>
 
-              {/* Input & Error Row */}
-              <div className={`rounded-md p-2 ${montoField.bgColor}`}>
-                <Controller
-                  name={
-                    `lstFacturacion.${index}.${montoField.name}` as any
-                  }
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 text-right"
-                      type="number"
-                      disabled={!isEditable}
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={field.value ?? ""}
-                    />
-                  )}
-                />
-                {errors.lstFacturacion?.[index]?.[
-                  montoField.name
-                ] && (
-                  <span className="text-red-500 text-xs mt-1 block leading-tight">
-                    {
-                      errors.lstFacturacion?.[index]?.[
-                        montoField.name
-                      ]?.message
-                    }
-                  </span>
-                )}
+              {/* Contenedor único con borde para Min y Max */}
+              <div className={`rounded-md p-3 border-2 ${group.bgColor} ${group.borderColor}`}>
+                <div className="grid grid-cols-2 gap-3">
+                  {group.fields.map((field) => (
+                    <div key={field.name} className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-gray-600">{field.label}</span>
+                      <Controller
+                        name={`lstFacturacion.${index}.${field.name}` as any}
+                        control={control}
+                        render={({ field: controllerField }) => (
+                          <input
+                            {...controllerField}
+                            className="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500 text-right bg-white"
+                            type="number"
+                            disabled={!isEditable}
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={controllerField.value ?? ""}
+                          />
+                        )}
+                      />
+                      {errors.lstFacturacion?.[index]?.[field.name as keyof typeof errors.lstFacturacion[number]] && (
+                        <span className="text-red-500 text-xs leading-tight">
+                          {errors.lstFacturacion?.[index]?.[field.name as "minBaseAmount"]?.message}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           );
@@ -132,3 +163,4 @@ export const BillingTable: React.FC<BillingTableProps> = ({
     </div>
   );
 };
+
