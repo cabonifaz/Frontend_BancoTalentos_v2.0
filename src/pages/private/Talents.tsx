@@ -627,6 +627,14 @@ export const Talents = () => {
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <button
+                          className="text-[var(--color-blue)]"
+                          onClick={() => openModal("modalEditPersonal")}
+                        >
+                          Editar perfil
+                        </button>
+                      </div>
                       {/* File upload */}
                       <div className="flex flex-col md:flex-row items-center w-full justify-between gap-4 my-8">
                         <p className="text-[var(--color-blue)] text-justify flex-grow">
