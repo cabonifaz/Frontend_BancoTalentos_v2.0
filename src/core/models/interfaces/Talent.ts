@@ -4,6 +4,7 @@ export interface Talent {
   apellidoPaterno: string;
   apellidoMaterno: string;
   imagen: string;
+  photoUrl: string;
   puesto: string;
   pais: string;
   ciudad: string;
