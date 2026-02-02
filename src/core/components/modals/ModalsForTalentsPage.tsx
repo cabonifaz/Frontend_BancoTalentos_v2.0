@@ -37,7 +37,10 @@ interface Props {
   feedbackRef: React.MutableRefObject<Feedback | null>;
   cvLang?: "ES" | "EN";
   fetchTalentDets: (id: number) => void;
-  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
+  updateTalentList?: (
+    idTalento: number,
+    fields: Partial<Talent>,
+  ) => void;
 }
 
 export const ModalsForTalentsPage = ({
@@ -51,15 +54,16 @@ export const ModalsForTalentsPage = ({
   updateTalentList,
   cvLang,
 }: Props) => {
-  const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
+  const handleUpdate = (idTalento: number) =>
+    fetchTalentDets(idTalento);
   const { closeModal } = useModal();
 
- const { paramsByMaestro, fetchParams } = useFetchParams();
+  const { paramsByMaestro, fetchParams } = useFetchParams();
 
   useEffect(() => {
     fetchParams("12,13");
   }, [fetchParams]);
-  
+
   return (
     <>
       <ModalResume
@@ -97,8 +101,9 @@ export const ModalsForTalentsPage = ({
       <ModalUploadResume
         idTalento={talent?.idTalento}
         idArchivo={
-          talentDet?.files.find((file) => file.idTipoDocumento === DOCUMENTO_CV)
-            ?.idArchivo
+          talentDet?.files.find(
+            (file) => file.idTipoDocumento === DOCUMENTO_CV,
+          )?.idArchivo
         }
         onUpdate={handleUpdate}
       />
@@ -116,11 +121,20 @@ export const ModalsForTalentsPage = ({
         updateTalentList={updateTalentList}
       />
 
-      <ModalUploadCert idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalUploadCert
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
-      <ModalTechSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalTechSkills
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
-      <ModalSoftSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
+      <ModalSoftSkills
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
 
       <ModalSummary
         idTalento={talent?.idTalento}
@@ -159,13 +173,10 @@ export const ModalsForTalentsPage = ({
         updateTalentList={updateTalentList}
       />
 
-    <ModalEditPersonal
-      idTalento={talent?.idTalento}
-      paises={paramsByMaestro[12] || []}
-      ciudades={paramsByMaestro[13] || []}
-      onUpdate={handleUpdate} // ← CAMBIAR: pasar la función directamente
-      onClose={() => closeModal("modalEditPersonal")}
-    />
-  </>
+      <ModalEditPersonal
+        idTalento={talent?.idTalento}
+        onUpdate={handleUpdate}
+      />
+    </>
   );
 };
