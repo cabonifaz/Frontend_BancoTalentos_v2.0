@@ -5,7 +5,7 @@ on:
     branches:
       - staging-aws
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [synchronize]
     branches:
       - staging-aws
 
