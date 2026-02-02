@@ -119,7 +119,7 @@ export const AddTalent = () => {
   } = methods;
 
   // Auto-guardado del formulario
-  const { clearStorage } = useFormPersistence(watch, setValue, ['cv', 'foto']);
+  const { clearStorage, saveFiles, loadFiles } = useFormPersistence(watch, setValue, ['cv', 'foto']);
 
   const watchCountryPhone = watch("codigoPais");
   const watchCountry = watch("idPais");
@@ -128,6 +128,13 @@ export const AddTalent = () => {
   const ciudadesFiltradas = watchCountry
     ? ciudades.filter((ciudad:any) => ciudad.num2 === watchCountry)
     : [];
+
+  // Cargar archivos guardados al montar
+  useEffect(() => {
+    const { cv, foto } = loadFiles();
+    if (cv) setCvFile(cv);
+    if (foto) setFotoFile(foto);
+  }, []);
 
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
     setCvFileErrors("");
@@ -237,7 +244,7 @@ export const AddTalent = () => {
   };
 
   // file
-  const handleFileChange = (field: keyof AddTalentType, file: File | null) => {
+  const handleFileChange = async (field: keyof AddTalentType, file: File | null) => {
     if (field === "cv") {
       setCvFile(file);
       setCvFileErrors("");
@@ -245,7 +252,12 @@ export const AddTalent = () => {
       setFotoFile(file);
       setFotoFileErrors("");
     }
-  };
+    // Guardar archivos inmediatamente
+    await saveFiles(
+      field === "cv" ? file : cvFile,
+      field === "foto" ? file : fotoFile
+  );
+};
 
   const { isModalOpen, openModal, closeModal } = useModal();
 

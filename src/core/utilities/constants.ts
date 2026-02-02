@@ -60,3 +60,4 @@ export const GROUP_MODALIDAD_PLANILLA = 1;
 
 // Form persistence
 export const FORM_STORAGE_KEY = "addTalentFormDraft";
+export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";

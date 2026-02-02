@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { UseFormWatch, UseFormSetValue, FieldValues } from "react-hook-form";
-import { FORM_STORAGE_KEY } from "../utilities/constants";
+import { FORM_STORAGE_KEY, FORM_FILES_STORAGE_KEY } from "../utilities/constants";
 
 export const useFormPersistence = <T extends FieldValues>(
   watch: UseFormWatch<T>,
@@ -26,7 +26,7 @@ export const useFormPersistence = <T extends FieldValues>(
     }
   }, []);
 
-  // Guardar con debounce de 2 segundos
+  // Guardar con debounce de 1 segundo
   useEffect(() => {
     const subscription = watch((formData) => {
       if (timeoutRef.current) {
@@ -50,10 +50,71 @@ export const useFormPersistence = <T extends FieldValues>(
     };
   }, [watch, excludeFields]);
 
+  // Función para guardar archivos
+  const saveFiles = async (cvFile: File | null, fotoFile: File | null) => {
+    try {
+      const files: any = {};
+      
+      if (cvFile) {
+        const reader = new FileReader();
+        const cvBase64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(cvFile);
+        });
+        files.cv = { name: cvFile.name, data: cvBase64 };
+      }
+      
+      if (fotoFile) {
+        const reader = new FileReader();
+        const fotoBase64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(fotoFile);
+        });
+        files.foto = { name: fotoFile.name, data: fotoBase64 };
+      }
+      
+      if (Object.keys(files).length > 0) {
+        localStorage.setItem(FORM_FILES_STORAGE_KEY, JSON.stringify(files));
+      }
+    } catch (error) {
+      console.error("Error saving files:", error);
+    }
+  };
+
+  // Función para recuperar archivos
+  const loadFiles = (): { cv: File | null; foto: File | null } => {
+    const savedFiles = localStorage.getItem(FORM_FILES_STORAGE_KEY);
+    if (!savedFiles) return { cv: null, foto: null };
+
+    try {
+      const parsed = JSON.parse(savedFiles);
+      const cv = parsed.cv ? base64ToFile(parsed.cv.data, parsed.cv.name) : null;
+      const foto = parsed.foto ? base64ToFile(parsed.foto.data, parsed.foto.name) : null;
+      return { cv, foto };
+    } catch (error) {
+      console.error("Error loading files:", error);
+      return { cv: null, foto: null };
+    }
+  };
+
+  // Convertir base64 a File
+  const base64ToFile = (base64: string, filename: string): File => {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
   // Función para limpiar el storage
   const clearStorage = () => {
     localStorage.removeItem(FORM_STORAGE_KEY);
+    localStorage.removeItem(FORM_FILES_STORAGE_KEY);
   };
 
-  return { clearStorage };
+  return { clearStorage, saveFiles, loadFiles };
 };
