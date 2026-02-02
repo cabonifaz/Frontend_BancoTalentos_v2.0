@@ -3,15 +3,9 @@ import { Utils } from "../../core/utilities/utils";
 import { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { useNavigate } from "react-router-dom";
-import {
-  getTalent,
-  getTalents,
-} from "../../core/services/apiService";
+import { getTalent, getTalents } from "../../core/services/apiService";
 import { useSnackbar } from "notistack";
-import {
-  handleError,
-  handleResponse,
-} from "../../core/utilities/errorHandler";
+import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import { useApi } from "../../core/hooks/useApi";
 import {
   Education,
@@ -49,11 +43,8 @@ export const Talents = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [currentPage, setCurrentPage] = useState(1);
   const [talent, setTalent] = useState<Talent | null>(null);
-  const [isTalentPanelVisible, setTalentPanelVisible] =
-    useState(true);
-  const [openDropdown, setOpenDropdown] = useState<number | null>(
-    null
-  );
+  const [isTalentPanelVisible, setTalentPanelVisible] = useState(true);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const experienceRef = useRef<Experience | null>(null);
@@ -64,13 +55,17 @@ export const Talents = () => {
   const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<
     number | null
   >(null);
-  const [selectedFavourites, setSelectedFavourites] = useState<
-    number | null
-  >(null);
+  const [selectedFavourites, setSelectedFavourites] = useState<number | null>(
+    null,
+  );
 
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12,13,2,19,20,15,16,32"
+    "12,13,2,19,20,15,16,32",
   );
+
+  const skillOptions = paramsByMaestro[19] || [];
+  const englishLevels = paramsByMaestro[16] || [];
+
   const { favourites: favouritesData, fetchFavourites } =
     useFavouritesContext();
   const [cvLang, setCvLang] = useState<"ES" | "EN">("ES");
@@ -104,10 +99,8 @@ export const Talents = () => {
       }),
   });
 
-  const { isLoading, removeTechnicalSkill, removeSoftSkill } =
-    useRemoveSkill();
+  const { isLoading, removeTechnicalSkill, removeSoftSkill } = useRemoveSkill();
 
-  const goToAddTalent = () => navigate("/dashboard/nuevo-talento");
   const handlePaginate = (page: number) => setCurrentPage(page);
 
   const handleTalentSelection = (talent: Talent) => {
@@ -118,14 +111,12 @@ export const Talents = () => {
 
   const handleSearch = (
     englishLevel?: number | null,
-    favourites?: number | null
+    favourites?: number | null,
   ) => {
     const searchValue = searchInputRef.current?.value || "";
 
     const finalEnglishLevel =
-      englishLevel !== undefined
-        ? englishLevel
-        : selectedEnglishLevel;
+      englishLevel !== undefined ? englishLevel : selectedEnglishLevel;
     const finalFavourites =
       favourites !== undefined ? favourites : selectedFavourites;
 
@@ -141,15 +132,12 @@ export const Talents = () => {
   // update local data on success tanlent update
   // when data doesn't come in fetchTalent
   // updates in details and list
-  const handleTalentUpdate = (
-    id: number,
-    fields: Partial<Talent>
-  ) => {
+  const handleTalentUpdate = (id: number, fields: Partial<Talent>) => {
     if (!talentsData) return;
 
     // Talents list validated to avoid null errors
     const updatedTalents = talentsData?.talents?.map((talento) =>
-      talento.idTalento === id ? { ...talento, ...fields } : talento
+      talento.idTalento === id ? { ...talento, ...fields } : talento,
     );
 
     setTalentsData({
@@ -158,8 +146,7 @@ export const Talents = () => {
     });
 
     setTalent(
-      updatedTalents.find((talento) => talento.idTalento === id) ||
-        null
+      updatedTalents.find((talento) => talento.idTalento === id) || null,
     );
   };
 
@@ -193,31 +180,25 @@ export const Talents = () => {
     if (id) {
       fetchTalentDets(id);
     }
-  }, [fetchTalentDets, talent?.idTalento]);
+  }, [fetchTalentDets, talent]);
 
   const handleOpenModal = <T,>(
     modalId: string,
     ref: React.MutableRefObject<T | null>,
-    itemToEdit?: T
+    itemToEdit?: T,
   ) => {
     ref.current = itemToEdit || null;
     openModal(modalId);
   };
 
-  const handleEnglishLevelChangeFilter = (
-    selectedValues: string[]
-  ) => {
-    const newValue = selectedValues[0]
-      ? Number(selectedValues[0])
-      : null;
+  const handleEnglishLevelChangeFilter = (selectedValues: string[]) => {
+    const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
     setSelectedEnglishLevel(newValue);
     handleSearch(newValue, undefined);
   };
 
   const handleFavouritesChangeFilter = (selectedValues: string[]) => {
-    const newValue = selectedValues[0]
-      ? Number(selectedValues[0])
-      : null;
+    const newValue = selectedValues[0] ? Number(selectedValues[0]) : null;
     setSelectedFavourites(newValue);
     handleSearch(undefined, newValue);
   };
@@ -231,7 +212,7 @@ export const Talents = () => {
 
   const handleRemoveTechnicalSkill = async (
     technicalId: number,
-    talentId: number
+    talentId: number,
   ) => {
     const rs = await removeTechnicalSkill(technicalId);
 
@@ -251,10 +232,7 @@ export const Talents = () => {
     if (messageId == 2) fetchTalentDets(talentId);
   };
 
-  const handleRemoveSoftSkill = async (
-    targetId: number,
-    talentId: number
-  ) => {
+  const handleRemoveSoftSkill = async (targetId: number, talentId: number) => {
     const rs = await removeSoftSkill(targetId);
 
     if (!rs) {
@@ -301,7 +279,7 @@ export const Talents = () => {
             <div className="flex flex-col lg:flex-row lg:items-center gap-7 w-full sm:w-1/3">
               <button
                 type="button"
-                onClick={goToAddTalent}
+                onClick={() => navigate("/dashboard/nuevo-talento")}
                 className="w-full xl:w-fit flex items-center whitespace-nowrap gap-1 btn btn-outline-blue"
               >
                 <img src="/assets/ic_add.svg" alt="add talent icon" />
@@ -318,9 +296,9 @@ export const Talents = () => {
                   name="habilidades"
                   label="Habilidades"
                   options={
-                    paramsByMaestro[19]?.map((param) => ({
-                      label: param.string1,
-                      value: param.num1.toString(),
+                    skillOptions.map((skill) => ({
+                      label: skill.string1,
+                      value: skill.num1.toString(),
                     })) || []
                   }
                   optionsType="checkbox"
@@ -341,9 +319,9 @@ export const Talents = () => {
                   name="nivelIngles"
                   label="Nivel de inglés"
                   options={
-                    paramsByMaestro[16]?.map((param) => ({
-                      label: param.string1,
-                      value: param.num1.toString(),
+                    englishLevels.map((level) => ({
+                      label: level.string1,
+                      value: level.num1.toString(),
                     })) || []
                   }
                   optionsType="radio"
@@ -378,9 +356,7 @@ export const Talents = () => {
                     setOpenDropdown(openDropdown === 2 ? null : 2)
                   }
                   selectedValues={
-                    selectedFavourites
-                      ? [selectedFavourites.toString()]
-                      : []
+                    selectedFavourites ? [selectedFavourites.toString()] : []
                   }
                   onChange={handleFavouritesChangeFilter}
                 />
@@ -420,17 +396,13 @@ export const Talents = () => {
                   ? Array.from({ length: 5 }).map((_, index) => (
                       <SkeletonCard key={index} />
                     ))
-                  : (talentsData?.talents || []).map(
-                      (talent, index) => (
-                        <TalentCard
-                          key={index}
-                          talent={talent}
-                          selectTalent={() =>
-                            handleTalentSelection(talent)
-                          }
-                        />
-                      )
-                    )}
+                  : (talentsData?.talents || []).map((talent, index) => (
+                      <TalentCard
+                        key={index}
+                        talent={talent}
+                        selectTalent={() => handleTalentSelection(talent)}
+                      />
+                    ))}
               </div>
               {/* Pagination */}
               <div className="mt-2">
@@ -470,16 +442,23 @@ export const Talents = () => {
                       <div className="flex flex-col sm:flex-row items-center w-full justify-between">
                         <div className="flex gap-10 sm:h-28">
                           <div className="relative">
-                            <img
-                              src={Utils.getImageSrc(talent.imagen)}
-                              alt="Foto Perfil Talento"
-                              className="h-24 w-24 rounded-full border"
-                            />
+                            {talentDets?.photoUrl || talent.photoUrl ? (
+                              <img
+                                src={talentDets?.photoUrl || talent.photoUrl}
+                                alt={`Foto de ${talent.nombres}`}
+                                className="h-24 w-24 rounded-full border"
+                              />
+                            ) : (
+                              <img
+                                src="/assets/ic_no_image.svg"
+                                alt={`Foto de ${talent.nombres}`}
+                                className="h-24 w-24 rounded-full border"
+                              />
+                            )}
+
                             <button
                               type="button"
-                              onClick={() =>
-                                openModal("modalEditPhoto")
-                              }
+                              onClick={() => openModal("modalEditPhoto")}
                               className="absolute bottom-4 -right-2 h-9 w-9 bg-white shadow-lg rounded-full p-2 hover:bg-zinc-50"
                             >
                               <img
@@ -513,34 +492,24 @@ export const Talents = () => {
                               <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
                                 <p>
                                   {`RxH ${
-                                    Utils.formatCoinByNum1(
-                                      talent.idMonedaRxh
-                                    ).string3
+                                    Utils.formatCoinByNum1(talent.idMonedaRxh)
+                                      .string3
                                   } `}
-                                  {talent.montoInicialRxH.toFixed(2)}{" "}
-                                  -{" "}
+                                  {talent.montoInicialRxH.toFixed(2)} -{" "}
                                   {talent.montoInicialRxH.toFixed(2)}
                                 </p>
                                 <p>
                                   {`Planilla ${
-                                    Utils.formatCoinByNum1(
-                                      talent.idMonedaPlan
-                                    ).string3
+                                    Utils.formatCoinByNum1(talent.idMonedaPlan)
+                                      .string3
                                   } `}
-                                  {talent.montoInicialPlanilla.toFixed(
-                                    2
-                                  )}{" "}
-                                  -{" "}
-                                  {talent.montoFinalPlanilla.toFixed(
-                                    2
-                                  )}
+                                  {talent.montoInicialPlanilla.toFixed(2)} -{" "}
+                                  {talent.montoFinalPlanilla.toFixed(2)}
                                 </p>
                               </div>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  openModal("modalSalary")
-                                }
+                                onClick={() => openModal("modalSalary")}
                                 className="hover:rounded-full hover:shadow-inner px-2 flex-shrink-0"
                               >
                                 <img
@@ -566,11 +535,7 @@ export const Talents = () => {
                         <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end sm:h-28 my-4 sm:my-0">
                           {/* CV */}
                           <OptionsButton
-                            options={[
-                              "CV",
-                              "CV Fractal ESP",
-                              "CV Fractal ENG",
-                            ]}
+                            options={["CV", "CV Fractal ESP", "CV Fractal ENG"]}
                             onSelect={(value) => {
                               if (value === "CV") {
                                 openModal("modalCv");
@@ -588,9 +553,7 @@ export const Talents = () => {
                           <div className="flex flex-col gap-4">
                             <button
                               type="button"
-                              onClick={() =>
-                                openModal("modalContact")
-                              }
+                              onClick={() => openModal("modalContact")}
                               className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
                             >
                               <img
@@ -610,15 +573,12 @@ export const Talents = () => {
                               >
                                 <a
                                   href={
-                                    formatUrl(
-                                      talentDets?.github || ""
-                                    ) || "#"
+                                    formatUrl(talentDets?.github || "") || "#"
                                   }
                                   target="_blank"
                                   rel="noreferrer"
                                   onClick={(e) =>
-                                    !talentDets?.github &&
-                                    e.preventDefault()
+                                    !talentDets?.github && e.preventDefault()
                                   }
                                 >
                                   <img
@@ -638,15 +598,12 @@ export const Talents = () => {
                               >
                                 <a
                                   href={
-                                    formatUrl(
-                                      talentDets?.linkedin || ""
-                                    ) || "#"
+                                    formatUrl(talentDets?.linkedin || "") || "#"
                                   }
                                   target="_blank"
                                   rel="noreferrer"
                                   onClick={(e) =>
-                                    !talentDets?.linkedin &&
-                                    e.preventDefault()
+                                    !talentDets?.linkedin && e.preventDefault()
                                   }
                                 >
                                   <img
@@ -658,9 +615,7 @@ export const Talents = () => {
                               </div>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  openModal("modalSocialMedia")
-                                }
+                                onClick={() => openModal("modalSocialMedia")}
                               >
                                 <img
                                   src="/assets/ic_edit.svg"
@@ -672,11 +627,19 @@ export const Talents = () => {
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <button
+                          className="text-[var(--color-blue)]"
+                          onClick={() => openModal("modalEditPersonal")}
+                        >
+                          Editar perfil
+                        </button>
+                      </div>
                       {/* File upload */}
                       <div className="flex flex-col md:flex-row items-center w-full justify-between gap-4 my-8">
                         <p className="text-[var(--color-blue)] text-justify flex-grow">
-                          Sube tu certificado o diploma que respalde
-                          tus aptitudes.
+                          Sube tu certificado o diploma que respalde tus
+                          aptitudes.
                         </p>
                         <button
                           type="button"
@@ -705,9 +668,7 @@ export const Talents = () => {
                             </p>
                             <button
                               type="button"
-                              onClick={() =>
-                                openModal("modalTechSkills")
-                              }
+                              onClick={() => openModal("modalTechSkills")}
                               className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                             >
                               <img
@@ -718,38 +679,38 @@ export const Talents = () => {
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {(
-                              talentDets?.habilidadesTecnicas || []
-                            ).map((item, index) => (
-                              <>
-                                <p
-                                  key={item.idHabTec}
-                                  className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
-                                >
-                                  {`${item.nombreHabilidad} ${
-                                    item?.aniosExperiencia
-                                      ? ` - (${item.aniosExperiencia})`
-                                      : ""
-                                  }`}
-                                </p>
-                                <button
-                                  type="button"
-                                  title="Remover habilidad"
-                                >
-                                  <img
-                                    className="w-5 h-5"
-                                    src="assets/ic_remove.png"
-                                    alt="Remove icon"
-                                    onClick={() =>
-                                      handleRemoveTechnicalSkill(
-                                        item.idHabTec,
-                                        talent.idTalento
-                                      )
-                                    }
-                                  />
-                                </button>
-                              </>
-                            ))}
+                            {(talentDets?.habilidadesTecnicas || []).map(
+                              (item, index) => (
+                                <>
+                                  <p
+                                    key={item.idHabTec}
+                                    className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
+                                  >
+                                    {`${item.nombreHabilidad} ${
+                                      item?.aniosExperiencia
+                                        ? ` - (${item.aniosExperiencia})`
+                                        : ""
+                                    }`}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    title="Remover habilidad"
+                                  >
+                                    <img
+                                      className="w-5 h-5"
+                                      src="assets/ic_remove.png"
+                                      alt="Remove icon"
+                                      onClick={() =>
+                                        handleRemoveTechnicalSkill(
+                                          item.idHabTec,
+                                          talent.idTalento,
+                                        )
+                                      }
+                                    />
+                                  </button>
+                                </>
+                              ),
+                            )}
                           </div>
                         </div>
                         {/* Soft */}
@@ -760,9 +721,7 @@ export const Talents = () => {
                             </p>
                             <button
                               type="button"
-                              onClick={() =>
-                                openModal("modalSoftSkills")
-                              }
+                              onClick={() => openModal("modalSoftSkills")}
                               className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                             >
                               <img
@@ -773,34 +732,34 @@ export const Talents = () => {
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {(
-                              talentDets?.habilidadesBlandas || []
-                            ).map((item, index) => (
-                              <>
-                                <p
-                                  key={item.id}
-                                  className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
-                                >
-                                  {item.nombreHabilidad}
-                                </p>
-                                <button
-                                  type="button"
-                                  title="Remover habilidad"
-                                >
-                                  <img
-                                    className="w-5 h-5"
-                                    src="assets/ic_remove.png"
-                                    alt="Remove icon"
-                                    onClick={() =>
-                                      handleRemoveSoftSkill(
-                                        item.id,
-                                        talent.idTalento
-                                      )
-                                    }
-                                  />
-                                </button>
-                              </>
-                            ))}
+                            {(talentDets?.habilidadesBlandas || []).map(
+                              (item, index) => (
+                                <>
+                                  <p
+                                    key={item.id}
+                                    className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
+                                  >
+                                    {item.nombreHabilidad}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    title="Remover habilidad"
+                                  >
+                                    <img
+                                      className="w-5 h-5"
+                                      src="assets/ic_remove.png"
+                                      alt="Remove icon"
+                                      onClick={() =>
+                                        handleRemoveSoftSkill(
+                                          item.id,
+                                          talent.idTalento,
+                                        )
+                                      }
+                                    />
+                                  </button>
+                                </>
+                              ),
+                            )}
                           </div>
                         </div>
                       </div>
@@ -833,13 +792,11 @@ export const Talents = () => {
                         </h2>
                         <p className="text-[#71717A] text-sm flex gap-2 items-center">
                           {Utils.formatDisponibilidad(
-                            talentDets?.disponibilidad
+                            talentDets?.disponibilidad,
                           )}
                           <button
                             type="button"
-                            onClick={() =>
-                              openModal("modalAvailability")
-                            }
+                            onClick={() => openModal("modalAvailability")}
                             className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5"
                           >
                             <img
@@ -857,10 +814,7 @@ export const Talents = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              handleOpenModal(
-                                "modalExperience",
-                                experienceRef
-                              )
+                              handleOpenModal("modalExperience", experienceRef)
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
@@ -881,11 +835,11 @@ export const Talents = () => {
                                   handleOpenModal(
                                     "modalExperience",
                                     experienceRef,
-                                    item
+                                    item,
                                   )
                                 }
                               />
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -896,10 +850,7 @@ export const Talents = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              handleOpenModal(
-                                "modalEducation",
-                                educationRef
-                              )
+                              handleOpenModal("modalEducation", educationRef)
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
@@ -920,11 +871,11 @@ export const Talents = () => {
                                   handleOpenModal(
                                     "modalEducation",
                                     educationRef,
-                                    item
+                                    item,
                                   )
                                 }
                               />
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -935,10 +886,7 @@ export const Talents = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              handleOpenModal(
-                                "modalLanguage",
-                                languageRef
-                              )
+                              handleOpenModal("modalLanguage", languageRef)
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
@@ -950,21 +898,19 @@ export const Talents = () => {
                           </button>
                         </h2>
                         <div className="flex flex-col">
-                          {(talentDets?.idiomas || []).map(
-                            (item, index) => (
-                              <LanguageCard
-                                key={index}
-                                data={item}
-                                onEdit={() =>
-                                  handleOpenModal(
-                                    "modalLanguage",
-                                    languageRef,
-                                    item
-                                  )
-                                }
-                              />
-                            )
-                          )}
+                          {(talentDets?.idiomas || []).map((item, index) => (
+                            <LanguageCard
+                              key={index}
+                              data={item}
+                              onEdit={() =>
+                                handleOpenModal(
+                                  "modalLanguage",
+                                  languageRef,
+                                  item,
+                                )
+                              }
+                            />
+                          ))}
                         </div>
                       </div>
                       {/* Feedback */}
@@ -973,29 +919,24 @@ export const Talents = () => {
                           Feedback
                         </h2>
                         <div className="flex flex-col">
-                          {(talentDets?.feedback || []).map(
-                            (item, index) => (
-                              <FeedbackCard
-                                key={index}
-                                data={item}
-                                onEdit={() =>
-                                  handleOpenModal(
-                                    "modalFeedback",
-                                    feedbackRef,
-                                    item
-                                  )
-                                }
-                              />
-                            )
-                          )}
+                          {(talentDets?.feedback || []).map((item, index) => (
+                            <FeedbackCard
+                              key={index}
+                              data={item}
+                              onEdit={() =>
+                                handleOpenModal(
+                                  "modalFeedback",
+                                  feedbackRef,
+                                  item,
+                                )
+                              }
+                            />
+                          ))}
                         </div>
                         <button
                           type="button"
                           onClick={() =>
-                            handleOpenModal(
-                              "modalFeedback",
-                              feedbackRef
-                            )
+                            handleOpenModal("modalFeedback", feedbackRef)
                           }
                           className="text-[#52525B] text-sm rounded-lg my-2 p-2 hover:text-[#27272A] hover:shadow-[0px_0px_4px_4px_rgba(0,0,0,0.05)] flex items-center gap-2 w-fit"
                         >
