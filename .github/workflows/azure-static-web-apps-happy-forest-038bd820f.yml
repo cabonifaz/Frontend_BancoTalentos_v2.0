@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - staging-aws
-  pull_request:
-    types: [synchronize]
-    branches:
-      - staging-aws
 
 jobs:
   build_and_deploy_job:
