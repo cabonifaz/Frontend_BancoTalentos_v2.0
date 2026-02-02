@@ -4,6 +4,9 @@ import { useApi } from "../../hooks/useApi";
 import { getTalent, updatePersonalDetails } from "../../services/apiService";
 import { useFetchParams } from "../../hooks/useFetchParams";
 import { useModal } from "../../context/ModalContext";
+import { Param } from "../../models/interfaces/Param";
+import { handleError, handleResponse } from "../../utilities/errorHandler";
+import { useSnackbar } from "notistack";
 import {
   EditTalentPersonalSchema,
   EditTalentPersonalSchemaType,
@@ -16,17 +19,28 @@ import { DropdownForm } from "../forms";
 
 interface Props {
   idTalento?: number;
-  onUpdate: () => void;
+  paises: Param[];
+  ciudades: Param[];
+  onUpdate: (idTalento: number) => void; 
   onClose: () => void;
 }
 
-
-
-export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
+export const ModalEditPersonal = ({ idTalento, paises, ciudades,  onClose, onUpdate }: Props) => {
     const { fetch: fetchTalent } = useApi(getTalent);
-    const { fetch: executeUpdate, loading: isUpdating } = useApi(updatePersonalDetails);
     const { paramsByMaestro, fetchParams } = useFetchParams();
     const { closeModal } = useModal();
+    const { enqueueSnackbar } = useSnackbar();
+    const { fetch: executeUpdate, loading: isUpdating } = useApi(updatePersonalDetails, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+        handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+        });
+    },
+    });
+
 
     const {
         register,
@@ -50,10 +64,20 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
     useEffect(() => {
 
         if (!idTalento) return;
+        if (paises.length === 0 || ciudades.length === 0) return;
 
         fetchTalent(idTalento).then((response) => {
             if (response?.data) {
                 const data = response.data as unknown as AddTalentParams;
+                 // Validar que el idPais existe en las opciones
+                const paisValido = paises.find((p) => p.num1 === data.idPais);
+                const paisId = paisValido ? data.idPais : 0;
+                
+                // Filtrar ciudades del país válido
+                const ciudadesDelPais = ciudades.filter((c) => Number(c.num2) === paisId);
+                const ciudadValida = ciudadesDelPais.find((c) => c.num1 === data.idCiudad);
+                const ciudadId = ciudadValida ? data.idCiudad : 0;
+                
                 reset({
                     nombres: data.nombres || "",
                     apellidoPaterno: (data as any).apellidos?.split(' ')[0] || "",
@@ -64,7 +88,7 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
                 });
             }
         });
-    }, [idTalento, fetchTalent, reset]);
+    }, [idTalento, fetchTalent, reset, paises.length, ciudades.length]);
 
     // Carga parámetros (País=12, Ciudad=13)
 
@@ -75,8 +99,8 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
     //Lógica de filtrado
 
     const watchCountry = watch("idPais");
-    const paises = paramsByMaestro[12] || [];
-    const ciudades = paramsByMaestro[13] || [];
+    //const paises = paramsByMaestro[12] || [];
+    //const ciudades = paramsByMaestro[13] || [];
     const ciudadesFiltradas = ciudades.filter(
     (c) => Number(c.num2) === Number(watchCountry)
     );
@@ -96,9 +120,9 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
         const response = await executeUpdate(updateRequest);
         if (response.data.idMensaje === 2) {
             if (onUpdate && idTalento) {
-                onUpdate(); 
+                 closeModal("modalEditPersonal");
+                onUpdate(idTalento); 
             }
-            closeModal("modalEditPersonal");
         }
     } catch (error) {
         console.error("Error al actualizar:", error);
@@ -110,61 +134,41 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
   return (
 
     <Modal
-        key={idTalento}
         id="modalEditPersonal"
         title="Editar perfil"
         confirmationLabel={isUpdating ? "Guardando..." : "Guardar"} 
         onConfirm={handleSubmit(onSubmit)}
     >
-    {/* Contenedor con scroll vertical */}
-    <div className="flex flex-col gap-4 pt-2 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
         {/* Doc. Identidad */}
 
         <div className="flex flex-col gap-1">
-
-        <label className="text-[11px] font-medium text-gray-500">Doc. Identidad</label>
-
-        <input {...register("dni")} type="text" className={inputStyle} placeholder="Doc. Identidad" />
-
+            <label className="text-[11px] font-medium text-gray-500">Doc. Identidad</label>
+            <input {...register("dni")} type="text" className={inputStyle} placeholder="Doc. Identidad" />
         </div>
 
         {/* Nombres */}
 
         <div className="flex flex-col gap-1">
-
-        <label className="text-[11px] font-medium text-gray-500">Nombres</label>
-
-        <input {...register("nombres")} type="text" className={inputStyle} />
-
+            <label className="text-[11px] font-medium text-gray-500">Nombres</label>
+            <input {...register("nombres")} type="text" className={inputStyle} />
         </div>
-
-
 
         {/* Apellido Paterno */}
 
         <div className="flex flex-col gap-1">
-
-        <label className="text-[11px] font-medium text-gray-500">Apellido paterno</label>
-
-        <input {...register("apellidoPaterno")} type="text" className={inputStyle} />
-
+            <label className="text-[11px] font-medium text-gray-500">Apellido paterno</label>
+            <input {...register("apellidoPaterno")} type="text" className={inputStyle} />
         </div>
-
-
 
         {/* Apellido Materno */}
 
         <div className="flex flex-col gap-1">
-
-        <label className="text-[11px] font-medium text-gray-500">Apellido materno</label>
-
-        <input {...register("apellidoMaterno")} type="text" className={inputStyle} />
-
+            <label className="text-[11px] font-medium text-gray-500">Apellido materno</label>
+            <input {...register("apellidoMaterno")} type="text" className={inputStyle} />
         </div>
 
-
-
        {/* PAÍS */}
+
         <div className="flex flex-col gap-1">
         <label className="text-[11px] font-medium text-gray-500">País</label>
         <Controller
@@ -173,7 +177,7 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
             render={({ field }) => (
             <select
                 {...field}
-                key={`pais-${field.value}`}  // ← AGREGAR
+                key={`pais-${field.value}`}  
                 value={field.value ?? 0}
                 onChange={(e) => field.onChange(Number(e.target.value))}
                 className={inputStyle}
@@ -191,6 +195,7 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
         </div>
 
         {/* CIUDAD */}
+
         <div className="flex flex-col gap-1">
         <label className="text-[11px] font-medium text-gray-500">Ciudad</label>
         <Controller
@@ -199,7 +204,7 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
             render={({ field }) => (
             <select
                 {...field}
-                key={`ciudad-${field.value}`}  // ← AGREGAR
+                key={`ciudad-${field.value}`} 
                 value={field.value ?? 0}
                 onChange={(e) => field.onChange(Number(e.target.value))}
                 className={inputStyle}
@@ -219,9 +224,8 @@ export const ModalEditPersonal = ({ idTalento, onClose, onUpdate }: Props) => {
                 {String(errors.idCiudad.message)}
             </p>
             )}
+
         </div>
-    
-    </div> 
 
     </Modal>
 

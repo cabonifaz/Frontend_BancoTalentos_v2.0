@@ -25,6 +25,8 @@ import { ModalUploadCert } from "./ModalUploadCert";
 import { ModalUploadResume } from "./ModalUploadResume";
 import { ModalEditPersonal } from "./ModalEditPersonal";
 import { useModal } from "../../context/ModalContext";
+import { useEffect } from "react";
+import { useFetchParams } from "../../hooks/useFetchParams";
 
 interface Props {
   talent?: Talent;
@@ -52,6 +54,12 @@ export const ModalsForTalentsPage = ({
   const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
   const { closeModal } = useModal();
 
+ const { paramsByMaestro, fetchParams } = useFetchParams();
+
+  useEffect(() => {
+    fetchParams("12,13");
+  }, [fetchParams]);
+  
   return (
     <>
       <ModalResume
@@ -153,7 +161,9 @@ export const ModalsForTalentsPage = ({
 
     <ModalEditPersonal
       idTalento={talent?.idTalento}
-      onUpdate={() => talent?.idTalento && handleUpdate(talent.idTalento)} 
+      paises={paramsByMaestro[12] || []}
+      ciudades={paramsByMaestro[13] || []}
+      onUpdate={handleUpdate} // ← CAMBIAR: pasar la función directamente
       onClose={() => closeModal("modalEditPersonal")}
     />
   </>
