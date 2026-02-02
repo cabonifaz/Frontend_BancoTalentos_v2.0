@@ -293,3 +293,22 @@ export const addPostulanteService = (
     }
   );
 };
+
+export const updatePersonalDetails = (
+  data: Partial<models.AddTalentParams>
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+    const token = 
+        localStorage.getItem("token") || 
+        localStorage.getItem("authToken") || 
+        "";
+
+    return axiosInstanceNoToken.post(
+        "/bdt/talent/addOrUpdateTalent",
+        data,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+};
