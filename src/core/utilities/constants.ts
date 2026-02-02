@@ -58,6 +58,6 @@ export const TIPO_ARCHIVO = "17";
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
 export const GROUP_MODALIDAD_PLANILLA = 1;
 
-// Form persistence
+// PERSISTENCIA EN EL FORM NUEVO TALENTO, CAMPOS Y ARCHIVOS
 export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
