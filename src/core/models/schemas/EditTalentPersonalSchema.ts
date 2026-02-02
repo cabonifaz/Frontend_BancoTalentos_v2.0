@@ -1,11 +1,20 @@
 import { z } from "zod";
 
 export const EditTalentPersonalSchema = z.object({
-  nombres: z.string().min(1, "El nombre es obligatorio"),
-  apellidoPaterno: z.string().min(1, "El apellido paterno es obligatorio"),
+  dni: z.string().min(1, "El DNI es requerido"),
+  nombres: z.string().min(1, "El nombre es requerido"),
+  apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
   apellidoMaterno: z.string().optional(),
-  pais: z.string().min(1, "El país es obligatorio"),
-  dni: z.string().min(8, "DNI debe tener al menos 8 caracteres"), // Agregado por tu pedido
+  idPais: z.coerce.number().optional(),
+  idCiudad: z.coerce.number().optional(),
+}).refine((data) => {
+  if (data.idPais && data.idPais > 0) {
+    return !!data.idCiudad && data.idCiudad > 0;
+  }
+  return true;
+}, {
+  message: "Seleccione una ciudad", 
+  path: ["idCiudad"],              
 });
 
 export type EditTalentPersonalSchemaType = z.infer<typeof EditTalentPersonalSchema>;

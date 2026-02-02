@@ -24,6 +24,7 @@ import { ModalTechSkills } from "./ModalTechSkills";
 import { ModalUploadCert } from "./ModalUploadCert";
 import { ModalUploadResume } from "./ModalUploadResume";
 import { ModalEditPersonal } from "./ModalEditPersonal";
+import { useModal } from "../../context/ModalContext";
 
 interface Props {
   talent?: Talent;
@@ -49,6 +50,7 @@ export const ModalsForTalentsPage = ({
   cvLang,
 }: Props) => {
   const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
+  const { closeModal } = useModal();
 
   return (
     <>
@@ -149,11 +151,11 @@ export const ModalsForTalentsPage = ({
         updateTalentList={updateTalentList}
       />
 
-      <ModalEditPersonal
-        talent={talent}
-        onUpdated={() => {}}
-        onClose={() => {}}
-      />
-    </>
+    <ModalEditPersonal
+      idTalento={talent?.idTalento}
+      onUpdate={() => talent?.idTalento && handleUpdate(talent.idTalento)} 
+      onClose={() => closeModal("modalEditPersonal")}
+    />
+  </>
   );
 };
