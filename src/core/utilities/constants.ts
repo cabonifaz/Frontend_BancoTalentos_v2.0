@@ -57,3 +57,6 @@ export const TIPO_ARCHIVO = "17";
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
 export const GROUP_MODALIDAD_PLANILLA = 1;
+
+// Form persistence
+export const FORM_STORAGE_KEY = "addTalentFormDraft";

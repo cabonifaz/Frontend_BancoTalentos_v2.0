@@ -48,6 +48,7 @@ import { useModal } from "../../core/context/ModalContext";
 import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 import { processText } from "../../core/utilities/textUtils";
+import { useFormPersistence } from "../../core/hooks/useFormPersistence";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -90,6 +91,9 @@ export const AddTalent = () => {
         setCvFile(null);
         setFotoFile(null);
 
+        //para limpiar el storage
+         clearStorage(); 
+
         // refrescar parametros para futuros registros
         refetchParams("12,13,2,19,20,15,16,32");
       }
@@ -113,6 +117,9 @@ export const AddTalent = () => {
     reset,
     setValue,
   } = methods;
+
+  // Auto-guardado del formulario
+  const { clearStorage } = useFormPersistence(watch, setValue, ['cv', 'foto']);
 
   const watchCountryPhone = watch("codigoPais");
   const watchCountry = watch("idPais");
@@ -323,6 +330,7 @@ export const AddTalent = () => {
                       setCvFileErrors("");
                       setFotoFile(null);
                       setFotoFileErrors("");
+                      clearStorage();
                     }}
                     className="rounded-lg text-white text-base bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                   >
