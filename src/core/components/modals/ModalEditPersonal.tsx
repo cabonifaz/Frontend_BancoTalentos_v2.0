@@ -1,17 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useApi } from "../../hooks/useApi";
-import {
-  getTalent,
-  updatePersonalDetails,
-} from "../../services/apiService";
+import { getTalent, updatePersonalDetails } from "../../services/apiService";
 import { useFetchParams } from "../../hooks/useFetchParams";
 import { useModal } from "../../context/ModalContext";
 import { Param } from "../../models/interfaces/Param";
-import {
-  handleError,
-  handleResponse,
-} from "../../utilities/errorHandler";
+import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { useSnackbar } from "notistack";
 import {
   EditTalentPersonalSchema,
@@ -26,9 +20,14 @@ import { Loading } from "../ui/Loading";
 interface Props {
   idTalento?: number;
   onUpdate: (idTalento: number) => void;
+  updateTalentList?: (idTalento: number, fields: any) => void;
 }
 
-export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
+export const ModalEditPersonal = ({
+  idTalento,
+  onUpdate,
+  updateTalentList,
+}: Props) => {
   const { fetch: fetchTalent } = useApi(getTalent);
   const {
     paramsByMaestro,
@@ -89,16 +88,11 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
         const ciudadesDelPais = ciudades.filter(
           (c) => Number(c.num2) === paisId,
         );
-        const ciudadValida = ciudadesDelPais.find(
-          (c) => c.num1 === data.idCiudad,
-        );
 
         reset({
           nombres: data.nombres || "",
-          apellidoPaterno:
-            (data as any).apellidos?.split(" ")[0] || "",
-          apellidoMaterno:
-            (data as any).apellidos?.split(" ")[1] || "",
+          apellidoPaterno: (data as any).apellidos?.split(" ")[0] || "",
+          apellidoMaterno: (data as any).apellidos?.split(" ")[1] || "",
           dni: data.dni || "",
           idPais: data.idPais || 0,
           idCiudad: data.idCiudad || 0,
@@ -140,8 +134,22 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
       if (response.data.idMensaje === 2) {
         if (onUpdate && idTalento) {
           closeModal("modalEditPersonal");
-          console.log("Llamando onUpdate con idTalento:", idTalento);
           onUpdate(idTalento);
+
+          if (updateTalentList) {
+            const paisNombre =
+              paises.find((p) => p.num1 === Number(data.idPais))?.string1 || "";
+            const ciudadNombre =
+              ciudades.find((c) => c.num1 === Number(data.idCiudad))?.string1 ||
+              "";
+            updateTalentList(idTalento, {
+              nombres: data.nombres,
+              apellidoPaterno: data.apellidoPaterno,
+              apellidoMaterno: data.apellidoMaterno,
+              pais: paisNombre,
+              ciudad: ciudadNombre,
+            });
+          }
         }
       }
     } catch (error) {
@@ -154,8 +162,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
 
   return (
     <>
-      {isParamsLoading ||
-        (isUpdating && <Loading opacity="opacity-70" />)}
+      {isParamsLoading || (isUpdating && <Loading opacity="opacity-70" />)}
       <Modal
         id="modalEditPersonal"
         title="Editar perfil"
@@ -182,11 +189,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
           <label className="text-[11px] font-medium text-gray-500">
             Nombres
           </label>
-          <input
-            {...register("nombres")}
-            type="text"
-            className={inputStyle}
-          />
+          <input {...register("nombres")} type="text" className={inputStyle} />
         </div>
 
         {/* Apellido Paterno */}
@@ -218,9 +221,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
         {/* PAÍS */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500">
-            País
-          </label>
+          <label className="text-[11px] font-medium text-gray-500">País</label>
           <Controller
             name="idPais"
             control={control}
@@ -229,9 +230,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
                 {...field}
                 key={`pais-${field.value}`}
                 value={field.value ?? 0}
-                onChange={(e) =>
-                  field.onChange(Number(e.target.value))
-                }
+                onChange={(e) => field.onChange(Number(e.target.value))}
                 className={inputStyle}
               >
                 <option value={0}>Seleccione un país</option>
@@ -244,9 +243,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
             )}
           />
           {errors.idPais && (
-            <p className="text-red-500 text-sm">
-              {errors.idPais.message}
-            </p>
+            <p className="text-red-500 text-sm">{errors.idPais.message}</p>
           )}
         </div>
 
@@ -264,9 +261,7 @@ export const ModalEditPersonal = ({ idTalento, onUpdate }: Props) => {
                 {...field}
                 key={`ciudad-${field.value}`}
                 value={field.value ?? 0}
-                onChange={(e) =>
-                  field.onChange(Number(e.target.value))
-                }
+                onChange={(e) => field.onChange(Number(e.target.value))}
                 className={inputStyle}
                 disabled={ciudadesFiltradas.length === 0}
               >

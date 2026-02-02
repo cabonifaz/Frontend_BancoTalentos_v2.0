@@ -24,9 +24,6 @@ import { ModalTechSkills } from "./ModalTechSkills";
 import { ModalUploadCert } from "./ModalUploadCert";
 import { ModalUploadResume } from "./ModalUploadResume";
 import { ModalEditPersonal } from "./ModalEditPersonal";
-import { useModal } from "../../context/ModalContext";
-import { useEffect } from "react";
-import { useFetchParams } from "../../hooks/useFetchParams";
 
 interface Props {
   talent?: Talent;
@@ -37,10 +34,7 @@ interface Props {
   feedbackRef: React.MutableRefObject<Feedback | null>;
   cvLang?: "ES" | "EN";
   fetchTalentDets: (id: number) => void;
-  updateTalentList?: (
-    idTalento: number,
-    fields: Partial<Talent>,
-  ) => void;
+  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
 export const ModalsForTalentsPage = ({
@@ -54,15 +48,7 @@ export const ModalsForTalentsPage = ({
   updateTalentList,
   cvLang,
 }: Props) => {
-  const handleUpdate = (idTalento: number) =>
-    fetchTalentDets(idTalento);
-  const { closeModal } = useModal();
-
-  const { paramsByMaestro, fetchParams } = useFetchParams();
-
-  useEffect(() => {
-    fetchParams("12,13");
-  }, [fetchParams]);
+  const handleUpdate = (idTalento: number) => fetchTalentDets(idTalento);
 
   return (
     <>
@@ -101,19 +87,16 @@ export const ModalsForTalentsPage = ({
       <ModalUploadResume
         idTalento={talent?.idTalento}
         idArchivo={
-          talentDet?.files.find(
-            (file) => file.idTipoDocumento === DOCUMENTO_CV,
-          )?.idArchivo
+          talentDet?.files.find((file) => file.idTipoDocumento === DOCUMENTO_CV)
+            ?.idArchivo
         }
         onUpdate={handleUpdate}
       />
 
       <ModalSalary
         idTalento={talent?.idTalento}
-        // idMoneda={talentDet?.idMoneda}
         idMonedaPlan={talent?.idMonedaPlan}
         idMonedaRxh={talent?.idMonedaRxh}
-        // idModalidadFacturacion={talent?.idModalidadFacturacion}
         initPlan={talent?.montoInicialPlanilla}
         endPlan={talent?.montoFinalPlanilla}
         initRxH={talent?.montoInicialRxH}
@@ -121,20 +104,11 @@ export const ModalsForTalentsPage = ({
         updateTalentList={updateTalentList}
       />
 
-      <ModalUploadCert
-        idTalento={talent?.idTalento}
-        onUpdate={handleUpdate}
-      />
+      <ModalUploadCert idTalento={talent?.idTalento} onUpdate={handleUpdate} />
 
-      <ModalTechSkills
-        idTalento={talent?.idTalento}
-        onUpdate={handleUpdate}
-      />
+      <ModalTechSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
 
-      <ModalSoftSkills
-        idTalento={talent?.idTalento}
-        onUpdate={handleUpdate}
-      />
+      <ModalSoftSkills idTalento={talent?.idTalento} onUpdate={handleUpdate} />
 
       <ModalSummary
         idTalento={talent?.idTalento}
@@ -176,6 +150,7 @@ export const ModalsForTalentsPage = ({
       <ModalEditPersonal
         idTalento={talent?.idTalento}
         onUpdate={handleUpdate}
+        updateTalentList={updateTalentList}
       />
     </>
   );
