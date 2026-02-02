@@ -49,6 +49,7 @@ import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 import { processText } from "../../core/utilities/textUtils";
 import { useFormPersistence } from "../../core/hooks/useFormPersistence";
+import { FORM_STORAGE_KEY } from "../../core/utilities/constants";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -296,8 +297,12 @@ export const AddTalent = () => {
 
       // Autocomplete form
       completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
-      setCanCloseMessage(
-        "Formulario completado, revise los campos antes de enviar"
+       setTimeout(() => {
+      const formData = watch();
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+      }, 2000);
+        setCanCloseMessage(
+          "Formulario completado, revise los campos antes de enviar"
       );
     } catch (error: any) {
       setCanCloseMessage(error?.message || "Error al analizar el CV");
