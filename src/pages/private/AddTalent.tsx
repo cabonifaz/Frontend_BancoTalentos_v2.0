@@ -132,9 +132,20 @@ export const AddTalent = () => {
 
   // Cargar archivos guardados al montar
   useEffect(() => {
-    const { cv, foto } = loadFiles();
-    if (cv) setCvFile(cv);
-    if (foto) setFotoFile(foto);
+      const { cv, foto } = loadFiles();
+      if (cv) {
+      setCvFile(cv);
+      // Crear FileList para react-hook-form
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(cv);
+      setValue('cv', dataTransfer.files as any);
+    }
+    if (foto) {
+      setFotoFile(foto);
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(foto);
+      setValue('foto', dataTransfer.files as any);
+    }
   }, []);
 
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
