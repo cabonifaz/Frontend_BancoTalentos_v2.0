@@ -48,6 +48,8 @@ import { useModal } from "../../core/context/ModalContext";
 import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
 import { processText } from "../../core/utilities/textUtils";
+import { useFormPersistence } from "../../core/hooks/useFormPersistence";
+import { FORM_STORAGE_KEY } from "../../core/utilities/constants";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -90,6 +92,9 @@ export const AddTalent = () => {
         setCvFile(null);
         setFotoFile(null);
 
+        //para limpiar el storage
+         clearStorage(); 
+
         // refrescar parametros para futuros registros
         refetchParams("12,13,2,19,20,15,16,32");
       }
@@ -114,6 +119,9 @@ export const AddTalent = () => {
     setValue,
   } = methods;
 
+  // Auto-guardado del formulario
+  const { clearStorage, saveFiles, loadFiles } = useFormPersistence(watch, setValue, ['cv', 'foto']);
+
   const watchCountryPhone = watch("codigoPais");
   const watchCountry = watch("idPais");
   // const watchCity = watch("idCiudad");
@@ -121,6 +129,24 @@ export const AddTalent = () => {
   const ciudadesFiltradas = watchCountry
     ? ciudades.filter((ciudad:any) => ciudad.num2 === watchCountry)
     : [];
+
+  // Cargar archivos guardados al montar
+  useEffect(() => {
+      const { cv, foto } = loadFiles();
+      if (cv) {
+      setCvFile(cv);
+      // Crear FileList para react-hook-form
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(cv);
+      setValue('cv', dataTransfer.files as any);
+    }
+    if (foto) {
+      setFotoFile(foto);
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(foto);
+      setValue('foto', dataTransfer.files as any);
+    }
+  }, []);
 
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
     setCvFileErrors("");
@@ -230,7 +256,7 @@ export const AddTalent = () => {
   };
 
   // file
-  const handleFileChange = (field: keyof AddTalentType, file: File | null) => {
+  const handleFileChange = async (field: keyof AddTalentType, file: File | null) => {
     if (field === "cv") {
       setCvFile(file);
       setCvFileErrors("");
@@ -238,7 +264,12 @@ export const AddTalent = () => {
       setFotoFile(file);
       setFotoFileErrors("");
     }
-  };
+    // Guardar archivos inmediatamente
+    await saveFiles(
+      field === "cv" ? file : cvFile,
+      field === "foto" ? file : fotoFile
+  );
+};
 
   const { isModalOpen, openModal, closeModal } = useModal();
 
@@ -277,8 +308,12 @@ export const AddTalent = () => {
 
       // Autocomplete form
       completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
-      setCanCloseMessage(
-        "Formulario completado, revise los campos antes de enviar"
+       setTimeout(() => {
+      const formData = watch();
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+      }, 2000);
+        setCanCloseMessage(
+          "Formulario completado, revise los campos antes de enviar"
       );
     } catch (error: any) {
       setCanCloseMessage(error?.message || "Error al analizar el CV");
@@ -323,6 +358,7 @@ export const AddTalent = () => {
                       setCvFileErrors("");
                       setFotoFile(null);
                       setFotoFileErrors("");
+                      clearStorage();
                     }}
                     className="rounded-lg text-white text-base bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                   >
