@@ -44,8 +44,7 @@ const contractDurationSchema = z.object({
     .min(1, "Elige una duración"),
   duration: z.coerce
     .number({
-      invalid_type_error:
-        "La duración de contrato debe ser un número",
+      invalid_type_error: "La duración de contrato debe ser un número",
     })
     .min(1, "La duración de contrato debe ser mayor a 0"),
 });
@@ -111,12 +110,8 @@ const rqFacturacionSchema = z
   })
   .superRefine((data, ctx) => {
     // Función auxiliar para validar pares
-    const validateRange = (
-      min: number,
-      max: number,
-      path: string,
-    ) => {
-      if (max > 0 && max < min) {
+    const validateRange = (min: number, max: number, path: string) => {
+      if (max < min) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "El monto máximo no puede ser menor al mínimo",
@@ -125,11 +120,7 @@ const rqFacturacionSchema = z
       }
     };
 
-    validateRange(
-      data.minBaseAmount,
-      data.maxBaseAmount,
-      "maxBaseAmount",
-    );
+    validateRange(data.minBaseAmount, data.maxBaseAmount, "maxBaseAmount");
     validateRange(
       data.minTravelAllowance,
       data.maxTravelAllowance,
