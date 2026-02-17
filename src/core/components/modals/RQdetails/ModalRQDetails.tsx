@@ -7,11 +7,7 @@ import {
   UpdateBaseRQSchemaType,
 } from "../../../models/schemas/UpdateBaseRQSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Param,
-  RequerimientosResponse,
-  RequirementResponse,
-} from "../../../models";
+import { Param, RequirementResponse } from "../../../models";
 import { TabRQData } from "./tabs/TabRQData";
 import { useFetchRequirement } from "../../../hooks/useFetchRequirement";
 import { formatISODate } from "../../../utilities/date.utils";
@@ -74,8 +70,7 @@ export const ModalRQDetails = ({
   const fileExtensionsParams = paramsByMaestro[TIPO_ARCHIVO] || [];
   const currencyOptions = paramsByMaestro[TIPO_MONEDA] || [];
 
-  const techSkillsParams =
-    paramsByMaestro[HABILIDADES_TECNICAS] || [];
+  const techSkillsParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];
 
   const availableTechSkills = techSkillsParams.map((skill) => ({
@@ -173,9 +168,7 @@ export const ModalRQDetails = ({
           (item) => item.idPerfil === v.idPerfil,
         );
 
-        const tarifa = tariffFound
-          ? tariffFound.tarifa.toFixed(2)
-          : "-";
+        const tarifa = tariffFound ? tariffFound.tarifa.toFixed(2) : "-";
 
         const moneda = tariffFound?.moneda || "S/.";
 
@@ -209,13 +202,9 @@ export const ModalRQDetails = ({
 
       // Duracion de contrato, si no tiene duracion de contrato (valores en 0)
       const idDuracionContrato =
-        req.idDuracionContrato === null
-          ? undefined
-          : req.idDuracionContrato;
+        req.idDuracionContrato === null ? undefined : req.idDuracionContrato;
       const duracionContrato =
-        req.duracionContrato === null
-          ? undefined
-          : req.duracionContrato;
+        req.duracionContrato === null ? undefined : req.duracionContrato;
 
       // Determinar si tiene duración basado en los valores de duracion e idDuracion
       const hasDuration = !!(
@@ -273,9 +262,7 @@ export const ModalRQDetails = ({
         (item) => item.idPerfil === v.idPerfil,
       );
 
-      const tarifa = tariffFound
-        ? tariffFound.tarifa.toFixed(2)
-        : "-";
+      const tarifa = tariffFound ? tariffFound.tarifa.toFixed(2) : "-";
 
       const moneda = tariffFound?.moneda || "S/.";
 
@@ -309,13 +296,9 @@ export const ModalRQDetails = ({
 
     // Duracion de contrato, si no tiene duracion de contrato (valores en 0)
     const idDuracionContrato =
-      req.idDuracionContrato === null
-        ? undefined
-        : req.idDuracionContrato;
+      req.idDuracionContrato === null ? undefined : req.idDuracionContrato;
     const duracionContrato =
-      req.duracionContrato === null
-        ? undefined
-        : req.duracionContrato;
+      req.duracionContrato === null ? undefined : req.duracionContrato;
 
     // Determinar si tiene duración basado en los valores de duracion e idDuracion
     const hasDuration = !!(
@@ -362,8 +345,7 @@ export const ModalRQDetails = ({
   const onSubmit = async (data: UpdateBaseRQSchemaType) => {
     try {
       const idCliente = Number(data.idCliente);
-      const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } =
-        data;
+      const { lstArchivos, lstVacantes, autogenRQ, ...cleanData } = data;
 
       const vacanciesToSent = data.lstVacantes
         .filter((v) => v.idEstado !== 0)
@@ -388,9 +370,7 @@ export const ModalRQDetails = ({
         cliente: res?.requerimiento.cliente,
         estado: data.idEstadoRQ,
         duracion: tieneDuracion ? Number(data.duracion) : undefined,
-        idDuracion: tieneDuracion
-          ? Number(data.idDuracion)
-          : undefined,
+        idDuracion: tieneDuracion ? Number(data.idDuracion) : undefined,
         lstVacantes: vacanciesToSent,
         idModalidadFact: data.idModalidadFact?.join(","),
         idDuracionContrato: idDuracionContrato,
@@ -398,10 +378,7 @@ export const ModalRQDetails = ({
         lstFacturacion: data.lstFacturacion,
       };
 
-      const response = await postData(
-        "/fmi/requirement/update",
-        payload,
-      );
+      const response = await postData("/fmi/requirement/update", payload);
 
       if (response.idTipoMensaje === 2) {
         fetchRequirement();
@@ -443,9 +420,7 @@ export const ModalRQDetails = ({
                       <TabClient
                         rqId={rqId}
                         clients={clients}
-                        contacts={
-                          res?.requerimiento.lstRqContactos || []
-                        }
+                        contacts={res?.requerimiento.lstRqContactos || []}
                         fetchRequirement={fetchRequirement}
                       />
                     ),
@@ -480,9 +455,7 @@ export const ModalRQDetails = ({
                         availableDegrees={availableDegrees}
                         availableTechSkills={availableTechSkills}
                         refetchParams={refetchParams}
-                        vacancies={
-                          res?.requerimiento.lstRqVacantes || []
-                        }
+                        vacancies={res?.requerimiento.lstRqVacantes || []}
                         fetchRequirement={fetchRequirement}
                       />
                     ),
@@ -506,9 +479,7 @@ export const ModalRQDetails = ({
                         rqId={rqId}
                         rqState={res?.requerimiento.idEstado || 0}
                         handleAssign={handleAssingPost}
-                        talents={
-                          res?.requerimiento.lstRqTalento || []
-                        }
+                        talents={res?.requerimiento.lstRqTalento || []}
                       />
                     ),
                   },
