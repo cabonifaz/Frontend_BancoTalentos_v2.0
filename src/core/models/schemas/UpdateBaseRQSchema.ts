@@ -24,8 +24,7 @@ const contractDurationSchema = z
       .min(1, "Elige una duración"),
     duration: z.coerce
       .number({
-        invalid_type_error:
-          "La duración de contrato debe ser un número",
+        invalid_type_error: "La duración de contrato debe ser un número",
       })
       .min(1, "La duración de contrato debe ser mayor a 0"),
   })
@@ -94,12 +93,8 @@ const rqFacturacionSchema = z
   })
   .superRefine((data, ctx) => {
     // Función auxiliar para validar pares
-    const validateRange = (
-      min: number,
-      max: number,
-      path: string,
-    ) => {
-      if (max > 0 && max < min) {
+    const validateRange = (min: number, max: number, path: string) => {
+      if (max < min) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "El monto máximo no puede ser menor al mínimo",
@@ -108,11 +103,7 @@ const rqFacturacionSchema = z
       }
     };
 
-    validateRange(
-      data.minBaseAmount,
-      data.maxBaseAmount,
-      "maxBaseAmount",
-    );
+    validateRange(data.minBaseAmount, data.maxBaseAmount, "maxBaseAmount");
     validateRange(
       data.minTravelAllowance,
       data.maxTravelAllowance,
@@ -139,9 +130,7 @@ export const UpdateBaseRQSchema = z
   .object({
     idCliente: z.number().min(1, "El cliente es obligatorio"),
     codigoRQ: z.string().optional(),
-    fechaSolicitud: z
-      .string()
-      .min(1, "La fecha de solicitud es obligatoria"),
+    fechaSolicitud: z.string().min(1, "La fecha de solicitud es obligatoria"),
     descripcion: z
       .string()
       .min(1, "La descripción es obligatoria")
@@ -242,6 +231,4 @@ export const UpdateBaseRQSchema = z
     }
   });
 
-export type UpdateBaseRQSchemaType = z.infer<
-  typeof UpdateBaseRQSchema
->;
+export type UpdateBaseRQSchemaType = z.infer<typeof UpdateBaseRQSchema>;
