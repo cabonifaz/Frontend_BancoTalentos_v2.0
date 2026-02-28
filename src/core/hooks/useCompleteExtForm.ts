@@ -26,12 +26,14 @@ export const useCompleteExtForm = () => {
    * @throws {Error} Si ocurre un error durante el proceso de auto-completado del formulario.
    */
   const completeForm = (
-    data: IACVResponse,
+    response: IACVResponse,
     setValue: UseFormSetValue<AddPostulanteType>,
     countries: Param[],
     cities: Param[],
-    techSkills: Param[]
+    techSkills: Param[],
   ) => {
+    const { data } = response;
+
     try {
       // Datos personales
       safeSetValue("nombres", data.nombres, setValue);
@@ -69,7 +71,7 @@ export const useCompleteExtForm = () => {
           .map((skill) => {
             const id = getTechSkillId(
               skill.nombreHabilidad,
-              techSkills
+              techSkills,
             );
 
             // if (id === 0) return undefined;
@@ -122,7 +124,7 @@ export const useCompleteExtForm = () => {
       }
     } catch (error) {
       throw new Error(
-        "Error al completar el formulario automáticamente"
+        "Error al completar el formulario automáticamente",
       );
     }
   };
@@ -145,7 +147,7 @@ export const useCompleteExtForm = () => {
 const safeSetValue = <K extends keyof AddPostulanteType>(
   key: K,
   value: AddPostulanteType[K] | null | undefined,
-  setValue: UseFormSetValue<AddPostulanteType>
+  setValue: UseFormSetValue<AddPostulanteType>,
 ) => {
   if (value !== null && value !== undefined) {
     setValue(key, value);

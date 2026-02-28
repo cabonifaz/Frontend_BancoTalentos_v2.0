@@ -21,12 +21,14 @@ export const useAutoCompletTalForm = () => {
    * @param techSkills An array of `Param` objects representing available technical skills.
    */
   const completeForm = (
-    data: IACVResponse,
+    response: IACVResponse,
     setValue: UseFormSetValue<AddTalentType>,
     countries: Param[],
     cities: Param[],
-    techSkills: Param[]
+    techSkills: Param[],
   ) => {
+    const { data } = response;
+
     try {
       // Datos personales
       if (data.nombres !== null && data.nombres !== undefined) {
@@ -109,7 +111,7 @@ export const useAutoCompletTalForm = () => {
           .map((skill) => {
             const id = getTechSkillId(
               skill.nombreHabilidad,
-              techSkills
+              techSkills,
             );
 
             //if (id === 0) return undefined;
