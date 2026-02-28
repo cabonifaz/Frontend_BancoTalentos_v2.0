@@ -22,7 +22,7 @@ export const useFetchCVData = () => {
       );
 
       const { idMensaje, mensaje } = response.data;
-      if (idMensaje && idMensaje == 2) return response.data;
+      if (idMensaje && idMensaje === 2) return response.data;
       throw new Error(mensaje || "Error al procesar el CV");
     } catch (error) {
       throw new Error(
