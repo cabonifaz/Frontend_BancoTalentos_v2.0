@@ -60,6 +60,8 @@ export const Talents = () => {
   const educationRef = useRef<Education | null>(null);
   const languageRef = useRef<Language | null>(null);
   const feedbackRef = useRef<Feedback | null>(null);
+  const isFirstRender = useRef(true);
+
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
   const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<
     number | null
@@ -183,14 +185,6 @@ export const Talents = () => {
   }, []);
 
   useEffect(() => {
-    fetchFavourites();
-  }, [fetchFavourites]);
-
-  useEffect(() => {
-    fetchTalents({ nPag: currentPage });
-  }, [currentPage, fetchTalents]);
-
-  useEffect(() => {
     const id = talent?.idTalento;
 
     if (id) {
@@ -281,7 +275,18 @@ export const Talents = () => {
     openModal(MODAL_FRACTAL_CV);
   };
 
-  if (loadingParams) return <Loading />;
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    fetchTalents({ nPag: currentPage });
+  }, [currentPage, fetchTalents]);
+
+  useEffect(() => {
+    Promise.all([fetchFavourites(), fetchTalents({ nPag: 1 })]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative">
