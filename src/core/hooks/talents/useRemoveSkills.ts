@@ -10,10 +10,10 @@ export const useRemoveSkill = () => {
 
     try {
       const response = await axiosInstance.delete<BaseResponse>(
-        "/bdt/talent/deleteTechskill?targetId=" + targetId
+        "/bdt/talent/deleteTechskill?targetId=" + targetId,
       );
 
-      if (response && response.data.idMensaje == 2)
+      if (response && response.data.idMensaje === 2)
         return response.data;
     } catch (error) {
       return null;
@@ -27,10 +27,10 @@ export const useRemoveSkill = () => {
 
     try {
       const response = await axiosInstance.delete<BaseResponse>(
-        "/bdt/talent/deleteSoftskill?targetId=" + targetId
+        "/bdt/talent/deleteSoftskill?targetId=" + targetId,
       );
 
-      if (response && response.data.idMensaje == 2)
+      if (response && response.data.idMensaje === 2)
         return response.data;
     } catch (error) {
       return null;

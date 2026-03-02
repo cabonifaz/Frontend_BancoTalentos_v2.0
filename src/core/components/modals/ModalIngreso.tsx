@@ -54,7 +54,7 @@ export const ModalIngreso = ({
 
   useEffect(() => {
     fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`
+      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`,
     );
   }, [fetchParams]);
 
@@ -68,7 +68,7 @@ export const ModalIngreso = ({
 
   const proyectoServicio =
     paramsByMaestro[PROYECTO_SERVICIO]?.find(
-      (item) => item.num1 === 1
+      (item) => item.num1 === 1,
     )?.string1 || "";
 
   const objetoContrato =
@@ -113,7 +113,7 @@ export const ModalIngreso = ({
       tipoMoneda: 0,
       idSedeDeclarar:
         sedeSunatList.find(
-          (sede) => sede.nombre === currentTalent?.sedeDeclarar
+          (sede) => sede.nombre === currentTalent?.sedeDeclarar,
         )?.idSede || 0,
     },
   });
@@ -128,7 +128,7 @@ export const ModalIngreso = ({
   const calculateEndDate = (
     startDate: string,
     duration: number,
-    durationTypeId: number
+    durationTypeId: number,
   ) => {
     if (!startDate || !duration || !durationTypeId) return "";
 
@@ -158,7 +158,7 @@ export const ModalIngreso = ({
       const endDate = calculateEndDate(
         fchInicioContrato,
         durationContract,
-        durationContractId
+        durationContractId,
       );
       if (endDate) {
         setValue("fchTerminoContrato", endDate);
@@ -177,6 +177,7 @@ export const ModalIngreso = ({
     durationContract,
     durationContractId,
     setValue,
+    clearErrors,
   ]);
 
   // cargar valores por defecto desde parametros
@@ -204,7 +205,7 @@ export const ModalIngreso = ({
           data.declararSunat === 2
             ? ""
             : sedeSunatList.find(
-                (sede) => sede.idSede === data.idSedeDeclarar
+                (sede) => sede.idSede === data.idSedeDeclarar,
               )?.nombre,
         area:
           unitValues.find((unit) => data.idArea === unit.num1)
@@ -233,7 +234,7 @@ export const ModalIngreso = ({
     if (!watchedModalidad || !modalityValues) return;
 
     const selectedModality = modalityValues.find(
-      (m) => m.num1 === watchedModalidad
+      (m) => m.num1 === watchedModalidad,
     );
 
     if (!selectedModality) return;
