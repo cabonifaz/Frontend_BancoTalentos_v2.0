@@ -4,6 +4,7 @@ import { Param } from "../../models";
 
 interface Props {
   title?: string;
+  subtitle?: string;
   lottieUrl?: string;
   canClose?: boolean;
   onClose?: () => void;
@@ -13,6 +14,7 @@ interface Props {
 
 export const ModalWorkingAI = ({
   title = "Analizando con IA",
+  subtitle = "Estamos procesando tu CV, esto puede tardar unos minutos",
   lottieUrl = "https://lottie.host/64faf884-b597-4df2-8e38-95c680989246/WLgLrfCVmO.json",
   canClose = false,
   onClose,
@@ -21,7 +23,8 @@ export const ModalWorkingAI = ({
 }: Props) => {
   const [animationData, setAnimationData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [randomDescription, setRandomDescription] = useState<string>("");
+  const [randomDescription, setRandomDescription] =
+    useState<string>("");
 
   useEffect(() => {
     const fetchAnimation = async () => {
@@ -45,7 +48,9 @@ export const ModalWorkingAI = ({
       setRandomDescription(frasesIA[firstIndex].string1);
 
       const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * frasesIA.length);
+        const randomIndex = Math.floor(
+          Math.random() * frasesIA.length,
+        );
         setRandomDescription(frasesIA[randomIndex].string1);
       }, 3500);
 
@@ -59,6 +64,8 @@ export const ModalWorkingAI = ({
       <div className="bg-white rounded-2xl shadow-lg p-6 max-w-2xl w-full text-center">
         {/* Título */}
         <h2 className="text-xl font-bold mb-4">{title}</h2>
+        {/* Subtítulo */}
+        <p className="text-gray-600 mb-4">{subtitle}</p>
 
         {/* Animación */}
         <div className="w-64 h-64 mx-auto">
@@ -74,13 +81,17 @@ export const ModalWorkingAI = ({
         {/* Mensaje dinámico */}
         {canCloseMessage ? (
           <div className="my-4">
-            <p className="text-gray-800 font-semibold">{canCloseMessage}</p>
+            <p className="text-gray-800 font-semibold">
+              {canCloseMessage}
+            </p>
             <p className="text-gray-500 text-sm mt-2 italic">
               {randomDescription}
             </p>
           </div>
         ) : (
-          <p className="text-gray-600 my-4 font-medium">{randomDescription}</p>
+          <p className="text-gray-600 my-4 font-medium">
+            {randomDescription}
+          </p>
         )}
 
         {/* Botón Aceptar (solo si canClose) */}

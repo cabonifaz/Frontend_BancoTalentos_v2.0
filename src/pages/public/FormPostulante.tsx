@@ -44,7 +44,6 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
-import { usePdfSmartExtractor } from "../../core/hooks/usePdfToText";
 import { useFetchCVData } from "../../core/hooks/useFetchCVData";
 import { useCompleteExtForm } from "../../core/hooks/useCompleteExtForm";
 import { useModal } from "../../core/context/ModalContext";
@@ -56,7 +55,7 @@ import { processText } from "../../core/utilities/textUtils";
 export const FormPostulante = () => {
   const registerRef = useRef(false);
   const { paramsByMaestro, loading: loadingParams } = useParams(
-    "2, 12, 13, 15, 16, 19, 20, 31, 40"
+    "2, 12, 13, 15, 16, 19, 20, 31, 40",
   ) as { paramsByMaestro: any; loading: boolean };
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -85,7 +84,7 @@ export const FormPostulante = () => {
             showSuccessMessage: true,
             enqueueSnackbar: enqueueSnackbar,
           }),
-      }
+      },
     );
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
@@ -107,7 +106,6 @@ export const FormPostulante = () => {
     defaultValues: initialFormValuesPostulante,
   });
 
-
   const {
     register,
     handleSubmit,
@@ -123,17 +121,16 @@ export const FormPostulante = () => {
   // const watchCity = watch("idCiudad");
 
   const ciudadesFiltradas = watchCountry
-    ? ciudades.filter((ciudad:any) => ciudad.num2 === watchCountry)
+    ? ciudades.filter((ciudad: any) => ciudad.num2 === watchCountry)
     : [];
 
   const onSubmit: SubmitHandler<AddPostulanteType> = async (data) => {
-
     setCvFileErrors("");
     setFotoFileErrors("");
-  // Validación manual
-  if (!data.cv[0] || !(data.cv[0] instanceof File)) {
-    setCvFileErrors("El CV es requerido");
-    return;
+    // Validación manual
+    if (!data.cv[0] || !(data.cv[0] instanceof File)) {
+      setCvFileErrors("El CV es requerido");
+      return;
     }
     if (!data.cv[0].name.endsWith(".pdf")) {
       setCvFileErrors("El CV debe ser un archivo PDF");
@@ -150,7 +147,7 @@ export const FormPostulante = () => {
       ]);
       if (!isValid) {
         setFotoFileErrors(
-          "La foto debe ser un archivo PNG, JPEG o JPG"
+          "La foto debe ser un archivo PNG, JPEG o JPG",
         );
         return;
       }
@@ -208,7 +205,7 @@ export const FormPostulante = () => {
         cvArchivo: {
           stringB64: cvBase64,
           nombreArchivo: Utils.getFileNameWithoutExtension(
-            cvFile?.name
+            cvFile?.name,
           ),
           extensionArchivo: "pdf",
           idTipoArchivo: ARCHIVO_PDF,
@@ -218,7 +215,7 @@ export const FormPostulante = () => {
           ? {
               stringB64: fotoBase64,
               nombreArchivo: Utils.getFileNameWithoutExtension(
-                fotoFile?.name
+                fotoFile?.name,
               ),
               extensionArchivo:
                 Utils.detectarFormatoDesdeBase64(fotoBase64),
@@ -234,9 +231,10 @@ export const FormPostulante = () => {
         if (response.data.idMensaje === 2) {
           const idTalent = response.data.idNuevo;
           const ubicacion = `${
-            paises.find((item:any) => item.num1 === data.idPais)?.string1
+            paises.find((item: any) => item.num1 === data.idPais)
+              ?.string1
           }, ${
-            ciudades.find((item:any) => item.num1 === data.idCiudad)
+            ciudades.find((item: any) => item.num1 === data.idCiudad)
               ?.string1
           }`;
 
@@ -252,12 +250,7 @@ export const FormPostulante = () => {
               tiempoContrato: null,
               idTiempoContrato: null,
               fechaInicioLabores: null,
-              // cargo: data.puesto,
               remuneracion: null,
-              /* idMoneda:
-                data.idMoneda === 0 || data.idMoneda === undefined
-                  ? null
-                  : data.idMoneda, */
               idModalidad: null,
               ubicacion: ubicacion,
               tieneEquipo: data?.tieneEquipo || false,
@@ -286,7 +279,7 @@ export const FormPostulante = () => {
   // file
   const handleFileChange = (
     field: keyof AddPostulanteType,
-    file: File | null
+    file: File | null,
   ) => {
     if (field === "cv") {
       setCvFile(file);
@@ -298,7 +291,6 @@ export const FormPostulante = () => {
   };
 
   /** Analizar CV con IA */
-  const { extractSmartText } = usePdfSmartExtractor();
   const { fetchCVDetails } = useFetchCVData();
   const { completeForm, idCiudad } = useCompleteExtForm();
   const { isModalOpen, closeModal, openModal } = useModal();
@@ -325,11 +317,8 @@ export const FormPostulante = () => {
       setCanCloseMessage(undefined);
       openModal(MODAL_AI_WORKING);
 
-      // Extract information from file
-      const cvData = await extractSmartText(cvFile);
-
-      // Extract data using AI
-      const cvDetails = await fetchCVDetails(cvData);
+      // Extract data using backend service
+      const cvDetails = await fetchCVDetails(cvFile);
 
       // Autocomplete form
       completeForm(
@@ -337,10 +326,10 @@ export const FormPostulante = () => {
         setValue,
         paises,
         ciudades,
-        habilidadesTecnicas
+        habilidadesTecnicas,
       );
       setCanCloseMessage(
-        "Formulario completado, revise los campos antes de enviar"
+        "Formulario completado, revise los campos antes de enviar",
       );
     } catch (error: any) {
       setCanCloseMessage(error?.message || "Error al analizar el CV");
@@ -558,7 +547,7 @@ export const FormPostulante = () => {
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
-                        {paises.map((pais:any) => (
+                        {paises.map((pais: any) => (
                           <option
                             key={pais.idParametro}
                             value={pais.num1}
@@ -580,7 +569,8 @@ export const FormPostulante = () => {
                           {watchCountryPhone
                             ? `${
                                 paises.find(
-                                  (p:any) => p.num1 === watchCountryPhone
+                                  (p: any) =>
+                                    p.num1 === watchCountryPhone,
                                 )?.string3 || "00"
                               }`
                             : "+00"}
@@ -620,7 +610,7 @@ export const FormPostulante = () => {
                         </p>
                       )}
                     </div>
-                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-2">
                       <div className="flex justify-between items-center px-1">
                         <label
                           htmlFor="description"
@@ -629,15 +619,31 @@ export const FormPostulante = () => {
                           Presentación
                         </label>
                         {/* CONTADOR DE CARACTERES */}
-                        <span className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}>
+                        <span
+                          className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}
+                        >
                           {watch("descripcion")?.length || 0} / 5000
                         </span>
                       </div>
                       <div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
-                        <span>Los emojis y espacios extras se eliminarán automáticamente</span>
+                        <span>
+                          Los emojis y espacios extras se eliminarán
+                          automáticamente
+                        </span>
                       </div>
                       <Controller
                         name="descripcion"
@@ -651,24 +657,28 @@ export const FormPostulante = () => {
                             placeholder="Cuéntanos sobre ti..."
                             onBlur={(e) => {
                               // Sanitizar cuando el usuario sale del campo
-                              const { text, wasSanitized, wasTruncated } = processText(e.target.value, 5000);
-                              
+                              const {
+                                text,
+                                wasSanitized,
+                                wasTruncated,
+                              } = processText(e.target.value, 5000);
+
                               if (text !== e.target.value) {
                                 field.onChange(text);
-                                
+
                                 if (wasTruncated) {
                                   enqueueSnackbar(
                                     "La presentación se interrumpió a los 5,000 caracteres",
-                                    { variant: "warning" }
+                                    { variant: "warning" },
                                   );
                                 } else if (wasSanitized) {
                                   enqueueSnackbar(
                                     "Se limpiaron caracteres especiales de la presentación",
-                                    { variant: "info" }
+                                    { variant: "info" },
                                   );
                                 }
                               }
-                              
+
                               field.onBlur();
                             }}
                           />
@@ -677,10 +687,20 @@ export const FormPostulante = () => {
                       {/* MENSAJE DE ERROR - MÁXIMO 5000 */}
                       {(watch("descripcion")?.length ?? 0) > 5000 && (
                         <p className="text-red-400 text-sm flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
-                          La presentación no debe exceder los 5,000 caracteres
+                          La presentación no debe exceder los 5,000
+                          caracteres
                         </p>
                       )}
                       {/* MENSAJE DE ERROR DEL SCHEMA */}
@@ -690,33 +710,14 @@ export const FormPostulante = () => {
                         </p>
                       )}
                     </div>
-                    {/*<div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="puestoAnt"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Puesto actual<span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        {...register("puesto")}
-                        id="puestoAnt"
-                        type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Puesto actual"
-                      />
-                      {errors.puesto && (
-                        <p className="text-red-400 text-sm">
-                          {errors.puesto.message}
-                        </p>
-                      )}
-                    </div>*/}
+
                     <div className="flex flex-col gap-2">
                       <label className="text-[#636d7c] text-sm px-1">
                         Disponibilidad{" "}
                         <span className="text-red-400">*</span>
                       </label>
 
-                      {disponibilidades?.map((d:any) => (
+                      {disponibilidades?.map((d: any) => (
                         <label
                           className="flex items-center gap-2"
                           key={d.num1}
@@ -759,7 +760,7 @@ export const FormPostulante = () => {
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
-                        {paises.map((pais:any) => (
+                        {paises.map((pais: any) => (
                           <option
                             key={pais.idParametro}
                             value={pais.num1}
@@ -792,7 +793,7 @@ export const FormPostulante = () => {
                         <option value={0}>
                           Seleccione una ciudad
                         </option>
-                        {ciudadesFiltradas.map((ciudad:any) => (
+                        {ciudadesFiltradas.map((ciudad: any) => (
                           <option
                             key={ciudad.idParametro}
                             value={ciudad.num1}
@@ -810,7 +811,7 @@ export const FormPostulante = () => {
                   </div>
                   {/* Salary */}
                   <SalaryExpectSectionExter
-                    coins={coins.map((c:any) => ({
+                    coins={coins.map((c: any) => ({
                       idCoin: c.num1,
                       stringVal: c.string1,
                     }))}
@@ -826,14 +827,6 @@ export const FormPostulante = () => {
                     dropdownWithSearch={true}
                     shouldShowEmptyForm={true}
                   />
-                  {/* Soft skills */}
-                  {/*  <SoftSkillsSection<AddPostulanteType>
-                    control={control}
-                    errors={errors}
-                    habilidadesBlandas={habilidadesBlandas}
-                    dropdownWithSearch={false}
-                    shouldShowEmptyForm={true}
-                  /> */}
                   {/* Experience */}
                   <ExperiencesSection<AddPostulanteType>
                     control={control}
@@ -946,7 +939,9 @@ export const FormPostulante = () => {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      disabled={!isDirty || !isValid || registerRef.current}
+                      disabled={
+                        !isDirty || !isValid || registerRef.current
+                      }
                       className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
                                         ${
                                           !isValid ||

@@ -30,7 +30,10 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { enqueueSnackbar } from "notistack";
 import { useApi } from "../../core/hooks/useApi";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../core/utilities/errorHandler";
 import { addTalent } from "../../core/services/apiService";
 import {
   ARCHIVO_IMAGEN,
@@ -41,7 +44,6 @@ import {
 } from "../../core/utilities/constants";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
-import { usePdfSmartExtractor } from "../../core/hooks/usePdfToText";
 import { useFetchCVData } from "../../core/hooks/useFetchCVData";
 import { useAutoCompletTalForm } from "../../core/hooks/useAutoCompletTalFormt";
 import { useModal } from "../../core/context/ModalContext";
@@ -54,7 +56,7 @@ import { FORM_STORAGE_KEY } from "../../core/utilities/constants";
 export const AddTalent = () => {
   const navigate = useNavigate();
   const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32,31,40"
+    "12,13,2,19,20,15,16,32,31,40",
   );
   const countryCode = useRef<HTMLParagraphElement>(null);
 
@@ -93,7 +95,7 @@ export const AddTalent = () => {
         setFotoFile(null);
 
         //para limpiar el storage
-         clearStorage(); 
+        clearStorage();
 
         // refrescar parametros para futuros registros
         refetchParams("12,13,2,19,20,15,16,32");
@@ -120,33 +122,37 @@ export const AddTalent = () => {
   } = methods;
 
   // Auto-guardado del formulario
-  const { clearStorage, saveFiles, loadFiles } = useFormPersistence(watch, setValue, ['cv', 'foto']);
+  const { clearStorage, saveFiles, loadFiles } = useFormPersistence(
+    watch,
+    setValue,
+    ["cv", "foto"],
+  );
 
   const watchCountryPhone = watch("codigoPais");
   const watchCountry = watch("idPais");
   // const watchCity = watch("idCiudad");
 
   const ciudadesFiltradas = watchCountry
-    ? ciudades.filter((ciudad:any) => ciudad.num2 === watchCountry)
+    ? ciudades.filter((ciudad: any) => ciudad.num2 === watchCountry)
     : [];
 
   // Cargar archivos guardados al montar
   useEffect(() => {
-      const { cv, foto } = loadFiles();
-      if (cv) {
+    const { cv, foto } = loadFiles();
+    if (cv) {
       setCvFile(cv);
       // Crear FileList para react-hook-form
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(cv);
-      setValue('cv', dataTransfer.files as any);
+      setValue("cv", dataTransfer.files as any);
     }
     if (foto) {
       setFotoFile(foto);
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(foto);
-      setValue('foto', dataTransfer.files as any);
+      setValue("foto", dataTransfer.files as any);
     }
-  }, []);
+  }, [setValue, loadFiles]);
 
   const onSubmit: SubmitHandler<AddTalentType> = async (data) => {
     setCvFileErrors("");
@@ -165,9 +171,15 @@ export const AddTalent = () => {
     // Validación manual de foto
     const photoFile = data.foto?.[0];
     if (photoFile && photoFile instanceof File) {
-      const { isValid } = validateFile(photoFile, ["png", "jpeg", "jpg"]);
+      const { isValid } = validateFile(photoFile, [
+        "png",
+        "jpeg",
+        "jpg",
+      ]);
       if (!isValid) {
-        setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
+        setFotoFileErrors(
+          "La foto debe ser un archivo PNG, JPEG o JPG",
+        );
         return;
       }
     }
@@ -187,7 +199,8 @@ export const AddTalent = () => {
       salaryExpectations,
       ...filterData
     } = data;
-    const phone = countryCode.current?.textContent + " " + telefono.trim();
+    const phone =
+      countryCode.current?.textContent + " " + telefono.trim();
 
     const cleanExperiencias = experiencias.map((exp) => ({
       ...exp,
@@ -220,20 +233,13 @@ export const AddTalent = () => {
         idMoneda: null,
 
         ...filterData,
-        /* idModalidadFacturacion: idModalidadFacturacion,
-        montoInicialPlanilla:
-          idModalidadFacturacion === MODALIDAD_PLANILLA ? montoInicial : 0,
-        montoFinalPlanilla:
-          idModalidadFacturacion === MODALIDAD_PLANILLA ? montoFinal : 0,
-        montoInicialRxH:
-          idModalidadFacturacion === MODALIDAD_RXH ? montoInicial : 0,
-        montoFinalRxH:
-          idModalidadFacturacion === MODALIDAD_RXH ? montoFinal : 0, */
         experiencias: cleanExperiencias,
         educaciones: cleanEducaciones,
         cvArchivo: {
           stringB64: cvBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(cvFile?.name),
+          nombreArchivo: Utils.getFileNameWithoutExtension(
+            cvFile?.name,
+          ),
           extensionArchivo: "pdf",
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
@@ -241,8 +247,11 @@ export const AddTalent = () => {
         fotoArchivo: fotoBase64
           ? {
               stringB64: fotoBase64,
-              nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-              extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
+              nombreArchivo: Utils.getFileNameWithoutExtension(
+                fotoFile?.name,
+              ),
+              extensionArchivo:
+                Utils.detectarFormatoDesdeBase64(fotoBase64),
               idTipoArchivo: ARCHIVO_IMAGEN,
               idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
             }
@@ -251,12 +260,17 @@ export const AddTalent = () => {
 
       postTalent(cleanData);
     } catch (error) {
-      enqueueSnackbar("error al cargar archivos", { variant: "warning" });
+      enqueueSnackbar("error al cargar archivos", {
+        variant: "warning",
+      });
     }
   };
 
   // file
-  const handleFileChange = async (field: keyof AddTalentType, file: File | null) => {
+  const handleFileChange = async (
+    field: keyof AddTalentType,
+    file: File | null,
+  ) => {
     if (field === "cv") {
       setCvFile(file);
       setCvFileErrors("");
@@ -267,18 +281,19 @@ export const AddTalent = () => {
     // Guardar archivos inmediatamente
     await saveFiles(
       field === "cv" ? file : cvFile,
-      field === "foto" ? file : fotoFile
-  );
-};
+      field === "foto" ? file : fotoFile,
+    );
+  };
 
   const { isModalOpen, openModal, closeModal } = useModal();
 
   /** Analize CV with IA */
-  const { extractSmartText } = usePdfSmartExtractor();
   const { fetchCVDetails } = useFetchCVData();
   const { completeForm, idCiudad } = useAutoCompletTalForm();
   const [canClose, setCanClose] = useState(false);
-  const [canCloseMessage, setCanCloseMessage] = useState<string | undefined>();
+  const [canCloseMessage, setCanCloseMessage] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
     if (idCiudad) {
@@ -295,25 +310,31 @@ export const AddTalent = () => {
     }
 
     try {
-      // Open modal
       setCanClose(false);
       setCanCloseMessage(undefined);
       openModal(MODAL_AI_WORKING);
 
-      // Extract information from file
-      const cvData = await extractSmartText(cvFile);
+      // Extract data using backend service
+      const cvDetails = await fetchCVDetails(cvFile);
 
-      // Extract data using AI
-      const cvDetails = await fetchCVDetails(cvData);
+      completeForm(
+        cvDetails,
+        setValue,
+        paises,
+        ciudades,
+        habilidadesTecnicas,
+      );
 
-      // Autocomplete form
-      completeForm(cvDetails, setValue, paises, ciudades, habilidadesTecnicas);
-       setTimeout(() => {
-      const formData = watch();
-      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+      setTimeout(() => {
+        const formData = watch();
+        localStorage.setItem(
+          FORM_STORAGE_KEY,
+          JSON.stringify(formData),
+        );
       }, 2000);
-        setCanCloseMessage(
-          "Formulario completado, revise los campos antes de enviar"
+
+      setCanCloseMessage(
+        "Formulario completado, revise los campos antes de enviar",
       );
     } catch (error: any) {
       setCanCloseMessage(error?.message || "Error al analizar el CV");
@@ -346,8 +367,12 @@ export const AddTalent = () => {
               {/* title */}
               <div className="flex p-4 bg-white w-full md:w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
                 <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
-                  <h2 className="font-semibold text-xl">Nuevo Talento</h2>
-                  <h3 className="text-sm">Ingresa datos del talento.</h3>
+                  <h2 className="font-semibold text-xl">
+                    Nuevo Talento
+                  </h2>
+                  <h3 className="text-sm">
+                    Ingresa datos del talento.
+                  </h3>
                 </div>
                 <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
                   <button
@@ -384,7 +409,8 @@ export const AddTalent = () => {
                 <div>
                   <div className="flex justify-between items-center">
                     <h3 className="text-[#3f3f46] text-lg">
-                      Curriculum Vitae<span className="text-red-500">*</span>
+                      Curriculum Vitae
+                      <span className="text-red-500">*</span>
                     </h3>
                     {cvFile && (
                       <button
@@ -407,20 +433,28 @@ export const AddTalent = () => {
                     value={cvFile}
                   />
                   {cvFileErrors !== "" && (
-                    <p className="text-red-400 text-sm">{cvFileErrors}</p>
+                    <p className="text-red-400 text-sm">
+                      {cvFileErrors}
+                    </p>
                   )}
-                  <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+                  <h3 className="text-[#3f3f46] text-lg">
+                    Foto de perfil
+                  </h3>
                   <FileInput<AddTalentType>
                     register={register}
                     errors={errors}
                     name="foto"
                     initialText="Sube una foto"
                     acceptedTypes=".png, .jpeg, .jpg"
-                    onChange={(file) => handleFileChange("foto", file)}
+                    onChange={(file) =>
+                      handleFileChange("foto", file)
+                    }
                     value={fotoFile}
                   />
                   {fotoFileErrors !== "" && (
-                    <p className="text-red-400 text-sm">{fotoFileErrors}</p>
+                    <p className="text-red-400 text-sm">
+                      {fotoFileErrors}
+                    </p>
                   )}
                 </div>
                 {/* Data */}
@@ -433,7 +467,8 @@ export const AddTalent = () => {
                       htmlFor="dni"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Doc. Identidad<span className="text-red-500">*</span>
+                      Doc. Identidad
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register("dni")}
@@ -473,7 +508,8 @@ export const AddTalent = () => {
                       htmlFor="lastname-f"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Apellido paterno<span className="text-red-500">*</span>
+                      Apellido paterno
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register("apellidoPaterno")}
@@ -513,17 +549,23 @@ export const AddTalent = () => {
                       htmlFor="countrycode"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Número de Celular<span className="text-red-500">*</span>
+                      Número de Celular
+                      <span className="text-red-500">*</span>
                     </label>
                     <select
                       id="countrycode"
                       autoComplete="tel-country-code"
-                      {...register("codigoPais", { valueAsNumber: true })}
+                      {...register("codigoPais", {
+                        valueAsNumber: true,
+                      })}
                       className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                     >
                       <option value={0}>Seleccione un país</option>
                       {paises.map((pais) => (
-                        <option key={pais.idParametro} value={pais.num1}>
+                        <option
+                          key={pais.idParametro}
+                          value={pais.num1}
+                        >
                           {pais.string1}
                         </option>
                       ))}
@@ -541,8 +583,9 @@ export const AddTalent = () => {
                       >
                         {watchCountryPhone
                           ? `${
-                              paises.find((p) => p.num1 === watchCountryPhone)
-                                ?.string3 || "00"
+                              paises.find(
+                                (p) => p.num1 === watchCountryPhone,
+                              )?.string3 || "00"
                             }`
                           : "+00"}
                       </p>
@@ -565,7 +608,8 @@ export const AddTalent = () => {
                       htmlFor="email"
                       className="text-[#636d7c] text-sm px-1"
                     >
-                      Correo electrónico<span className="text-red-500">*</span>
+                      Correo electrónico
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       {...register("email")}
@@ -590,16 +634,12 @@ export const AddTalent = () => {
                         {/*<span className="text-red-500">*</span>*/}
                       </label>
                       {/* CONTADOR DE CARACTERES */}
-                      <span className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}>
+                      <span
+                        className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}
+                      >
                         {watch("descripcion")?.length || 0} / 5000
                       </span>
                     </div>
-                     {/*{<div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                     </svg>
-                     { <span>Los emojis y espacios extras se eliminarán automáticamente</span> }
-                    </div>*/}
                     <Controller
                       name="descripcion"
                       control={control}
@@ -610,24 +650,28 @@ export const AddTalent = () => {
                           className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5] transition-colors"
                           placeholder="Cuéntanos sobre este talento..."
                           onBlur={(e) => {
-                            const { text, wasSanitized, wasTruncated } = processText(e.target.value, 5000);
-                            
+                            const {
+                              text,
+                              wasSanitized,
+                              wasTruncated,
+                            } = processText(e.target.value, 5000);
+
                             if (text !== e.target.value) {
                               field.onChange(text);
-                              
+
                               if (wasTruncated) {
                                 enqueueSnackbar(
                                   "La presentación se interrumpió a los 5.000 caracteres",
-                                  { variant: "warning" }
+                                  { variant: "warning" },
                                 );
                               } else if (wasSanitized) {
                                 enqueueSnackbar(
                                   "Se limpiaron caracteres especiales de la presentación",
-                                  { variant: "info" }
+                                  { variant: "info" },
                                 );
                               }
                             }
-                            
+
                             field.onBlur();
                           }}
                         />
@@ -641,11 +685,15 @@ export const AddTalent = () => {
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[#636d7c] text-sm px-1">
-                      Disponibilidad <span className="text-red-400">*</span>
+                      Disponibilidad{" "}
+                      <span className="text-red-400">*</span>
                     </label>
 
                     {disponibilidades?.map((d) => (
-                      <label className="flex items-center gap-2" key={d.num1}>
+                      <label
+                        className="flex items-center gap-2"
+                        key={d.num1}
+                      >
                         <input
                           type="checkbox"
                           value={d.num1}
@@ -683,7 +731,10 @@ export const AddTalent = () => {
                     >
                       <option value={0}>Seleccione un país</option>
                       {paises.map((pais) => (
-                        <option key={pais.idParametro} value={pais.num1}>
+                        <option
+                          key={pais.idParametro}
+                          value={pais.num1}
+                        >
                           {pais.string1}
                         </option>
                       ))}
@@ -704,12 +755,17 @@ export const AddTalent = () => {
                     <select
                       id="city"
                       autoComplete="address-level2"
-                      {...register("idCiudad", { valueAsNumber: true })}
+                      {...register("idCiudad", {
+                        valueAsNumber: true,
+                      })}
                       className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                     >
                       <option value={0}>Seleccione una ciudad</option>
                       {ciudadesFiltradas.map((ciudad) => (
-                        <option key={ciudad.idParametro} value={ciudad.num1}>
+                        <option
+                          key={ciudad.idParametro}
+                          value={ciudad.num1}
+                        >
                           {ciudad.string1}
                         </option>
                       ))}
@@ -730,88 +786,6 @@ export const AddTalent = () => {
                   control={control}
                   errors={errors}
                 />
-                {/* Banda salarial, posible eliminación */}
-                <div className="*:mb-4">
-                  {/* <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
-                    Banda salarial
-                  </h3> */}
-                  {/*  <h4 className="text-[#636d7c] text-base font-semibold px-1">
-                    Moneda<span className="text-red-500">*</span>
-                  </h4>
-                  <select
-                    id="currency"
-                    {...register("idMoneda", { valueAsNumber: true })}
-                    className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
-                  >
-                    <option value={0}>Seleccione una moneda</option>
-                    {monedas.map((moneda) => (
-                      <option key={moneda.idParametro} value={moneda.num1}>
-                        {moneda.string1}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.idMoneda && (
-                    <p className="text-red-400 text-sm">
-                      {errors.idMoneda.message}
-                    </p>
-                  )} */}
-                  {/* <h4 className="text-[#636d7c] text-base font-semibold px-1">
-                    Modalidad de facturación
-                    <span className="text-red-500">*</span>
-                  </h4>
-                  <select
-                    id="modalidadFacturacion"
-                    {...register("idModalidadFacturacion", {
-                      valueAsNumber: true,
-                    })}
-                    className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
-                  >
-                    <option value={0}>
-                      Seleccione la modalidad de facturación
-                    </option>
-                    {modalidadFacturacion.map((mod) => (
-                      <option key={mod.idParametro} value={mod.num1}>
-                        {mod.string1}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.idModalidadFacturacion && (
-                    <p className="text-red-400 text-sm">
-                      {errors.idModalidadFacturacion.message}
-                    </p>
-                  )} */}
-                  {/*  <h4 className="text-[#636d7c] text-base font-semibold px-1">
-                    Montos
-                  </h4>
-                  <div className="flex flex-col sm:flex-row w-full gap-8">
-                    <div className="flex flex-col sm:w-1/2">
-                      <label
-                        htmlFor="initRxH"
-                        className="text-[#71717A] text-sm px-1"
-                      >
-                        Monto inicial<span className="text-red-500">*</span>
-                      </label>
-                      <NumberInput<AddTalentType>
-                        control={control}
-                        name="montoInicial"
-                        error={errors.montoInicial?.message}
-                      />
-                    </div>
-                    <div className="flex flex-col sm:w-1/2">
-                      <label
-                        htmlFor="endRxH"
-                        className="text-[#71717A] text-sm px-1"
-                      >
-                        Monto final<span className="text-red-500">*</span>
-                      </label>
-                      <NumberInput<AddTalentType>
-                        control={control}
-                        name="montoFinal"
-                        error={errors.montoFinal?.message}
-                      />
-                    </div>
-                  </div> */}
-                </div>
                 {/* Tech skills */}
                 <TechSkillsSection<AddTalentType>
                   control={control}
@@ -912,7 +886,9 @@ export const AddTalent = () => {
                             checked={field.value === true}
                             onChange={() => field.onChange(true)}
                           />
-                          <span className="ml-2 text-gray-700">Sí</span>
+                          <span className="ml-2 text-gray-700">
+                            Sí
+                          </span>
                         </label>
                         <label className="flex items-center cursor-pointer">
                           <input
@@ -921,7 +897,9 @@ export const AddTalent = () => {
                             checked={field.value === false}
                             onChange={() => field.onChange(false)}
                           />
-                          <span className="ml-2 text-gray-700">No</span>
+                          <span className="ml-2 text-gray-700">
+                            No
+                          </span>
                         </label>
                       </div>
                       {errors.tieneEquipo && (

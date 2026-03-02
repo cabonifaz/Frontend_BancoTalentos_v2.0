@@ -12,7 +12,6 @@ import { usePDFFromReact } from "../../../hooks/usePDFFromTemplate";
 import { Loading } from "../../ui/Loading";
 import { PDFViewer } from "@react-pdf/renderer";
 import { FractalCVTemplate } from "../../templates/FractalCVTemplate";
-import { sortEducation, sortWorkExperience } from "./helpers";
 import { useTranslateTalentData } from "../../../hooks/useTranslateTalentData";
 import { TalentForFractalCV } from "../../../models/interfaces/TalentDataForFractal";
 import { UploadTalentFileRequest } from "../../../models/requests/talent";
@@ -26,7 +25,6 @@ import {
   DOCUMENTO_CV_FR_EN,
   DOCUMENTO_CV_FR_ES,
 } from "../../../utilities/constants";
-import { getCvFile } from "../../../services/apiService";
 
 // @marker helpers
 const notifySuccess = (message: string) =>
@@ -51,7 +49,7 @@ export const ModalFractalCV = ({
   const [talentForCV, setTalentForCV] =
     useState<TalentForFractalCV | null>(null);
   const [generatedPDF, setGeneratedPDF] = useState<string | null>(
-    null
+    null,
   );
   const [existingFile, setExistingFile] = useState<any>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
@@ -99,7 +97,7 @@ export const ModalFractalCV = ({
       const idTipoDocumento =
         language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
       const file = talentDet.files.find(
-        (f: any) => f.idTipoDocumento === idTipoDocumento
+        (f: any) => f.idTipoDocumento === idTipoDocumento,
       );
       setExistingFile(file || null);
     }
@@ -119,7 +117,7 @@ export const ModalFractalCV = ({
       language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
 
     const cvFile = talentDet?.files.find(
-      (file) => file.idTipoDocumento === lookingFor
+      (file) => file.idTipoDocumento === lookingFor,
     );
 
     try {
@@ -164,7 +162,7 @@ export const ModalFractalCV = ({
       ) {
         const translated = await translateTalentData(
           talentForCV,
-          language
+          language,
         );
         cvData = translated.promptResponse;
         setTalentForCV(cvData);
@@ -175,7 +173,7 @@ export const ModalFractalCV = ({
         cvData,
         getFullname(),
         cvData.experiencias || [],
-        language
+        language,
       );
 
       setGeneratedPDF(encodedPDF);
@@ -199,7 +197,7 @@ export const ModalFractalCV = ({
         idTalento: talent.idTalento ?? undefined,
         nombreArchivo: `${getFullname().replace(
           /\s+/g,
-          "_"
+          "_",
         )}_CV_${language}`,
         extensionArchivo: "pdf",
         idTipoArchivo: ARCHIVO_PDF,
@@ -230,7 +228,7 @@ export const ModalFractalCV = ({
         idTalento: talent.idTalento ?? undefined,
         nombreArchivo: `${getFullname().replace(
           /\s+/g,
-          "_"
+          "_",
         )}_CV_${language}`,
         extensionArchivo: "pdf",
         idTipoArchivo: ARCHIVO_PDF,
