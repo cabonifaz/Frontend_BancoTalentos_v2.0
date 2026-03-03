@@ -631,7 +631,6 @@ export const AddTalent = () => {
                         className="text-[#636d7c] text-sm"
                       >
                         Presentación
-                        {/*<span className="text-red-500">*</span>*/}
                       </label>
                       {/* CONTADOR DE CARACTERES */}
                       <span

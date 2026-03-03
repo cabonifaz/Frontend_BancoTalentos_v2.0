@@ -4,12 +4,6 @@ import { Param } from "../models";
 
 type fileNameType = string | undefined | null;
 
-enum TipoArchivo {
-  PDF = 1,
-  WORD = 2,
-  EXCEL = 3,
-}
-
 export class Utils {
   static getPriorityValueFromParams = (values?: Param[]): number => {
     if (!values || values.length === 0) return 0;
@@ -46,7 +40,7 @@ export class Utils {
       stars.push(
         i < rating
           ? getFilledStar(`${i}`)
-          : getOutlinedStar(`${i + 5}`)
+          : getOutlinedStar(`${i + 5}`),
       );
     }
     return stars;
@@ -83,9 +77,9 @@ export class Utils {
           .split("")
           .map(
             (c) =>
-              `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`
+              `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`,
           )
-          .join("")
+          .join(""),
       );
       return JSON.parse(jsonPayload);
     } catch (err) {
@@ -110,7 +104,7 @@ export class Utils {
     const formato = this.detectarFormatoDesdeBase64(base64String);
     const base64WithPrefix = this.addBase64ImagePrefix(
       base64String,
-      formato
+      formato,
     );
 
     if (this.isValidImageBase64(base64WithPrefix)) {
@@ -131,13 +125,13 @@ export class Utils {
 
   static isValidImageBase64 = (base64String: string) => {
     return /^data:image\/(jpeg|png|jpg);base64,[A-Za-z0-9+/=]+$/.test(
-      base64String
+      base64String,
     );
   };
 
   static addBase64ImagePrefix = (
     base64String: string,
-    formato: string
+    formato: string,
   ) => {
     if (base64String && !base64String.startsWith("data:image/")) {
       return `data:image/${formato};base64,${base64String}`;
@@ -176,7 +170,7 @@ export class Utils {
   };
 
   static getFileNameWithoutExtension = (
-    fileName: fileNameType
+    fileName: fileNameType,
   ): string => {
     if (!fileName) return "";
 
@@ -211,7 +205,7 @@ export class Utils {
   }
 
   static getFileNameAndExtension = (
-    fileName: fileNameType
+    fileName: fileNameType,
   ): { nombreArchivo: string; extensionArchivo: string } => {
     if (!fileName) return { nombreArchivo: "", extensionArchivo: "" };
 
@@ -229,11 +223,11 @@ export class Utils {
 
   static getTipoArchivoId = (
     extension: string,
-    paramsFiles: Param[]
+    paramsFiles: Param[],
   ): number => {
     const matchedParam = paramsFiles.find(
       (param) =>
-        param.string2.toLowerCase() === extension.toLowerCase()
+        param.string2.toLowerCase() === extension.toLowerCase(),
     );
 
     if (matchedParam) return matchedParam.num1;
@@ -267,7 +261,7 @@ export class Utils {
 
   static formatMonthYear = (
     dateString: string,
-    originalFormat = "dd/MM/yyyy"
+    originalFormat = "dd/MM/yyyy",
   ) => {
     if (!dateString) return "";
 
@@ -286,7 +280,7 @@ export class Utils {
   };
 
   static formatDisponibilidad(
-    mdIds: string | null | undefined
+    mdIds: string | null | undefined,
   ): string {
     // Cotejar con la tabla maestro
     const modalidades: Record<number, string> = {
@@ -303,7 +297,7 @@ export class Utils {
     if (ids.length === 0) return "No específicado";
 
     const mdNames = ids.map(
-      (id) => modalidades[Number(id)] ?? `Desconocida (${id})`
+      (id) => modalidades[Number(id)] ?? `Desconocida (${id})`,
     );
 
     return mdNames.join(", ");
