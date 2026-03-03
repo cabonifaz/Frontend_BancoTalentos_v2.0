@@ -10,9 +10,14 @@ import {
   useFormContext,
   useWatch,
 } from "react-hook-form";
+import { enqueueSnackbar } from "notistack";
+import { sumarizeFunctions } from "../../services/ai.service";
+import { useAsyncService } from "../../hooks/useAsyncService";
+import { ModalWorkingAI } from "../modals/ModalWorkingAI";
 
-interface ExperiencesSectionProps<F extends FieldValues>
-  extends DynamicSectionProps<F> {
+interface ExperiencesSectionProps<
+  F extends FieldValues,
+> extends DynamicSectionProps<F> {
   empresaValue?: string;
 }
 
@@ -29,6 +34,16 @@ export const ExperiencesSection = <F extends FieldValues>({
     control,
     name: "experiencias" as ArrayPath<F>,
   });
+
+  /**
+   *  Call to API to API to summarize funciones using AI
+   */
+
+  const {
+    result,
+    loading: summarizing,
+    execute,
+  } = useAsyncService(sumarizeFunctions);
 
   const watchedFechasInicio = useWatch({
     control,
@@ -60,7 +75,6 @@ export const ExperiencesSection = <F extends FieldValues>({
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
     onChange: (value: any) => void,
-    currentValue: string
   ) => {
     const isChecked = e.target.checked;
     setDefaultCompanies((prev) => ({ ...prev, [index]: isChecked }));
@@ -100,6 +114,44 @@ export const ExperiencesSection = <F extends FieldValues>({
     });
   }, [watchedFechasInicio, trigger, fields, getValues]);
 
+  /**
+   * Handle sumarization of funciones using AI
+   */
+  const [resumenInstructions, setResumenInstructions] = useState<
+    Record<number, string>
+  >({});
+
+  const handleSummarize = async (index: number) => {
+    const currentFunciones = watch(
+      `experiencias.${index}.funciones` as Path<F>,
+    );
+    const instrucciones = resumenInstructions[index] || "";
+
+    if (!currentFunciones) {
+      enqueueSnackbar({
+        message: "La descripción de funciones es requerida",
+        variant: "error",
+      });
+      return;
+    }
+
+    // Call to API for summary
+    const { result } = await execute(currentFunciones, instrucciones);
+
+    if (result?.idMensaje != 2) {
+      enqueueSnackbar({
+        message: result?.mensaje || "Error al resumir las funciones",
+        variant: "error",
+      });
+      return;
+    }
+
+    setValue(
+      `experiencias.${index}.funciones` as Path<F>,
+      (result?.data?.summary || "") as any,
+    );
+  };
+
   return (
     <DynamicSection
       title="Experiencias laborales"
@@ -117,10 +169,18 @@ export const ExperiencesSection = <F extends FieldValues>({
       canRemoveFirst={!shouldShowEmptyForm}
       canAddSections={shouldAddElements}
     >
+      {summarizing && (
+        <ModalWorkingAI
+          randomPhrases={[]}
+          title="Resumiendo las funciones laborales"
+          subtitle="Esto no tardará mucho"
+        />
+      )}
+
       {fields.map((field, index) => {
         // Determinar si es Fractal basado en el valor actual del campo empresa
         const currentEmpresa = watch(
-          `experiencias.${index}.empresa` as Path<F>
+          `experiencias.${index}.empresa` as Path<F>,
         );
         const isFractal =
           typeof currentEmpresa === "string" &&
@@ -186,7 +246,6 @@ export const ExperiencesSection = <F extends FieldValues>({
                           e,
                           index,
                           onChange,
-                          value
                         );
                       }}
                       className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
@@ -256,6 +315,37 @@ export const ExperiencesSection = <F extends FieldValues>({
                   />
                 )}
               />
+
+              {/* --- BLOQUE DE RESUMEN CON IA --- */}
+              <div className="mt-2 flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Instrucciones para resumir (ej: 'en 3 puntos clave', 'tono formal'...)"
+                    className="flex-1 h-9 px-3 text-sm border-gray-300 border rounded-md focus:outline-none focus:border-[#4F46E5]"
+                    value={resumenInstructions[index] || ""}
+                    onChange={(e) =>
+                      setResumenInstructions((prev) => ({
+                        ...prev,
+                        [index]: e.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSummarize(index)}
+                    className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                  >
+                    {/* Puedes poner un icono de estrellitas o magia aquí */}
+                    <span>Resumir</span>
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 px-1">
+                  Utiliza IA para optimizar la descripción de las
+                  funciones
+                </p>
+              </div>
+
               {(errors as any).experiencias?.[index]?.funciones && (
                 <p className="text-red-400 text-sm">
                   {
@@ -330,12 +420,12 @@ export const ExperiencesSection = <F extends FieldValues>({
                               "" as any,
                               {
                                 shouldValidate: true,
-                              }
+                              },
                             );
 
                             // Limpiar los errores de fechaFin
                             clearErrors(
-                              `experiencias.${index}.fechaFin` as Path<F>
+                              `experiencias.${index}.fechaFin` as Path<F>,
                             );
                           }
                         }}
@@ -367,7 +457,7 @@ export const ExperiencesSection = <F extends FieldValues>({
                       type="date"
                       id={`experiencias.${index}.fechaFin`}
                       disabled={getValues(
-                        `experiencias.${index}.flActualidad` as Path<F>
+                        `experiencias.${index}.flActualidad` as Path<F>,
                       )}
                       className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
                     />
