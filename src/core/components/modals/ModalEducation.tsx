@@ -12,7 +12,10 @@ import {
   addOrUpdateTalentEducation,
   deleteTalenteEducation,
 } from "../../services/apiService";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
 import { EducationsSection } from "..";
@@ -33,8 +36,14 @@ export const educationSchema = z
       trim,
       z.string().min(1, "La institución es requerida"),
     ),
-    carrera: z.preprocess(trim, z.string().min(1, "La carrera es requerida")),
-    grado: z.preprocess(trim, z.string().min(1, "El grado es requerido")),
+    carrera: z.preprocess(
+      trim,
+      z.string().min(1, "La carrera es requerida"),
+    ),
+    grado: z.preprocess(
+      trim,
+      z.string().min(1, "El grado es requerido"),
+    ),
     fechaInicio: z.preprocess(
       trim,
       z.string().min(1, "La fecha de inicio es requerida"),
@@ -42,15 +51,17 @@ export const educationSchema = z
     fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
     flActualidad: z.coerce.boolean(),
   })
-  .refine((data) => data.flActualidad || !!data.fechaFin, {
-    message: "La fecha de fin es requerida",
-    path: ["fechaFin"],
-  })
   .refine(
     (data) => {
-      if (data.flActualidad || !data.fechaFin) return true;
+      // 1. Si es "actualidad", o si falta alguna de las dos fechas, no validamos nada (pasa)
+      if (data.flActualidad || !data.fechaFin || !data.fechaInicio) {
+        return true;
+      }
+
+      // 2. Si llegó aquí, es porque hay ambas fechas y NO es "actualidad"
       const inicio = new Date(data.fechaInicio);
       const fin = new Date(data.fechaFin);
+
       return fin > inicio;
     },
     {
@@ -113,7 +124,8 @@ export const ModalEducation = ({
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio: Utils.formatDateForInput(educacion.fechaInicio) || "",
+        fechaInicio:
+          Utils.formatDateForInput(educacion.fechaInicio) || "",
         fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
         flActualidad: educacion.flActualidad || false,
       });
@@ -134,19 +146,20 @@ export const ModalEducation = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [educationRef.current, setValue, reset]);
 
-  const { loading: addOrUpdateLoading, fetch: addOrUpdateData } = useApi<
-    BaseResponse,
-    AddOrUpdateEducationParams
-  >(addOrUpdateTalentEducation, {
-    onError: (error) => handleError(error, enqueueSnackbar),
-    onSuccess: (response) => {
-      handleResponse({
-        response: response,
-        showSuccessMessage: true,
-        enqueueSnackbar: enqueueSnackbar,
-      });
-    },
-  });
+  const { loading: addOrUpdateLoading, fetch: addOrUpdateData } =
+    useApi<BaseResponse, AddOrUpdateEducationParams>(
+      addOrUpdateTalentEducation,
+      {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) => {
+          handleResponse({
+            response: response,
+            showSuccessMessage: true,
+            enqueueSnackbar: enqueueSnackbar,
+          });
+        },
+      },
+    );
 
   const { loading: deleteLoading, fetch: deleteData } = useApi<
     BaseResponse,
@@ -185,7 +198,8 @@ export const ModalEducation = ({
     };
 
     if (isEditing && educationRef.current) {
-      requestData.idTalentoEducacion = educationRef.current.idEducacion;
+      requestData.idTalentoEducacion =
+        educationRef.current.idEducacion;
     }
 
     addOrUpdateData(requestData).then((response) => {
@@ -198,12 +212,14 @@ export const ModalEducation = ({
 
   const handleOnDelete = () => {
     if (educationRef.current && idTalento) {
-      deleteData(educationRef.current.idEducacion).then((response) => {
-        if (response.data.idMensaje === 2) {
-          if (onUpdate) onUpdate(idTalento);
-          handleCloseModal();
-        }
-      });
+      deleteData(educationRef.current.idEducacion).then(
+        (response) => {
+          if (response.data.idMensaje === 2) {
+            if (onUpdate) onUpdate(idTalento);
+            handleCloseModal();
+          }
+        },
+      );
     }
   };
 
@@ -214,7 +230,8 @@ export const ModalEducation = ({
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio: Utils.formatDateForInput(educacion.fechaInicio) || "",
+        fechaInicio:
+          Utils.formatDateForInput(educacion.fechaInicio) || "",
         fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
         flActualidad: educacion.flActualidad || false,
       });
