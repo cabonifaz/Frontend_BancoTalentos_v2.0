@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { getTalents } from "../../core/services/apiService";
+import { getRequirements, getTalents } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
-import { Talent, TalentParams, TalentsResponse } from "../../core/models";
+import {
+  RequirementItem,
+  ReqListParams,
+  RequerimientosResponse,
+  Talent,
+  TalentParams,
+  TalentsResponse,
+} from "../../core/models";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
-import { Loading } from "../../core/components";
 
 type InterviewEstado =
   | "Registrado"
@@ -17,10 +23,15 @@ type InterviewEstado =
 
 interface CreateForm {
   talento: string;
-  tituloRQ: string;
   cliente: string;
   fecha: string;
   estado: InterviewEstado;
+}
+
+interface SelectedRQ {
+  id: number;
+  label: string;
+  cliente: string;
 }
 
 const ESTADOS: InterviewEstado[] = [
@@ -35,7 +46,11 @@ export default function InterviewCreatePage() {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showRQSuggestions, setShowRQSuggestions] = useState(false);
+  const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const rqSuggestionsRef = useRef<HTMLDivElement>(null);
+  const rqInputRef = useRef<HTMLInputElement>(null);
 
   const {
     loading: loadingTalents,
@@ -45,9 +60,16 @@ export default function InterviewCreatePage() {
     onError: (error) => handleError(error, enqueueSnackbar),
   });
 
+  const {
+    loading: loadingReqs,
+    data: reqsData,
+    fetch: fetchReqs,
+  } = useApi<RequerimientosResponse, ReqListParams>(getRequirements, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+  });
+
   const [form, setForm] = useState<CreateForm>({
     talento: "",
-    tituloRQ: "",
     cliente: "",
     fecha: "",
     estado: "Pendiente",
@@ -79,6 +101,54 @@ export default function InterviewCreatePage() {
     setShowSuggestions(false);
   };
 
+  const handleRQSearch = (value: string) => {
+    if (value.length > 2) {
+      fetchReqs({
+        buscar: value,
+        nPag: 1,
+        idCliente: null,
+        estado: null,
+        fechaSolicitud: null,
+      });
+      setShowRQSuggestions(true);
+    } else {
+      setShowRQSuggestions(false);
+    }
+  };
+
+  const toggleRQSelection = (req: RequirementItem) => {
+    let newRQs: SelectedRQ[];
+    if (selectedRQs.find((r: SelectedRQ) => r.id === req.idRequerimiento)) {
+      newRQs = selectedRQs.filter(
+        (r: SelectedRQ) => r.id !== req.idRequerimiento,
+      );
+    } else {
+      newRQs = [
+        ...selectedRQs,
+        { id: req.idRequerimiento, label: req.titulo, cliente: req.cliente },
+      ];
+    }
+    setSelectedRQs(newRQs);
+
+    // Update unique clients in form
+    const uniqueClients = Array.from(
+      new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
+    ).join(", ");
+    set("cliente", uniqueClients);
+
+    if (rqInputRef.current) rqInputRef.current.value = "";
+    setShowRQSuggestions(false);
+  };
+
+  const removeRQ = (id: number) => {
+    const newRQs = selectedRQs.filter((r: SelectedRQ) => r.id !== id);
+    setSelectedRQs(newRQs);
+    const uniqueClients = Array.from(
+      new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
+    ).join(", ");
+    set("cliente", uniqueClients);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -86,6 +156,12 @@ export default function InterviewCreatePage() {
         !suggestionsRef.current.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
+      }
+      if (
+        rqSuggestionsRef.current &&
+        !rqSuggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowRQSuggestions(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -232,27 +308,124 @@ export default function InterviewCreatePage() {
                 )}
             </div>
 
-            {/* Título RQ */}
-            <div className="flex flex-col gap-1">
-              <label className="input-label font-medium">Título RQ</label>
-              <input
-                type="text"
-                className="input w-full"
-                value={form.tituloRQ}
-                onChange={(e) => set("tituloRQ", e.target.value)}
-                placeholder="Ej: Senior Backend Engineer"
-              />
+            {/* Título RQ (Searchable Multiple) */}
+            <div className="flex flex-col gap-1 relative">
+              <label className="input-label font-medium">
+                Requerimientos (RQ)
+              </label>
+              <div className="relative">
+                <input
+                  ref={rqInputRef}
+                  type="text"
+                  className="input w-full"
+                  onChange={(e) => handleRQSearch(e.target.value)}
+                  onFocus={() => {
+                    const val = rqInputRef.current?.value || "";
+                    if (val.length > 2) setShowRQSuggestions(true);
+                  }}
+                  placeholder="Buscar requerimientos por título o código..."
+                />
+                {loadingReqs && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--color-primary)]"></div>
+                  </div>
+                )}
+              </div>
+
+              {/* Multi-selection tags */}
+              {selectedRQs.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedRQs.map((rq: SelectedRQ) => (
+                    <span
+                      key={rq.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-blue-10)] text-[var(--color-blue)] rounded-lg text-xs font-semibold"
+                    >
+                      {rq.label}
+                      <button
+                        type="button"
+                        onClick={() => removeRQ(rq.id)}
+                        className="hover:text-red-500"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-3 h-3"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* RQ Suggestions Dropdown */}
+              {showRQSuggestions &&
+                reqsData?.requerimientos &&
+                reqsData.requerimientos.length > 0 && (
+                  <div
+                    ref={rqSuggestionsRef}
+                    className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  >
+                    {reqsData.requerimientos.map((r: RequirementItem) => {
+                      const isSelected = selectedRQs.some(
+                        (selected: SelectedRQ) =>
+                          selected.id === r.idRequerimiento,
+                      );
+                      return (
+                        <button
+                          key={r.idRequerimiento}
+                          type="button"
+                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between border-b border-gray-100 last:border-none transition-colors ${isSelected ? "bg-blue-50" : ""}`}
+                          onClick={() => toggleRQSelection(r)}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {r.titulo}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {r.codigoRQ} · {r.cliente}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-4 h-4 text-blue-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2.5}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
             </div>
 
-            {/* Cliente */}
+            {/* Cliente (ReadOnly) */}
             <div className="flex flex-col gap-1">
               <label className="input-label font-medium">Cliente</label>
               <input
                 type="text"
-                className="input w-full"
+                className="input w-full bg-gray-50 text-gray-500 cursor-not-allowed"
                 value={form.cliente}
-                onChange={(e) => set("cliente", e.target.value)}
-                placeholder="Nombre del cliente"
+                readOnly
+                placeholder="Se autocompleta según el RQ"
               />
             </div>
 
