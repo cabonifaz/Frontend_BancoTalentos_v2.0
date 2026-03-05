@@ -1,6 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
+import { getTalents } from "../../core/services/apiService";
+import { useApi } from "../../core/hooks/useApi";
+import { Talent, TalentParams, TalentsResponse } from "../../core/models";
+import { useSnackbar } from "notistack";
+import { handleError } from "../../core/utilities/errorHandler";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -189,6 +194,17 @@ export default function InterviewDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
+  const { enqueueSnackbar } = useSnackbar();
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const {
+    loading: loadingTalents,
+    data: talentsData,
+    fetch: fetchTalents,
+  } = useApi<TalentsResponse, TalentParams>(getTalents, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+  });
 
   const [form, setForm] = useState<InterviewFormData>(
     isEditing ? { ...MOCK_DETAIL } : { ...EMPTY },
@@ -205,6 +221,37 @@ export default function InterviewDetailPage() {
     // TODO: call API
     navigate("/dashboard/entrevistas");
   };
+
+  const handleTalentChange = (value: string) => {
+    set("talento", value);
+    if (value.length > 2) {
+      fetchTalents({ search: value, nPag: 1 });
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectTalent = (talent: Talent) => {
+    set(
+      "talento",
+      `${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`,
+    );
+    setShowSuggestions(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -375,15 +422,58 @@ export default function InterviewDetailPage() {
             {/* Información General */}
             <SectionCard icon={IconDoc} title="Información General">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+                <div className="relative">
                   <label className="input-label block mb-1">Talento</label>
-                  <input
-                    type="text"
-                    className="input w-full"
-                    value={form.talento}
-                    onChange={(e) => set("talento", e.target.value)}
-                    placeholder="Nombre del talento"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="input w-full"
+                      value={form.talento}
+                      onChange={(e) => handleTalentChange(e.target.value)}
+                      onFocus={() =>
+                        form.talento.length > 2 && setShowSuggestions(true)
+                      }
+                      placeholder="Nombre del talento"
+                    />
+                    {loadingTalents && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--color-primary)]"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions &&
+                    talentsData?.talents &&
+                    talentsData.talents.length > 0 && (
+                      <div
+                        ref={suggestionsRef}
+                        className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                      >
+                        {talentsData.talents.map((t) => (
+                          <button
+                            key={t.idTalento}
+                            type="button"
+                            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-none transition-colors"
+                            onClick={() => selectTalent(t)}
+                          >
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
+                              {t.nombres[0]}
+                              {t.apellidoPaterno[0]}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {t.nombres} {t.apellidoPaterno}{" "}
+                                {t.apellidoMaterno}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {t.puesto}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                 </div>
                 <div>
                   <label className="input-label block mb-1">Título RQ</label>
