@@ -27,13 +27,16 @@ interface InterviewFormData {
   talento: string;
   cliente: string;
   fecha: string;
+  hora: string;
   estado: InterviewEstado;
+  etapa: string;
   calificacion: number;
   recomendado: boolean;
   notasPersonales: string;
   notasExperiencia: string;
   notasIdiomas: string;
   notasEducacion: string;
+  enlaceEntrevista: string;
 }
 
 interface SelectedRQ {
@@ -56,13 +59,16 @@ const MOCK_DETAIL: InterviewFormData = {
   talento: "Juan Pérez",
   cliente: "TechSolutions Inc.",
   fecha: "2023-10-25",
+  hora: "10:00",
   estado: "Finalizado",
+  etapa: "Entrevista Técnica",
   calificacion: 4,
   recomendado: true,
   notasPersonales: "",
   notasExperiencia: "",
   notasIdiomas: "",
   notasEducacion: "",
+  enlaceEntrevista: "https://zoom.us/j/123456789",
 };
 
 const MOCK_FILES: UploadedFile[] = [
@@ -93,13 +99,16 @@ const EMPTY: InterviewFormData = {
   talento: "",
   cliente: "",
   fecha: "",
+  hora: "",
   estado: "Pendiente",
+  etapa: "Entrevista Técnica",
   calificacion: 0,
   recomendado: false,
   notasPersonales: "",
   notasExperiencia: "",
   notasIdiomas: "",
   notasEducacion: "",
+  enlaceEntrevista: "",
 };
 
 const ESTADOS: InterviewEstado[] = [
@@ -108,6 +117,15 @@ const ESTADOS: InterviewEstado[] = [
   "En Proceso",
   "Finalizado",
   "Cancelado",
+];
+
+const ETAPAS = [
+  "Filtro Telefónico",
+  "Entrevista Técnica",
+  "Entrevista RRHH",
+  "Entrevista con Cliente",
+  "Prueba Técnica",
+  "Entrevista Final",
 ];
 
 const RATING_LABELS: Record<number, string> = {
@@ -660,16 +678,20 @@ export default function InterviewDetailPage() {
                     )}
                 </div>
 
-                {/* Cliente (ReadOnly) */}
-                <div>
+                {/* Cliente (ReadOnly - Visual only) */}
+                <div className="flex flex-col gap-1 relative">
                   <label className="input-label block mb-1">Cliente</label>
-                  <input
-                    type="text"
-                    className="input w-full bg-gray-50 text-gray-500 cursor-not-allowed"
-                    value={form.cliente}
-                    readOnly
-                    placeholder="Se autocompleta según el RQ"
-                  />
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg min-h-[46px]">
+                    {form.cliente ? (
+                      <p className="text-sm text-gray-700 font-medium">
+                        {form.cliente}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">
+                        Se autocompleta según el RQ
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="input-label block mb-1">Fecha</label>
@@ -680,7 +702,63 @@ export default function InterviewDetailPage() {
                     onChange={(e) => set("fecha", e.target.value)}
                   />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
+                  <label className="input-label block mb-1">Hora</label>
+                  <input
+                    type="time"
+                    className="input w-full"
+                    value={form.hora}
+                    onChange={(e) => set("hora", e.target.value)}
+                  />
+                </div>
+                {/* Enlace de Entrevista */}
+                <div className="sm:col-span-2 flex flex-col gap-1">
+                  <label className="input-label font-medium mb-1">
+                    Enlace de la Entrevista
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                        />
+                      </svg>
+                    </div>
+                    <input
+                      type="url"
+                      className="input w-full"
+                      value={form.enlaceEntrevista}
+                      onChange={(e) => set("enlaceEntrevista", e.target.value)}
+                      placeholder="https://zoom.us/j/..."
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="input-label block mb-1">
+                    Etapa de la Entrevista
+                  </label>
+                  <select
+                    className="dropdown"
+                    value={form.etapa}
+                    onChange={(e) => set("etapa", e.target.value)}
+                  >
+                    {ETAPAS.map((et) => (
+                      <option key={et} value={et}>
+                        {et}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="input-label block mb-1">
                     Estado de la Entrevista
                   </label>
