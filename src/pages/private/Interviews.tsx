@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import { BaseOption, DateFilter, FilterDropDown } from "../../core/components";
 
@@ -86,8 +87,6 @@ function getAvatarColor(initials: string): string {
   return AVATAR_COLORS[initials] ?? "bg-gray-400";
 }
 
-type EstadoBadgeProps = { estado: InterviewItem["estado"] };
-
 const BADGE_CLASSES: Record<InterviewItem["estado"], string> = {
   Registrado: "bg-green-100 text-green-700",
   Pendiente: "bg-yellow-100 text-yellow-700",
@@ -96,7 +95,7 @@ const BADGE_CLASSES: Record<InterviewItem["estado"], string> = {
   Cancelado: "bg-red-100 text-red-500",
 };
 
-function EstadoBadge({ estado }: EstadoBadgeProps) {
+function EstadoBadge({ estado }: { estado: InterviewItem["estado"] }) {
   return (
     <span
       className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${BADGE_CLASSES[estado]}`}
@@ -106,7 +105,7 @@ function EstadoBadge({ estado }: EstadoBadgeProps) {
   );
 }
 
-// ─── Filter options (static for mockup) ──────────────────────────────────────
+// ─── Filter options ───────────────────────────────────────────────────────────
 
 const CLIENT_OPTIONS: BaseOption[] = [
   { value: "banbif", label: "Banbif" },
@@ -125,13 +124,14 @@ const ESTADO_OPTIONS: BaseOption[] = [
 // ─── Page component ───────────────────────────────────────────────────────────
 
 export default function InterviewsPage() {
+  const navigate = useNavigate();
+
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [selectedCliente, setSelectedCliente] = useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
   const [buscar, setBuscar] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Simple client-side filter for the mockup
   const filtered = MOCK_INTERVIEWS.filter((item) => {
     const matchesBuscar =
       !buscar ||
@@ -159,7 +159,7 @@ export default function InterviewsPage() {
           <button
             type="button"
             className="btn btn-primary p-3 h-12 flex items-center gap-2"
-            onClick={() => {}}
+            onClick={() => navigate("/dashboard/entrevistas/nueva")}
           >
             <span className="text-lg leading-none">+</span>
             Nueva Entrevista
@@ -169,7 +169,6 @@ export default function InterviewsPage() {
         {/* Filters panel */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <div className="flex flex-col gap-4">
-            {/* Search row */}
             <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
               <div className="flex-1">
                 <label
@@ -179,7 +178,6 @@ export default function InterviewsPage() {
                   Búsqueda por título de RQ, talento o código
                 </label>
                 <div className="relative">
-                  {/* Search icon */}
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -208,7 +206,6 @@ export default function InterviewsPage() {
               </div>
             </div>
 
-            {/* Dropdown filters row */}
             <div className="flex gap-4 flex-wrap items-center">
               <FilterDropDown
                 name="cliente"
@@ -236,11 +233,7 @@ export default function InterviewsPage() {
               />
               <DateFilter label="Fecha" onDateSelected={() => {}} />
 
-              <button
-                type="button"
-                className="btn btn-primary p-3 h-10"
-                onClick={() => {}}
-              >
+              <button type="button" className="btn btn-primary p-3 h-10">
                 Buscar
               </button>
             </div>
@@ -272,15 +265,18 @@ export default function InterviewsPage() {
                   filtered.map((item) => {
                     const initials = getInitials(item.talento);
                     return (
-                      <tr key={item.id} className="table-row">
+                      <tr
+                        key={item.id}
+                        className="table-row cursor-pointer"
+                        onClick={() =>
+                          navigate(`/dashboard/entrevistas/${item.id}`)
+                        }
+                      >
                         <td className="table-cell text-gray-500">{item.id}</td>
                         <td className="table-cell">
                           <div className="flex items-center gap-3">
-                            {/* Avatar */}
                             <span
-                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-xs font-semibold shrink-0 ${getAvatarColor(
-                                initials,
-                              )}`}
+                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-xs font-semibold shrink-0 ${getAvatarColor(initials)}`}
                             >
                               {initials}
                             </span>
@@ -317,9 +313,7 @@ export default function InterviewsPage() {
             Página {currentPage} de {TOTAL_PAGES}
           </span>
           <button
-            className={`btn ${
-              currentPage >= TOTAL_PAGES ? "btn-disabled" : "btn-primary"
-            }`}
+            className={`btn ${currentPage >= TOTAL_PAGES ? "btn-disabled" : "btn-primary"}`}
             onClick={() => setCurrentPage((p) => Math.min(TOTAL_PAGES, p + 1))}
             disabled={currentPage >= TOTAL_PAGES}
           >
