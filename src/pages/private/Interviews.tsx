@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import {
-  BaseOption,
-  DateFilter,
-  FilterDropDown,
-  Loading,
-} from "../../core/components";
+import { DateFilter, FilterDropDown, Loading } from "../../core/components";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { listInterviews } from "../../core/services/interviews.service";
 import {
