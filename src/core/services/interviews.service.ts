@@ -88,3 +88,30 @@ export const getInterviewDetail = async (id: number, config?: ApiConfig) => {
     config,
   );
 };
+
+export interface UpdateInterviewPayload {
+  idEntrevista: number;
+  idTalento: number;
+  fecha: string;
+  hora: string;
+  estado: number;
+  etapa: number;
+  enlaceEntrevista: string;
+  calificacion: number;
+  notasPersonales: string;
+  notasExperiencia: string;
+  notasIdiomas: string;
+  notasEducacion: string;
+  idsRqs: number[];
+}
+
+export const updateInterview = async (
+  data: UpdateInterviewPayload,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/update",
+    data,
+    config,
+  );
+};

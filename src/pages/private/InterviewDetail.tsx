@@ -12,7 +12,11 @@ import { Loading } from "../../core/components";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
-import { getInterviewDetail } from "../../core/services/interviews.service";
+import {
+  getInterviewDetail,
+  updateInterview,
+  UpdateInterviewPayload,
+} from "../../core/services/interviews.service";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -201,6 +205,9 @@ export default function InterviewDetailPage() {
     result: detailResult,
   } = useAsyncService(getInterviewDetail);
 
+  const { execute: executeUpdate, loading: loadingSave } =
+    useAsyncService(updateInterview);
+
   useEffect(() => {
     if (isEditing && id) {
       fetchDetail(Number(id));
@@ -239,11 +246,41 @@ export default function InterviewDetailPage() {
     }
   }, [detailResult, setValue]);
 
-  const handleSave = (data: UpdateInterviewType) => {
-    console.log("Saving changes:", data);
-    // TODO: call update API
-    enqueueSnackbar("Cambios guardados correctamente", { variant: "success" });
-    navigate(-1);
+  const handleSave = async (data: UpdateInterviewType) => {
+    if (!id) return;
+    const payload: UpdateInterviewPayload = {
+      idEntrevista: id ? parseInt(id, 10) : 0,
+      idTalento: data.idTalento,
+      fecha: data.fecha,
+      hora: data.hora,
+      estado: data.estado,
+      etapa: data.etapa,
+      enlaceEntrevista: data.enlaceEntrevista || "",
+      calificacion: data.calificacion ?? 0,
+      notasPersonales: data.notasPersonales || "",
+      notasExperiencia: data.notasExperiencia || "",
+      notasIdiomas: data.notasIdiomas || "",
+      notasEducacion: data.notasEducacion || "",
+      idsRqs: data.idsRqs,
+    };
+
+    const res = await executeUpdate(payload);
+
+    if (res.result && res.result.idTipoMensaje === 2) {
+      enqueueSnackbar(
+        res.result.mensaje || "Entrevista actualizada con éxito",
+        {
+          variant: "success",
+        },
+      );
+    } else if (res.result) {
+      enqueueSnackbar(
+        res.result.mensaje || "Error al actualizar la entrevista",
+        {
+          variant: "error",
+        },
+      );
+    }
   };
 
   const handleRQSearch = (value: string) => {
@@ -351,7 +388,7 @@ export default function InterviewDetailPage() {
 
   return (
     <Dashboard>
-      {(loadingDetail || loadingReqs || loadingParams) && (
+      {(loadingDetail || loadingReqs || loadingParams || loadingSave) && (
         <Loading opacity="opacity-50" />
       )}
       <div className="p-4 mx-4 xl:mx-16 pb-12">
