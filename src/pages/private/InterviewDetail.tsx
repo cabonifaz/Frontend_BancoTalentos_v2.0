@@ -11,8 +11,11 @@ import {
   TalentParams,
   TalentsResponse,
 } from "../../core/models";
+import { Loading } from "../../core/components";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
+import { useAsyncService } from "../../core/hooks/useAsyncService";
+import { getInterviewDetail } from "../../core/services/interviews.service";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -254,12 +257,46 @@ export default function InterviewDetailPage() {
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const {
+    execute: fetchDetail,
+    loading: loadingDetail,
+    result: detailResult,
+  } = useAsyncService(getInterviewDetail);
+
+  useEffect(() => {
+    if (isEditing && id) {
+      fetchDetail(Number(id));
+    }
+  }, [id, isEditing, fetchDetail]);
+
+  useEffect(() => {
+    if (detailResult?.data) {
+      const data = detailResult.data;
+      setForm({
+        talento: data.talento,
+        cliente: data.clienteResumen,
+        fecha: data.fecha,
+        hora: data.hora,
+        estado: data.estado as InterviewEstado,
+        etapa: data.etapa,
+        calificacion: data.calificacion,
+        recomendado: data.calificacion >= 3, // Logic example
+        notasPersonales: data.notasPersonales,
+        notasExperiencia: data.notasExperiencia,
+        notasIdiomas: data.notasIdiomas,
+        notasEducacion: data.notasEducacion,
+        enlaceEntrevista: data.enlaceEntrevista,
+      });
+      // files mapping if needed
+    }
+  }, [detailResult]);
+
   const set = (field: keyof InterviewFormData, value: unknown) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = () => {
     // TODO: call API
-    navigate("/dashboard/entrevistas");
+    navigate(-1);
   };
 
   const handleTalentChange = (value: string) => {
@@ -441,6 +478,9 @@ export default function InterviewDetailPage() {
 
   return (
     <Dashboard>
+      {(loadingDetail || loadingTalents || loadingReqs) && (
+        <Loading opacity="opacity-50" />
+      )}
       <div className="p-4 mx-4 xl:mx-16 pb-12">
         {/* ── Top bar ── */}
         <div className="flex items-start justify-between gap-4 my-4">
@@ -448,7 +488,7 @@ export default function InterviewDetailPage() {
             {/* Back link */}
             <button
               type="button"
-              onClick={() => navigate("/dashboard/entrevistas")}
+              onClick={() => navigate(-1)}
               className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline mb-2"
             >
               <svg
@@ -480,7 +520,7 @@ export default function InterviewDetailPage() {
           <div className="flex items-center gap-2 shrink-0 pt-6">
             <button
               type="button"
-              onClick={() => navigate("/dashboard/entrevistas")}
+              onClick={() => navigate(-1)}
               className="btn btn-outline-gray px-5 py-2 text-sm"
             >
               Cancelar

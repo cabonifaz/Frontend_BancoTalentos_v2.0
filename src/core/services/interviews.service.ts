@@ -43,6 +43,27 @@ export interface InterviewResponseDTO {
   idEtapa: number;
 }
 
+export interface InterviewDetailDTO {
+  id: number;
+  idTalento: number;
+  talento: string;
+  fecha: string;
+  hora: string;
+  idEstado: number;
+  estado: string;
+  idEtapa: number;
+  etapa: string;
+  enlaceEntrevista: string;
+  calificacion: number;
+  notasPersonales: string;
+  notasExperiencia: string;
+  notasIdiomas: string;
+  notasEducacion: string;
+  clienteResumen: string;
+  selectedRQs: any;
+  files: any[];
+}
+
 // List Interviews
 export const listInterviews = async (
   data: InterviewListRequest,
@@ -59,3 +80,11 @@ export const listInterviews = async (
 };
 
 // end List Interviews
+
+// Get Interview Detail
+export const getInterviewDetail = async (id: number, config?: ApiConfig) => {
+  return axiosInstanceFMI.get<OperationResult<InterviewDetailDTO>>(
+    `fmi/interviews/detail/${id}`,
+    config,
+  );
+};
