@@ -1,104 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { BaseOption, DateFilter, FilterDropDown } from "../../core/components";
-
-// ─── Static mock data ────────────────────────────────────────────────────────
-
-interface InterviewItem {
-  id: number;
-  talento: string;
-  tituloRQ: string;
-  cliente: string;
-  fechaEntrevista: string;
-  estado:
-    | "Registrado"
-    | "Pendiente"
-    | "En Proceso"
-    | "Finalizado"
-    | "Cancelado";
-}
-
-const MOCK_INTERVIEWS: InterviewItem[] = [
-  {
-    id: 1024,
-    talento: "Juan Pérez",
-    tituloRQ: "SOL_BS_123 Java Dev",
-    cliente: "Banbif",
-    fechaEntrevista: "30/01/2026 10:00 AM",
-    estado: "Registrado",
-  },
-  {
-    id: 1023,
-    talento: "Maria Gonzalez",
-    tituloRQ: "SOL_BS_000 QA Analyst",
-    cliente: "Interbank",
-    fechaEntrevista: "29/01/2026 03:00 PM",
-    estado: "Pendiente",
-  },
-  {
-    id: 1022,
-    talento: "Carlos Ruiz",
-    tituloRQ: "SOL_BS_999 Lider Técnico",
-    cliente: "Banbif",
-    fechaEntrevista: "28/01/2026 11:30 AM",
-    estado: "En Proceso",
-  },
-  {
-    id: 1021,
-    talento: "Ana Torres",
-    tituloRQ: "RQ-006066 Fullstack",
-    cliente: "BCP",
-    fechaEntrevista: "26/01/2026 09:00 AM",
-    estado: "Finalizado",
-  },
-  {
-    id: 1020,
-    talento: "Luis Sanchez",
-    tituloRQ: "RQ-006065 Backend",
-    cliente: "Banbif",
-    fechaEntrevista: "25/01/2026 04:00 PM",
-    estado: "Cancelado",
-  },
-];
+import {
+  BaseOption,
+  DateFilter,
+  FilterDropDown,
+  Loading,
+} from "../../core/components";
+import { useAsyncService } from "../../core/hooks/useAsyncService";
+import { listInterviews } from "../../core/services/interviews.service";
 
 const TOTAL_PAGES = 10;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-}
-
-const AVATAR_COLORS: Record<string, string> = {
-  JP: "bg-blue-400",
-  MG: "bg-purple-400",
-  CR: "bg-orange-400",
-  AT: "bg-indigo-400",
-  LS: "bg-teal-400",
+const BADGE_CLASSES: Record<number, string> = {
+  1: "bg-green-100 text-green-700", // Registrado
+  2: "bg-blue-100 text-blue-700", // En Proceso
+  3: "bg-gray-100 text-gray-600", // Finalizado
+  4: "bg-red-100 text-red-500", // Cancelado
 };
 
-function getAvatarColor(initials: string): string {
-  return AVATAR_COLORS[initials] ?? "bg-gray-400";
-}
-
-const BADGE_CLASSES: Record<InterviewItem["estado"], string> = {
-  Registrado: "bg-green-100 text-green-700",
-  Pendiente: "bg-yellow-100 text-yellow-700",
-  "En Proceso": "bg-blue-100 text-blue-700",
-  Finalizado: "bg-gray-100 text-gray-600",
-  Cancelado: "bg-red-100 text-red-500",
-};
-
-function EstadoBadge({ estado }: { estado: InterviewItem["estado"] }) {
+function EstadoBadge({
+  idEstado,
+  estado,
+}: {
+  idEstado: number;
+  estado: string;
+}) {
+  const badgeClass = BADGE_CLASSES[idEstado] || "bg-gray-100 text-gray-700";
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${BADGE_CLASSES[estado]}`}
+      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badgeClass}`}
     >
       {estado}
     </span>
@@ -132,11 +65,28 @@ export default function InterviewsPage() {
   const [buscar, setBuscar] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filtered = MOCK_INTERVIEWS.filter((item) => {
+  const { execute, loading, result } = useAsyncService(listInterviews);
+
+  useEffect(() => {
+    execute({
+      nPag: 1,
+      busqueda: null,
+      idCliente: null,
+      idEstado: null,
+      fecha: null,
+    });
+  }, []);
+
+  const response = result?.data;
+  const interviews = response?.items || [];
+  const totalPages = response?.totalPages ?? TOTAL_PAGES;
+
+  const filtered = interviews.filter((item) => {
+    const fullName = item.talento;
     const matchesBuscar =
       !buscar ||
-      item.talento.toLowerCase().includes(buscar.toLowerCase()) ||
-      item.tituloRQ.toLowerCase().includes(buscar.toLowerCase()) ||
+      fullName.toLowerCase().includes(buscar.toLowerCase()) ||
+      item.tituloRq.toLowerCase().includes(buscar.toLowerCase()) ||
       item.id.toString().includes(buscar);
 
     const matchesCliente =
@@ -152,6 +102,7 @@ export default function InterviewsPage() {
 
   return (
     <Dashboard>
+      {loading && <Loading opacity="opacity-50" />}
       <div className="p-4 mx-4 xl:mx-16">
         {/* Page header */}
         <div className="flex justify-between items-center my-4">
@@ -248,10 +199,10 @@ export default function InterviewsPage() {
                 <tr className="table-header uppercase">
                   <th className="table-header-cell">ID</th>
                   <th className="table-header-cell">Talento</th>
-                  <th className="table-header-cell">Título RQ</th>
-                  <th className="table-header-cell">Cliente</th>
+                  <th className="table-header-cell">Requerimientos</th>
+                  <th className="table-header-cell">Clientes</th>
                   <th className="table-header-cell">Fecha Entrevista</th>
-                  <th className="table-header-cell">Estado</th>
+                  <th className="table-header-cell">Etapa/Estado</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -262,38 +213,32 @@ export default function InterviewsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((item) => {
-                    const initials = getInitials(item.talento);
-                    return (
-                      <tr
-                        key={item.id}
-                        className="table-row cursor-pointer"
-                        onClick={() =>
-                          navigate(`/dashboard/entrevistas/${item.id}`)
-                        }
-                      >
-                        <td className="table-cell text-gray-500">{item.id}</td>
-                        <td className="table-cell">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-xs font-semibold shrink-0 ${getAvatarColor(initials)}`}
-                            >
-                              {initials}
-                            </span>
-                            <span className="font-medium text-gray-900">
-                              {item.talento}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="table-cell">{item.tituloRQ}</td>
-                        <td className="table-cell">{item.cliente}</td>
-                        <td className="table-cell">{item.fechaEntrevista}</td>
-                        <td className="table-cell">
-                          <EstadoBadge estado={item.estado} />
-                        </td>
-                      </tr>
-                    );
-                  })
+                  filtered.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="table-row cursor-pointer"
+                      onClick={() =>
+                        navigate(`/dashboard/entrevistas/${item.id}`)
+                      }
+                    >
+                      <td className="table-cell text-gray-500">{item.id}</td>
+                      <td className="table-cell">
+                        <span className="font-medium text-gray-900">
+                          {item.talento}
+                        </span>
+                      </td>
+                      <td className="table-cell">{item.tituloRq}</td>
+                      <td className="table-cell">{item.cliente}</td>
+                      <td className="table-cell">{item.fechaEntrevista}</td>
+                      <td className="table-cell">
+                        <span className="font-bold block">{item.etapa}</span>
+                        <EstadoBadge
+                          idEstado={item.idEstado}
+                          estado={item.estado}
+                        />
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
@@ -310,12 +255,12 @@ export default function InterviewsPage() {
             Anterior
           </button>
           <span className="text-sm text-gray-600">
-            Página {currentPage} de {TOTAL_PAGES}
+            Página {currentPage} de {totalPages}
           </span>
           <button
-            className={`btn ${currentPage >= TOTAL_PAGES ? "btn-disabled" : "btn-primary"}`}
-            onClick={() => setCurrentPage((p) => Math.min(TOTAL_PAGES, p + 1))}
-            disabled={currentPage >= TOTAL_PAGES}
+            className={`btn ${currentPage >= totalPages ? "btn-disabled" : "btn-primary"}`}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
           >
             Siguiente
           </button>

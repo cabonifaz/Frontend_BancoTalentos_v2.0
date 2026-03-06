@@ -1,5 +1,5 @@
 import { ApiConfig } from "../hooks/useAsyncService";
-import { BaseResponse, BaseResponseFMI } from "../models";
+import { BaseResponseFMI, OperationResult } from "../models";
 import { axiosInstanceFMI } from "./axiosService";
 
 export interface CreateInterviewType {
@@ -22,3 +22,40 @@ export const createInterview = async (
     config,
   );
 };
+
+export interface InterviewListRequest {
+  nPag: number | null;
+  busqueda: string | null;
+  idCliente: number | null;
+  idEstado: number | null;
+  fecha: string | null;
+}
+
+export interface InterviewResponseDTO {
+  id: number;
+  talento: string;
+  tituloRq: string;
+  cliente: string;
+  fechaEntrevista: string;
+  estado: string;
+  idEstado: number;
+  etapa: string;
+  idEtapa: number;
+}
+
+// List Interviews
+export const listInterviews = async (
+  data: InterviewListRequest,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<
+    OperationResult<{
+      items: InterviewResponseDTO[];
+      totalElements: number;
+      totalPages: number;
+      currentPage: number;
+    }>
+  >("fmi/interviews/list", data, config);
+};
+
+// end List Interviews
