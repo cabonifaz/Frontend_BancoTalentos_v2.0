@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import {
   BaseOption,
@@ -9,6 +9,11 @@ import {
 } from "../../core/components";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { listInterviews } from "../../core/services/interviews.service";
+import {
+  ESTADO_ENTREVISTA,
+  ETAPA_ENTREVISTA,
+} from "../../core/utilities/constants";
+import { useParams } from "../../core/context/ParamsContext";
 
 const TOTAL_PAGES = 10;
 
@@ -31,74 +36,84 @@ function EstadoBadge({
   const badgeClass = BADGE_CLASSES[idEstado] || "bg-gray-100 text-gray-700";
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${badgeClass}`}
+      className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${badgeClass}`}
     >
       {estado}
     </span>
   );
 }
 
-// ─── Filter options ───────────────────────────────────────────────────────────
-
-const CLIENT_OPTIONS: BaseOption[] = [
-  { value: "banbif", label: "Banbif" },
-  { value: "interbank", label: "Interbank" },
-  { value: "bcp", label: "BCP" },
-];
-
-const ESTADO_OPTIONS: BaseOption[] = [
-  { value: "registrado", label: "Registrado" },
-  { value: "pendiente", label: "Pendiente" },
-  { value: "en_proceso", label: "En Proceso" },
-  { value: "finalizado", label: "Finalizado" },
-  { value: "cancelado", label: "Cancelado" },
-];
-
-// ─── Page component ───────────────────────────────────────────────────────────
-
 export default function InterviewsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  /**
+   * Fetch params
+
+   */
+  // get params
+  const { paramsByMaestro, loading: loadingParams } = useParams(
+    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA}`,
+  );
+
+  const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
+  const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
 
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-  const [selectedCliente, setSelectedCliente] = useState<string[]>([]);
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
+  const [selectedStage, setSelectedStage] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [buscar, setBuscar] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize page from URL query param (default 1)
+  const initialPage = parseInt(searchParams.get("page") ?? "1", 10);
+  const [currentPage, setCurrentPage] = useState<number>(
+    isNaN(initialPage) ? 1 : initialPage,
+  );
+
+  const nextPage = () => setCurrentPage((prev) => prev + 1);
+  const prevPage = () => setCurrentPage((prev) => prev - 1);
 
   const { execute, loading, result } = useAsyncService(listInterviews);
-
-  useEffect(() => {
-    execute({
-      nPag: 1,
-      busqueda: null,
-      idCliente: null,
-      idEstado: null,
-      fecha: null,
-    });
-  }, []);
 
   const response = result?.data;
   const interviews = response?.items || [];
   const totalPages = response?.totalPages ?? TOTAL_PAGES;
 
-  const filtered = interviews.filter((item) => {
-    const fullName = item.talento;
-    const matchesBuscar =
-      !buscar ||
-      fullName.toLowerCase().includes(buscar.toLowerCase()) ||
-      item.tituloRq.toLowerCase().includes(buscar.toLowerCase()) ||
-      item.id.toString().includes(buscar);
+  const fetchInterviews = (page = 1) => {
+    // Obtenemos el ID del estado, asegurándonos de que sea un número válido o null
+    const selectedId = selectedEstado[0];
+    const idEstadoNum = selectedId ? Number(selectedId) : null;
+    // Formatear fecha a YYYY-MM-DD
+    const fechaFormateada = selectedDate
+      ? selectedDate.toISOString().split("T")[0]
+      : null;
 
-    const matchesCliente =
-      selectedCliente.length === 0 ||
-      selectedCliente.includes(item.cliente.toLowerCase());
+    execute({
+      npag: page,
+      busqueda: buscar.trim() || null,
+      idCliente: null,
+      idEstado:
+        idEstadoNum !== null && !isNaN(idEstadoNum) ? idEstadoNum : null,
+      fecha: fechaFormateada,
+    });
+  };
 
-    const matchesEstado =
-      selectedEstado.length === 0 ||
-      selectedEstado.includes(item.estado.toLowerCase().replace(" ", "_"));
+  // Sincronizar URL y cargar datos cuando cambie la página o al montar
+  useEffect(() => {
+    setSearchParams({ page: currentPage.toString() });
+    fetchInterviews(currentPage);
+  }, [currentPage]);
 
-    return matchesBuscar && matchesCliente && matchesEstado;
-  });
+  const handleSearch = () => {
+    if (currentPage === 1) {
+      // Si ya estamos en la página 1, forzamos la recarga de datos con los nuevos filtros
+      fetchInterviews(1);
+    } else {
+      // Si estamos en otra página, volver a la 1 disparará automáticamente el useEffect
+      setCurrentPage(1);
+    }
+  };
 
   return (
     <Dashboard>
@@ -159,21 +174,12 @@ export default function InterviewsPage() {
 
             <div className="flex gap-4 flex-wrap items-center">
               <FilterDropDown
-                name="cliente"
-                label="Cliente"
-                options={CLIENT_OPTIONS}
-                optionsType="radio"
-                optionsPanelSize="w-48"
-                inputPosition="right"
-                isOpen={openDropdown === 0}
-                onToggle={() => setOpenDropdown(openDropdown === 0 ? null : 0)}
-                selectedValues={selectedCliente}
-                onChange={setSelectedCliente}
-              />
-              <FilterDropDown
                 name="estado"
                 label="Estado"
-                options={ESTADO_OPTIONS}
+                options={interviewStates.map((state) => ({
+                  value: state.num1,
+                  label: state.string1,
+                }))}
                 optionsType="radio"
                 optionsPanelSize="w-44"
                 inputPosition="right"
@@ -182,9 +188,28 @@ export default function InterviewsPage() {
                 selectedValues={selectedEstado}
                 onChange={setSelectedEstado}
               />
-              <DateFilter label="Fecha" onDateSelected={() => {}} />
+              <FilterDropDown
+                name="etapa"
+                label="Etapa"
+                options={interviewStages.map((stage) => ({
+                  value: stage.num1,
+                  label: stage.string1,
+                }))}
+                optionsType="radio"
+                optionsPanelSize="w-60"
+                inputPosition="right"
+                isOpen={openDropdown === 2}
+                onToggle={() => setOpenDropdown(openDropdown === 2 ? null : 2)}
+                selectedValues={selectedStage}
+                onChange={setSelectedStage}
+              />
+              <DateFilter label="Fecha" onDateSelected={setSelectedDate} />
 
-              <button type="button" className="btn btn-primary p-3 h-10">
+              <button
+                type="button"
+                className="btn btn-primary p-3 h-10"
+                onClick={handleSearch}
+              >
                 Buscar
               </button>
             </div>
@@ -206,14 +231,14 @@ export default function InterviewsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filtered.length === 0 ? (
+                {interviews.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="table-empty">
                       No hay entrevistas disponibles.
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((item) => (
+                  interviews.map((item) => (
                     <tr
                       key={item.id}
                       className="table-row cursor-pointer"
@@ -249,7 +274,7 @@ export default function InterviewsPage() {
         <div className="flex justify-center items-center gap-4 my-6">
           <button
             className={`btn ${currentPage === 1 ? "btn-disabled" : "btn-outline-gray"}`}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            onClick={prevPage}
             disabled={currentPage === 1}
           >
             Anterior
@@ -259,7 +284,7 @@ export default function InterviewsPage() {
           </span>
           <button
             className={`btn ${currentPage >= totalPages ? "btn-disabled" : "btn-primary"}`}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={nextPage}
             disabled={currentPage >= totalPages}
           >
             Siguiente

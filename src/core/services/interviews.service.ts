@@ -24,7 +24,7 @@ export const createInterview = async (
 };
 
 export interface InterviewListRequest {
-  nPag: number | null;
+  npag: number | null;
   busqueda: string | null;
   idCliente: number | null;
   idEstado: number | null;
