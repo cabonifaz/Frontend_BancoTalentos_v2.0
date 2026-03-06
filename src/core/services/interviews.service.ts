@@ -60,7 +60,7 @@ export interface InterviewDetailDTO {
   notasIdiomas: string;
   notasEducacion: string;
   clienteResumen: string;
-  selectedRQs: any;
+  selectedRQs: { id: number; label: string; cliente: string }[];
   files: any[];
 }
 

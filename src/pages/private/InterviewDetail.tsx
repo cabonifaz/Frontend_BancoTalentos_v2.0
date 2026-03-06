@@ -1,46 +1,50 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { getRequirements, getTalents } from "../../core/services/apiService";
+import { getRequirements } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
 import {
   RequirementItem,
   ReqListParams,
   RequerimientosResponse,
-  Talent,
-  TalentParams,
-  TalentsResponse,
 } from "../../core/models";
 import { Loading } from "../../core/components";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { getInterviewDetail } from "../../core/services/interviews.service";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  UpdateInterviewSchema,
+  UpdateInterviewType,
+} from "../../core/models/schemas/UpdateInterviewSchema";
+import { useParams as useParamsContext } from "../../core/context/ParamsContext";
+import {
+  FileText,
+  Pencil,
+  Star,
+  Folder,
+  ChevronLeft,
+  Check,
+  Plus,
+  X,
+  CloudUpload,
+  Loader2,
+  Link as LinkIcon,
+} from "lucide-react";
+import {
+  ESTADO_ENTREVISTA,
+  ETAPA_ENTREVISTA,
+} from "../../core/utilities/constants";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type InterviewEstado =
-  | "Registrado"
-  | "Pendiente"
-  | "En Proceso"
-  | "Finalizado"
-  | "Cancelado";
-
-interface InterviewFormData {
-  talento: string;
-  cliente: string;
-  fecha: string;
-  hora: string;
-  estado: InterviewEstado;
-  etapa: string;
-  calificacion: number;
-  recomendado: boolean;
-  notasPersonales: string;
-  notasExperiencia: string;
-  notasIdiomas: string;
-  notasEducacion: string;
-  enlaceEntrevista: string;
-}
+const RATING_LABELS: Record<number, string> = {
+  1: "Muy Malo",
+  2: "Malo",
+  3: "Regular",
+  4: "Muy Bueno",
+  5: "Excelente",
+};
 
 interface SelectedRQ {
   id: number;
@@ -55,89 +59,6 @@ interface UploadedFile {
   date: string;
   type: "pdf" | "img" | "doc";
 }
-
-// ─── Mock seed data (used when editing an existing interview) ─────────────────
-
-const MOCK_DETAIL: InterviewFormData = {
-  talento: "Juan Pérez",
-  cliente: "TechSolutions Inc.",
-  fecha: "2023-10-25",
-  hora: "10:00",
-  estado: "Finalizado",
-  etapa: "Entrevista Técnica",
-  calificacion: 4,
-  recomendado: true,
-  notasPersonales: "",
-  notasExperiencia: "",
-  notasIdiomas: "",
-  notasEducacion: "",
-  enlaceEntrevista: "https://zoom.us/j/123456789",
-};
-
-const MOCK_FILES: UploadedFile[] = [
-  {
-    id: 1,
-    name: "CV_JuanPerez_2025.pdf",
-    size: "2.4 MB",
-    date: "24 Oct 2023",
-    type: "pdf",
-  },
-  {
-    id: 2,
-    name: "Portafolio_Diseño.pdf",
-    size: "15.8 MB",
-    date: "24 Oct 2023",
-    type: "doc",
-  },
-  {
-    id: 3,
-    name: "Certificado_Inglés.jpg",
-    size: "850 KB",
-    date: "25 Oct 2023",
-    type: "img",
-  },
-];
-
-const EMPTY: InterviewFormData = {
-  talento: "",
-  cliente: "",
-  fecha: "",
-  hora: "",
-  estado: "Pendiente",
-  etapa: "Entrevista Técnica",
-  calificacion: 0,
-  recomendado: false,
-  notasPersonales: "",
-  notasExperiencia: "",
-  notasIdiomas: "",
-  notasEducacion: "",
-  enlaceEntrevista: "",
-};
-
-const ESTADOS: InterviewEstado[] = [
-  "Registrado",
-  "Pendiente",
-  "En Proceso",
-  "Finalizado",
-  "Cancelado",
-];
-
-const ETAPAS = [
-  "Filtro Telefónico",
-  "Entrevista Técnica",
-  "Entrevista RRHH",
-  "Entrevista con Cliente",
-  "Prueba Técnica",
-  "Entrevista Final",
-];
-
-const RATING_LABELS: Record<number, string> = {
-  1: "Muy Malo",
-  2: "Malo",
-  3: "Regular",
-  4: "Muy Bueno",
-  5: "Excelente",
-};
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -175,20 +96,12 @@ function StarRating({
           onMouseLeave={() => setHovered(0)}
           onClick={() => onChange(star)}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+          <Star
             className="w-7 h-7"
             fill={(hovered || value) >= star ? "#FACC15" : "none"}
-            stroke={(hovered || value) >= star ? "#FACC15" : "#D1D5DB"}
+            color={(hovered || value) >= star ? "#FACC15" : "#D1D5DB"}
             strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L3.04 10.384c-.38-.325-.176-.948.322-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
-            />
-          </svg>
+          />
         </button>
       ))}
     </div>
@@ -226,20 +139,50 @@ export default function InterviewDetailPage() {
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
   const { enqueueSnackbar } = useSnackbar();
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showRQSuggestions, setShowRQSuggestions] = useState(false);
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
   const rqInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    loading: loadingTalents,
-    data: talentsData,
-    fetch: fetchTalents,
-  } = useApi<TalentsResponse, TalentParams>(getTalents, {
-    onError: (error) => handleError(error, enqueueSnackbar),
+  // get params
+  const { paramsByMaestro, loading: loadingParams } = useParamsContext(
+    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA}`,
+  );
+
+  const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
+  const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+
+  const methods = useForm<UpdateInterviewType>({
+    resolver: zodResolver(UpdateInterviewSchema),
+    defaultValues: {
+      idTalento: 0,
+      fecha: "",
+      hora: "",
+      estado: 0,
+      etapa: 0,
+      idsRqs: [],
+      enlaceEntrevista: "",
+      calificacion: 0,
+      notasPersonales: "",
+      notasExperiencia: "",
+      notasIdiomas: "",
+      notasEducacion: "",
+    },
   });
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    watch,
+    formState: { errors },
+  } = methods;
+
+  const formValues = watch();
+
+  const [talentName, setTalentName] = useState("");
+  const [clientName, setClientName] = useState("");
 
   const {
     loading: loadingReqs,
@@ -249,12 +192,7 @@ export default function InterviewDetailPage() {
     onError: (error) => handleError(error, enqueueSnackbar),
   });
 
-  const [form, setForm] = useState<InterviewFormData>(
-    isEditing ? { ...MOCK_DETAIL } : { ...EMPTY },
-  );
-  const [files, setFiles] = useState<UploadedFile[]>(
-    isEditing ? [...MOCK_FILES] : [],
-  );
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -272,49 +210,40 @@ export default function InterviewDetailPage() {
   useEffect(() => {
     if (detailResult?.data) {
       const data = detailResult.data;
-      setForm({
-        talento: data.talento,
-        cliente: data.clienteResumen,
-        fecha: data.fecha,
-        hora: data.hora,
-        estado: data.estado as InterviewEstado,
-        etapa: data.etapa,
-        calificacion: data.calificacion,
-        recomendado: data.calificacion >= 3, // Logic example
-        notasPersonales: data.notasPersonales,
-        notasExperiencia: data.notasExperiencia,
-        notasIdiomas: data.notasIdiomas,
-        notasEducacion: data.notasEducacion,
-        enlaceEntrevista: data.enlaceEntrevista,
-      });
-      // files mapping if needed
+      setTalentName(data.talento);
+      setClientName(data.clienteResumen);
+
+      const rQS: SelectedRQ[] =
+        data.selectedRQs?.map((rq: any) => ({
+          id: rq.id,
+          label: rq.label,
+          cliente: rq.cliente,
+        })) || [];
+      setSelectedRQs(rQS);
+
+      setValue("idTalento", data.idTalento);
+      setValue("fecha", data.fecha);
+      setValue("hora", data.hora);
+      setValue("estado", data.idEstado);
+      setValue("etapa", data.idEtapa);
+      setValue(
+        "idsRqs",
+        rQS.map((r) => r.id),
+      );
+      setValue("enlaceEntrevista", data.enlaceEntrevista || "");
+      setValue("calificacion", data.calificacion);
+      setValue("notasPersonales", data.notasPersonales);
+      setValue("notasExperiencia", data.notasExperiencia);
+      setValue("notasIdiomas", data.notasIdiomas);
+      setValue("notasEducacion", data.notasEducacion);
     }
-  }, [detailResult]);
+  }, [detailResult, setValue]);
 
-  const set = (field: keyof InterviewFormData, value: unknown) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
-
-  const handleSave = () => {
-    // TODO: call API
+  const handleSave = (data: UpdateInterviewType) => {
+    console.log("Saving changes:", data);
+    // TODO: call update API
+    enqueueSnackbar("Cambios guardados correctamente", { variant: "success" });
     navigate(-1);
-  };
-
-  const handleTalentChange = (value: string) => {
-    set("talento", value);
-    if (value.length > 2) {
-      fetchTalents({ search: value, nPag: 1 });
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
-    }
-  };
-
-  const selectTalent = (talent: Talent) => {
-    set(
-      "talento",
-      `${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`,
-    );
-    setShowSuggestions(false);
   };
 
   const handleRQSearch = (value: string) => {
@@ -345,12 +274,17 @@ export default function InterviewDetailPage() {
       ];
     }
     setSelectedRQs(newRQs);
+    setValue(
+      "idsRqs",
+      newRQs.map((r) => r.id),
+      { shouldValidate: true },
+    );
 
     // Update unique clients in form
     const uniqueClients = Array.from(
       new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
     ).join(", ");
-    set("cliente", uniqueClients);
+    setClientName(uniqueClients);
 
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
@@ -359,20 +293,19 @@ export default function InterviewDetailPage() {
   const removeRQ = (id: number) => {
     const newRQs = selectedRQs.filter((r: SelectedRQ) => r.id !== id);
     setSelectedRQs(newRQs);
+    setValue(
+      "idsRqs",
+      newRQs.map((r) => r.id),
+      { shouldValidate: true },
+    );
     const uniqueClients = Array.from(
       new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
     ).join(", ");
-    set("cliente", uniqueClients);
+    setClientName(uniqueClients);
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
       if (
         rqSuggestionsRef.current &&
         !rqSuggestionsRef.current.contains(event.target as Node)
@@ -411,625 +344,443 @@ export default function InterviewDetailPage() {
     setFiles((prev) => prev.filter((f) => f.id !== fid));
 
   // ── SVG icons (inline to avoid asset deps) ──
-  const IconDoc = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z"
-      />
-    </svg>
-  );
-  const IconPencil = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"
-      />
-    </svg>
-  );
-  const IconStar = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557L3.04 10.384c-.38-.325-.176-.948.322-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
-      />
-    </svg>
-  );
-  const IconFolder = (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-4 h-4"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v8.25A2.25 2.25 0 0 0 4.5 16.5h6.75a2.25 2.25 0 0 0 2.25-2.25v-.75"
-      />
-    </svg>
-  );
+  const IconDoc = <FileText size={16} />;
+  const IconPencil = <Pencil size={16} />;
+  const IconStar = <Star size={16} />;
+  const IconFolder = <Folder size={16} />;
 
   return (
     <Dashboard>
-      {(loadingDetail || loadingTalents || loadingReqs) && (
+      {(loadingDetail || loadingReqs || loadingParams) && (
         <Loading opacity="opacity-50" />
       )}
       <div className="p-4 mx-4 xl:mx-16 pb-12">
-        {/* ── Top bar ── */}
-        <div className="flex items-start justify-between gap-4 my-4">
-          <div>
-            {/* Back link */}
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline mb-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-3 h-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2.5}
+        <form onSubmit={handleSubmit(handleSave)}>
+          {/* ── Top bar ── */}
+          <div className="flex items-start justify-between gap-4 my-4">
+            <div>
+              {/* Back link */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline mb-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              Volver a Entrevistas
-            </button>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {isEditing ? "Detalle de Entrevista" : "Nueva Entrevista"}
-            </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {isEditing
-                ? "Edita los detalles, notas y evaluaciones del candidato."
-                : "Completa los datos para registrar la entrevista."}
-            </p>
+                <ChevronLeft size={14} />
+                Volver a Entrevistas
+              </button>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {isEditing ? "Detalle de Entrevista" : "Nueva Entrevista"}
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {isEditing
+                  ? "Edita los detalles, notas y evaluaciones del candidato."
+                  : "Completa los datos para registrar la entrevista."}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 pt-6">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="btn btn-outline-gray px-5 py-2 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2"
+              >
+                <Check size={16} />
+                Guardar Cambios
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 pt-6">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="btn btn-outline-gray px-5 py-2 text-sm"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Guardar Cambios
-            </button>
-          </div>
-        </div>
-
-        {/* ── Two-column body ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
-          {/* ── Left column ── */}
-          <div className="flex flex-col gap-4">
-            {/* Información General */}
-            <SectionCard icon={IconDoc} title="Información General">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative">
-                  <label className="input-label block mb-1">Talento</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      className="input w-full"
-                      value={form.talento}
-                      onChange={(e) => handleTalentChange(e.target.value)}
-                      onFocus={() =>
-                        form.talento.length > 2 && setShowSuggestions(true)
-                      }
-                      placeholder="Nombre del talento"
-                    />
-                    {loadingTalents && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--color-primary)]"></div>
-                      </div>
-                    )}
+          {/* ── Two-column body ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+            {/* ── Left column ── */}
+            <div className="flex flex-col gap-4">
+              {/* Información General */}
+              <SectionCard icon={IconDoc} title="Información General">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Talento (ReadOnly) */}
+                  <div className="flex flex-col gap-1 relative">
+                    <label className="input-label font-medium mb-1">
+                      Talento
+                    </label>
+                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg min-h-[46px]">
+                      <span className="text-sm font-semibold text-gray-900">
+                        {talentName}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Suggestions Dropdown */}
-                  {showSuggestions &&
-                    talentsData?.talents &&
-                    talentsData.talents.length > 0 && (
-                      <div
-                        ref={suggestionsRef}
-                        className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                      >
-                        {talentsData.talents.map((t) => (
-                          <button
-                            key={t.idTalento}
-                            type="button"
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-none transition-colors"
-                            onClick={() => selectTalent(t)}
+                  {/* Título RQ (Searchable Multiple) */}
+                  <div className="flex flex-col gap-1 relative">
+                    <label className="input-label font-medium mb-1">
+                      Requerimientos (RQ)
+                    </label>
+                    <div className="relative">
+                      <input
+                        ref={rqInputRef}
+                        type="text"
+                        className={`input w-full ${errors.idsRqs ? "border-red-500" : ""}`}
+                        onChange={(e) => handleRQSearch(e.target.value)}
+                        onFocus={() => {
+                          const val = rqInputRef.current?.value || "";
+                          if (val.length > 2) setShowRQSuggestions(true);
+                        }}
+                        placeholder="Buscar requerimientos por título o código..."
+                      />
+                      {loadingReqs && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[var(--color-primary)]">
+                          <Loader2 size={16} />
+                        </div>
+                      )}
+                    </div>
+                    {errors.idsRqs && (
+                      <p className="text-red-500 text-xs mt-1 font-medium">
+                        {errors.idsRqs.message}
+                      </p>
+                    )}
+
+                    {/* Multi-selection tags */}
+                    {selectedRQs.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedRQs.map((rq: SelectedRQ) => (
+                          <span
+                            key={rq.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-blue-10)] text-[var(--color-blue)] rounded-lg text-xs font-semibold"
                           >
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">
-                              {t.nombres[0]}
-                              {t.apellidoPaterno[0]}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {t.nombres} {t.apellidoPaterno}{" "}
-                                {t.apellidoMaterno}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {t.puesto}
-                              </p>
-                            </div>
-                          </button>
+                            {rq.label}
+                            <button
+                              type="button"
+                              onClick={() => removeRQ(rq.id)}
+                              className="hover:text-red-500"
+                            >
+                              <X size={12} />
+                            </button>
+                          </span>
                         ))}
                       </div>
                     )}
-                </div>
-                {/* Título RQ (Searchable Multiple) */}
-                <div className="flex flex-col gap-1 relative">
-                  <label className="input-label font-medium mb-1">
-                    Requerimientos (RQ)
-                  </label>
-                  <div className="relative">
-                    <input
-                      ref={rqInputRef}
-                      type="text"
-                      className="input w-full"
-                      onChange={(e) => handleRQSearch(e.target.value)}
-                      onFocus={() => {
-                        const val = rqInputRef.current?.value || "";
-                        if (val.length > 2) setShowRQSuggestions(true);
-                      }}
-                      placeholder="Buscar requerimientos por título o código..."
-                    />
-                    {loadingReqs && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--color-primary)]"></div>
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Multi-selection tags */}
-                  {selectedRQs.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedRQs.map((rq: SelectedRQ) => (
-                        <span
-                          key={rq.id}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-blue-10)] text-[var(--color-blue)] rounded-lg text-xs font-semibold"
+                    {/* RQ Suggestions Dropdown */}
+                    {showRQSuggestions &&
+                      reqsData?.requerimientos &&
+                      reqsData.requerimientos.length > 0 && (
+                        <div
+                          ref={rqSuggestionsRef}
+                          className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
                         >
-                          {rq.label}
-                          <button
-                            type="button"
-                            onClick={() => removeRQ(rq.id)}
-                            className="hover:text-red-500"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="w-3 h-3"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={3}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                          {reqsData.requerimientos.map((r: RequirementItem) => {
+                            const isSelected = selectedRQs.some(
+                              (selected: SelectedRQ) =>
+                                selected.id === r.idRequerimiento,
+                            );
+                            return (
+                              <button
+                                key={r.idRequerimiento}
+                                type="button"
+                                className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between border-b border-gray-100 last:border-none transition-colors ${isSelected ? "bg-blue-50" : ""}`}
+                                onClick={() => toggleRQSelection(r)}
+                              >
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {r.titulo}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {r.codigoRQ} · {r.cliente}
+                                  </p>
+                                </div>
+                                {isSelected && (
+                                  <Check size={16} className="text-blue-600" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                  </div>
 
-                  {/* RQ Suggestions Dropdown */}
-                  {showRQSuggestions &&
-                    reqsData?.requerimientos &&
-                    reqsData.requerimientos.length > 0 && (
-                      <div
-                        ref={rqSuggestionsRef}
-                        className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                      >
-                        {reqsData.requerimientos.map((r: RequirementItem) => {
-                          const isSelected = selectedRQs.some(
-                            (selected: SelectedRQ) =>
-                              selected.id === r.idRequerimiento,
-                          );
-                          return (
-                            <button
-                              key={r.idRequerimiento}
-                              type="button"
-                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center justify-between border-b border-gray-100 last:border-none transition-colors ${isSelected ? "bg-blue-50" : ""}`}
-                              onClick={() => toggleRQSelection(r)}
-                            >
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {r.titulo}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {r.codigoRQ} · {r.cliente}
-                                </p>
-                              </div>
-                              {isSelected && (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="w-4 h-4 text-blue-600"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                  strokeWidth={2.5}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
-                            </button>
-                          );
-                        })}
+                  {/* Cliente (ReadOnly) */}
+                  <div className="flex flex-col gap-1 relative">
+                    <label className="input-label block mb-1">Cliente</label>
+                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg min-h-[46px]">
+                      {clientName ? (
+                        <p className="text-sm text-gray-700 font-medium">
+                          {clientName}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">
+                          Se autocompleta según el RQ
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Row: Enlace, Fecha, Hora (Usa grid interno para ocupar toda la fila) */}
+                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
+                    {/* Enlace de Entrevista */}
+                    <div className="md:col-span-2 flex flex-col gap-1">
+                      <label className="input-label font-medium mb-1">
+                        Enlace de la Entrevista
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
+                          <LinkIcon size={20} />
+                        </div>
+                        <input
+                          {...register("enlaceEntrevista")}
+                          type="url"
+                          className={`input w-full ${errors.enlaceEntrevista ? "border-red-500" : ""}`}
+                          placeholder="https://zoom.us/j/..."
+                        />
                       </div>
-                    )}
-                </div>
-
-                {/* Cliente (ReadOnly - Visual only) */}
-                <div className="flex flex-col gap-1 relative">
-                  <label className="input-label block mb-1">Cliente</label>
-                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg min-h-[46px]">
-                    {form.cliente ? (
-                      <p className="text-sm text-gray-700 font-medium">
-                        {form.cliente}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-400 italic">
-                        Se autocompleta según el RQ
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="input-label block mb-1">Fecha</label>
-                  <input
-                    type="date"
-                    className="input w-full"
-                    value={form.fecha}
-                    onChange={(e) => set("fecha", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="input-label block mb-1">Hora</label>
-                  <input
-                    type="time"
-                    className="input w-full"
-                    value={form.hora}
-                    onChange={(e) => set("hora", e.target.value)}
-                  />
-                </div>
-                {/* Enlace de Entrevista */}
-                <div className="sm:col-span-2 flex flex-col gap-1">
-                  <label className="input-label font-medium mb-1">
-                    Enlace de la Entrevista
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.826a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                        />
-                      </svg>
+                      {errors.enlaceEntrevista && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.enlaceEntrevista.message}
+                        </p>
+                      )}
                     </div>
-                    <input
-                      type="url"
-                      className="input w-full"
-                      value={form.enlaceEntrevista}
-                      onChange={(e) => set("enlaceEntrevista", e.target.value)}
-                      placeholder="https://zoom.us/j/..."
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="input-label block mb-1">
-                    Etapa de la Entrevista
-                  </label>
-                  <select
-                    className="dropdown"
-                    value={form.etapa}
-                    onChange={(e) => set("etapa", e.target.value)}
-                  >
-                    {ETAPAS.map((et) => (
-                      <option key={et} value={et}>
-                        {et}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="input-label block mb-1">
-                    Estado de la Entrevista
-                  </label>
-                  <select
-                    className="dropdown"
-                    value={form.estado}
-                    onChange={(e) =>
-                      set("estado", e.target.value as InterviewEstado)
-                    }
-                  >
-                    {ESTADOS.map((e) => (
-                      <option key={e} value={e}>
-                        {e}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </SectionCard>
 
-            {/* Notas */}
-            <SectionCard
-              icon={IconPencil}
-              title="Notas de la Entrevista"
-              iconColor="text-[var(--color-primary)]"
-            >
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="input-label block mb-1">
-                    Notas Personales
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="input w-full resize-none"
-                    placeholder="Impresiones generales sobre la personalidad y actitud..."
-                    value={form.notasPersonales}
-                    onChange={(e) => set("notasPersonales", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="input-label block mb-1">
-                    Notas Experiencia Laboral
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="input w-full resize-none"
-                    placeholder="Detalles relevantes sobre roles previos y logros..."
-                    value={form.notasExperiencia}
-                    onChange={(e) => set("notasExperiencia", e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="input-label block mb-1">
-                      Notas Idiomas
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Nivel de fluidez y vocabulario técnico..."
-                      value={form.notasIdiomas}
-                      onChange={(e) => set("notasIdiomas", e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="input-label block mb-1">
-                      Notas Educación
-                    </label>
-                    <textarea
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Formación académica y certificaciones..."
-                      value={form.notasEducacion}
-                      onChange={(e) => set("notasEducacion", e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </SectionCard>
-          </div>
-
-          {/* ── Right column ── */}
-          <div className="flex flex-col gap-4">
-            {/* Evaluación */}
-            <SectionCard
-              icon={IconStar}
-              title="Evaluación"
-              iconColor="text-[var(--color-orange)]"
-            >
-              <p className="text-xs text-gray-400 text-center mb-3">
-                Calificación General
-              </p>
-              <StarRating
-                value={form.calificacion}
-                onChange={(v) => set("calificacion", v)}
-              />
-              <p className="text-center text-sm font-medium text-gray-700 mt-2 mb-4 min-h-[1.25rem]">
-                {form.calificacion > 0 ? (
-                  <>
-                    {form.calificacion}/5{" "}
-                    <span className="text-gray-400 font-normal">
-                      {RATING_LABELS[form.calificacion]}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-gray-400 font-normal text-xs">
-                    Sin calificar
-                  </span>
-                )}
-              </p>
-
-              <hr className="border-gray-100 mb-4" />
-
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="input-checkbox mt-0.5"
-                  checked={form.recomendado}
-                  onChange={(e) => set("recomendado", e.target.checked)}
-                />
-                <div>
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                    Recomendado para contratación
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Marcar si el candidato cumple con el perfil
-                  </p>
-                </div>
-              </label>
-            </SectionCard>
-
-            {/* Archivos Subidos */}
-            <SectionCard icon={IconFolder} title="Archivos Subidos">
-              {/* header action */}
-              <div className="flex items-center justify-between -mt-5 mb-4">
-                <span /> {/* spacer – title already in SectionCard */}
-                <button
-                  type="button"
-                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
-                  Agregar
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-              </div>
-
-              {/* File list */}
-              <div className="flex flex-col gap-1 mb-3">
-                {files.map((f) => (
-                  <div
-                    key={f.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group"
-                  >
-                    <FileIcon type={f.type} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-700 truncate">
-                        {f.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {f.size} · {f.date}
-                      </p>
+                    {/* Fecha */}
+                    <div className="flex flex-col gap-1">
+                      <label className="input-label block mb-1">Fecha</label>
+                      <input
+                        {...register("fecha")}
+                        type="date"
+                        className={`input w-full ${errors.fecha ? "border-red-500" : ""}`}
+                      />
+                      {errors.fecha && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.fecha.message}
+                        </p>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeFile(f.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded"
+
+                    {/* Hora */}
+                    <div className="flex flex-col gap-1">
+                      <label className="input-label block mb-1">Hora</label>
+                      <input
+                        {...register("hora")}
+                        type="time"
+                        className={`input w-full ${errors.hora ? "border-red-500" : ""}`}
+                      />
+                      {errors.hora && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.hora.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Etapa */}
+                  <div className="flex flex-col gap-1">
+                    <label className="input-label font-medium mb-1">
+                      Etapa de la Entrevista
+                    </label>
+                    <select
+                      {...register("etapa")}
+                      className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18 18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
+                      <option value={0}>Seleccione etapa</option>
+                      {interviewStages.map((stage) => (
+                        <option key={stage.idParametro} value={stage.num1}>
+                          {stage.string1}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.etapa && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.etapa.message}
+                      </p>
+                    )}
                   </div>
-                ))}
-              </div>
 
-              {/* Drop zone */}
+                  {/* Estado */}
+                  <div className="flex flex-col gap-1">
+                    <label className="input-label font-medium mb-1">
+                      Estado de la Entrevista
+                    </label>
+                    <select
+                      {...register("estado")}
+                      className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
+                    >
+                      <option value={0}>Seleccione estado</option>
+                      {interviewStates.map((state) => (
+                        <option key={state.idParametro} value={state.num1}>
+                          {state.string1}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.estado && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.estado.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </SectionCard>
+
+              {/* Notas */}
+              <SectionCard
+                icon={IconPencil}
+                title="Notas de la Entrevista"
+                iconColor="text-[var(--color-primary)]"
+              >
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="input-label block mb-1">
+                      Notas Personales
+                    </label>
+                    <textarea
+                      {...register("notasPersonales")}
+                      rows={3}
+                      className="input w-full resize-none"
+                      placeholder="Impresiones generales sobre la personalidad y actitud..."
+                    />
+                  </div>
+                  <div>
+                    <label className="input-label block mb-1">
+                      Notas Experiencia Laboral
+                    </label>
+                    <textarea
+                      {...register("notasExperiencia")}
+                      rows={3}
+                      className="input w-full resize-none"
+                      placeholder="Detalles relevantes sobre roles previos y logros..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="input-label block mb-1">
+                        Notas Idiomas
+                      </label>
+                      <textarea
+                        {...register("notasIdiomas")}
+                        rows={3}
+                        className="input w-full resize-none"
+                        placeholder="Nivel de fluidez y vocabulario técnico..."
+                      />
+                    </div>
+                    <div>
+                      <label className="input-label block mb-1">
+                        Notas Educación
+                      </label>
+                      <textarea
+                        {...register("notasEducacion")}
+                        rows={3}
+                        className="input w-full resize-none"
+                        placeholder="Formación académica y certificaciones..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+
+            {/* ── Right column ── */}
+            <div className="flex flex-col gap-4">
+              {/* Evaluación */}
+              <SectionCard
+                icon={IconStar}
+                title="Evaluación"
+                iconColor="text-[var(--color-orange)]"
+              >
+                <p className="text-xs text-gray-400 text-center mb-3">
+                  Calificación General
+                </p>
+                <Controller
+                  name="calificacion"
+                  control={control}
+                  render={({ field }) => (
+                    <StarRating
+                      value={field.value || 0}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                <p className="text-center text-sm font-medium text-gray-700 mt-2 mb-4 min-h-[1.25rem]">
+                  {formValues.calificacion ? (
+                    <>
+                      {formValues.calificacion}/5{" "}
+                      <span className="text-gray-400 font-normal">
+                        {RATING_LABELS[formValues.calificacion]}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-gray-400 font-normal text-xs">
+                      Sin calificar
+                    </span>
+                  )}
+                </p>
+              </SectionCard>
+            </div>
+          </div>
+        </form>
+
+        {/* ── Files section (Outside form) ── */}
+        <div className="mt-4">
+          <SectionCard icon={IconFolder} title="Archivos Subidos">
+            {/* header action */}
+            <div className="flex items-center justify-between -mt-5 mb-4">
+              <span /> {/* spacer – title already in SectionCard */}
               <button
                 type="button"
+                className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-200 rounded-xl py-5 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors w-full"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-7 h-7"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"
-                  />
-                </svg>
-                <span className="text-xs text-center leading-relaxed px-2">
-                  Arrastra archivos aquí o haz clic para subir
-                </span>
+                <Plus size={14} />
+                Agregar
               </button>
-            </SectionCard>
-          </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
+
+            {/* File list */}
+            <div className="flex flex-col gap-1 mb-3">
+              {files.map((f) => (
+                <div
+                  key={f.id}
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group"
+                >
+                  <FileIcon type={f.type} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-700 truncate">
+                      {f.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {f.size} · {f.date}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(f.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Drop zone */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-gray-200 rounded-xl py-5 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors w-full"
+            >
+              <CloudUpload size={28} strokeWidth={1.5} />
+              <span className="text-xs text-center leading-relaxed px-2">
+                Arrastra archivos aquí o haz clic para subir
+              </span>
+            </button>
+          </SectionCard>
         </div>
       </div>
     </Dashboard>
