@@ -56,12 +56,22 @@ interface SelectedRQ {
   cliente: string;
 }
 
+const FILE_CATEGORIES = [
+  { id: "CV", label: "CV" },
+  { id: "PRUEBA_TECNICA", label: "Prueba Técnica" },
+  { id: "EVALUACION", label: "Evaluación" },
+  { id: "OTRO", label: "Otro" },
+] as const;
+
+type FileCategory = (typeof FILE_CATEGORIES)[number]["id"];
+
 interface UploadedFile {
   id: number;
   name: string;
   size: string;
   date: string;
   type: "pdf" | "img" | "doc";
+  category: FileCategory;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -147,6 +157,11 @@ export default function InterviewDetailPage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
   const rqInputRef = useRef<HTMLInputElement>(null);
+
+  // Modal file state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<FileCategory>("CV");
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext(
@@ -243,6 +258,16 @@ export default function InterviewDetailPage() {
       setValue("notasExperiencia", data.notasExperiencia);
       setValue("notasIdiomas", data.notasIdiomas);
       setValue("notasEducacion", data.notasEducacion);
+
+      const filesData: UploadedFile[] = (data.files || []).map((f: any) => ({
+        id: f.id,
+        name: f.name,
+        size: f.size,
+        date: f.date,
+        type: f.type,
+        category: f.category || "OTRO",
+      }));
+      setFiles(filesData);
     }
   }, [detailResult, setValue]);
 
@@ -357,24 +382,37 @@ export default function InterviewDetailPage() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const ext = file.name.split(".").pop()?.toLowerCase();
+    setPendingFile(file);
+    setIsUploadModalOpen(true);
+    e.target.value = "";
+  };
+
+  const confirmUpload = () => {
+    if (!pendingFile) return;
+
+    const ext = pendingFile.name.split(".").pop()?.toLowerCase();
     const type: UploadedFile["type"] =
       ext === "pdf" ? "pdf" : ext === "jpg" || ext === "png" ? "img" : "doc";
+
     setFiles((prev) => [
       ...prev,
       {
         id: Date.now(),
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(0)} KB`,
+        name: pendingFile.name,
+        size: `${(pendingFile.size / 1024).toFixed(0)} KB`,
         date: new Date().toLocaleDateString("es-PE", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         }),
         type,
+        category: selectedCategory,
       },
     ]);
-    e.target.value = "";
+
+    setPendingFile(null);
+    setIsUploadModalOpen(false);
+    setSelectedCategory("CV");
   };
 
   const removeFile = (fid: number) =>
@@ -788,9 +826,17 @@ export default function InterviewDetailPage() {
                 >
                   <FileIcon type={f.type} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-700 truncate">
-                      {f.name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-medium text-gray-700 truncate">
+                        {f.name}
+                      </p>
+                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
+                        {
+                          FILE_CATEGORIES.find((c) => c.id === f.category)
+                            ?.label
+                        }
+                      </span>
+                    </div>
                     <p className="text-xs text-gray-400">
                       {f.size} · {f.date}
                     </p>
@@ -818,6 +864,84 @@ export default function InterviewDetailPage() {
               </span>
             </button>
           </SectionCard>
+          {/* ── File Upload Modal ── */}
+          {isUploadModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Configurar Archivo
+                  </h3>
+                  <button
+                    onClick={() => setIsUploadModalOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="p-3 bg-white rounded-lg shadow-sm">
+                      <FileText
+                        className="text-[var(--color-primary)]"
+                        size={24}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {pendingFile?.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {(pendingFile?.size ?? 0) / 1024 > 1024
+                          ? `${((pendingFile?.size ?? 0) / (1024 * 1024)).toFixed(2)} MB`
+                          : `${((pendingFile?.size ?? 0) / 1024).toFixed(0)} KB`}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                      Tipo de Archivo
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {FILE_CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedCategory(cat.id)}
+                          className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                            selectedCategory === cat.id
+                              ? "bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-md shadow-[var(--color-primary-20)]"
+                              : "bg-white border-gray-200 text-gray-600 hover:border-[var(--color-primary-20)] hover:bg-gray-50"
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-gray-50 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsUploadModalOpen(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-white transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmUpload}
+                    className="flex-[2] px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-20)]"
+                  >
+                    Subir Archivo
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Dashboard>
