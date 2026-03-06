@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import {
@@ -139,36 +140,18 @@ export default function InterviewsPage() {
               <div className="flex-1">
                 <label
                   htmlFor="buscar-entrevista"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1"
                 >
-                  Búsqueda por título de RQ, talento o código
+                  Búsqueda por talento
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-                      />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    id="buscar-entrevista"
-                    value={buscar}
-                    onChange={(e) => setBuscar(e.target.value)}
-                    placeholder="Ej: Juan Perez, Java Developer..."
-                    className="input w-full pl-9"
-                  />
-                </div>
+                <input
+                  type="text"
+                  id="buscar-entrevista"
+                  value={buscar}
+                  onChange={(e) => setBuscar(e.target.value)}
+                  placeholder="Ej: Juan Perez"
+                  className="input w-full"
+                />
               </div>
             </div>
 
@@ -217,7 +200,7 @@ export default function InterviewsPage() {
         </div>
 
         {/* Table */}
-        <div className="table-container">
+        <div className="table-container shadow-lg rounded-xl border border-gray-100 overflow-hidden">
           <div className="table-wrapper">
             <table className="table">
               <thead>
@@ -227,7 +210,8 @@ export default function InterviewsPage() {
                   <th className="table-header-cell">Requerimientos</th>
                   <th className="table-header-cell">Clientes</th>
                   <th className="table-header-cell">Fecha Entrevista</th>
-                  <th className="table-header-cell">Etapa/Estado</th>
+                  <th className="table-header-cell">Etapa / Estado</th>
+                  <th className="table-header-cell text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -239,13 +223,7 @@ export default function InterviewsPage() {
                   </tr>
                 ) : (
                   interviews.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="table-row cursor-pointer"
-                      onClick={() =>
-                        navigate(`/dashboard/entrevistas/${item.id}`)
-                      }
-                    >
+                    <tr key={item.id} className="table-row">
                       <td className="table-cell text-gray-500">{item.id}</td>
                       <td className="table-cell">
                         <span className="font-medium text-gray-900">
@@ -262,6 +240,18 @@ export default function InterviewsPage() {
                           estado={item.estado}
                         />
                       </td>
+                      <td className="table-cell text-center">
+                        <button
+                          type="button"
+                          className="p-2 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                          onClick={() =>
+                            navigate(`/dashboard/entrevistas/${item.id}`)
+                          }
+                          title="Ver detalle"
+                        >
+                          <Eye size={20} />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -271,23 +261,42 @@ export default function InterviewsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center items-center gap-4 my-6">
+        <div className="flex justify-center items-center gap-6 my-8">
           <button
-            className={`btn ${currentPage === 1 ? "btn-disabled" : "btn-outline-gray"}`}
+            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
+              currentPage === 1
+                ? "text-gray-300 cursor-not-allowed border border-gray-100 bg-gray-50"
+                : "text-gray-600 border border-gray-200 bg-white hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:shadow-md active:scale-95 shadow-sm"
+            }`}
             onClick={prevPage}
             disabled={currentPage === 1}
+            title="Página Anterior"
           >
-            Anterior
+            <ChevronLeft size={20} />
           </button>
-          <span className="text-sm text-gray-600">
-            Página {currentPage} de {totalPages}
-          </span>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Página</span>
+            <span className="flex items-center justify-center h-9 w-9 rounded-lg bg-[var(--color-primary-10)] text-[var(--color-primary)] text-sm font-bold shadow-sm border border-[var(--color-primary-20)]">
+              {currentPage}
+            </span>
+            <span className="text-sm font-medium">de</span>
+            <span className="text-sm font-bold text-gray-700">
+              {totalPages}
+            </span>
+          </div>
+
           <button
-            className={`btn ${currentPage >= totalPages ? "btn-disabled" : "btn-primary"}`}
+            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
+              currentPage >= totalPages
+                ? "text-gray-300 cursor-not-allowed border border-gray-100 bg-gray-50"
+                : "text-[var(--color-primary)] border border-[var(--color-primary-20)] bg-white hover:bg-[var(--color-primary)] hover:text-white hover:shadow-md active:scale-95 shadow-sm"
+            }`}
             onClick={nextPage}
             disabled={currentPage >= totalPages}
+            title="Página Siguiente"
           >
-            Siguiente
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
