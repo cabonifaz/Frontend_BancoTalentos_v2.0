@@ -16,6 +16,7 @@ import {
   getInterviewDetail,
   updateInterview,
   UpdateInterviewPayload,
+  uploadInterviewFile,
 } from "../../core/services/interviews.service";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,6 +41,7 @@ import {
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
+  TIPO_ARCHIVO_ENTREVISTA,
 } from "../../core/utilities/constants";
 
 const RATING_LABELS: Record<number, string> = {
@@ -56,22 +58,14 @@ interface SelectedRQ {
   cliente: string;
 }
 
-const FILE_CATEGORIES = [
-  { id: "CV", label: "CV" },
-  { id: "PRUEBA_TECNICA", label: "Prueba Técnica" },
-  { id: "EVALUACION", label: "Evaluación" },
-  { id: "OTRO", label: "Otro" },
-] as const;
-
-type FileCategory = (typeof FILE_CATEGORIES)[number]["id"];
-
 interface UploadedFile {
   id: number;
   name: string;
-  size: string;
-  date: string;
   type: "pdf" | "img" | "doc";
-  category: FileCategory;
+  idFileType: number;
+  fileType: string;
+  path?: string;
+  date?: string;
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -161,15 +155,16 @@ export default function InterviewDetailPage() {
   // Modal file state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<FileCategory>("CV");
+  const [selectedCategory, setSelectedCategory] = useState<number>(0);
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext(
-    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA}`,
+    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA},${TIPO_ARCHIVO_ENTREVISTA}`,
   );
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+  const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
 
   const methods = useForm<UpdateInterviewType>({
     resolver: zodResolver(UpdateInterviewSchema),
@@ -223,6 +218,9 @@ export default function InterviewDetailPage() {
   const { execute: executeUpdate, loading: loadingSave } =
     useAsyncService(updateInterview);
 
+  const { execute: executeUploadFile, loading: loadingUpload } =
+    useAsyncService(uploadInterviewFile);
+
   useEffect(() => {
     if (isEditing && id) {
       fetchDetail(Number(id));
@@ -262,10 +260,11 @@ export default function InterviewDetailPage() {
       const filesData: UploadedFile[] = (data.files || []).map((f: any) => ({
         id: f.id,
         name: f.name,
-        size: f.size,
         date: f.date,
         type: f.type,
-        category: f.category || "OTRO",
+        idFileType: f.idFileType,
+        fileType: f.fileType || "Otro",
+        path: f.path,
       }));
       setFiles(filesData);
     }
@@ -383,36 +382,57 @@ export default function InterviewDetailPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingFile(file);
+    // Set default category to the first one available
+    if (interviewFileTypes.length > 0) {
+      setSelectedCategory(interviewFileTypes[0].num1);
+    }
     setIsUploadModalOpen(true);
     e.target.value = "";
   };
 
-  const confirmUpload = () => {
-    if (!pendingFile) return;
+  const confirmUpload = async () => {
+    if (!pendingFile || !id) return;
 
-    const ext = pendingFile.name.split(".").pop()?.toLowerCase();
-    const type: UploadedFile["type"] =
-      ext === "pdf" ? "pdf" : ext === "jpg" || ext === "png" ? "img" : "doc";
+    const res = await executeUploadFile({
+      idInterview: Number(id),
+      idFileType: selectedCategory,
+      file: pendingFile,
+    });
 
-    setFiles((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: pendingFile.name,
-        size: `${(pendingFile.size / 1024).toFixed(0)} KB`,
-        date: new Date().toLocaleDateString("es-PE", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }),
-        type,
-        category: selectedCategory,
-      },
-    ]);
+    if (res.result && res.result.idTipoMensaje === 2) {
+      const ext = pendingFile.name.split(".").pop()?.toLowerCase();
+      const type: UploadedFile["type"] =
+        ext === "pdf" ? "pdf" : ext === "jpg" || ext === "png" ? "img" : "doc";
 
-    setPendingFile(null);
-    setIsUploadModalOpen(false);
-    setSelectedCategory("CV");
+      const typeLabel =
+        interviewFileTypes.find((t) => t.num1 === selectedCategory)?.string1 ||
+        "Otro";
+
+      setFiles((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          name: pendingFile.name,
+          date: new Date().toLocaleDateString("es-PE", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          type,
+          idFileType: selectedCategory,
+          fileType: typeLabel,
+        },
+      ]);
+
+      enqueueSnackbar("Archivo subido con éxito", { variant: "success" });
+      setPendingFile(null);
+      setIsUploadModalOpen(false);
+      setSelectedCategory(0);
+    } else if (res.result) {
+      enqueueSnackbar(res.result.mensaje || "Error al subir archivo", {
+        variant: "error",
+      });
+    }
   };
 
   const removeFile = (fid: number) =>
@@ -426,9 +446,11 @@ export default function InterviewDetailPage() {
 
   return (
     <Dashboard>
-      {(loadingDetail || loadingReqs || loadingParams || loadingSave) && (
-        <Loading opacity="opacity-50" />
-      )}
+      {(loadingDetail ||
+        loadingReqs ||
+        loadingParams ||
+        loadingSave ||
+        loadingUpload) && <Loading opacity="opacity-50" />}
       <div className="p-4 mx-4 xl:mx-16 pb-12">
         <form onSubmit={handleSubmit(handleSave)}>
           {/* ── Top bar ── */}
@@ -831,15 +853,10 @@ export default function InterviewDetailPage() {
                         {f.name}
                       </p>
                       <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
-                        {
-                          FILE_CATEGORIES.find((c) => c.id === f.category)
-                            ?.label
-                        }
+                        {f.fileType}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400">
-                      {f.size} · {f.date}
-                    </p>
+                    <p className="text-xs text-gray-400">{f.date}</p>
                   </div>
                   <button
                     type="button"
@@ -866,7 +883,7 @@ export default function InterviewDetailPage() {
           </SectionCard>
           {/* ── File Upload Modal ── */}
           {isUploadModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[30] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="text-lg font-bold text-gray-900">
@@ -905,18 +922,18 @@ export default function InterviewDetailPage() {
                       Tipo de Archivo
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {FILE_CATEGORIES.map((cat) => (
+                      {interviewFileTypes.map((cat) => (
                         <button
-                          key={cat.id}
+                          key={cat.num1}
                           type="button"
-                          onClick={() => setSelectedCategory(cat.id)}
+                          onClick={() => setSelectedCategory(cat.num1)}
                           className={`px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
-                            selectedCategory === cat.id
+                            selectedCategory === cat.num1
                               ? "bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-md shadow-[var(--color-primary-20)]"
                               : "bg-white border-gray-200 text-gray-600 hover:border-[var(--color-primary-20)] hover:bg-gray-50"
                           }`}
                         >
-                          {cat.label}
+                          {cat.string1}
                         </button>
                       ))}
                     </div>

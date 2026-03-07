@@ -115,3 +115,25 @@ export const updateInterview = async (
     config,
   );
 };
+
+export interface UploadInterviewFilePayload {
+  idInterview: number;
+  idFileType: number;
+  file: File;
+}
+
+export const uploadInterviewFile = async (
+  data: UploadInterviewFilePayload,
+  config?: ApiConfig,
+) => {
+  const formData = new FormData();
+  formData.append("idInterview", data.idInterview.toString());
+  formData.append("idFileType", data.idFileType.toString());
+  formData.append("file", data.file);
+
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/file/upload",
+    formData,
+    config,
+  );
+};
