@@ -137,3 +137,17 @@ export const uploadInterviewFile = async (
     config,
   );
 };
+
+export const deleteInterviewFile = async (
+  fileId: number,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/file/remove",
+    null,
+    {
+      ...config,
+      params: { fileId },
+    },
+  );
+};

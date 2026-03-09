@@ -7,6 +7,8 @@ import {
   RequirementItem,
   ReqListParams,
   RequerimientosResponse,
+  BaseResponseFMI,
+  OperationResult,
 } from "../../core/models";
 import { Loading } from "../../core/components";
 import { useSnackbar } from "notistack";
@@ -17,6 +19,9 @@ import {
   updateInterview,
   UpdateInterviewPayload,
   uploadInterviewFile,
+  deleteInterviewFile,
+  InterviewDetailDTO,
+  UploadInterviewFilePayload,
 } from "../../core/services/interviews.service";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,12 +75,18 @@ interface UploadedFile {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function FileIcon({ type }: { type: UploadedFile["type"] }) {
-  const cfg = {
+function FileIcon({ type }: { type: string }) {
+  const configs: Record<string, { bg: string; label: string }> = {
     pdf: { bg: "bg-red-100 text-red-600", label: "PDF" },
     img: { bg: "bg-green-100 text-green-600", label: "IMG" },
     doc: { bg: "bg-blue-100 text-blue-600", label: "DOC" },
-  }[type];
+  };
+
+  const cfg = configs[type] || {
+    bg: "bg-gray-100 text-gray-600",
+    label: "FILE",
+  };
+
   return (
     <span
       className={`inline-flex items-center justify-center w-9 h-9 rounded-lg text-xs font-bold shrink-0 ${cfg.bg}`}
@@ -213,13 +224,22 @@ export default function InterviewDetailPage() {
     execute: fetchDetail,
     loading: loadingDetail,
     result: detailResult,
-  } = useAsyncService(getInterviewDetail);
+  } = useAsyncService<OperationResult<InterviewDetailDTO>, [number]>(
+    getInterviewDetail,
+  );
 
-  const { execute: executeUpdate, loading: loadingSave } =
-    useAsyncService(updateInterview);
+  const { execute: executeUpdate, loading: loadingSave } = useAsyncService<
+    BaseResponseFMI,
+    [UpdateInterviewPayload]
+  >(updateInterview);
 
   const { execute: executeUploadFile, loading: loadingUpload } =
-    useAsyncService(uploadInterviewFile);
+    useAsyncService<BaseResponseFMI, [UploadInterviewFilePayload]>(
+      uploadInterviewFile,
+    );
+
+  const { execute: executeDeleteFile, loading: loadingDeleteFile } =
+    useAsyncService<BaseResponseFMI, [number]>(deleteInterviewFile);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -257,15 +277,25 @@ export default function InterviewDetailPage() {
       setValue("notasIdiomas", data.notasIdiomas);
       setValue("notasEducacion", data.notasEducacion);
 
-      const filesData: UploadedFile[] = (data.files || []).map((f: any) => ({
-        id: f.id,
-        name: f.name,
-        date: f.date,
-        type: f.type,
-        idFileType: f.idFileType,
-        fileType: f.fileType || "Otro",
-        path: f.path,
-      }));
+      const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
+        const ext = f.name?.split(".").pop()?.toLowerCase();
+        const iconType: UploadedFile["type"] =
+          ext === "pdf"
+            ? "pdf"
+            : ["jpg", "jpeg", "png", "gif"].includes(ext || "")
+              ? "img"
+              : "doc";
+
+        return {
+          id: f.id,
+          name: f.name,
+          date: f.date,
+          type: iconType,
+          idFileType: f.idFileType,
+          fileType: f.type || "Otro",
+          path: f.pathFile || f.path,
+        };
+      });
       setFiles(filesData);
     }
   }, [detailResult, setValue]);
@@ -435,8 +465,19 @@ export default function InterviewDetailPage() {
     }
   };
 
-  const removeFile = (fid: number) =>
-    setFiles((prev) => prev.filter((f) => f.id !== fid));
+  const removeFile = async (fid: number) => {
+    const res = await executeDeleteFile(fid);
+    if (res.result && res.result.idTipoMensaje === 2) {
+      setFiles((prev) => prev.filter((f) => f.id !== fid));
+      enqueueSnackbar(res.result.mensaje || "Archivo eliminado", {
+        variant: "success",
+      });
+    } else if (res.result) {
+      enqueueSnackbar(res.result.mensaje || "Error al eliminar archivo", {
+        variant: "error",
+      });
+    }
+  };
 
   // ── SVG icons (inline to avoid asset deps) ──
   const IconDoc = <FileText size={16} />;
@@ -450,7 +491,8 @@ export default function InterviewDetailPage() {
         loadingReqs ||
         loadingParams ||
         loadingSave ||
-        loadingUpload) && <Loading opacity="opacity-50" />}
+        loadingUpload ||
+        loadingDeleteFile) && <Loading opacity="opacity-50" />}
       <div className="p-4 mx-4 xl:mx-16 pb-12">
         <form onSubmit={handleSubmit(handleSave)}>
           {/* ── Top bar ── */}
