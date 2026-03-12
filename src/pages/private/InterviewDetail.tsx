@@ -47,7 +47,10 @@ import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
   TIPO_ARCHIVO_ENTREVISTA,
+  ESTADO_RQ,
 } from "../../core/utilities/constants";
+import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
+import { useFetchClients } from "../../core/hooks/useFetchClients";
 
 const RATING_LABELS: Record<number, string> = {
   1: "Muy Malo",
@@ -163,6 +166,11 @@ export default function InterviewDetailPage() {
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
   const rqInputRef = useRef<HTMLInputElement>(null);
 
+  // Modal state for RQ Details
+  const [selectedRqIdForModal, setSelectedRqIdForModal] = useState<number | null>(
+    null,
+  );
+
   // Modal file state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -170,12 +178,15 @@ export default function InterviewDetailPage() {
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext(
-    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA},${TIPO_ARCHIVO_ENTREVISTA}`,
+    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA},${TIPO_ARCHIVO_ENTREVISTA},${ESTADO_RQ}`,
   );
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
   const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
+  const rqStates = paramsByMaestro[ESTADO_RQ] || [];
+
+  const { clientes: clients } = useFetchClients();
 
   const methods = useForm<UpdateInterviewType>({
     resolver: zodResolver(UpdateInterviewSchema),
@@ -591,7 +602,13 @@ export default function InterviewDetailPage() {
                             key={rq.id}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--color-blue-10)] text-[var(--color-blue)] rounded-lg text-xs font-semibold"
                           >
-                            {rq.label}
+                            <button
+                              type="button"
+                              className="hover:underline"
+                              onClick={() => setSelectedRqIdForModal(rq.id)}
+                            >
+                              {rq.label}
+                            </button>
                             <button
                               type="button"
                               onClick={() => removeRQ(rq.id)}
@@ -1003,6 +1020,16 @@ export default function InterviewDetailPage() {
           )}
         </div>
       </div>
+      {selectedRqIdForModal && (
+        <ModalRQDetails
+          rqId={selectedRqIdForModal}
+          rqStates={rqStates}
+          clients={clients}
+          onClose={() => setSelectedRqIdForModal(null)}
+          handleAssingPost={() => {}}
+          updateRQData={() => {}}
+        />
+      )}
     </Dashboard>
   );
 }

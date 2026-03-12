@@ -225,7 +225,9 @@ export default function InterviewsPage() {
                           {item.talento}
                         </span>
                       </td>
-                      <td className="table-cell">{item.tituloRq}</td>
+                      <td className="table-cell max-w-[300px] truncate" title={item.tituloRq}>
+                        {item.tituloRq}
+                      </td>
                       <td className="table-cell">{item.cliente}</td>
                       <td className="table-cell">{item.fechaEntrevista}</td>
                       <td className="table-cell">
