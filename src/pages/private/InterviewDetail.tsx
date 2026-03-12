@@ -23,7 +23,7 @@ import {
   InterviewDetailDTO,
   UploadInterviewFilePayload,
 } from "../../core/services/interviews.service";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   UpdateInterviewSchema,
@@ -202,6 +202,7 @@ export default function InterviewDetailPage() {
       etapa: 0,
       idsRqs: [],
       enlaceEntrevista: "",
+      entrevistadores: [{ fullname: "", email: "" }],
       calificacion: 0,
       calificacionPersonal: 0,
       calificacionExperiencia: 0,
@@ -222,6 +223,15 @@ export default function InterviewDetailPage() {
     watch,
     formState: { errors },
   } = methods;
+
+  const {
+    fields: interviewerFields,
+    append: appendInterviewer,
+    remove: removeInterviewer,
+  } = useFieldArray({
+    control,
+    name: "entrevistadores",
+  });
 
   const formValues = watch();
 
@@ -290,6 +300,7 @@ export default function InterviewDetailPage() {
         rQS.map((r) => r.id),
       );
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
+      setValue("entrevistadores", data.entrevistadores || [{ fullname: "", email: "" }]);
       setValue("calificacion", data.calificacion);
       setValue("calificacionPersonal", data.calificacionPersonal || 0);
       setValue("calificacionExperiencia", data.calificacionExperiencia || 0);
@@ -333,6 +344,7 @@ export default function InterviewDetailPage() {
       estado: data.estado,
       etapa: data.etapa,
       enlaceEntrevista: data.enlaceEntrevista || "",
+      entrevistadores: data.entrevistadores || [],
       calificacion: data.calificacion ?? 0,
       calificacionPersonal: data.calificacionPersonal ?? 0,
       calificacionExperiencia: data.calificacionExperiencia ?? 0,
@@ -791,6 +803,97 @@ export default function InterviewDetailPage() {
                         {errors.estado.message}
                       </p>
                     )}
+                  </div>
+                </div>
+
+                {/* Entrevistadores section */}
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 text-[var(--color-blue)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
+                        />
+                      </svg>
+                      Entrevistadores
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        appendInterviewer({ fullname: "", email: "" })
+                      }
+                      className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus size={14} />
+                      Agregar Entrevistador
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {interviewerFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg relative"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Nombre Completo
+                          </label>
+                          <input
+                            {...register(`entrevistadores.${index}.fullname`)}
+                            placeholder="Ej: Ana García"
+                            className={`input w-full bg-white ${
+                              errors.entrevistadores?.[index]?.fullname
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors.entrevistadores?.[index]?.fullname && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.entrevistadores[index]?.fullname?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Email (Opcional)
+                          </label>
+                          <input
+                            {...register(`entrevistadores.${index}.email`)}
+                            placeholder="ana.garcia@empresa.com"
+                            className={`input w-full bg-white ${
+                              errors.entrevistadores?.[index]?.email
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors.entrevistadores?.[index]?.email && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.entrevistadores[index]?.email?.message}
+                            </p>
+                          )}
+                        </div>
+                        {interviewerFields.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeInterviewer(index)}
+                            className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Eliminar entrevistador"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </SectionCard>

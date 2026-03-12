@@ -16,6 +16,12 @@ export const UpdateInterviewSchema = z.object({
     .url("El enlace debe ser una URL válida")
     .optional()
     .or(z.literal("")),
+  entrevistadores: z.array(
+    z.object({
+      fullname: z.string().min(1, "El nombre completo es requerido"),
+      email: z.string().email("Email inválido").optional().or(z.literal("")),
+    })
+  ).optional(),
   calificacion: z.number().min(0).max(5).optional(),
   calificacionPersonal: z.number().min(0).max(5).optional(),
   calificacionExperiencia: z.number().min(0).max(5).optional(),

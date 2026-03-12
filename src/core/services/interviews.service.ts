@@ -10,6 +10,7 @@ export interface CreateInterviewType {
   estado: number;
   etapa: number;
   enlaceEntrevista: string;
+  entrevistadores: { fullname: string; email?: string }[];
 }
 
 export const createInterview = async (
@@ -54,6 +55,7 @@ export interface InterviewDetailDTO {
   idEtapa: number;
   etapa: string;
   enlaceEntrevista: string;
+  entrevistadores: { fullname: string; email?: string }[];
   calificacion: number;
   calificacionPersonal: number;
   calificacionExperiencia: number;
@@ -101,6 +103,7 @@ export interface UpdateInterviewPayload {
   estado: number;
   etapa: number;
   enlaceEntrevista: string;
+  entrevistadores: { fullname: string; email?: string }[];
   calificacion: number;
   calificacionPersonal: number;
   calificacionExperiencia: number;
