@@ -17,6 +17,10 @@ export const UpdateInterviewSchema = z.object({
     .optional()
     .or(z.literal("")),
   calificacion: z.number().min(0).max(5).optional(),
+  calificacionPersonal: z.number().min(0).max(5).optional(),
+  calificacionExperiencia: z.number().min(0).max(5).optional(),
+  calificacionIdiomas: z.number().min(0).max(5).optional(),
+  calificacionEducacion: z.number().min(0).max(5).optional(),
   notasPersonales: z.string().optional(),
   notasExperiencia: z.string().optional(),
   notasIdiomas: z.string().optional(),

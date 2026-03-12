@@ -55,6 +55,10 @@ export interface InterviewDetailDTO {
   etapa: string;
   enlaceEntrevista: string;
   calificacion: number;
+  calificacionPersonal: number;
+  calificacionExperiencia: number;
+  calificacionIdiomas: number;
+  calificacionEducacion: number;
   notasPersonales: string;
   notasExperiencia: string;
   notasIdiomas: string;
@@ -98,6 +102,10 @@ export interface UpdateInterviewPayload {
   etapa: number;
   enlaceEntrevista: string;
   calificacion: number;
+  calificacionPersonal: number;
+  calificacionExperiencia: number;
+  calificacionIdiomas: number;
+  calificacionEducacion: number;
   notasPersonales: string;
   notasExperiencia: string;
   notasIdiomas: string;

@@ -102,13 +102,17 @@ function FileIcon({ type }: { type: string }) {
 function StarRating({
   value,
   onChange,
+  size = "w-7 h-7",
+  gap = "gap-1",
 }: {
   value: number;
   onChange: (v: number) => void;
+  size?: string;
+  gap?: string;
 }) {
   const [hovered, setHovered] = useState(0);
   return (
-    <div className="flex gap-1 justify-center">
+    <div className={`flex ${gap} justify-center`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
@@ -119,7 +123,7 @@ function StarRating({
           onClick={() => onChange(star)}
         >
           <Star
-            className="w-7 h-7"
+            className={size}
             fill={(hovered || value) >= star ? "#FACC15" : "none"}
             color={(hovered || value) >= star ? "#FACC15" : "#D1D5DB"}
             strokeWidth={1.5}
@@ -199,6 +203,10 @@ export default function InterviewDetailPage() {
       idsRqs: [],
       enlaceEntrevista: "",
       calificacion: 0,
+      calificacionPersonal: 0,
+      calificacionExperiencia: 0,
+      calificacionIdiomas: 0,
+      calificacionEducacion: 0,
       notasPersonales: "",
       notasExperiencia: "",
       notasIdiomas: "",
@@ -283,6 +291,10 @@ export default function InterviewDetailPage() {
       );
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
       setValue("calificacion", data.calificacion);
+      setValue("calificacionPersonal", data.calificacionPersonal || 0);
+      setValue("calificacionExperiencia", data.calificacionExperiencia || 0);
+      setValue("calificacionIdiomas", data.calificacionIdiomas || 0);
+      setValue("calificacionEducacion", data.calificacionEducacion || 0);
       setValue("notasPersonales", data.notasPersonales);
       setValue("notasExperiencia", data.notasExperiencia);
       setValue("notasIdiomas", data.notasIdiomas);
@@ -322,6 +334,10 @@ export default function InterviewDetailPage() {
       etapa: data.etapa,
       enlaceEntrevista: data.enlaceEntrevista || "",
       calificacion: data.calificacion ?? 0,
+      calificacionPersonal: data.calificacionPersonal ?? 0,
+      calificacionExperiencia: data.calificacionExperiencia ?? 0,
+      calificacionIdiomas: data.calificacionIdiomas ?? 0,
+      calificacionEducacion: data.calificacionEducacion ?? 0,
       notasPersonales: data.notasPersonales || "",
       notasExperiencia: data.notasExperiencia || "",
       notasIdiomas: data.notasIdiomas || "",
@@ -787,9 +803,23 @@ export default function InterviewDetailPage() {
               >
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="input-label block mb-1">
-                      Notas Personales
-                    </label>
+                    <div className="flex items-center gap-3 mb-1">
+                      <label className="input-label block m-0">
+                        Notas Personales
+                      </label>
+                      <Controller
+                        name="calificacionPersonal"
+                        control={control}
+                        render={({ field }) => (
+                          <StarRating
+                            value={field.value || 0}
+                            onChange={field.onChange}
+                            size="w-5 h-5"
+                            gap="gap-0.5"
+                          />
+                        )}
+                      />
+                    </div>
                     <textarea
                       {...register("notasPersonales")}
                       rows={3}
@@ -798,9 +828,23 @@ export default function InterviewDetailPage() {
                     />
                   </div>
                   <div>
-                    <label className="input-label block mb-1">
-                      Notas Experiencia Laboral
-                    </label>
+                    <div className="flex items-center gap-3 mb-1">
+                      <label className="input-label block m-0">
+                        Notas Experiencia Laboral
+                      </label>
+                      <Controller
+                        name="calificacionExperiencia"
+                        control={control}
+                        render={({ field }) => (
+                          <StarRating
+                            value={field.value || 0}
+                            onChange={field.onChange}
+                            size="w-5 h-5"
+                            gap="gap-0.5"
+                          />
+                        )}
+                      />
+                    </div>
                     <textarea
                       {...register("notasExperiencia")}
                       rows={3}
@@ -810,9 +854,23 @@ export default function InterviewDetailPage() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="input-label block mb-1">
-                        Notas Idiomas
-                      </label>
+                      <div className="flex items-center gap-3 mb-1">
+                        <label className="input-label block m-0">
+                          Notas Idiomas
+                        </label>
+                        <Controller
+                          name="calificacionIdiomas"
+                          control={control}
+                          render={({ field }) => (
+                            <StarRating
+                              value={field.value || 0}
+                              onChange={field.onChange}
+                              size="w-5 h-5"
+                              gap="gap-0.5"
+                            />
+                          )}
+                        />
+                      </div>
                       <textarea
                         {...register("notasIdiomas")}
                         rows={3}
@@ -821,9 +879,23 @@ export default function InterviewDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="input-label block mb-1">
-                        Notas Educación
-                      </label>
+                      <div className="flex items-center gap-3 mb-1">
+                        <label className="input-label block m-0">
+                          Notas Educación
+                        </label>
+                        <Controller
+                          name="calificacionEducacion"
+                          control={control}
+                          render={({ field }) => (
+                            <StarRating
+                              value={field.value || 0}
+                              onChange={field.onChange}
+                              size="w-5 h-5"
+                              gap="gap-0.5"
+                            />
+                          )}
+                        />
+                      </div>
                       <textarea
                         {...register("notasEducacion")}
                         rows={3}
