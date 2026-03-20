@@ -344,7 +344,7 @@ export default function InterviewDetailPage() {
       estado: data.estado,
       etapa: data.etapa,
       enlaceEntrevista: data.enlaceEntrevista || "",
-      entrevistadores: data.entrevistadores || [],
+      entrevistadores: JSON.stringify(data.entrevistadores || []),
       calificacion: data.calificacion ?? 0,
       calificacionPersonal: data.calificacionPersonal ?? 0,
       calificacionExperiencia: data.calificacionExperiencia ?? 0,

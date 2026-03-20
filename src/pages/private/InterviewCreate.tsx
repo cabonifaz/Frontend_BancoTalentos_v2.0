@@ -128,7 +128,7 @@ export default function InterviewCreatePage() {
       estado: Number(data.estado),
       etapa: Number(data.etapa),
       enlaceEntrevista: data.enlaceEntrevista || "",
-      entrevistadores: data.entrevistadores || [],
+      entrevistadores: JSON.stringify(data.entrevistadores || []),
     };
 
     const { result } = await execute(payload);
