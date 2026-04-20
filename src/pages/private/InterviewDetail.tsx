@@ -203,6 +203,7 @@ export default function InterviewDetailPage() {
       idsRqs: [],
       enlaceEntrevista: "",
       entrevistadores: [{ fullname: "", email: "" }],
+      grabaciones: [{ enlace: "", fecha: "" }], 
       calificacion: 0,
       calificacionPersonal: 0,
       calificacionExperiencia: 0,
@@ -212,6 +213,7 @@ export default function InterviewDetailPage() {
       notasExperiencia: "",
       notasIdiomas: "",
       notasEducacion: "",
+      motivoCancelacion: "",
     },
   });
 
@@ -231,6 +233,16 @@ export default function InterviewDetailPage() {
   } = useFieldArray({
     control,
     name: "entrevistadores",
+  });
+
+  const {
+    fields: grabacionFields,
+    append: appendGrabacion,
+    remove: removeGrabacion,
+    replace: replaceGrabacion,
+  } = useFieldArray({
+    control,
+    name: "grabaciones",
   });
 
   const formValues = watch();
@@ -293,7 +305,7 @@ export default function InterviewDetailPage() {
       setValue("idTalento", data.idTalento);
       setValue("fecha", data.fecha);
       setValue("hora", data.hora);
-      setValue("estado", data.idEstado);
+      setValue("estado", Number(data.idEstado));
       setValue("etapa", data.idEtapa);
       setValue(
         "idsRqs",
@@ -301,6 +313,7 @@ export default function InterviewDetailPage() {
       );
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
       setValue("entrevistadores", data.entrevistadores || [{ fullname: "", email: "" }]);
+      setValue("grabaciones", data.grabaciones || [{ enlace: "", fecha: "" }]);
       setValue("calificacion", data.calificacion);
       setValue("calificacionPersonal", data.calificacionPersonal || 0);
       setValue("calificacionExperiencia", data.calificacionExperiencia || 0);
@@ -310,6 +323,7 @@ export default function InterviewDetailPage() {
       setValue("notasExperiencia", data.notasExperiencia);
       setValue("notasIdiomas", data.notasIdiomas);
       setValue("notasEducacion", data.notasEducacion);
+      setValue("motivoCancelacion", data.motivoCancelacion);
 
       const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
         const ext = f.name?.split(".").pop()?.toLowerCase();
@@ -345,6 +359,7 @@ export default function InterviewDetailPage() {
       etapa: data.etapa,
       enlaceEntrevista: data.enlaceEntrevista || "",
       entrevistadores: JSON.stringify(data.entrevistadores || []),
+      grabaciones: JSON.stringify(data.grabaciones || []),
       calificacion: data.calificacion ?? 0,
       calificacionPersonal: data.calificacionPersonal ?? 0,
       calificacionExperiencia: data.calificacionExperiencia ?? 0,
@@ -355,6 +370,7 @@ export default function InterviewDetailPage() {
       notasIdiomas: data.notasIdiomas || "",
       notasEducacion: data.notasEducacion || "",
       idsRqs: data.idsRqs,
+      motivoCancelacion: data.motivoCancelacion || "",
     };
 
     const res = await executeUpdate(payload);
@@ -803,6 +819,108 @@ export default function InterviewDetailPage() {
                         {errors.estado.message}
                       </p>
                     )}
+                  </div>
+                </div>
+
+                {/* Motivo Cancelacion */}
+
+                {
+                  (() => {
+                    if(Number(watch("estado")) === 4) {
+                      console.log("Estado es Cancelado, mostrar motivo de cancelación")
+                      return (
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                          <label className="input-label font-medium mb-1">
+                            Motivo de cancelación
+                          </label>
+                          <textarea
+                            {...register("motivoCancelacion")}
+                            rows={3}
+                            className="input w-full resize-none"
+                          />
+                        </div>
+                        
+                      );
+                      
+                    }
+                    
+                  })()
+                }  
+
+                {/* Agregar grabaciones de reuniones */}
+
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+                      Grabaciones de reuniones
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        appendGrabacion({ enlace: "", fecha: "" })
+                      }
+                      className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus size={14} />
+                      Agregar Grabación
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {grabacionFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg relative"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Enlace
+                          </label>
+                          <input
+                            {...register(`grabaciones.${index}.enlace`)}
+                            placeholder="Ej: https://drive.google.com/file/d/abc123/view"
+                            className={`input w-full bg-white ${
+                              errors.grabaciones?.[index]?.enlace
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors.grabaciones?.[index]?.enlace && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.grabaciones[index]?.enlace?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Fecha
+                          </label>
+                          <div className="flex flex-col gap-1">
+                            <input
+                              {...register(`grabaciones.${index}.fecha`)}
+                              type="date"
+                              className="input w-full bg-white"
+                            />
+                            {errors.grabaciones?.[index]?.fecha && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.grabaciones[index]?.fecha?.message}
+                              </p>
+                            )}
+                          </div>
+                        
+                        </div>
+                        {grabacionFields.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeGrabacion(index)}
+                            className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Eliminar grabación"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 

@@ -22,6 +22,14 @@ export const UpdateInterviewSchema = z.object({
       email: z.string().email("Email inválido").optional().or(z.literal("")),
     })
   ).optional(),
+  grabaciones: z.array(
+  z.object({
+    enlace: z
+      .string()
+      .url("El enlace debe ser una URL válida"),
+    fecha: z.string().min(1, "La fecha es requerida")
+    })
+  ).optional(),
   calificacion: z.number().min(0).max(5).optional(),
   calificacionPersonal: z.number().min(0).max(5).optional(),
   calificacionExperiencia: z.number().min(0).max(5).optional(),
@@ -31,6 +39,7 @@ export const UpdateInterviewSchema = z.object({
   notasExperiencia: z.string().optional(),
   notasIdiomas: z.string().optional(),
   notasEducacion: z.string().optional(),
+  motivoCancelacion: z.string().optional()
 });
 
 export type UpdateInterviewType = z.infer<typeof UpdateInterviewSchema>;

@@ -56,6 +56,7 @@ export interface InterviewDetailDTO {
   etapa: string;
   enlaceEntrevista: string;
   entrevistadores: { fullname: string; email?: string }[];
+  grabaciones: { enlace: string; fecha: string }[];
   calificacion: number;
   calificacionPersonal: number;
   calificacionExperiencia: number;
@@ -66,6 +67,7 @@ export interface InterviewDetailDTO {
   notasIdiomas: string;
   notasEducacion: string;
   clienteResumen: string;
+  motivoCancelacion: string;
   selectedRQs: { id: number; label: string; cliente: string }[];
   files: any[];
 }
@@ -104,6 +106,7 @@ export interface UpdateInterviewPayload {
   etapa: number;
   enlaceEntrevista: string;
   entrevistadores: string;
+  grabaciones: string;
   calificacion: number;
   calificacionPersonal: number;
   calificacionExperiencia: number;
@@ -114,6 +117,7 @@ export interface UpdateInterviewPayload {
   notasIdiomas: string;
   notasEducacion: string;
   idsRqs: number[];
+  motivoCancelacion: string;
 }
 
 export const updateInterview = async (
