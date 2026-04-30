@@ -153,6 +153,85 @@ export const uploadInterviewFile = async (
   );
 };
 
+export interface GenerateUploadUrlPayload {
+  idInterview: number;
+  idFileType: number;
+  fileName: string;
+  contentType: string;
+}
+
+export interface GenerateUploadUrlResponse {
+  data: {
+    url: string;
+    path: string;
+    fileName: string;
+  }
+}
+
+export interface GenerateDownloadUrlResponse {
+  baseResponse: BaseResponseFMI;
+  data: {
+    url: string;
+    fileName: string;
+  };
+}
+
+export const generateUploadUrl = async (
+  data: GenerateUploadUrlPayload,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<GenerateUploadUrlResponse>(
+    "fmi/interviews/file/upload-url",
+    data,
+    config,
+  );
+};
+
+export const uploadFileToS3 = async (url:string,file:File) => {
+  return await fetch(url,{
+    method:"PUT",
+    headers:{
+      "Content-Type": file.type
+    },
+    body:file
+  });
+};
+
+export interface ConfirmUploadPayload {
+  idInterview: number;
+  idFileType: number;
+  fileName: string;
+  path: string;
+}
+
+export const confirmUploadFile = async (
+  data: ConfirmUploadPayload,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/file/confirm-upload",
+    data,
+    config,
+  );
+};
+
+export const downloadInterviewFile = async (fileId:number) => {
+  return axiosInstanceFMI.get(
+    `fmi/interviews/file/download/${fileId}`
+  );
+};
+
+export const generateDownloadUrl = async (
+  idFile: number,
+  config?: ApiConfig,
+): Promise<{ data: GenerateDownloadUrlResponse }> => {
+  return axiosInstanceFMI.post(
+    "fmi/interviews/file/download-url",
+    { idFile },
+    { signal: config?.signal },
+  );
+};
+
 export const deleteInterviewFile = async (
   fileId: number,
   config?: ApiConfig,

@@ -18,11 +18,14 @@ import {
   getInterviewDetail,
   updateInterview,
   UpdateInterviewPayload,
-  uploadInterviewFile,
   deleteInterviewFile,
   InterviewDetailDTO,
-  UploadInterviewFilePayload,
+  generateUploadUrl,
+  uploadFileToS3,
+  confirmUploadFile,
+  generateDownloadUrl
 } from "../../core/services/interviews.service";
+
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -72,8 +75,9 @@ interface UploadedFile {
   type: "pdf" | "img" | "doc";
   idFileType: number;
   fileType: string;
-  path?: string;
+  //path?: string;//ESTO SE VA
   date?: string;
+  ///urlFile?: string;// Y ESTO IGUAL
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -274,10 +278,11 @@ export default function InterviewDetailPage() {
     [UpdateInterviewPayload]
   >(updateInterview);
 
-  const { execute: executeUploadFile, loading: loadingUpload } =
-    useAsyncService<BaseResponseFMI, [UploadInterviewFilePayload]>(
-      uploadInterviewFile,
-    );
+  const { execute: executeGenerateUpload, loading: loadingUpload } = useAsyncService(generateUploadUrl);
+
+  const { execute: executeConfirmUpload } = useAsyncService(confirmUploadFile);
+
+  const { execute: executeDownloadFile } = useAsyncService(generateDownloadUrl);
 
   const { execute: executeDeleteFile, loading: loadingDeleteFile } =
     useAsyncService<BaseResponseFMI, [number]>(deleteInterviewFile);
@@ -340,13 +345,15 @@ export default function InterviewDetailPage() {
           date: f.date,
           type: iconType,
           idFileType: f.idFileType,
-          fileType: f.type || "Otro",
-          path: f.pathFile || f.path,
+          fileType: f.type || "Otro"
+          //path: f.pathFile || f.path,//ESTO SE TIENE QUE IR
+          //urlFile: f.urlFile// Y ESTO IGUAL Xd
         };
       });
       setFiles(filesData);
     }
   }, [detailResult, setValue]);
+
 
   const handleSave = async (data: UpdateInterviewType) => {
     if (!id) return;
@@ -475,50 +482,69 @@ export default function InterviewDetailPage() {
     e.target.value = "";
   };
 
-  const confirmUpload = async () => {
-    if (!pendingFile || !id) return;
+const confirmUpload = async () => {
+  if (!pendingFile || !id) return;
 
-    const res = await executeUploadFile({
+  try {
+    // 1 pedir URL al backend
+    const presigned = await executeGenerateUpload({
       idInterview: Number(id),
       idFileType: selectedCategory,
-      file: pendingFile,
+      fileName: pendingFile.name,
+      contentType: pendingFile.type,
     });
 
-    if (res.result && res.result.idTipoMensaje === 2) {
-      const ext = pendingFile.name.split(".").pop()?.toLowerCase();
-      const type: UploadedFile["type"] =
-        ext === "pdf" ? "pdf" : ext === "jpg" || ext === "png" ? "img" : "doc";
+    if (!presigned.result) {
+      enqueueSnackbar("No se pudo generar URL de subida", {
+        variant: "error",
+      });
+      return;
+    }
 
-      const typeLabel =
-        interviewFileTypes.find((t) => t.num1 === selectedCategory)?.string1 ||
-        "Otro";
+    const data = presigned.result.data;
 
-      setFiles((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          name: pendingFile.name,
-          date: new Date().toLocaleDateString("es-PE", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }),
-          type,
-          idFileType: selectedCategory,
-          fileType: typeLabel,
-        },
-      ]);
+    // 2 subir directo a S3
+    const uploadResponse = await uploadFileToS3(
+      data.url,
+      pendingFile,
+    );
 
-      enqueueSnackbar("Archivo subido con éxito", { variant: "success" });
+    if (!uploadResponse.ok) {
+      enqueueSnackbar("Error subiendo archivo a S3 ", {
+        variant: "error",
+      });
+      return;
+    }
+
+    // 3 confirmar en backend
+    const confirm = await executeConfirmUpload({
+      idInterview: Number(id),
+      idFileType: selectedCategory,
+      fileName: data.fileName,
+      path: data.path,
+    });
+
+    if (confirm.result?.idTipoMensaje === 2) {
+      enqueueSnackbar("Archivo subido con éxito", {
+        variant: "success",
+      });
+
+      await fetchDetail(Number(id)); // recargar lista real
       setPendingFile(null);
       setIsUploadModalOpen(false);
       setSelectedCategory(0);
-    } else if (res.result) {
-      enqueueSnackbar(res.result.mensaje || "Error al subir archivo", {
+    } else {
+      enqueueSnackbar("Error confirmando archivo", {
         variant: "error",
       });
     }
-  };
+
+  } catch (error) {
+    enqueueSnackbar("Error al subir archivo", {
+      variant: "error",
+    });
+  }
+};
 
   const removeFile = async (fid: number) => {
     const res = await executeDeleteFile(fid);
@@ -529,6 +555,18 @@ export default function InterviewDetailPage() {
       });
     } else if (res.result) {
       enqueueSnackbar(res.result.mensaje || "Error al eliminar archivo", {
+        variant: "error",
+      });
+    }
+  };
+
+  const handleDownload = async (idFile: number) => {
+    const res = await executeDownloadFile(idFile);
+
+    if (res.result?.data?.url) {
+      window.open(res.result.data.url, "_blank");
+    } else {
+      enqueueSnackbar("No se pudo descargar archivo", {
         variant: "error",
       });
     }
@@ -827,7 +865,6 @@ export default function InterviewDetailPage() {
                 {
                   (() => {
                     if(Number(watch("estado")) === 4) {
-                      console.log("Estado es Cancelado, mostrar motivo de cancelación")
                       return (
                         <div className="mt-8 pt-8 border-t border-gray-100">
                           <label className="input-label font-medium mb-1">
@@ -1201,9 +1238,13 @@ export default function InterviewDetailPage() {
                   <FileIcon type={f.type} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-medium text-gray-700 truncate">
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(f.id)}
+                        className="text-xs font-medium text-blue-600 truncate hover:underline"
+                      >
                         {f.name}
-                      </p>
+                      </button>
                       <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
                         {f.fileType}
                       </span>
