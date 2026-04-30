@@ -18,11 +18,14 @@ import {
   getInterviewDetail,
   updateInterview,
   UpdateInterviewPayload,
-  uploadInterviewFile,
   deleteInterviewFile,
   InterviewDetailDTO,
-  UploadInterviewFilePayload,
+  generateUploadUrl,
+  uploadFileToS3,
+  confirmUploadFile,
+  generateDownloadUrl
 } from "../../core/services/interviews.service";
+
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -72,8 +75,9 @@ interface UploadedFile {
   type: "pdf" | "img" | "doc";
   idFileType: number;
   fileType: string;
-  path?: string;
+  //path?: string;//ESTO SE VA
   date?: string;
+  ///urlFile?: string;// Y ESTO IGUAL
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -203,6 +207,7 @@ export default function InterviewDetailPage() {
       idsRqs: [],
       enlaceEntrevista: "",
       entrevistadores: [{ fullname: "", email: "" }],
+      grabaciones: [{ enlace: "", fecha: "" }], 
       calificacion: 0,
       calificacionPersonal: 0,
       calificacionExperiencia: 0,
@@ -212,6 +217,7 @@ export default function InterviewDetailPage() {
       notasExperiencia: "",
       notasIdiomas: "",
       notasEducacion: "",
+      motivoCancelacion: "",
     },
   });
 
@@ -231,6 +237,16 @@ export default function InterviewDetailPage() {
   } = useFieldArray({
     control,
     name: "entrevistadores",
+  });
+
+  const {
+    fields: grabacionFields,
+    append: appendGrabacion,
+    remove: removeGrabacion,
+    replace: replaceGrabacion,
+  } = useFieldArray({
+    control,
+    name: "grabaciones",
   });
 
   const formValues = watch();
@@ -262,10 +278,11 @@ export default function InterviewDetailPage() {
     [UpdateInterviewPayload]
   >(updateInterview);
 
-  const { execute: executeUploadFile, loading: loadingUpload } =
-    useAsyncService<BaseResponseFMI, [UploadInterviewFilePayload]>(
-      uploadInterviewFile,
-    );
+  const { execute: executeGenerateUpload, loading: loadingUpload } = useAsyncService(generateUploadUrl);
+
+  const { execute: executeConfirmUpload } = useAsyncService(confirmUploadFile);
+
+  const { execute: executeDownloadFile } = useAsyncService(generateDownloadUrl);
 
   const { execute: executeDeleteFile, loading: loadingDeleteFile } =
     useAsyncService<BaseResponseFMI, [number]>(deleteInterviewFile);
@@ -293,7 +310,7 @@ export default function InterviewDetailPage() {
       setValue("idTalento", data.idTalento);
       setValue("fecha", data.fecha);
       setValue("hora", data.hora);
-      setValue("estado", data.idEstado);
+      setValue("estado", Number(data.idEstado));
       setValue("etapa", data.idEtapa);
       setValue(
         "idsRqs",
@@ -301,6 +318,7 @@ export default function InterviewDetailPage() {
       );
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
       setValue("entrevistadores", data.entrevistadores || [{ fullname: "", email: "" }]);
+      setValue("grabaciones", data.grabaciones || [{ enlace: "", fecha: "" }]);
       setValue("calificacion", data.calificacion);
       setValue("calificacionPersonal", data.calificacionPersonal || 0);
       setValue("calificacionExperiencia", data.calificacionExperiencia || 0);
@@ -310,6 +328,7 @@ export default function InterviewDetailPage() {
       setValue("notasExperiencia", data.notasExperiencia);
       setValue("notasIdiomas", data.notasIdiomas);
       setValue("notasEducacion", data.notasEducacion);
+      setValue("motivoCancelacion", data.motivoCancelacion);
 
       const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
         const ext = f.name?.split(".").pop()?.toLowerCase();
@@ -326,13 +345,15 @@ export default function InterviewDetailPage() {
           date: f.date,
           type: iconType,
           idFileType: f.idFileType,
-          fileType: f.type || "Otro",
-          path: f.pathFile || f.path,
+          fileType: f.type || "Otro"
+          //path: f.pathFile || f.path,//ESTO SE TIENE QUE IR
+          //urlFile: f.urlFile// Y ESTO IGUAL Xd
         };
       });
       setFiles(filesData);
     }
   }, [detailResult, setValue]);
+
 
   const handleSave = async (data: UpdateInterviewType) => {
     if (!id) return;
@@ -344,7 +365,8 @@ export default function InterviewDetailPage() {
       estado: data.estado,
       etapa: data.etapa,
       enlaceEntrevista: data.enlaceEntrevista || "",
-      entrevistadores: data.entrevistadores || [],
+      entrevistadores: JSON.stringify(data.entrevistadores || []),
+      grabaciones: JSON.stringify(data.grabaciones || []),
       calificacion: data.calificacion ?? 0,
       calificacionPersonal: data.calificacionPersonal ?? 0,
       calificacionExperiencia: data.calificacionExperiencia ?? 0,
@@ -355,6 +377,7 @@ export default function InterviewDetailPage() {
       notasIdiomas: data.notasIdiomas || "",
       notasEducacion: data.notasEducacion || "",
       idsRqs: data.idsRqs,
+      motivoCancelacion: data.motivoCancelacion || "",
     };
 
     const res = await executeUpdate(payload);
@@ -459,50 +482,69 @@ export default function InterviewDetailPage() {
     e.target.value = "";
   };
 
-  const confirmUpload = async () => {
-    if (!pendingFile || !id) return;
+const confirmUpload = async () => {
+  if (!pendingFile || !id) return;
 
-    const res = await executeUploadFile({
+  try {
+    // 1 pedir URL al backend
+    const presigned = await executeGenerateUpload({
       idInterview: Number(id),
       idFileType: selectedCategory,
-      file: pendingFile,
+      fileName: pendingFile.name,
+      contentType: pendingFile.type,
     });
 
-    if (res.result && res.result.idTipoMensaje === 2) {
-      const ext = pendingFile.name.split(".").pop()?.toLowerCase();
-      const type: UploadedFile["type"] =
-        ext === "pdf" ? "pdf" : ext === "jpg" || ext === "png" ? "img" : "doc";
+    if (!presigned.result) {
+      enqueueSnackbar("No se pudo generar URL de subida", {
+        variant: "error",
+      });
+      return;
+    }
 
-      const typeLabel =
-        interviewFileTypes.find((t) => t.num1 === selectedCategory)?.string1 ||
-        "Otro";
+    const data = presigned.result.data;
 
-      setFiles((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          name: pendingFile.name,
-          date: new Date().toLocaleDateString("es-PE", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          }),
-          type,
-          idFileType: selectedCategory,
-          fileType: typeLabel,
-        },
-      ]);
+    // 2 subir directo a S3
+    const uploadResponse = await uploadFileToS3(
+      data.url,
+      pendingFile,
+    );
 
-      enqueueSnackbar("Archivo subido con éxito", { variant: "success" });
+    if (!uploadResponse.ok) {
+      enqueueSnackbar("Error subiendo archivo a S3 ", {
+        variant: "error",
+      });
+      return;
+    }
+
+    // 3 confirmar en backend
+    const confirm = await executeConfirmUpload({
+      idInterview: Number(id),
+      idFileType: selectedCategory,
+      fileName: data.fileName,
+      path: data.path,
+    });
+
+    if (confirm.result?.idTipoMensaje === 2) {
+      enqueueSnackbar("Archivo subido con éxito", {
+        variant: "success",
+      });
+
+      await fetchDetail(Number(id)); // recargar lista real
       setPendingFile(null);
       setIsUploadModalOpen(false);
       setSelectedCategory(0);
-    } else if (res.result) {
-      enqueueSnackbar(res.result.mensaje || "Error al subir archivo", {
+    } else {
+      enqueueSnackbar("Error confirmando archivo", {
         variant: "error",
       });
     }
-  };
+
+  } catch (error) {
+    enqueueSnackbar("Error al subir archivo", {
+      variant: "error",
+    });
+  }
+};
 
   const removeFile = async (fid: number) => {
     const res = await executeDeleteFile(fid);
@@ -513,6 +555,18 @@ export default function InterviewDetailPage() {
       });
     } else if (res.result) {
       enqueueSnackbar(res.result.mensaje || "Error al eliminar archivo", {
+        variant: "error",
+      });
+    }
+  };
+
+  const handleDownload = async (idFile: number) => {
+    const res = await executeDownloadFile(idFile);
+
+    if (res.result?.data?.url) {
+      window.open(res.result.data.url, "_blank");
+    } else {
+      enqueueSnackbar("No se pudo descargar archivo", {
         variant: "error",
       });
     }
@@ -806,6 +860,107 @@ export default function InterviewDetailPage() {
                   </div>
                 </div>
 
+                {/* Motivo Cancelacion */}
+
+                {
+                  (() => {
+                    if(Number(watch("estado")) === 4) {
+                      return (
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                          <label className="input-label font-medium mb-1">
+                            Motivo de cancelación
+                          </label>
+                          <textarea
+                            {...register("motivoCancelacion")}
+                            rows={3}
+                            className="input w-full resize-none"
+                          />
+                        </div>
+                        
+                      );
+                      
+                    }
+                    
+                  })()
+                }  
+
+                {/* Agregar grabaciones de reuniones */}
+
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+                      Grabaciones de reuniones
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        appendGrabacion({ enlace: "", fecha: "" })
+                      }
+                      className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                    >
+                      <Plus size={14} />
+                      Agregar Grabación
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {grabacionFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg relative"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Enlace
+                          </label>
+                          <input
+                            {...register(`grabaciones.${index}.enlace`)}
+                            placeholder="Ej: https://drive.google.com/file/d/abc123/view"
+                            className={`input w-full bg-white ${
+                              errors.grabaciones?.[index]?.enlace
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors.grabaciones?.[index]?.enlace && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.grabaciones[index]?.enlace?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            Fecha
+                          </label>
+                          <div className="flex flex-col gap-1">
+                            <input
+                              {...register(`grabaciones.${index}.fecha`)}
+                              type="date"
+                              className="input w-full bg-white"
+                            />
+                            {errors.grabaciones?.[index]?.fecha && (
+                              <p className="text-red-500 text-xs mt-1">
+                                {errors.grabaciones[index]?.fecha?.message}
+                              </p>
+                            )}
+                          </div>
+                        
+                        </div>
+                        {grabacionFields.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeGrabacion(index)}
+                            className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                            title="Eliminar grabación"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Entrevistadores section */}
                 <div className="mt-8 pt-8 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-6">
@@ -1083,9 +1238,13 @@ export default function InterviewDetailPage() {
                   <FileIcon type={f.type} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-xs font-medium text-gray-700 truncate">
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(f.id)}
+                        className="text-xs font-medium text-blue-600 truncate hover:underline"
+                      >
                         {f.name}
-                      </p>
+                      </button>
                       <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase">
                         {f.fileType}
                       </span>
