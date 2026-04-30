@@ -18,6 +18,10 @@ const PantallaGenerarEnlaceRequerimiento = lazy(
   () => import("./PantallaGenerarEnlaceRequerimiento"),
 );
 
+const Interviews = lazy(() => import("./Interviews"));
+const InterviewDetail = lazy(() => import("./InterviewDetail"));
+const InterviewCreate = lazy(() => import("./InterviewCreate"));
+
 export const PrivateRouter = () => {
   return (
     <RoutesWithNotFound>
@@ -30,6 +34,9 @@ export const PrivateRouter = () => {
         path="/generarEnlaceRequerimiento"
         element={<PantallaGenerarEnlaceRequerimiento />}
       />
+      <Route path="/entrevistas" element={<Interviews />} />
+      <Route path="/entrevistas/nueva" element={<InterviewCreate />} />
+      <Route path="/entrevistas/:id" element={<InterviewDetail />} />
       <Route path="/formDatos" element={<PantallaDatos />} />
     </RoutesWithNotFound>
   );

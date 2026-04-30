@@ -1,9 +1,7 @@
-export const BASE_URL =
-  "https://bancotalentobackendpreprod-awdecbbsgrh4d8bn.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI =
-  "https://autfmibackendpreprod-hadmdsa5hjaghub8.canadacentral-01.azurewebsites.net";
-// export const BASE_URL = "http://localhost:8080";
-// export const BASE_URL_FMI = "http://localhost:8081";
+export const BASE_URL = "https://bancotalentobackendpreprod-awdecbbsgrh4d8bn.canadacentral-01.azurewebsites.net";
+export const BASE_URL_FMI = "https://autfmibackendpreprod-hadmdsa5hjaghub8.canadacentral-01.azurewebsites.net";
+//export const BASE_URL = "http://localhost:8080";
+//export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
@@ -53,6 +51,9 @@ export const HABILIDADES_TECNICAS = "19";
 export const GRADO_ESTUDIO = "38";
 export const TIPO_ARCHIVOS_RQ = "41";
 export const TIPO_ARCHIVO = "17";
+export const ESTADO_ENTREVISTA = "43";
+export const ETAPA_ENTREVISTA = "44";
+export const TIPO_ARCHIVO_ENTREVISTA = "45";
 
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
