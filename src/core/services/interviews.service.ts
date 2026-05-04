@@ -29,6 +29,7 @@ export interface InterviewListRequest {
   busqueda: string | null;
   idCliente: number | null;
   idEstado: number | null;
+  idEtapa: number | null;
   fecha: string | null;
 }
 
