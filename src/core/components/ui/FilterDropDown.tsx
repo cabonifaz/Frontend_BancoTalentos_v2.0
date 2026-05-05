@@ -11,6 +11,7 @@ interface Props<T extends BaseOption> {
   label: string;
   isOpen: boolean;
   options: T[];
+  sortOptions?: boolean;
   optionsPanelSize: string;
   optionsType: "radio" | "checkbox";
   inputPosition: "left" | "right";
@@ -24,6 +25,7 @@ export const FilterDropDown = <T extends BaseOption>({
   label,
   options,
   name,
+  sortOptions = true,
   optionsType,
   inputPosition,
   optionsPanelSize,
@@ -188,18 +190,20 @@ export const FilterDropDown = <T extends BaseOption>({
                 ))}
               </ul>
             </div>
-            {[...options]
+            {([...options]
               .filter((option) =>
                 searchable && searchTerm
                   ? option.label
                       .toLowerCase()
                       .includes(searchTerm.toLowerCase())
                   : true
-              )
+              ))
               .sort((a, b) =>
-                a.label.localeCompare(b.label, undefined, {
-                  sensitivity: "base",
-                })
+                sortOptions
+                  ? a.label.localeCompare(b.label, undefined, {
+                      sensitivity: "base",
+                    })
+                  : 0
               )
               .map((option, index) => (
                 <div

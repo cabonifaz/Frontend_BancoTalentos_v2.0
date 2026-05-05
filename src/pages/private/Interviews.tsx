@@ -54,6 +54,12 @@ export default function InterviewsPage() {
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+  const sortedInterviewStates = [...interviewStates].sort(
+    (a, b) => a.num1 - b.num1,
+  );
+  const sortedInterviewStages = [...interviewStages].sort(
+    (a, b) => a.num1 - b.num1,
+  );
 
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
   const [selectedEstado, setSelectedEstado] = useState<string[]>([]);
@@ -80,7 +86,8 @@ export default function InterviewsPage() {
     // Obtenemos el ID del estado, asegurándonos de que sea un número válido o null
     const selectedId = selectedEstado[0];
     const idEstadoNum = selectedId ? Number(selectedId) : null;
-    const idEtapaNum = selectedStage ? Number(selectedStage) : null;
+    const selectedStageId = selectedStage[0];
+    const idEtapaNum = selectedStageId ? Number(selectedStageId) : null;
     // Formatear fecha a YYYY-MM-DD
     const fechaFormateada = selectedDate
       ? selectedDate.toISOString().split("T")[0]
@@ -155,10 +162,11 @@ export default function InterviewsPage() {
               <FilterDropDown
                 name="estado"
                 label="Estado"
-                options={interviewStates.map((state) => ({
+                options={sortedInterviewStates.map((state) => ({
                   value: state.num1,
                   label: state.string1,
                 }))}
+                sortOptions={false}
                 optionsType="radio"
                 optionsPanelSize="w-44"
                 inputPosition="right"
@@ -170,10 +178,11 @@ export default function InterviewsPage() {
               <FilterDropDown
                 name="etapa"
                 label="Etapa"
-                options={interviewStages.map((stage) => ({
+                options={sortedInterviewStages.map((stage) => ({
                   value: stage.num1,
                   label: stage.string1,
                 }))}
+                sortOptions={false}
                 optionsType="radio"
                 optionsPanelSize="w-60"
                 inputPosition="right"
