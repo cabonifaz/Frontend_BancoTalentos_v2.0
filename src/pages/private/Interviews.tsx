@@ -80,6 +80,7 @@ export default function InterviewsPage() {
     // Obtenemos el ID del estado, asegurándonos de que sea un número válido o null
     const selectedId = selectedEstado[0];
     const idEstadoNum = selectedId ? Number(selectedId) : null;
+    const idEtapaNum = selectedStage ? Number(selectedStage) : null;
     // Formatear fecha a YYYY-MM-DD
     const fechaFormateada = selectedDate
       ? selectedDate.toISOString().split("T")[0]
@@ -89,8 +90,8 @@ export default function InterviewsPage() {
       npag: page,
       busqueda: buscar.trim() || null,
       idCliente: null,
-      idEstado:
-        idEstadoNum !== null && !isNaN(idEstadoNum) ? idEstadoNum : null,
+      idEstado: idEstadoNum !== null && !isNaN(idEstadoNum) ? idEstadoNum : null,
+      idEtapa: idEtapaNum !== null && !isNaN(idEtapaNum) ? idEtapaNum : null,//FRANCO LO HIZO
       fecha: fechaFormateada,
     });
   };
