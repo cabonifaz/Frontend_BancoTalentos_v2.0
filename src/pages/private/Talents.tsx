@@ -54,6 +54,8 @@ export const Talents = () => {
   const [openDropdown, setOpenDropdown] = useState<number | null>(
     null,
   );
+  const [yearsExperience, setYearsExperience] = useState("");
+  const [jobPosition, setJobPosition] = useState(""); 
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const experienceRef = useRef<Experience | null>(null);
@@ -140,6 +142,8 @@ export const Talents = () => {
       techAbilities: selectedSkills.join(","),
       idEnglishLevel: finalEnglishLevel || undefined,
       idTalentCollection: finalFavourites || undefined,
+      yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
+      jobPosition: jobPosition || undefined,
     });
   };
 
@@ -344,6 +348,26 @@ export const Talents = () => {
                     setSelectedSkills(selectedValues.map(Number))
                   }
                 />
+
+                <div className="flex gap-2 items-center">
+
+                  <input
+                    type="text"
+                    placeholder="Puesto"
+                    value={jobPosition}
+                    onChange={(e) => setJobPosition(e.target.value)}
+                    className="border rounded-lg px-2 py-1" 
+                  />
+
+                  <input
+                    type="number"
+                    placeholder="Años exp."
+                    value={yearsExperience}
+                    onChange={(e) => setYearsExperience(e.target.value)}
+                    className="border rounded-lg px-2 py-1 w-28"
+                  />
+
+                </div>
 
                 <FilterDropDown
                   name="nivelIngles"
