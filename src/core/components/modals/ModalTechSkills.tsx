@@ -27,10 +27,10 @@ export const techSkillSchema = z.object({
     })
     .min(0, "Seleccione una habilidad técnica"),
   anios: z.coerce
-    .number({
-      invalid_type_error: "Los años de experiencia son requeridos",
-    })
-    .min(1, "Los años de experiencia son requeridos"),
+      .number({
+        invalid_type_error: "Los años de experiencia deben ser numéricos",
+      })
+      .optional(),
   habilidad: z.preprocess(
     emptyToNull,
     z.string({
@@ -130,7 +130,7 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
 
         <div>
           <h3 className="text-[#71717A] text-sm mt-6 mb-4">
-            Agrega tu nueva experiencia técnica
+            Agrega tu nueva experiencia técnica waaaa
           </h3>
 
           <form onSubmit={handleSubmit(onSubmit)}>

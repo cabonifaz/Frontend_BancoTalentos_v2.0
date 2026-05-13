@@ -20,7 +20,7 @@ export interface AddTalentParams {
   idMoneda?: number | null;
   habilidadesTecnicas?: {
     idHabilidad: number;
-    anios: number;
+    anios?: number | null;
   }[];
   habilidadesBlandas?: {
     idHabilidad: number;
