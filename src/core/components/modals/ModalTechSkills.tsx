@@ -130,7 +130,7 @@ export const ModalTechSkills = ({ idTalento, onUpdate }: Props) => {
 
         <div>
           <h3 className="text-[#71717A] text-sm mt-6 mb-4">
-            Agrega tu nueva experiencia técnica waaaa
+            Agrega tu nueva experiencia técnica
           </h3>
 
           <form onSubmit={handleSubmit(onSubmit)}>
