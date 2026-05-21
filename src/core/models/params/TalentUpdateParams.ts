@@ -53,7 +53,7 @@ export interface TalentTechSkillParams {
   idTalento: number;
   idHabilidad: number;
   habilidad: string;
-  anios: number;
+  anios?: number | null;
 }
 
 export interface TalentSoftSkillParams {
