@@ -46,9 +46,7 @@ export default function InterviewCreatePage() {
   const rqInputRef = useRef<HTMLInputElement>(null);
 
   // get params
-  const { paramsByMaestro, loading: loadingParams } = useParams(
-    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA}`,
-  );
+  const { paramsByMaestro, loading: loadingParams } = useParams();
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];

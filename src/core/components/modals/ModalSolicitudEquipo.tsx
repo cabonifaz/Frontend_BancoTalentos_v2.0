@@ -32,9 +32,7 @@ export const ModalSolicitudEquipo = ({
   currentTalent,
 }: Props) => {
   const [defaultSoftwareIds, setDefaultSoftwareIds] = useState<string[]>([]);
-  const { paramsByMaestro, loading: paramLoading } = useParams(
-    `${UNIDAD},${TIPO_HARDWARE},${ANEXO_HARDWARE},${TIPO_SOFTWARE}`,
-  );
+  const { paramsByMaestro, loading: paramLoading } = useParams();
 
   const tipoHardwareParams = useMemo(
     () => paramsByMaestro[TIPO_HARDWARE] || [],

@@ -35,7 +35,7 @@ export const EducationsSection = <F extends FieldValues>({
   const [currentDates, setCurrentDates] = useState<Record<number, boolean>>({});
   const hasAppendedInitial = useRef(false);
 
-  const { paramsByMaestro } = useParams("38");
+  const { paramsByMaestro } = useParams();
   const grados = paramsByMaestro[38] || [];
 
   useEffect(() => {

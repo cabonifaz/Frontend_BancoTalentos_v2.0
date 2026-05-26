@@ -2,9 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useApi } from "../../hooks/useApi";
 import { getTalent, updatePersonalDetails } from "../../services/apiService";
-import { useFetchParams } from "../../hooks/useFetchParams";
+import { useParams } from "../../context/ParamsContext";
 import { useModal } from "../../context/ModalContext";
-import { Param } from "../../models/interfaces/Param";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { useSnackbar } from "notistack";
 import {
@@ -29,11 +28,7 @@ export const ModalEditPersonal = ({
   updateTalentList,
 }: Props) => {
   const { fetch: fetchTalent } = useApi(getTalent);
-  const {
-    paramsByMaestro,
-    fetchParams,
-    loading: isParamsLoading,
-  } = useFetchParams();
+  const { paramsByMaestro, loading: isParamsLoading } = useParams();
 
   const paises = paramsByMaestro[12] || [];
   const ciudades = paramsByMaestro[13] || [];
@@ -100,12 +95,6 @@ export const ModalEditPersonal = ({
       }
     });
   }, [idTalento, fetchTalent, reset, paises.length, ciudades.length]);
-
-  // Carga parámetros (País=12, Ciudad=13)
-
-  useEffect(() => {
-    fetchParams("12,13");
-  }, [fetchParams]);
 
   //Lógica de filtrado
 

@@ -54,9 +54,7 @@ import { processText } from "../../core/utilities/textUtils";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
-  const { paramsByMaestro, loading: loadingParams } = useParams(
-    "2, 12, 13, 15, 16, 19, 20, 31, 40",
-  ) as { paramsByMaestro: any; loading: boolean };
+  const { paramsByMaestro, loading: loadingParams } = useParams() as { paramsByMaestro: any; loading: boolean };
   const countryCode = useRef<HTMLParagraphElement>(null);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
