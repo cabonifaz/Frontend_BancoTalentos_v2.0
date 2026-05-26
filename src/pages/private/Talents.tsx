@@ -72,9 +72,7 @@ export const Talents = () => {
     number | null
   >(null);
 
-  const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12,13,2,19,20,15,16,32",
-  );
+  const { paramsByMaestro, loading: loadingParams } = useParams();
 
   const skillOptions = paramsByMaestro[19] || [];
   const englishLevels = paramsByMaestro[16] || [];

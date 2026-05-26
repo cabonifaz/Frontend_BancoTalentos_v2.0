@@ -66,10 +66,7 @@ export const ModalRQCreate = ({
     paramsByMaestro,
     refetchParams,
     loading: loadingParams,
-  } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS}, ${GRADO_ESTUDIO},
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
-  );
+  } = useParams();
 
   const skillsByParams = paramsByMaestro[HABILIDADES_TECNICAS] || [];
   const paramsDegrees = paramsByMaestro[GRADO_ESTUDIO] || [];

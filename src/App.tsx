@@ -3,22 +3,24 @@ import { SnackbarProvider } from 'notistack';
 import { AppRouter } from './AppRouter';
 import { ModalProvider } from './core/context/ModalContext';
 import { initAxios } from './core/services/axiosService';
-import { ParamsProvider } from './core/context/ParamsContext';
 import { FavouritesProvider } from './core/context/FavouritesContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 initAxios();
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <SnackbarProvider maxSnack={2} autoHideDuration={4000} anchorOrigin={{ vertical: 'top', horizontal: 'center', }}>
-      <FavouritesProvider>
-        <ParamsProvider>
+    <QueryClientProvider client={queryClient}>
+      <SnackbarProvider maxSnack={2} autoHideDuration={4000} anchorOrigin={{ vertical: 'top', horizontal: 'center', }}>
+        <FavouritesProvider>
           <ModalProvider>
             <AppRouter />
           </ModalProvider>
-        </ParamsProvider>
-      </FavouritesProvider>
-    </SnackbarProvider>
+        </FavouritesProvider>
+      </SnackbarProvider>
+    </QueryClientProvider>
   );
 }
 
