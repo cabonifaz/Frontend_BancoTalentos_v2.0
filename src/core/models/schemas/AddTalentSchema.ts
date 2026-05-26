@@ -143,12 +143,13 @@ export const AddTalentSchema = z.object({
           required_error: "Seleccione una habilidad técnica",
         })
         .min(0, "Seleccione una habilidad técnica"),
+
       anios: z.coerce
         .number({
-          invalid_type_error:
-            "Los años de experiencia son requeridos",
+          invalid_type_error: "Los años de experiencia deben ser numéricos",
         })
-        .min(1, "Los años de experiencia son requeridos"),
+        .optional(),
+
       habilidad: z.preprocess(
         emptyToNull,
         z.string({

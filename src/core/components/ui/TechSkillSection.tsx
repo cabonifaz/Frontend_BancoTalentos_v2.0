@@ -245,7 +245,7 @@ export const TechSkillsSection = <F extends FieldValues>({
               htmlFor={`habilidadesTecnicas.${index}.anios`}
               className="text-[#71717A] text-sm px-1"
             >
-              Años de experiencia<span className="text-red-400">*</span>
+              Años de experiencia
             </label>
             <Controller
               name={`habilidadesTecnicas.${index}.anios` as Path<F>}
