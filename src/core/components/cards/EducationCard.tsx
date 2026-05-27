@@ -5,7 +5,7 @@ interface Props {
   data: Education;
   onEdit: () => void;
 }
-//wa
+
 export const EducationCard = ({ data, onEdit }: Props) => {
   return (
     <div className="flex items-center justify-between rounded-md my-1 px-2 sm:px-12 py-4 bg-[#f4f4f5] w-full">
