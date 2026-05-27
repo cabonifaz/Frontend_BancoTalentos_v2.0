@@ -60,3 +60,6 @@ export const GROUP_MODALIDAD_PLANILLA = 1;
 // PERSISTENCIA EN EL FORM NUEVO TALENTO, CAMPOS Y ARCHIVOS
 export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
+
+// ALL PARAM IDS — single fetch on app load
+export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45";

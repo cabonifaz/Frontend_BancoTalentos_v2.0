@@ -39,7 +39,7 @@ interface TabProps {
   availableDegrees: { id: number; label: string }[];
   fetchRequirement: () => void;
   toggleEdit: () => void;
-  refetchParams: (param: string) => void;
+  refetchParams: () => void;
 }
 
 export const TabVacancies = ({
@@ -228,7 +228,7 @@ export const TabVacancies = ({
           onClose={handleCloseModalSkills}
           availableSkills={availableTechSkills}
           refetchAvailableSkills={() =>
-            refetchParams(`${HABILIDADES_TECNICAS}`)
+            refetchParams()
           }
           idVac={idVac ?? 0}
         />

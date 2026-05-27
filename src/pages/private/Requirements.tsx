@@ -67,9 +67,7 @@ export const Requirements = () => {
     useState<RequirementItem | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  const { paramsByMaestro, loading: loadingParams } = useParams(
-    `24, ${ESTADO_RQ}`
-  );
+  const { paramsByMaestro, loading: loadingParams } = useParams();
 
   const { openModal, closeModal, isModalOpen } = useModal();
   const rqState = paramsByMaestro[ESTADO_RQ] || [];

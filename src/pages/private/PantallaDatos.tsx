@@ -81,7 +81,7 @@ const PantallaDatos = () => {
     );
 
   const { paramsByMaestro, loading: loadingParams } =
-    useParams("5, 2, 3");
+    useParams();
   const { talentoDetails, loading } = useFetchTalento(
     talento.idTalento
   ); // fmi

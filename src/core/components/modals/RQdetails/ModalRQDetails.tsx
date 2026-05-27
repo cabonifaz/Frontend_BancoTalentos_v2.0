@@ -52,10 +52,7 @@ export const ModalRQDetails = ({
   updateRQData,
 }: ModalProps) => {
   // @marker params
-  const { paramsByMaestro, refetchParams } = useParams(
-    `${DURACION_RQ}, ${MODALIDAD_RQ}, ${TIPO_MODALIDAD}, ${HABILIDADES_TECNICAS},${GRADO_ESTUDIO}, 
-      ${TIPO_ARCHIVOS_RQ}, ${TIPO_ARCHIVO}, ${TIPO_MONEDA}`,
-  );
+  const { paramsByMaestro, refetchParams } = useParams();
 
   // @marker base state
   const [initialFiles, setInitialFiles] = useState<any[]>([]);

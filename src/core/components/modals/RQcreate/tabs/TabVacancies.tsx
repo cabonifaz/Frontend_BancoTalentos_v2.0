@@ -34,7 +34,7 @@ interface TabProps {
   tarifario: Tarifa[];
   techSkills: { id: number; label: string }[];
   availableDegrees: { id: number; label: string }[];
-  refetchParams: (idMasters: string) => Promise<void>;
+  refetchParams: () => Promise<void>;
 }
 
 export const TabVacancies = ({
@@ -306,7 +306,7 @@ export const TabVacancies = ({
           onSave={handleSaveTechSkills}
           initialSkills={getInitialSkills(currentProfile || 0)}
           refetchAvailableSkills={() =>
-            refetchParams(`${HABILIDADES_TECNICAS}`)
+            refetchParams()
           }
         />
       )}

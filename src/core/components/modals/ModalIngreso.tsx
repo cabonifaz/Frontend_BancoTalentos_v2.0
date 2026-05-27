@@ -26,7 +26,6 @@ import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
 import { useEffect, useState } from "react";
-import { useFetchParams } from "../../hooks/useFetchParams";
 import { Utils } from "../../utilities/utils";
 import { addDays, addWeeks, addMonths, format } from "date-fns";
 
@@ -45,22 +44,12 @@ export const ModalIngreso = ({
   durationContract,
   durationContractId,
 }: Props) => {
-  const {
-    paramsByMaestro,
-    loading: paramLoading,
-    fetchParams,
-  } = useFetchParams();
+  const { paramsByMaestro, loading: paramLoading } = useParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
 
-  useEffect(() => {
-    fetchParams(
-      `${TIPO_MODALIDAD},${UNIDAD},${MOTIVO_INGRESO},${HORARIO_TRABAJO},${PROYECTO_SERVICIO},${OBJETO_CONTRATO}, ${TIPO_MONEDA}`,
-    );
-  }, [fetchParams]);
-
-  const modalityValues = paramsByMaestro[TIPO_MODALIDAD];
-  const unitValues = paramsByMaestro[UNIDAD];
-  const reasonValues = paramsByMaestro[MOTIVO_INGRESO];
+  const modalityValues = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const unitValues = paramsByMaestro[UNIDAD] || [];
+  const reasonValues = paramsByMaestro[MOTIVO_INGRESO] || [];
   const currencyValues = paramsByMaestro[TIPO_MONEDA] || [];
   const horarioTrabajo =
     paramsByMaestro[HORARIO_TRABAJO]?.find((item) => item.num1 === 1)

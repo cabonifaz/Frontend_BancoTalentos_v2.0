@@ -185,9 +185,7 @@ export default function InterviewDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
 
   // get params
-  const { paramsByMaestro, loading: loadingParams } = useParamsContext(
-    `${ESTADO_ENTREVISTA},${ETAPA_ENTREVISTA},${TIPO_ARCHIVO_ENTREVISTA},${ESTADO_RQ}`,
-  );
+  const { paramsByMaestro, loading: loadingParams } = useParamsContext();
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];

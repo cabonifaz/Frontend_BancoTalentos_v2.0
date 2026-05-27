@@ -55,9 +55,7 @@ import { FORM_STORAGE_KEY } from "../../core/utilities/constants";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
-  const { paramsByMaestro, refetchParams } = useParams(
-    "12,13,2,19,20,15,16,32,31,40",
-  );
+  const { paramsByMaestro, refetchParams } = useParams();
   const countryCode = useRef<HTMLParagraphElement>(null);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -98,7 +96,7 @@ export const AddTalent = () => {
         clearStorage();
 
         // refrescar parametros para futuros registros
-        refetchParams("12,13,2,19,20,15,16,32");
+        refetchParams();
       }
     },
   });
