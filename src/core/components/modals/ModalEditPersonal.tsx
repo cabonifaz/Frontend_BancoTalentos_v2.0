@@ -12,7 +12,7 @@ import {
 } from "../../models/schemas/EditTalentPersonalSchema";
 
 import { Modal } from "./Modal";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AddTalentParams } from "../../models";
 import { Loading } from "../ui/Loading";
 
@@ -30,8 +30,8 @@ export const ModalEditPersonal = ({
   const { fetch: fetchTalent } = useApi(getTalent);
   const { paramsByMaestro, loading: isParamsLoading } = useParams();
 
-  const paises = paramsByMaestro[12] || [];
-  const ciudades = paramsByMaestro[13] || [];
+  const paises = useMemo(() => paramsByMaestro[12] || [], [paramsByMaestro]);
+  const ciudades = useMemo(() => paramsByMaestro[13] || [], [paramsByMaestro]);
 
   const { closeModal } = useModal();
   const { enqueueSnackbar } = useSnackbar();
@@ -77,24 +77,18 @@ export const ModalEditPersonal = ({
         const data = response.data as unknown as AddTalentParams;
         // Validar que el idPais existe en las opciones
         const paisValido = paises.find((p) => p.num1 === data.idPais);
-        const paisId = paisValido ? data.idPais : 0;
-
-        // Filtrar ciudades del país válido
-        const ciudadesDelPais = ciudades.filter(
-          (c) => Number(c.num2) === paisId,
-        );
 
         reset({
           nombres: data.nombres || "",
           apellidoPaterno: (data as any).apellidos?.split(" ")[0] || "",
           apellidoMaterno: (data as any).apellidos?.split(" ")[1] || "",
           dni: data.dni || "",
-          idPais: data.idPais || 0,
+          idPais: paisValido ? data.idPais : 0,
           idCiudad: data.idCiudad || 0,
         });
       }
     });
-  }, [idTalento, fetchTalent, reset, paises.length, ciudades.length]);
+  }, [idTalento, fetchTalent, reset, paises, ciudades]);
 
   //Lógica de filtrado
 
