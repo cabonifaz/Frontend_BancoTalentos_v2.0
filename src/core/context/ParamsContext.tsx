@@ -35,7 +35,7 @@ export const useParams = () => {
     queryKey: PARAMS_QUERY_KEY,
     queryFn: fetchAllParams,
     retry: 10,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 20, // 20 minutes
     gcTime: Infinity,
     refetchOnWindowFocus: false,
   });
