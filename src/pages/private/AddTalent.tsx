@@ -208,8 +208,12 @@ export const AddTalent = () => {
 
     const cleanEducaciones = educaciones.map((edu) => ({
       ...edu,
+
       flActualidad: edu.flActualidad ? 1 : 0,
-      fechaFin: edu.flActualidad ? null : edu.fechaFin,
+
+      fechaInicio: `${edu.fechaInicio}-01-01`,
+      
+      fechaFin: edu.flActualidad ? null : edu.fechaFin ? `${edu.fechaFin}-12-31` : null,
     }));
 
     try {

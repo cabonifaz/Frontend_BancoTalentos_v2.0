@@ -183,7 +183,7 @@ export const EducationsSection = <F extends FieldValues>({
                 htmlFor={`educaciones.${index}.fechaInicio`}
                 className="text-[#71717A] text-sm px-1"
               >
-                Mes y año de inicio<span className="text-red-400">*</span>
+                Año de inicio<span className="text-red-400">*</span>
               </label>
               <Controller
                 name={`educaciones.${index}.fechaInicio` as Path<F>}
@@ -191,9 +191,11 @@ export const EducationsSection = <F extends FieldValues>({
                 render={({ field }) => (
                   <input
                     {...field}
-                    type="date"
+                    type="number"
+                    min="1900"
+                    max="2100"
+                    placeholder="YYYY"
                     id={`educaciones.${index}.fechaInicio`}
-                    autoComplete="bday"
                     className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
                   />
                 )}
@@ -258,7 +260,7 @@ export const EducationsSection = <F extends FieldValues>({
                 htmlFor={`educaciones.${index}.fechaFin`}
                 className="text-[#71717A] text-sm px-1"
               >
-                Mes y año de fin
+                Año de fin
               </label>
               <Controller
                 name={`educaciones.${index}.fechaFin` as Path<F>}
@@ -266,7 +268,10 @@ export const EducationsSection = <F extends FieldValues>({
                 render={({ field }) => (
                   <input
                     {...field}
-                    type="date"
+                    type="number"
+                    min="1900"
+                    max="2100"
+                    placeholder="YYYY"
                     id={`educaciones.${index}.fechaFin`}
                     disabled={getValues(
                       `educaciones.${index}.flActualidad` as Path<F>

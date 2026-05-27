@@ -22,7 +22,7 @@ import { EducationsSection } from "..";
 import { useEffect } from "react";
 import { z } from "zod";
 import { trim, emptyToUndef } from "../../models/schemas/Validations";
-import { Utils } from "../../utilities/utils";
+//import { Utils } from "../../utilities/utils";
 
 interface Props {
   idTalento?: number;
@@ -36,39 +36,73 @@ export const educationSchema = z
       trim,
       z.string().min(1, "La institución es requerida"),
     ),
+
     carrera: z.preprocess(
       trim,
       z.string().min(1, "La carrera es requerida"),
     ),
+
     grado: z.preprocess(
       trim,
       z.string().min(1, "El grado es requerido"),
     ),
+
     fechaInicio: z.preprocess(
       trim,
-      z.string().min(1, "La fecha de inicio es requerida"),
+      z
+        .string()
+        .regex(
+          /^\d{4}$/,
+          "El año de inicio debe tener 4 dígitos",
+        ),
     ),
-    fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
+
+    fechaFin: z.preprocess(
+      emptyToUndef,
+      z.string().optional(),
+    ),
+
     flActualidad: z.coerce.boolean(),
   })
-  .refine(
-    (data) => {
-      // 1. Si es "actualidad", o si falta alguna de las dos fechas, no validamos nada (pasa)
-      if (data.flActualidad || !data.fechaFin || !data.fechaInicio) {
-        return true;
+  .superRefine((data, ctx) => {
+    // Si NO es actualidad, fechaFin es requerida
+    if (!data.flActualidad) {
+      if (!data.fechaFin) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El año de fin es requerido",
+          path: ["fechaFin"],
+        });
+
+        return;
       }
 
-      // 2. Si llegó aquí, es porque hay ambas fechas y NO es "actualidad"
-      const inicio = new Date(data.fechaInicio);
-      const fin = new Date(data.fechaFin);
+      // Validar formato YYYY
+      if (!/^\d{4}$/.test(data.fechaFin)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "El año de fin debe tener 4 dígitos",
+          path: ["fechaFin"],
+        });
 
-      return fin > inicio;
-    },
-    {
-      message: "La fecha de fin debe ser mayor a la fecha de inicio",
-      path: ["fechaFin"],
-    },
-  );
+        return;
+      }
+
+      // Validar rango
+      const inicio = Number(data.fechaInicio);
+      const fin = Number(data.fechaFin);
+
+      if (fin < inicio) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "El año de fin debe ser mayor o igual al año de inicio",
+          path: ["fechaFin"],
+        });
+      }
+    }
+  });
 
 export type EducationFormData = z.infer<typeof educationSchema>;
 
@@ -120,15 +154,21 @@ export const ModalEducation = ({
   useEffect(() => {
     if (educationRef.current) {
       const educacion = educationRef.current;
+
       setValue("educaciones.0", {
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio:
-          Utils.formatDateForInput(educacion.fechaInicio) || "",
-        fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
+        fechaInicio: educacion.fechaInicio ? new Date(educacion.fechaInicio)
+            .getFullYear()
+            .toString()
+          : "",
+
+        fechaFin: educacion.fechaFin ? educacion.fechaFin.slice(6) : "",
+
         flActualidad: educacion.flActualidad || false,
       });
+
     } else {
       reset({
         educaciones: [
@@ -190,10 +230,8 @@ export const ModalEducation = ({
       institucion: primeraEducacion.institucion,
       carrera: primeraEducacion.carrera,
       grado: primeraEducacion.grado,
-      fechaInicio: primeraEducacion.fechaInicio,
-      fechaFin: primeraEducacion.flActualidad
-        ? ""
-        : primeraEducacion.fechaFin || "",
+      fechaInicio: `${primeraEducacion.fechaInicio}-01-01`,
+      fechaFin: primeraEducacion.flActualidad ? "" : `${primeraEducacion.fechaFin}-12-31` || "",
       flActualidad: primeraEducacion.flActualidad ? 1 : 0,
     };
 
@@ -226,13 +264,22 @@ export const ModalEducation = ({
   const handleCloseModal = () => {
     if (educationRef.current) {
       const educacion = educationRef.current;
+
       setValue("educaciones.0", {
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio:
-          Utils.formatDateForInput(educacion.fechaInicio) || "",
-        fechaFin: Utils.formatDateForInput(educacion.fechaFin) || "",
+        fechaInicio: educacion.fechaInicio
+          ? new Date(educacion.fechaInicio)
+              .getFullYear()
+              .toString()
+          : "",
+
+        fechaFin: educacion.fechaFin
+          ? new Date(educacion.fechaFin)
+              .getFullYear()
+              .toString()
+          : "",
         flActualidad: educacion.flActualidad || false,
       });
     }
