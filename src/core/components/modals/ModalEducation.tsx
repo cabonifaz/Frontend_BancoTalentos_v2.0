@@ -164,7 +164,7 @@ export const ModalEducation = ({
             .toString()
           : "",
 
-        fechaFin: educacion.fechaFin ? educacion.fechaFin.slice(6) : "",
+        fechaFin: !educacion.flActualidad && educacion.fechaFin ? educacion.fechaFin.slice(6) : "",
 
         flActualidad: educacion.flActualidad || false,
       });
@@ -275,7 +275,7 @@ export const ModalEducation = ({
               .toString()
           : "",
 
-        fechaFin: educacion.fechaFin
+        fechaFin: !educacion.flActualidad && educacion.fechaFin
           ? new Date(educacion.fechaFin)
               .getFullYear()
               .toString()

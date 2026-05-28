@@ -1,6 +1,6 @@
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -773,10 +773,9 @@ export const Talents = () => {
                           <div className="flex flex-wrap gap-2">
                             {(
                               talentDets?.habilidadesTecnicas || []
-                            ).map((item, index) => (
-                              <>
+                            ).map((item) => (
+                              <React.Fragment key={item.idHabTec}>
                                 <p
-                                  key={item.idHabTec}
                                   className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
                                 >
                                   {`${item.nombreHabilidad} ${
@@ -801,7 +800,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </>
+                              </React.Fragment>
                             ))}
                           </div>
                         </div>
@@ -828,10 +827,9 @@ export const Talents = () => {
                           <div className="flex flex-wrap gap-2">
                             {(
                               talentDets?.habilidadesBlandas || []
-                            ).map((item, index) => (
-                              <>
+                            ).map((item) => (
+                              <React.Fragment key={item.id}>
                                 <p
-                                  key={item.id}
                                   className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
                                 >
                                   {item.nombreHabilidad}
@@ -852,7 +850,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </>
+                              </React.Fragment>
                             ))}
                           </div>
                         </div>
