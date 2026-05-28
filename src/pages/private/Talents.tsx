@@ -62,7 +62,6 @@ export const Talents = () => {
   const educationRef = useRef<Education | null>(null);
   const languageRef = useRef<Language | null>(null);
   const feedbackRef = useRef<Feedback | null>(null);
-  const isFirstRender = useRef(true);
 
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
   const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<
@@ -113,7 +112,51 @@ export const Talents = () => {
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
 
-  const handlePaginate = (page: number) => setCurrentPage(page);
+  const buildTalentParams = (
+    nPag: number,
+    overrides?: {
+      englishLevel?: number | null;
+      favourites?: number | null;
+    },
+  ): TalentParams => {
+    const searchValue = searchInputRef.current?.value.trim() || "";
+
+    const finalEnglishLevel =
+      overrides?.englishLevel !== undefined
+        ? overrides.englishLevel
+        : selectedEnglishLevel;
+    const finalFavourites =
+      overrides?.favourites !== undefined
+        ? overrides.favourites
+        : selectedFavourites;
+
+    return {
+      nPag,
+      search: searchValue || undefined,
+      techAbilities: selectedSkills.length
+        ? selectedSkills.join(",")
+        : undefined,
+      idEnglishLevel: finalEnglishLevel || undefined,
+      idTalentCollection: finalFavourites || undefined,
+      yearsExperience: yearsExperience
+        ? Number(yearsExperience)
+        : undefined,
+      jobPosition: jobPosition || undefined,
+    };
+  };
+
+  const fetchTalentPage = (
+    page: number,
+    overrides?: {
+      englishLevel?: number | null;
+      favourites?: number | null;
+    },
+  ) => {
+    setCurrentPage(page);
+    fetchTalents(buildTalentParams(page, overrides));
+  };
+
+  const handlePaginate = (page: number) => fetchTalentPage(page);
 
   const handleTalentSelection = (talent: Talent) => {
     setTalent(talent);
@@ -125,23 +168,9 @@ export const Talents = () => {
     englishLevel?: number | null,
     favourites?: number | null,
   ) => {
-    const searchValue = searchInputRef.current?.value || "";
-
-    const finalEnglishLevel =
-      englishLevel !== undefined
-        ? englishLevel
-        : selectedEnglishLevel;
-    const finalFavourites =
-      favourites !== undefined ? favourites : selectedFavourites;
-
-    fetchTalents({
-      nPag: 1,
-      search: searchValue,
-      techAbilities: selectedSkills.join(","),
-      idEnglishLevel: finalEnglishLevel || undefined,
-      idTalentCollection: finalFavourites || undefined,
-      yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
-      jobPosition: jobPosition || undefined,
+    fetchTalentPage(1, {
+      englishLevel,
+      favourites,
     });
   };
 
@@ -276,14 +305,6 @@ export const Talents = () => {
     setCvLang(lang);
     openModal(MODAL_FRACTAL_CV);
   };
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    fetchTalents({ nPag: currentPage });
-  }, [currentPage, fetchTalents]);
 
   useEffect(() => {
     Promise.all([fetchFavourites(), fetchTalents({ nPag: 1 })]);
