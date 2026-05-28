@@ -120,10 +120,12 @@ export const AddTalent = () => {
   } = methods;
 
   // Auto-guardado del formulario
+  const watchedValues = watch();
   const { clearStorage, saveFiles, loadFiles } = useFormPersistence(
-    watch,
+    watchedValues,
     setValue,
     ["cv", "foto"],
+    reset,
   );
 
   const watchCountryPhone = watch("codigoPais");

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DynamicSectionProps } from "../../models";
 import { DynamicSection } from "./DynamicSection";
+import { YearPicker } from "./YearPicker";
 import {
   FieldValues,
   Path,
@@ -190,14 +191,11 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.fechaInicio` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    placeholder="YYYY"
-                    id={`educaciones.${index}.fechaInicio`}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                  <YearPicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={1950}
+                    max={new Date().getFullYear()}
                   />
                 )}
               />
@@ -267,17 +265,14 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.fechaFin` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    min="1900"
-                    max="2100"
-                    placeholder="YYYY"
-                    id={`educaciones.${index}.fechaFin`}
+                  <YearPicker
+                    value={field.value}
+                    onChange={field.onChange}
                     disabled={getValues(
                       `educaciones.${index}.flActualidad` as Path<F>
                     )}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
+                    min={1950}
+                    max={new Date().getFullYear()}
                   />
                 )}
               />

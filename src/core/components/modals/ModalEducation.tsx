@@ -2,6 +2,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
 import { useModal } from "../../context/ModalContext";
+import { Utils } from "../../utilities/utils";
 import { useApi } from "../../hooks/useApi";
 import {
   AddOrUpdateEducationParams,
@@ -159,12 +160,9 @@ export const ModalEducation = ({
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio: educacion.fechaInicio ? new Date(educacion.fechaInicio)
-            .getFullYear()
-            .toString()
-          : "",
+        fechaInicio: Utils.formatDateForYearInput(educacion.fechaInicio),
 
-        fechaFin: !educacion.flActualidad && educacion.fechaFin ? educacion.fechaFin.slice(6) : "",
+        fechaFin: !educacion.flActualidad ? Utils.formatDateForYearInput(educacion.fechaFin) : "",
 
         flActualidad: educacion.flActualidad || false,
       });
@@ -275,11 +273,7 @@ export const ModalEducation = ({
               .toString()
           : "",
 
-        fechaFin: !educacion.flActualidad && educacion.fechaFin
-          ? new Date(educacion.fechaFin)
-              .getFullYear()
-              .toString()
-          : "",
+        fechaFin: !educacion.flActualidad ? Utils.formatDateForYearInput(educacion.fechaFin) : "",
         flActualidad: educacion.flActualidad || false,
       });
     }
