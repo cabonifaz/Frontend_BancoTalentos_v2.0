@@ -55,16 +55,17 @@ export const EducationsSection = <F extends FieldValues>({
       hasAppendedInitial.current = true;
     }
   }, [shouldShowEmptyForm, fields.length, append]);
-
+/*
   useEffect(() => {
     // Validar todas las fechas de fin cuando cambia alguna fecha de inicio
     fields.forEach((_, index) => {
-      if (getValues(`educaciones.${index}.fechaFin` as Path<F>)) {
+      console.log(getValues(`educaciones.${index}.flActualidad` as Path<F>))
+      if (getValues(`educaciones.${index}.flActualidad` as Path<F>)) {
         trigger(`educaciones.${index}.fechaFin` as Path<F>);
       }
     });
   }, [watchedFechasInicio, trigger, fields, getValues]);
-
+*/
   return (
     <DynamicSection
       title="Experiencias educativas"
