@@ -25,7 +25,7 @@ import {
 import { sedeSunatList } from "../../models/interfaces/SedeSunat";
 import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Utils } from "../../utilities/utils";
 import { addDays, addWeeks, addMonths, format } from "date-fns";
 
@@ -47,7 +47,10 @@ export const ModalIngreso = ({
   const { paramsByMaestro, loading: paramLoading } = useParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
 
-  const modalityValues = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const modalityValues = useMemo(
+    () => paramsByMaestro[TIPO_MODALIDAD] || [],
+    [paramsByMaestro],
+  );
   const unitValues = paramsByMaestro[UNIDAD] || [];
   const reasonValues = paramsByMaestro[MOTIVO_INGRESO] || [];
   const currencyValues = paramsByMaestro[TIPO_MONEDA] || [];

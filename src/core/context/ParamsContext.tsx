@@ -34,7 +34,8 @@ export const useParams = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: PARAMS_QUERY_KEY,
     queryFn: fetchAllParams,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    retry: 10,
+    staleTime: 1000 * 60 * 20, // 20 minutes
     gcTime: Infinity,
     refetchOnWindowFocus: false,
   });
