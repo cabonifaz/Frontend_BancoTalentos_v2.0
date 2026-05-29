@@ -1,6 +1,7 @@
+import { Search } from "lucide-react";
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useModal } from "../../core/context/ModalContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,6 +39,7 @@ import {
   Loading,
   TalentDetailsSkeleton,
 } from "../../core/components";
+import { CustomFilterDropDown } from "../../core/components/ui/CustomFilterDropDown";
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 import { MODAL_FRACTAL_CV } from "../../core/utilities/modalsIds";
@@ -62,7 +64,6 @@ export const Talents = () => {
   const educationRef = useRef<Education | null>(null);
   const languageRef = useRef<Language | null>(null);
   const feedbackRef = useRef<Feedback | null>(null);
-  const isFirstRender = useRef(true);
 
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
   const [selectedEnglishLevel, setSelectedEnglishLevel] = useState<
@@ -113,7 +114,51 @@ export const Talents = () => {
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
 
-  const handlePaginate = (page: number) => setCurrentPage(page);
+  const buildTalentParams = (
+    nPag: number,
+    overrides?: {
+      englishLevel?: number | null;
+      favourites?: number | null;
+    },
+  ): TalentParams => {
+    const searchValue = searchInputRef.current?.value.trim() || "";
+
+    const finalEnglishLevel =
+      overrides?.englishLevel !== undefined
+        ? overrides.englishLevel
+        : selectedEnglishLevel;
+    const finalFavourites =
+      overrides?.favourites !== undefined
+        ? overrides.favourites
+        : selectedFavourites;
+
+    return {
+      nPag,
+      search: searchValue || undefined,
+      techAbilities: selectedSkills.length
+        ? selectedSkills.join(",")
+        : undefined,
+      idEnglishLevel: finalEnglishLevel || undefined,
+      idTalentCollection: finalFavourites || undefined,
+      yearsExperience: yearsExperience
+        ? Number(yearsExperience)
+        : undefined,
+      jobPosition: jobPosition || undefined,
+    };
+  };
+
+  const fetchTalentPage = (
+    page: number,
+    overrides?: {
+      englishLevel?: number | null;
+      favourites?: number | null;
+    },
+  ) => {
+    setCurrentPage(page);
+    fetchTalents(buildTalentParams(page, overrides));
+  };
+
+  const handlePaginate = (page: number) => fetchTalentPage(page);
 
   const handleTalentSelection = (talent: Talent) => {
     setTalent(talent);
@@ -125,23 +170,9 @@ export const Talents = () => {
     englishLevel?: number | null,
     favourites?: number | null,
   ) => {
-    const searchValue = searchInputRef.current?.value || "";
-
-    const finalEnglishLevel =
-      englishLevel !== undefined
-        ? englishLevel
-        : selectedEnglishLevel;
-    const finalFavourites =
-      favourites !== undefined ? favourites : selectedFavourites;
-
-    fetchTalents({
-      nPag: 1,
-      search: searchValue,
-      techAbilities: selectedSkills.join(","),
-      idEnglishLevel: finalEnglishLevel || undefined,
-      idTalentCollection: finalFavourites || undefined,
-      yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
-      jobPosition: jobPosition || undefined,
+    fetchTalentPage(1, {
+      englishLevel,
+      favourites,
     });
   };
 
@@ -278,14 +309,6 @@ export const Talents = () => {
   };
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    fetchTalents({ nPag: currentPage });
-  }, [currentPage, fetchTalents]);
-
-  useEffect(() => {
     Promise.all([fetchFavourites(), fetchTalents({ nPag: 1 })]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -347,25 +370,54 @@ export const Talents = () => {
                   }
                 />
 
-                <div className="flex gap-2 items-center">
+                  <CustomFilterDropDown
+                    label="Experiencia"
+                    isOpen={openDropdown === 1}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 1 ? null : 1)
+                    }
+                    active={!!jobPosition || !!yearsExperience}
+                    onClear={() => {
+                      setJobPosition("");
+                      setYearsExperience("");
+                    }}
+                  >
+                    <div className="flex flex-col gap-4">
 
-                  <input
-                    type="text"
-                    placeholder="Puesto"
-                    value={jobPosition}
-                    onChange={(e) => setJobPosition(e.target.value)}
-                    className="border rounded-lg px-2 py-1" 
-                  />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Puesto
+                        </label>
 
-                  <input
-                    type="number"
-                    placeholder="Años exp."
-                    value={yearsExperience}
-                    onChange={(e) => setYearsExperience(e.target.value)}
-                    className="border rounded-lg px-2 py-1 w-28"
-                  />
+                        <input
+                          type="text"
+                          placeholder="Ej: Frontend Developer"
+                          value={jobPosition}
+                          onChange={(e) =>
+                            setJobPosition(e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
 
-                </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Años de experiencia
+                        </label>
+
+                        <input
+                          type="number"
+                          placeholder="Ej: 3"
+                          value={yearsExperience}
+                          onChange={(e) =>
+                            setYearsExperience(e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                    </div>
+                  </CustomFilterDropDown>
 
                 <FilterDropDown
                   name="nivelIngles"
@@ -379,9 +431,9 @@ export const Talents = () => {
                   optionsType="radio"
                   optionsPanelSize="w-36"
                   inputPosition="right"
-                  isOpen={openDropdown === 1}
+                  isOpen={openDropdown === 2}
                   onToggle={() =>
-                    setOpenDropdown(openDropdown === 1 ? null : 1)
+                    setOpenDropdown(openDropdown === 2 ? null : 2)
                   }
                   selectedValues={
                     selectedEnglishLevel
@@ -403,9 +455,9 @@ export const Talents = () => {
                   optionsType="radio"
                   optionsPanelSize="w-32"
                   inputPosition="right"
-                  isOpen={openDropdown === 2}
+                  isOpen={openDropdown === 3}
                   onToggle={() =>
-                    setOpenDropdown(openDropdown === 2 ? null : 2)
+                    setOpenDropdown(openDropdown === 3 ? null : 3)
                   }
                   selectedValues={
                     selectedFavourites
@@ -418,11 +470,7 @@ export const Talents = () => {
               {/* Search */}
               <div className="flex items-center justify-between w-full gap-4">
                 <div className="flex relative h-10 w-11/12">
-                  <img
-                    src="/assets/ic_search.svg"
-                    alt="search icon"
-                    className="absolute top-2 left-1 rounded-lg"
-                  />
+                  <Search className="absolute top-2 left-3" size={20} />
 
                   <input
                     type="text"
@@ -773,10 +821,9 @@ export const Talents = () => {
                           <div className="flex flex-wrap gap-2">
                             {(
                               talentDets?.habilidadesTecnicas || []
-                            ).map((item, index) => (
-                              <>
+                            ).map((item) => (
+                              <React.Fragment key={item.idHabTec}>
                                 <p
-                                  key={item.idHabTec}
                                   className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
                                 >
                                   {`${item.nombreHabilidad} ${
@@ -801,7 +848,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </>
+                              </React.Fragment>
                             ))}
                           </div>
                         </div>
@@ -828,10 +875,9 @@ export const Talents = () => {
                           <div className="flex flex-wrap gap-2">
                             {(
                               talentDets?.habilidadesBlandas || []
-                            ).map((item, index) => (
-                              <>
+                            ).map((item) => (
+                              <React.Fragment key={item.id}>
                                 <p
-                                  key={item.id}
                                   className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
                                 >
                                   {item.nombreHabilidad}
@@ -852,7 +898,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </>
+                              </React.Fragment>
                             ))}
                           </div>
                         </div>

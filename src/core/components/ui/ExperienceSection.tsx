@@ -153,22 +153,7 @@ export const ExperiencesSection = <F extends FieldValues>({
   };
 
   return (
-    <DynamicSection
-      title="Experiencias laborales"
-      onAdd={() =>
-        append({
-          empresa: "",
-          puesto: "",
-          fechaInicio: "",
-          fechaFin: "",
-          flActualidad: false,
-          funciones: "",
-        } as any)
-      }
-      onRemove={remove}
-      canRemoveFirst={!shouldShowEmptyForm}
-      canAddSections={shouldAddElements}
-    >
+    <>
       {summarizing && (
         <ModalWorkingAI
           randomPhrases={[]}
@@ -176,7 +161,22 @@ export const ExperiencesSection = <F extends FieldValues>({
           subtitle="Esto no tardará mucho"
         />
       )}
-
+      <DynamicSection
+        title="Experiencias laborales"
+        onAdd={() =>
+          append({
+            empresa: "",
+            puesto: "",
+            fechaInicio: "",
+            fechaFin: "",
+            flActualidad: false,
+            funciones: "",
+          } as any)
+        }
+        onRemove={remove}
+        canRemoveFirst={!shouldShowEmptyForm}
+        canAddSections={shouldAddElements}
+      >
       {fields.map((field, index) => {
         // Determinar si es Fractal basado en el valor actual del campo empresa
         const currentEmpresa = watch(
@@ -476,6 +476,7 @@ export const ExperiencesSection = <F extends FieldValues>({
           </div>
         );
       })}
-    </DynamicSection>
+      </DynamicSection>
+    </>
   );
 };
