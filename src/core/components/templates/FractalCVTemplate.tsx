@@ -8,7 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { Experience } from "../../models";
-import { formatDateByLangOnlyYear } from "../../utilities/language.utils";
+import { formatDateByLang, formatDateByLangOnlyYear } from "../../utilities/language.utils";
 import { TalentForFractalCV } from "../../models/interfaces/TalentDataForFractal";
 
 interface FractalCVTemplateProps {
@@ -192,10 +192,10 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 <View style={styles.flexBetween}>
                   <Text style={styles.bold}>{exp.puesto}</Text>
                   <Text>
-                    {formatDateByLangOnlyYear(exp.fechaInicio, language)} -{" "}
+                    {formatDateByLang(exp.fechaInicio, language)} -{" "}
                     {exp.flActualidad
                       ? t("Actualidad", "Present")
-                      : formatDateByLangOnlyYear(exp.fechaFin, language)}
+                      : formatDateByLang(exp.fechaFin, language)}
                   </Text>
                 </View>
                 <Text style={styles.paragraph}>{exp.funciones}</Text>
@@ -252,8 +252,8 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 <View style={styles.flexBetween}>
                   <Text>{c.carrera}</Text>
                   <Text>
-                    {formatDateByLangOnlyYear(c.fechaInicio, language)} -{" "}
-                    {formatDateByLangOnlyYear(c.fechaFin, language)}
+                    {formatDateByLang(c.fechaInicio, language)} -{" "}
+                    {formatDateByLang(c.fechaFin, language)}
                   </Text>
                 </View>
               </View>
