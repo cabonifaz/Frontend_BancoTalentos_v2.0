@@ -226,7 +226,9 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                   </Text>
                   <Text>
                     {formatDateByLangOnlyYear(ed.fechaInicio, language)} -{" "}
-                    {formatDateByLangOnlyYear(ed.fechaFin, language)}
+                    {ed.flActualidad
+                      ? t("Actualidad", "Present")
+                      : formatDateByLangOnlyYear(ed.fechaFin, language)}
                   </Text>
                 </View>
               </View>
