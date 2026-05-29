@@ -34,6 +34,7 @@ export const sanitizeText = (text: string): string => {
 
   result = result.replace(/\[\d{2}:\d{2}\]/g, "");   // [19:45]
   
+  // eslint-disable-next-line no-control-regex
   result = result.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ""); // Control chars (preserva \n y \r)
   result = result.replace(/[\u007F-\u009F]/g, "");   // Caracteres de control extendidos
   result = result.replace(/[\u200B-\u200D]/g, "");   // Zero-width spaces

@@ -36,6 +36,7 @@ export const useFormPersistence = <T extends FieldValues>(
         console.error("Error loading saved form data:", error);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Guardar con debounce cuando cambian los valores (incluyendo field arrays)
