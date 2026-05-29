@@ -38,6 +38,7 @@ import {
   Loading,
   TalentDetailsSkeleton,
 } from "../../core/components";
+import { CustomFilterDropDown } from "../../core/components/ui/CustomFilterDropDown";
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 import { MODAL_FRACTAL_CV } from "../../core/utilities/modalsIds";
@@ -368,25 +369,54 @@ export const Talents = () => {
                   }
                 />
 
-                <div className="flex gap-2 items-center">
+                  <CustomFilterDropDown
+                    label="Experiencia"
+                    isOpen={openDropdown === 1}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 1 ? null : 1)
+                    }
+                    active={!!jobPosition || !!yearsExperience}
+                    onClear={() => {
+                      setJobPosition("");
+                      setYearsExperience("");
+                    }}
+                  >
+                    <div className="flex flex-col gap-4">
 
-                  <input
-                    type="text"
-                    placeholder="Puesto"
-                    value={jobPosition}
-                    onChange={(e) => setJobPosition(e.target.value)}
-                    className="border rounded-lg px-2 py-1" 
-                  />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Puesto
+                        </label>
 
-                  <input
-                    type="number"
-                    placeholder="Años exp."
-                    value={yearsExperience}
-                    onChange={(e) => setYearsExperience(e.target.value)}
-                    className="border rounded-lg px-2 py-1 w-28"
-                  />
+                        <input
+                          type="text"
+                          placeholder="Ej: Frontend Developer"
+                          value={jobPosition}
+                          onChange={(e) =>
+                            setJobPosition(e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
 
-                </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Años de experiencia
+                        </label>
+
+                        <input
+                          type="number"
+                          placeholder="Ej: 3"
+                          value={yearsExperience}
+                          onChange={(e) =>
+                            setYearsExperience(e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                    </div>
+                  </CustomFilterDropDown>
 
                 <FilterDropDown
                   name="nivelIngles"
@@ -400,9 +430,9 @@ export const Talents = () => {
                   optionsType="radio"
                   optionsPanelSize="w-36"
                   inputPosition="right"
-                  isOpen={openDropdown === 1}
+                  isOpen={openDropdown === 2}
                   onToggle={() =>
-                    setOpenDropdown(openDropdown === 1 ? null : 1)
+                    setOpenDropdown(openDropdown === 2 ? null : 2)
                   }
                   selectedValues={
                     selectedEnglishLevel
@@ -424,9 +454,9 @@ export const Talents = () => {
                   optionsType="radio"
                   optionsPanelSize="w-32"
                   inputPosition="right"
-                  isOpen={openDropdown === 2}
+                  isOpen={openDropdown === 3}
                   onToggle={() =>
-                    setOpenDropdown(openDropdown === 2 ? null : 2)
+                    setOpenDropdown(openDropdown === 3 ? null : 3)
                   }
                   selectedValues={
                     selectedFavourites
