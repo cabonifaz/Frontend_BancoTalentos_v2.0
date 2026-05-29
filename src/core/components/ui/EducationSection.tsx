@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DynamicSectionProps } from "../../models";
 import { DynamicSection } from "./DynamicSection";
+import { YearPicker } from "./YearPicker";
 import {
   FieldValues,
   Path,
@@ -55,16 +56,17 @@ export const EducationsSection = <F extends FieldValues>({
       hasAppendedInitial.current = true;
     }
   }, [shouldShowEmptyForm, fields.length, append]);
-
+/*
   useEffect(() => {
     // Validar todas las fechas de fin cuando cambia alguna fecha de inicio
     fields.forEach((_, index) => {
-      if (getValues(`educaciones.${index}.fechaFin` as Path<F>)) {
+      console.log(getValues(`educaciones.${index}.flActualidad` as Path<F>))
+      if (getValues(`educaciones.${index}.flActualidad` as Path<F>)) {
         trigger(`educaciones.${index}.fechaFin` as Path<F>);
       }
     });
   }, [watchedFechasInicio, trigger, fields, getValues]);
-
+*/
   return (
     <DynamicSection
       title="Experiencias educativas"
@@ -183,18 +185,17 @@ export const EducationsSection = <F extends FieldValues>({
                 htmlFor={`educaciones.${index}.fechaInicio`}
                 className="text-[#71717A] text-sm px-1"
               >
-                Mes y año de inicio<span className="text-red-400">*</span>
+                Año de inicio<span className="text-red-400">*</span>
               </label>
               <Controller
                 name={`educaciones.${index}.fechaInicio` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
-                    {...field}
-                    type="date"
-                    id={`educaciones.${index}.fechaInicio`}
-                    autoComplete="bday"
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                  <YearPicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={1950}
+                    max={new Date().getFullYear()}
                   />
                 )}
               />
@@ -258,20 +259,20 @@ export const EducationsSection = <F extends FieldValues>({
                 htmlFor={`educaciones.${index}.fechaFin`}
                 className="text-[#71717A] text-sm px-1"
               >
-                Mes y año de fin
+                Año de fin
               </label>
               <Controller
                 name={`educaciones.${index}.fechaFin` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
-                    {...field}
-                    type="date"
-                    id={`educaciones.${index}.fechaFin`}
+                  <YearPicker
+                    value={field.value}
+                    onChange={field.onChange}
                     disabled={getValues(
                       `educaciones.${index}.flActualidad` as Path<F>
                     )}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400"
+                    min={1950}
+                    max={new Date().getFullYear()}
                   />
                 )}
               />

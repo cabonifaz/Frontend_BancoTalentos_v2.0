@@ -239,51 +239,68 @@ export const AddTalentSchema = z.object({
     .default([]),
 
   educaciones: z
-    .array(
-      z
-        .object({
-          institucion: z.preprocess(
-            trim,
-            z.string().min(1, "La institución es requerida"),
-          ),
-          carrera: z.preprocess(
-            trim,
-            z.string().min(1, "La carrera es requerida"),
-          ),
-          grado: z.preprocess(
-            trim,
-            z.string().min(1, "El grado es requerido"),
-          ),
-          fechaInicio: z.preprocess(
-            trim,
-            z.string().min(1, "La fecha de inicio es requerida"),
-          ),
-          fechaFin: z.preprocess(emptyToUndef, z.string().optional()),
-          flActualidad: z.coerce.boolean(),
-        })
-        .refine(
-          (data) => {
-            // Si el usuario marcó "actualidad" o el campo está vacío, saltamos la validación
-            if (
-              data.flActualidad ||
-              !data.fechaFin ||
-              !data.fechaInicio
-            )
-              return true;
-
-            const inicio = new Date(data.fechaInicio);
-            const fin = new Date(data.fechaFin);
-            return fin > inicio;
-          },
-          {
-            message:
-              "La fecha de fin debe ser mayor a la fecha de inicio",
-            path: ["fechaFin"],
-          },
+  .array(
+    z
+      .object({
+        institucion: z.preprocess(
+          trim,
+          z.string().min(1, "La institución es requerida"),
         ),
-    )
-    .optional()
-    .default([]),
+
+        carrera: z.preprocess(
+          trim,
+          z.string().min(1, "La carrera es requerida"),
+        ),
+
+        grado: z.preprocess(
+          trim,
+          z.string().min(1, "El grado es requerido"),
+        ),
+
+        fechaInicio: z.preprocess(
+          trim,
+          z
+            .string()
+            .regex(
+              /^\d{4}$/,
+              "El año de inicio debe tener 4 dígitos",
+            ),
+        ),
+
+        fechaFin: z.preprocess(
+          emptyToUndef,
+          z
+            .string()
+            .regex(
+              /^\d{4}$/,
+              "El año de fin debe tener 4 dígitos",
+            )
+            .optional(),
+        ),
+
+        flActualidad: z.coerce.boolean(),
+      })
+      .refine(
+        (data) => {
+          // Si es actualidad o no hay fecha fin
+          if (data.flActualidad || !data.fechaFin) {
+            return true;
+          }
+
+          const inicio = Number(data.fechaInicio);
+          const fin = Number(data.fechaFin);
+
+          return fin >= inicio;
+        },
+        {
+          message:
+            "El año de fin debe ser mayor al año de inicio",
+          path: ["fechaFin"],
+        },
+      ),
+  )
+  .optional()
+  .default([]),
 
   salaryExpectations: z
     .object({

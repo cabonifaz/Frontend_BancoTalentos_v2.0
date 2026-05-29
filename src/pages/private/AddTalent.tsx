@@ -120,10 +120,12 @@ export const AddTalent = () => {
   } = methods;
 
   // Auto-guardado del formulario
+  const watchedValues = watch();
   const { clearStorage, saveFiles, loadFiles } = useFormPersistence(
-    watch,
+    watchedValues,
     setValue,
     ["cv", "foto"],
+    reset,
   );
 
   const watchCountryPhone = watch("codigoPais");
@@ -208,8 +210,12 @@ export const AddTalent = () => {
 
     const cleanEducaciones = educaciones.map((edu) => ({
       ...edu,
+
       flActualidad: edu.flActualidad ? 1 : 0,
-      fechaFin: edu.flActualidad ? null : edu.fechaFin,
+
+      fechaInicio: `${edu.fechaInicio}-01-01`,
+      
+      fechaFin: edu.flActualidad ? null : edu.fechaFin ? `${edu.fechaFin}-12-31` : null,
     }));
 
     try {
@@ -314,6 +320,15 @@ export const AddTalent = () => {
 
       // Extract data using backend service
       const cvDetails = await fetchCVDetails(cvFile);
+
+      cvDetails.data.edExps.forEach((edu) => {
+
+        edu.fechaInicio = edu.fechaInicio.slice(0, 4); // Convertir a formato YYYY
+        if (edu.fechaFin) {
+          edu.fechaFin = edu.fechaFin.slice(0, 4); // Convertir a formato YYYY
+        }
+
+      });
 
       completeForm(
         cvDetails,

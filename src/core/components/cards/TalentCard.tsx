@@ -1,6 +1,4 @@
-import { get } from "http";
 import { Talent } from "../../models/interfaces/Talent";
-import { MODALIDAD_RXH } from "../../utilities/constants";
 import { Utils } from "../../utilities/utils";
 
 interface Props {
@@ -27,19 +25,19 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
           {getInitials(talent)}
         </div>
       </div>
-      <div className="w-3/4 md:w-fit">
+      <div className="w-3/4 min-w-0">
         <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
         <p className="text-sm text-[#71717A]">{talent.puesto}</p>
         <div className="flex gap-2 my-2">
           {Utils.getStars(talent.estrellas)}
         </div>
-        <p className="text-sm text-[#71717A] flex my-1 lg:h-5">
+        <p className="text-sm text-[#71717A] flex my-1 lg:h-5 min-w-0">
           <img
             src="/assets/ic_location.svg"
             alt="location icon"
-            className="h-5 w-5"
+            className="h-5 w-5 shrink-0"
           />
-          {`${talent.pais}, ${talent.ciudad}`}
+          <span className="truncate">{`${talent.pais}, ${talent.ciudad}`}</span>
         </p>
         <div className="text-sm text-[#71717A]">
           <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">

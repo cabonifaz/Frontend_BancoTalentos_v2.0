@@ -1,13 +1,21 @@
 import { useEffect, useRef } from "react";
-import { UseFormWatch, UseFormSetValue, FieldValues } from "react-hook-form";
+import { UseFormSetValue, UseFormReset, FieldValues } from "react-hook-form";
 import { FORM_STORAGE_KEY, FORM_FILES_STORAGE_KEY } from "../utilities/constants";
 
 export const useFormPersistence = <T extends FieldValues>(
-  watch: UseFormWatch<T>,
+  values: T,
   setValue: UseFormSetValue<T>,
-  excludeFields: string[] = []
+  excludeFields: string[] = [],
+  reset?: UseFormReset<T>,
 ) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRender = useRef(true);
+  const excludeFieldsRef = useRef(excludeFields);
+  excludeFieldsRef.current = excludeFields;
+  const resetRef = useRef(reset);
+  resetRef.current = reset;
+  const setValueRef = useRef(setValue);
+  setValueRef.current = setValue;
 
   // Cargar datos guardados al montar
   useEffect(() => {
@@ -15,46 +23,48 @@ export const useFormPersistence = <T extends FieldValues>(
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        Object.keys(parsed).forEach((key) => {
-          if (!excludeFields.includes(key)) {
-            setValue(key as any, parsed[key]);
-          }
-        });
+        const dataToRestore = { ...parsed };
+        excludeFieldsRef.current.forEach((field) => delete dataToRestore[field]);
+        if (resetRef.current) {
+          resetRef.current(dataToRestore as any);
+        } else {
+          Object.keys(dataToRestore).forEach((key) => {
+            setValueRef.current(key as any, dataToRestore[key]);
+          });
+        }
       } catch (error) {
         console.error("Error loading saved form data:", error);
       }
     }
   }, []);
 
-  // Guardar con debounce de 1 segundo
+  // Guardar con debounce cuando cambian los valores (incluyendo field arrays)
   useEffect(() => {
-    const subscription = watch((formData) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
 
-      timeoutRef.current = setTimeout(() => {
-        const dataToSave = { ...formData };
-        excludeFields.forEach((field) => {
-          delete dataToSave[field as keyof typeof dataToSave];
-        });
-        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
-      }, 1000);
-    });
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(() => {
+      const dataToSave = { ...values };
+      excludeFieldsRef.current.forEach((field) => {
+        delete dataToSave[field as keyof typeof dataToSave];
+      });
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));
+    }, 1000);
 
     return () => {
-      subscription.unsubscribe();
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [watch, excludeFields]);
+  }, [values]);
 
   // Función para guardar archivos
   const saveFiles = async (cvFile: File | null, fotoFile: File | null) => {
     try {
       const files: any = {};
-      
+
       if (cvFile) {
         const reader = new FileReader();
         const cvBase64 = await new Promise<string>((resolve) => {
@@ -63,7 +73,7 @@ export const useFormPersistence = <T extends FieldValues>(
         });
         files.cv = { name: cvFile.name, data: cvBase64 };
       }
-      
+
       if (fotoFile) {
         const reader = new FileReader();
         const fotoBase64 = await new Promise<string>((resolve) => {
@@ -72,7 +82,7 @@ export const useFormPersistence = <T extends FieldValues>(
         });
         files.foto = { name: fotoFile.name, data: fotoBase64 };
       }
-      
+
       if (Object.keys(files).length > 0) {
         localStorage.setItem(FORM_FILES_STORAGE_KEY, JSON.stringify(files));
       }
@@ -97,7 +107,6 @@ export const useFormPersistence = <T extends FieldValues>(
     }
   };
 
-  // Convertir base64 a File
   const base64ToFile = (base64: string, filename: string): File => {
     const arr = base64.split(',');
     const mime = arr[0].match(/:(.*?);/)![1];
@@ -110,7 +119,6 @@ export const useFormPersistence = <T extends FieldValues>(
     return new File([u8arr], filename, { type: mime });
   };
 
-  // Función para limpiar el storage
   const clearStorage = () => {
     localStorage.removeItem(FORM_STORAGE_KEY);
     localStorage.removeItem(FORM_FILES_STORAGE_KEY);

@@ -188,6 +188,13 @@ export class Utils {
     return `${year}-${month}-01`;
   };
 
+    static formatDateForYearInput = (date: string | undefined | null): string => {
+    if (!date) return "";
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) return date.split("/")[2];
+    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.substring(0, 4);
+    return "";
+  };
+
   static openPdfDocument(archivoB64: string) {
     const byteCharacters = atob(archivoB64);
     const byteNumbers = new Array(byteCharacters.length);

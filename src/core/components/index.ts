@@ -24,3 +24,4 @@ export * from "./ui/DateFilter";
 export * from "./ui/Tabs";
 export * from "./modals/ModalsForTalentsPage";
 export * from "./ui/AutoComplete";
+export * from "./ui/YearPicker";
