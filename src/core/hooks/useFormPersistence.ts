@@ -10,6 +10,12 @@ export const useFormPersistence = <T extends FieldValues>(
 ) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstRender = useRef(true);
+  const excludeFieldsRef = useRef(excludeFields);
+  excludeFieldsRef.current = excludeFields;
+  const resetRef = useRef(reset);
+  resetRef.current = reset;
+  const setValueRef = useRef(setValue);
+  setValueRef.current = setValue;
 
   // Cargar datos guardados al montar
   useEffect(() => {
@@ -18,12 +24,12 @@ export const useFormPersistence = <T extends FieldValues>(
       try {
         const parsed = JSON.parse(savedData);
         const dataToRestore = { ...parsed };
-        excludeFields.forEach((field) => delete dataToRestore[field]);
-        if (reset) {
-          reset(dataToRestore as any);
+        excludeFieldsRef.current.forEach((field) => delete dataToRestore[field]);
+        if (resetRef.current) {
+          resetRef.current(dataToRestore as any);
         } else {
           Object.keys(dataToRestore).forEach((key) => {
-            setValue(key as any, dataToRestore[key]);
+            setValueRef.current(key as any, dataToRestore[key]);
           });
         }
       } catch (error) {
@@ -43,7 +49,7 @@ export const useFormPersistence = <T extends FieldValues>(
 
     timeoutRef.current = setTimeout(() => {
       const dataToSave = { ...values };
-      excludeFields.forEach((field) => {
+      excludeFieldsRef.current.forEach((field) => {
         delete dataToSave[field as keyof typeof dataToSave];
       });
       localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(dataToSave));

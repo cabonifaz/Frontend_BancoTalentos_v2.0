@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
 import React, { useEffect, useRef, useState } from "react";
@@ -469,11 +470,7 @@ export const Talents = () => {
               {/* Search */}
               <div className="flex items-center justify-between w-full gap-4">
                 <div className="flex relative h-10 w-11/12">
-                  <img
-                    src="/assets/ic_search.svg"
-                    alt="search icon"
-                    className="absolute top-2 left-1 rounded-lg"
-                  />
+                  <Search className="absolute top-2 left-3" size={20} />
 
                   <input
                     type="text"
