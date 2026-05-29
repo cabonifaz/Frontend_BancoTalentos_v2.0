@@ -134,6 +134,7 @@ export function SoftSkillsSection<F extends FieldValues>({
                           });
                         }, 150);
                       }}
+                      role="combobox"
                       placeholder="Escribe para buscar..."
                       className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full"
                       aria-expanded={showSuggestions[index]}
