@@ -105,6 +105,7 @@ export default function InterviewsPage() {
   useEffect(() => {
     setSearchParams({ page: currentPage.toString() });
     fetchInterviews(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const handleSearch = () => {
