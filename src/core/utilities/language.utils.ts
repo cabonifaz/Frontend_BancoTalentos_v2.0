@@ -86,3 +86,36 @@ export const formatDateByLang = (
 
   return formatted;
 };
+
+export const formatDateByLangOnlyYear = (
+  dateStr: string,
+  lang: "ES" | "EN" = "ES"
+): string => {
+  if (!dateStr) return "";
+
+  const lower = dateStr.trim().toLowerCase();
+
+  if (["actualidad", "present", "presente"].includes(lower)) {
+    return lang === "ES" ? "Actualidad" : "Present";
+  }
+
+  const [day, month, year] = dateStr.split("/").map(Number);
+
+  if (!day || !month || !year) return dateStr;
+
+  const date = new Date(year, month - 1, day);
+  if (isNaN(date.getTime())) return dateStr;
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+  };
+
+  let formatted = date.toLocaleDateString(
+    lang === "ES" ? "es-ES" : "en-US",
+    options
+  );
+
+  formatted = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+
+  return formatted;
+};

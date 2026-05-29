@@ -8,7 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { Experience } from "../../models";
-import { formatDateByLang } from "../../utilities/language.utils";
+import { formatDateByLangOnlyYear } from "../../utilities/language.utils";
 import { TalentForFractalCV } from "../../models/interfaces/TalentDataForFractal";
 
 interface FractalCVTemplateProps {
@@ -192,10 +192,10 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 <View style={styles.flexBetween}>
                   <Text style={styles.bold}>{exp.puesto}</Text>
                   <Text>
-                    {formatDateByLang(exp.fechaInicio, language)} -{" "}
+                    {formatDateByLangOnlyYear(exp.fechaInicio, language)} -{" "}
                     {exp.flActualidad
                       ? t("Actualidad", "Present")
-                      : formatDateByLang(exp.fechaFin, language)}
+                      : formatDateByLangOnlyYear(exp.fechaFin, language)}
                   </Text>
                 </View>
                 <Text style={styles.paragraph}>{exp.funciones}</Text>
@@ -225,8 +225,8 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                     {ed.carrera} - {ed.grado}
                   </Text>
                   <Text>
-                    {formatDateByLang(ed.fechaInicio, language)} -{" "}
-                    {formatDateByLang(ed.fechaFin, language)}
+                    {formatDateByLangOnlyYear(ed.fechaInicio, language)} -{" "}
+                    {formatDateByLangOnlyYear(ed.fechaFin, language)}
                   </Text>
                 </View>
               </View>
@@ -252,8 +252,8 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                 <View style={styles.flexBetween}>
                   <Text>{c.carrera}</Text>
                   <Text>
-                    {formatDateByLang(c.fechaInicio, language)} -{" "}
-                    {formatDateByLang(c.fechaFin, language)}
+                    {formatDateByLangOnlyYear(c.fechaInicio, language)} -{" "}
+                    {formatDateByLangOnlyYear(c.fechaFin, language)}
                   </Text>
                 </View>
               </View>
