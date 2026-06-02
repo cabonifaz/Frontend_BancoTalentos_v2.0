@@ -582,7 +582,7 @@ export const Talents = () => {
                           </div>
                           <div className="flex flex-col">
                             <div className="flex gap-2 items-center w-fit">
-                              <p className="text-base text-wrap">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
+                              <p className="text-base text-wrap">{`ID: ${talent.idTalento} - ${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
                               <FavouriteButton
                                 idTalento={talent.idTalento}
                                 isFavourited={talent.esFavorito}

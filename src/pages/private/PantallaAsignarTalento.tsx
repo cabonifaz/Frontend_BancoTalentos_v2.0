@@ -20,6 +20,7 @@ import { ModalSolicitudEquipo } from "../../core/components/modals/ModalSolicitu
 type RequerimientoType = {
   idCliente: number;
   cliente: string;
+  titulo: string;
   codigoRQ: string;
   fechaSolicitud: string;
   descripcion: string;
@@ -55,6 +56,7 @@ interface TableRowProps {
   talento: AsignarTalentoType;
   onRemove: (id: number) => void;
   onUpdate: (talento: AsignarTalentoType) => void;
+  onInterview: (talento: AsignarTalentoType) => void;
   onConfirmChange: (
     talento: AsignarTalentoType,
     confirm: boolean
@@ -66,6 +68,7 @@ const TableRow: React.FC<TableRowProps> = ({
   talento,
   onRemove,
   onUpdate,
+  onInterview,
   onConfirmChange,
   disabled,
 }) => {
@@ -182,6 +185,12 @@ const TableRow: React.FC<TableRowProps> = ({
           } text-sm`}
         >
           Remover
+        </button>
+        <button
+          onClick={() => onInterview(talento)}
+          className="btn btn-primary text-sm"
+        >
+          Entrevistar
         </button>
       </td>
     </tr>
@@ -771,6 +780,23 @@ const TalentTable: React.FC = () => {
     });
   };
 
+  // Entrevistar talento
+  const handleInterviewTalent = (talent: AsignarTalentoType) => {
+    const fullName = `${talent.nombres} ${
+      talent.apellidos ||
+      `${talent.apellidoPaterno || ""} ${talent.apellidoMaterno || ""}`.trim()
+    }`;
+    navigate("/dashboard/entrevistas/nueva", {
+      state: {
+        idTalento: talent.idTalento,
+        talentName: fullName,
+        idRequerimiento: idRequerimiento,
+        rqLabel: `${requerimiento?.codigoRQ} - ${requerimiento?.titulo}` || requerimiento?.codigoRQ || "",
+        cliente: requerimiento?.cliente || "",
+      },
+    });
+  };
+
   // Verificar confirmación
   const handleConfirmOpen = () => {
     const acceptedTalents = localTalents.filter(
@@ -1055,6 +1081,7 @@ const TalentTable: React.FC = () => {
                           talento={talento}
                           onRemove={handleRemoveTalent}
                           onUpdate={handleUpdateTalent}
+                          onInterview={handleInterviewTalent}
                           onConfirmChange={handleConfirmChange}
                           disabled={buttonsDisabled}
                         />

@@ -26,7 +26,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
         </div>
       </div>
       <div className="w-3/4 min-w-0">
-        <p className="text-base">{`${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
+        <p className="text-base">{`ID: ${talent.idTalento} - ${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
         <p className="text-sm text-[#71717A]">{talent.puesto}</p>
         <div className="flex gap-2 my-2">
           {Utils.getStars(talent.estrellas)}
