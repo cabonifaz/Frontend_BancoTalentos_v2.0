@@ -183,7 +183,7 @@ export default function InterviewDetailPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
- 
+  const [isDragging, setIsDragging] = useState(false);
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext();
@@ -480,6 +480,18 @@ export default function InterviewDetailPage() {
     }
     setIsUploadModalOpen(true);
     e.target.value = "";
+  };
+
+const handleFileDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    setPendingFile(file);
+    if (interviewFileTypes.length > 0) {
+      setSelectedCategory(interviewFileTypes[0].num1);
+    }
+    setIsUploadModalOpen(true);
   };
 
 const confirmUpload = async () => {
@@ -1266,11 +1278,19 @@ const confirmUpload = async () => {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl py-5 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors w-full"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleFileDrop}
+              className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full ${
+                isDragging
+                  ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
+                  : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              }`}
             >
               <CloudUpload size={28} strokeWidth={1.5} />
               <span className="text-xs text-center leading-relaxed px-2">
-                Arrastra archivos aquí o haz clic para subir
+                {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
               </span>
             </button>
           </SectionCard>
