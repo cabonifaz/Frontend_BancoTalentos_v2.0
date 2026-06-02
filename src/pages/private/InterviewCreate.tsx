@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import { getRequirements, getTalents } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
@@ -34,8 +34,18 @@ interface SelectedRQ {
   cliente: string;
 }
 
+interface PrefillState {
+  idTalento?: number;
+  talentName?: string;
+  idRequerimiento?: number;
+  rqLabel?: string;
+  cliente?: string;
+}
+
 export default function InterviewCreatePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefill = (location.state as PrefillState) || {};
   const { enqueueSnackbar } = useSnackbar();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showRQSuggestions, setShowRQSuggestions] = useState(false);
@@ -114,6 +124,23 @@ export default function InterviewCreatePage() {
     register("idsRqs", { value: [] });
     register("idTalento");
   }, [register]);
+
+  useEffect(() => {
+    if (prefill.idTalento) {
+      setTalentSearchValue(prefill.talentName || "");
+      setValue("idTalento", prefill.idTalento, { shouldValidate: true });
+    }
+    if (prefill.idRequerimiento) {
+      const rq: SelectedRQ = {
+        id: prefill.idRequerimiento,
+        label: prefill.rqLabel || String(prefill.idRequerimiento),
+        cliente: prefill.cliente || "",
+      };
+      setSelectedRQs([rq]);
+      setValue("idsRqs", [prefill.idRequerimiento], { shouldValidate: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (data: CreateInterviewType) => {
     console.log("Saving interview:", data);
@@ -240,7 +267,13 @@ export default function InterviewCreatePage() {
             <div>
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/entrevistas")}
+                onClick={() =>
+                  prefill.idRequerimiento
+                    ? navigate("/dashboard/tableAsignarTalento", {
+                        state: { idRequerimiento: prefill.idRequerimiento },
+                      })
+                    : navigate("/dashboard/entrevistas")
+                }
                 className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline mb-2"
               >
                 <svg
@@ -257,7 +290,7 @@ export default function InterviewCreatePage() {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                Volver a Entrevistas
+                {prefill.idRequerimiento ? "Volver a Asignar Talento" : "Volver a Entrevistas"}
               </button>
               <h2 className="text-2xl font-bold text-gray-900">
                 Nueva Entrevista
