@@ -183,6 +183,8 @@ export default function InterviewDetailPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext();
@@ -301,7 +303,7 @@ export default function InterviewDetailPage() {
         data.selectedRQs?.map((rq: any) => ({
           id: rq.id,
           label: rq.label,
-          cliente: rq.cliente,
+          cliente: rq.cliente
         })) || [];
       setSelectedRQs(rQS);
 
@@ -421,8 +423,10 @@ export default function InterviewDetailPage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: req.titulo, cliente: req.cliente },
+        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente},
       ];
+
+
     }
     setSelectedRQs(newRQs);
     setValue(
@@ -472,7 +476,6 @@ export default function InterviewDetailPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingFile(file);
-    // Set default category to the first one available
     if (interviewFileTypes.length > 0) {
       setSelectedCategory(interviewFileTypes[0].num1);
     }
@@ -480,9 +483,21 @@ export default function InterviewDetailPage() {
     e.target.value = "";
   };
 
+const handleFileDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    setPendingFile(file);
+    if (interviewFileTypes.length > 0) {
+      setSelectedCategory(interviewFileTypes[0].num1);
+    }
+    setIsUploadModalOpen(true);
+  };
+
 const confirmUpload = async () => {
   if (!pendingFile || !id) return;
-
+  setIsUploading(true);
   try {
     // 1 pedir URL al backend
     const presigned = await executeGenerateUpload({
@@ -541,6 +556,8 @@ const confirmUpload = async () => {
     enqueueSnackbar("Error al subir archivo", {
       variant: "error",
     });
+  } finally {
+    setIsUploading(false);
   }
 };
 
@@ -1264,11 +1281,19 @@ const confirmUpload = async () => {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 rounded-xl py-5 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors w-full"
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleFileDrop}
+              className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full ${
+                isDragging
+                  ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
+                  : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              }`}
             >
               <CloudUpload size={28} strokeWidth={1.5} />
               <span className="text-xs text-center leading-relaxed px-2">
-                Arrastra archivos aquí o haz clic para subir
+                {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
               </span>
             </button>
           </SectionCard>
@@ -1335,16 +1360,25 @@ const confirmUpload = async () => {
                   <button
                     type="button"
                     onClick={() => setIsUploadModalOpen(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-white transition-colors"
+                    disabled={isUploading}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={confirmUpload}
-                    className="flex-[2] px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-20)]"
+                    disabled={isUploading}
+                    className="flex-[2] px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-20)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Subir Archivo
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Subiendo...
+                      </>
+                    ) : (
+                      "Subir Archivo"
+                    )}
                   </button>
                 </div>
               </div>
