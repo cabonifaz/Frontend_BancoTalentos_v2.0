@@ -183,6 +183,7 @@ export default function InterviewDetailPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
+ 
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext();
@@ -301,7 +302,7 @@ export default function InterviewDetailPage() {
         data.selectedRQs?.map((rq: any) => ({
           id: rq.id,
           label: rq.label,
-          cliente: rq.cliente,
+          cliente: rq.cliente
         })) || [];
       setSelectedRQs(rQS);
 
@@ -421,8 +422,10 @@ export default function InterviewDetailPage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: req.titulo, cliente: req.cliente },
+        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente},
       ];
+
+
     }
     setSelectedRQs(newRQs);
     setValue(
@@ -472,7 +475,6 @@ export default function InterviewDetailPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingFile(file);
-    // Set default category to the first one available
     if (interviewFileTypes.length > 0) {
       setSelectedCategory(interviewFileTypes[0].num1);
     }

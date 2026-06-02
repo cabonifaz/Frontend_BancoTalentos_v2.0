@@ -5,6 +5,7 @@ import { Dashboard } from "./Dashboard";
 import { DateFilter, FilterDropDown, Loading } from "../../core/components";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { listInterviews } from "../../core/services/interviews.service";
+import { Calendar } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
@@ -116,6 +117,19 @@ export default function InterviewsPage() {
       // Si estamos en otra página, volver a la 1 disparará automáticamente el useEffect
       setCurrentPage(1);
     }
+  };
+
+  const isToday = (fechaEntrevista: string) => {
+    const [fecha] = fechaEntrevista.split(" "); // 01/06/2026
+    const [dia, mes, anio] = fecha.split("/").map(Number);
+
+    const hoy = new Date();
+
+    return (
+      dia === hoy.getDate() &&
+      mes === hoy.getMonth() + 1 &&
+      anio === hoy.getFullYear()
+    );
   };
 
   return (
@@ -238,7 +252,18 @@ export default function InterviewsPage() {
                         {item.tituloRq}
                       </td>
                       <td className="table-cell">{item.cliente}</td>
-                      <td className="table-cell">{item.fechaEntrevista}</td>
+                      <td className="table-cell">
+                        <div className="flex items-center gap-2">
+                          <span>{item.fechaEntrevista}</span>
+
+                          {isToday(item.fechaEntrevista) && (
+                            <Calendar
+                              size={16}
+                              className="text-[var(--color-primary)]"
+                            />
+                          )}
+                        </div>
+                      </td>
                       <td className="table-cell">
                         <span className="font-bold block">{item.etapa}</span>
                         <EstadoBadge

@@ -213,7 +213,7 @@ export default function InterviewCreatePage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: req.titulo, cliente: req.cliente },
+        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente },
       ];
     }
     setSelectedRQs(newRQs);

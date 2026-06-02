@@ -791,7 +791,7 @@ const TalentTable: React.FC = () => {
         idTalento: talent.idTalento,
         talentName: fullName,
         idRequerimiento: idRequerimiento,
-        rqLabel: requerimiento?.titulo || requerimiento?.codigoRQ || "",
+        rqLabel: `${requerimiento?.codigoRQ} - ${requerimiento?.titulo}` || requerimiento?.codigoRQ || "",
         cliente: requerimiento?.cliente || "",
       },
     });
