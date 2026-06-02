@@ -5,7 +5,7 @@ import { Dashboard } from "./Dashboard";
 import { DateFilter, FilterDropDown, Loading } from "../../core/components";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { listInterviews } from "../../core/services/interviews.service";
-import { Calendar } from "lucide-react";
+import { Zap } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
@@ -257,9 +257,9 @@ export default function InterviewsPage() {
                           <span>{item.fechaEntrevista}</span>
 
                           {isToday(item.fechaEntrevista) && (
-                            <Calendar
-                              size={16}
-                              className="text-[var(--color-primary)]"
+                            <Zap
+                              size={18}
+                              className="text-amber-500 animate-bounce fill-amber-400"
                             />
                           )}
                         </div>

@@ -184,6 +184,7 @@ export default function InterviewDetailPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // get params
   const { paramsByMaestro, loading: loadingParams } = useParamsContext();
@@ -496,7 +497,7 @@ const handleFileDrop = (e: React.DragEvent<HTMLButtonElement>) => {
 
 const confirmUpload = async () => {
   if (!pendingFile || !id) return;
-
+  setIsUploading(true);
   try {
     // 1 pedir URL al backend
     const presigned = await executeGenerateUpload({
@@ -555,6 +556,8 @@ const confirmUpload = async () => {
     enqueueSnackbar("Error al subir archivo", {
       variant: "error",
     });
+  } finally {
+    setIsUploading(false);
   }
 };
 
@@ -1357,16 +1360,25 @@ const confirmUpload = async () => {
                   <button
                     type="button"
                     onClick={() => setIsUploadModalOpen(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-white transition-colors"
+                    disabled={isUploading}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold text-sm hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                   <button
                     type="button"
                     onClick={confirmUpload}
-                    className="flex-[2] px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-20)]"
+                    disabled={isUploading}
+                    className="flex-[2] px-4 py-2.5 rounded-xl bg-[var(--color-primary)] text-white font-semibold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-20)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    Subir Archivo
+                    {isUploading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Subiendo...
+                      </>
+                    ) : (
+                      "Subir Archivo"
+                    )}
                   </button>
                 </div>
               </div>
