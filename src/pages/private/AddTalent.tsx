@@ -321,13 +321,9 @@ export const AddTalent = () => {
       // Extract data using backend service
       const cvDetails = await fetchCVDetails(cvFile);
 
-      cvDetails.data.edExps.forEach((edu) => {
-
-        edu.fechaInicio = edu.fechaInicio.slice(0, 4); // Convertir a formato YYYY
-        if (edu.fechaFin) {
-          edu.fechaFin = edu.fechaFin.slice(0, 4); // Convertir a formato YYYY
-        }
-
+      cvDetails.data.edExps?.forEach((edu) => {
+        edu.fechaInicio = edu.fechaInicio?.slice(0, 4) || "";
+        edu.fechaFin = edu.fechaFin?.slice(0, 4) || "";
       });
 
       completeForm(

@@ -69,10 +69,12 @@ export const useAutoCompletTalForm = () => {
 
       // Ubicación
       if (data.location) {
-        const id = getCountryId(data.location.pais, countries);
-        if (id !== 0) {
-          setValue("idPais", id);
-          setValue("codigoPais", id);
+        if (data.location.pais) {
+          const id = getCountryId(data.location.pais, countries);
+          if (id !== 0) {
+            setValue("idPais", id);
+            setValue("codigoPais", id);
+          }
         }
 
         if (data.location.ciudad) {
@@ -109,6 +111,8 @@ export const useAutoCompletTalForm = () => {
       if (data.tecSkills && data.tecSkills.length > 0) {
         const mappedTechSkills = data.tecSkills
           .map((skill) => {
+            if (!skill.nombreHabilidad) return undefined;
+
             const id = getTechSkillId(
               skill.nombreHabilidad,
               techSkills,
@@ -117,7 +121,7 @@ export const useAutoCompletTalForm = () => {
             //if (id === 0) return undefined;
             return {
               idHabilidad: id,
-              anios: skill.aniosExperiencia,
+              anios: skill.aniosExperiencia || 0,
               habilidad: skill.nombreHabilidad.toUpperCase(),
             };
           })
@@ -130,10 +134,10 @@ export const useAutoCompletTalForm = () => {
       // Experiencia laboral
       if (data.workExps && data.workExps.length > 0) {
         const mappedExperiences = data.workExps.map((exp) => ({
-          empresa: exp.nombreEmpresa,
-          puesto: exp.puesto,
-          funciones: exp.funciones,
-          fechaInicio: exp.fechaInicio,
+          empresa: exp.nombreEmpresa || "",
+          puesto: exp.puesto || "",
+          funciones: exp.funciones || "",
+          fechaInicio: exp.fechaInicio || "",
           fechaFin: exp.fechaFin || "",
           flActualidad: exp.flActualidad === 1,
         }));
