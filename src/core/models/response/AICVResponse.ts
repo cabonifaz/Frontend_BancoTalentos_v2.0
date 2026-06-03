@@ -2,56 +2,57 @@ export interface IACVResponse {
   idMensaje: number;
   mensaje: string;
   data: {
-    nombres: string;
-    apellidoPaterno: string;
-    apellidoMaterno: string;
-    docIdentidad: string;
+    nombres: string | null;
+    apellidoPaterno: string | null;
+    apellidoMaterno: string | null;
+    docIdentidad: string | null;
     contacto: {
-      celularNum: string;
-      celularCod: string;
-      email: string;
+      celularNum: string | null;
+      celularCod: string | null;
+      email: string | null;
     };
     location: {
-      pais: string;
-      ciudad: string;
+      pais: string | null;
+      ciudad: string | null;
     };
     tecSkills: {
-      nombreHabilidad: string;
-      aniosExperiencia: number;
+      idHabTec?: number | null;
+      nombreHabilidad: string | null;
+      aniosExperiencia: number | null;
     }[];
     social: {
-      linkedin: string;
-      github: string;
+      linkedin: string | null;
+      github: string | null;
     };
-    presentacion: string;
+    presentacion: string | null;
     softSkills: {
-      nombreHabilidad: string;
+      nombreHabilidad: string | null;
     }[];
     workExps: {
       idExperiencia: number | null;
-      nombreEmpresa: string;
-      puesto: string;
-      funciones: string;
-      fechaInicio: string;
+      nombreEmpresa: string | null;
+      puesto: string | null;
+      funciones: string | null;
+      fechaInicio: string | null;
       fechaFin: string | null;
-      tiempo: string;
+      tiempo: string | null;
       flActualidad: number;
     }[];
     edExps: {
       idEducacion: number | null;
-      nombreInstitucion: string;
-      carrera: string;
-      grado: string;
-      fechaInicio: string;
-      fechaFin: string;
+      nombreInstitucion: string | null;
+      carrera: string | null;
+      grado: string | null;
+      fechaInicio: string | null;
+      fechaFin: string | null;
       flActualidad: number;
     }[];
     langs: {
       idTalentoIdioma: number | null;
       idIdioma: number | null;
-      nombreIdioma: string;
+      nombreIdioma: string | null;
       idNivel: number;
-      nivelIdioma: string;
+      nivelIdioma: string | null;
       estrellas: number;
     }[];
   };
