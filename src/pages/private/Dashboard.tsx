@@ -19,6 +19,7 @@ const railNav = [
 export const Dashboard = ({ children }: Props) => {
   const [redirect, setRedirect]       = useState(false);
   const [isSidebarOpen, setSidebar]   = useState(false);
+  const [isClickOpen, setIsClickOpen] = useState(false);
   const token                          = localStorage.getItem("token");
   const navigate                       = useNavigate();
 
@@ -34,8 +35,11 @@ export const Dashboard = ({ children }: Props) => {
     enqueueSnackbar("Sesión cerrada", { variant: "success" });
   };
 
-  const openSidebar  = () => setSidebar(true);
-  const closeSidebar = () => setSidebar(false);
+  const openSidebar  = () => { setSidebar(true); setIsClickOpen(true); };
+  const closeSidebar = () => { setSidebar(false); setIsClickOpen(false); };
+
+  const handleRailMouseEnter    = () => setSidebar(true);
+  const handleSidebarMouseLeave = () => { if (!isClickOpen) setSidebar(false); };
 
   const handleNav = (path: string) => {
     closeSidebar();
@@ -48,10 +52,24 @@ export const Dashboard = ({ children }: Props) => {
     <DashboardContext.Provider value={{ openSidebar, userInfo: { fullName, firstLetter, rol } }}>
 
       {/* ─── Collapsed navigation rail (always visible) ──────────────────── */}
-      <aside className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none">
+      <aside className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none" onMouseEnter={handleRailMouseEnter}>
+
+        {/* User avatar — triggers the expanded sidebar */}
+        <div className="flex flex-col items-center pt-5 pb-3 border-b border-gray-200">
+          <button
+            type="button"
+            onClick={openSidebar}
+            title="Perfil y menú"
+            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors"
+          >
+            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-sm font-semibold h-9 w-9 text-gray-700">
+              {firstLetter}
+            </span>
+          </button>
+        </div>
 
         {/* Quick-access nav icons */}
-        <nav className="flex flex-col items-center pt-5 gap-1 flex-1">
+        <nav className="flex flex-col items-center pt-3 gap-0.5 flex-1">
           {railNav.map(({ icon: Icon, label, path }) => (
             <button
               key={path}
@@ -65,17 +83,15 @@ export const Dashboard = ({ children }: Props) => {
           ))}
         </nav>
 
-        {/* User avatar — triggers the expanded sidebar */}
-        <div className="flex flex-col items-center pb-5">
+        {/* Logout */}
+        <div className="flex flex-col items-center pb-4 border-t border-gray-200 pt-2">
           <button
             type="button"
-            onClick={openSidebar}
-            title="Perfil y menú"
-            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors"
+            onClick={logout}
+            title="Cerrar sesión"
+            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
           >
-            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-sm font-semibold h-9 w-9 text-gray-700">
-              {firstLetter}
-            </span>
+            <LogOut size={21} strokeWidth={1.75} />
           </button>
         </div>
       </aside>
@@ -83,7 +99,7 @@ export const Dashboard = ({ children }: Props) => {
       {/* ─── Backdrop (dims content when sidebar is open) ─────────────────── */}
       <div
         className={`fixed inset-0 z-[45] bg-black/40 transition-opacity duration-300 ${
-          isSidebarOpen
+          isSidebarOpen && isClickOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         }`}
@@ -95,6 +111,7 @@ export const Dashboard = ({ children }: Props) => {
         className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        onMouseLeave={handleSidebarMouseLeave}
       >
         {/* User info header */}
         <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50 flex-shrink-0">
@@ -166,19 +183,19 @@ export const Dashboard = ({ children }: Props) => {
         </div>
       </div>
 
-      {children}
+      <div className="pl-16">{children}</div>
 
       {/* ─── Fractal branding — rendered after page content so DOM order never ─── */}
       {/* ─── buries it beneath later-painted positioned elements               ─── */}
       <div
-        className="fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 pointer-events-none select-none"
+        className="fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 select-none opacity-100 hover:opacity-0 transition-opacity duration-300"
         aria-hidden="true"
       >
         <img
           src="/assets/fractal-logo-BDT.png"
           alt="Fractal"
           className="h-6 w-auto block"
-          style={{ maxWidth: 88 }}
+          style={{ maxWidth: 100 }}
         />
       </div>
     </DashboardContext.Provider>

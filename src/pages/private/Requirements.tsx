@@ -306,7 +306,7 @@ export const Requirements = () => {
       )}
 
       <Dashboard>
-        <div className="p-4 mx-4 xl:mx-16">
+        <div className="pt-3 px-4">
           <div className="flex justify-between items-center my-4">
             <h2 className="text-2xl font-semibold flex gap-2">
               Requerimientos

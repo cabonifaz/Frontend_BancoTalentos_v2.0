@@ -122,7 +122,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   return (
     <Dashboard>
       {isLoading && (<Loading opacity="opacity-60" />)}
-      <div className="container mx-auto p-4">
+      <div className="p-4">
         <div className="flex flex-col gap-4">
           <h3 className="text-2xl font-semibold">Generación de enlace</h3>
 

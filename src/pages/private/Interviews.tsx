@@ -135,7 +135,7 @@ export default function InterviewsPage() {
   return (
     <Dashboard>
       {loading && <Loading opacity="opacity-50" />}
-      <div className="p-4 mx-4 xl:mx-16">
+      <div className="pt-3 px-4">
         {/* Page header */}
         <div className="flex justify-between items-center my-4">
           <h2 className="text-2xl font-semibold">Entrevistas</h2>

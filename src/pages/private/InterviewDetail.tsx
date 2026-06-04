@@ -601,7 +601,7 @@ const confirmUpload = async () => {
         loadingSave ||
         loadingUpload ||
         loadingDeleteFile) && <Loading opacity="opacity-50" />}
-      <div className="p-4 mx-4 xl:mx-16 pb-12">
+      <div className="pt-3 px-4 pb-12">
         <form onSubmit={handleSubmit(handleSave)}>
           {/* ── Top bar ── */}
           <div className="flex items-start justify-between gap-4 my-4">

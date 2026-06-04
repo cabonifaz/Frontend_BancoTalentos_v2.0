@@ -328,7 +328,7 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
-        <div className="pt-3 pl-[80px] pr-4 overflow-x-hidden">
+        <div className="pt-3 pl-4 pr-4 overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
             <div className="flex flex-row items-center gap-3 w-full sm:w-auto flex-shrink-0">
