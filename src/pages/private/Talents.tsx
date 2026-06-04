@@ -328,23 +328,23 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
-        <div className="py-3 px-4 2xl:px-[155px] overflow-x-hidden">
+        <div className="pt-3 pl-[80px] pr-4 overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-7 w-full sm:w-1/3">
+            <div className="flex flex-row items-center gap-3 w-full sm:w-auto flex-shrink-0">
               <button
                 type="button"
                 onClick={() => navigate("/dashboard/nuevo-talento")}
-                className="w-full xl:w-fit flex items-center whitespace-nowrap gap-1 btn btn-outline-blue"
+                className="flex-1 sm:flex-none xl:w-fit flex items-center whitespace-nowrap gap-1 btn btn-outline-blue"
               >
                 <img src="/assets/ic_add.svg" alt="add talent icon" />
-                <span> Nuevo Talento</span>
+                <span>Nuevo Talento</span>
               </button>
-              <p className="text-sm text-[#71717A] hidden xl:block">{`${
+              <p className="text-sm text-[#71717A] hidden xl:block whitespace-nowrap">{`${
                 talentsData?.total || 0
               } resultados encontrados`}</p>
             </div>
-            <div className="flex lg:flex-row flex-col-reverse items-center w-full sm:w-2/3 gap-4 lg:gap-12 lg:h-12">
+            <div className="flex lg:flex-row flex-col-reverse items-center w-full flex-1 min-w-0 gap-4 lg:gap-8 lg:h-12">
               {/* Filters */}
               <div className="flex flex-row flex-grow justify-between lg:justify-around lg:gap-4 items-center w-full">
                 <FilterDropDown
@@ -490,10 +490,10 @@ export const Talents = () => {
               </div>
             </div>
           </div>
-          <div className="flex mt-4 gap-4 h-[calc(100vh-250px)] lg:h-[calc(100vh-200px)]">
+          <div className="flex mt-4 gap-4 h-[calc(100vh-195px)] lg:h-[calc(100vh-76px)]">
             {/* Talents list */}
-            <div className="flex flex-col w-full md:w-1/3">
-              <div className="*:mb-2 h-[calc(100vh-230px)] overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
+            <div className="flex flex-col w-full md:w-[340px] xl:w-[370px] flex-shrink-0 min-h-0">
+              <div className="*:mb-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
                 {loadingTalents
                   ? Array.from({ length: 5 }).map((_, index) => (
                       <SkeletonCard key={index} />
@@ -522,16 +522,16 @@ export const Talents = () => {
             </div>
             {/* Talent details */}
             <div
-              className={`border-2 shadow-xl rounded-lg md:w-2/3 absolute top-0 left-0 z-10 w-full bg-white md:relative md:top-auto md:left-auto ${
+              className={`border-2 shadow-xl rounded-lg overflow-hidden flex-1 min-h-0 absolute top-0 left-0 z-[41] md:z-auto w-full bg-white md:relative md:top-auto md:left-auto ${
                 !isTalentPanelVisible ? "hidden" : ""
               }`}
             >
               {loadingTalentDets ? (
                 <TalentDetailsSkeleton />
               ) : (
-                <div>
+                <div className="h-full">
                   {talent && (
-                    <div className="flex flex-col px-4 md:pt-8 overflow-y-scroll overflow-x-hidden h-screen lg:h-[calc(100vh-205px)]">
+                    <div className="flex flex-col px-4 pt-4 overflow-y-auto overflow-x-hidden h-screen md:h-full">
                       <button
                         type="button"
                         onClick={() => setTalentPanelVisible(false)}

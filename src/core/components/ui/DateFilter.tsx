@@ -52,7 +52,7 @@ export const DateFilter = ({ label, onDateSelected }: Props) => {
 
             {isDatePickerOpen && (
                 <OutsideClickHandler onOutsideClick={() => setIsDatePickerOpen(false)}>
-                    <div className="absolute z-20 mt-2">
+                    <div className="absolute z-[43] mt-2">
                         <DatePicker
                             selected={selectedDate}
                             onChange={handleDateChange}

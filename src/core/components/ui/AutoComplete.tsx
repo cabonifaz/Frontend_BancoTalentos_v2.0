@@ -54,7 +54,7 @@ export const Autocomplete = ({
         className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
       />
       {query.length > 0 && (
-        <ul className="absolute bg-white border rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-md z-10">
+        <ul className="absolute bg-white border rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-md z-[43]">
           {filtered.length > 0 ? (
             filtered.map((opt) => (
               <li

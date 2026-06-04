@@ -303,7 +303,13 @@ export default function InterviewCreatePage() {
             <div className="flex items-center gap-2 shrink-0 pt-6">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/entrevistas")}
+                onClick={() =>
+                  prefill.idRequerimiento
+                    ? navigate("/dashboard/tableAsignarTalento", {
+                        state: { idRequerimiento: prefill.idRequerimiento },
+                      })
+                    : navigate("/dashboard/entrevistas")
+                }
                 className="btn btn-outline-gray px-5 py-2 text-sm"
               >
                 Cancelar
