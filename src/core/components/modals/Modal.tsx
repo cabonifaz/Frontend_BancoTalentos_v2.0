@@ -46,7 +46,7 @@ export const Modal = ({
   };
 
   return createPortal(
-    <div className="absolute top-0 left-0 bg-[#00000048] w-full h-screen flex flex-col items-center justify-center z-20">
+    <div className="fixed inset-0 bg-[#00000048] w-full h-screen flex flex-col items-center justify-center z-[60]">
       <div
         className={`bg-white rounded-lg p-6 flex flex-col ${divWidth}`}
         onClick={handleContentClick}

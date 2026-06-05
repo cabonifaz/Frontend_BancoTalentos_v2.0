@@ -1,6 +1,6 @@
 export const TalentDetailsSkeleton = () => {
     return (
-        <div className="flex flex-col px-8 md:pt-8 overflow-y-scroll overflow-x-hidden h-full lg:h-[calc(100vh-205px)]">
+        <div className="flex flex-col px-8 pt-4 overflow-y-scroll overflow-x-hidden h-full">
             {/* Back Button (Mobile) - Skeleton */}
             <div className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4">
                 <div className="h-6 w-6 bg-gray-300 rounded-full animate-pulse"></div>

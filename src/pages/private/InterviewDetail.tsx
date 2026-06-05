@@ -601,10 +601,10 @@ const confirmUpload = async () => {
         loadingSave ||
         loadingUpload ||
         loadingDeleteFile) && <Loading opacity="opacity-50" />}
-      <div className="p-4 mx-4 xl:mx-16 pb-12">
+      <div>
         <form onSubmit={handleSubmit(handleSave)}>
           {/* ── Top bar ── */}
-          <div className="flex items-start justify-between gap-4 my-4">
+          <div className="flex items-start justify-between gap-4 mb-2">
             <div>
               {/* Back link */}
               <button
@@ -1299,7 +1299,7 @@ const confirmUpload = async () => {
           </SectionCard>
           {/* ── File Upload Modal ── */}
           {isUploadModalOpen && (
-            <div className="fixed inset-0 z-[30] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="text-lg font-bold text-gray-900">

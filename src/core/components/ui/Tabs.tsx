@@ -37,7 +37,7 @@ export const Tabs = ({
   }, [activeTab]);
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Pestañas */}
       <div className="relative">
         <div className="flex border-b border-gray-200 overflow-x-auto">
@@ -62,10 +62,11 @@ export const Tabs = ({
         </div>
       </div>
 
-      <div className="mt-1">
+      <div className="mt-1 min-h-0 flex-1">
         {tabs.map((tab, index) => (
           <div
             key={index}
+            className="h-full min-h-0"
             style={{ display: activeTab === index ? "block" : "none" }}
           >
             {tab.children}

@@ -49,7 +49,7 @@ export const TabRQData = ({
 
   return (
     <>
-      <div className="flex flex-col flex-1">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex justify-end">
           <button
             type="button"
@@ -64,7 +64,7 @@ export const TabRQData = ({
           </button>
         </div>
         {/* Campos del formulario */}
-        <div className="space-y-4 flex-1">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-2">
           {/* Título RQ */}
           <div className="flex items-center">
             <label className="w-1/3 text-sm font-medium text-gray-700">

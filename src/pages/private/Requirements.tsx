@@ -306,8 +306,8 @@ export const Requirements = () => {
       )}
 
       <Dashboard>
-        <div className="p-4 mx-4 xl:mx-16">
-          <div className="flex justify-between items-center my-4">
+        <div className="flex h-full flex-col overflow-x-hidden">
+          <div className="flex shrink-0 justify-between items-center mb-2">
             <h2 className="text-2xl font-semibold flex gap-2">
               Requerimientos
             </h2>
@@ -320,7 +320,7 @@ export const Requirements = () => {
             </button>
           </div>
           {/* filters */}
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <div className="shrink-0 bg-white p-6 rounded-lg shadow-md mb-4">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
                 <div className="flex-1 ">
@@ -390,8 +390,8 @@ export const Requirements = () => {
           </div>
 
           {/* Table */}
-          <div className="table-container">
-            <div className="table-wrapper">
+          <div className="table-container min-h-0 flex-1">
+            <div className="table-wrapper h-full overflow-auto">
               <table className="table">
                 <thead>
                   <tr className="table-header">
@@ -516,7 +516,7 @@ export const Requirements = () => {
 
           {/* Pagination */}
           {(ReqsResponse?.totalElementos || 0) > 0 && (
-            <div className="flex flex-col items-center gap-2 my-4">
+            <div className="flex shrink-0 flex-col items-center gap-2 mt-4">
               {shouldShowPagination && (
                 <div className="flex justify-center items-center gap-4">
                   {/* Botón Anterior */}

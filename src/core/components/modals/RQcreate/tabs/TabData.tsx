@@ -45,8 +45,8 @@ export const TabData = ({ rqStates }: TabProps) => {
   }, [fchSol, fchVenc, setError, clearErrors]);
 
   return (
-    <div className="flex flex-col h-[calc(570px-120px)]">
-      <div className="overflow-y-auto pr-2">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-2">
         <div className="space-y-4 flex-1">
           {/* Título RQ */}
           <div className="flex items-center">

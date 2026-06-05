@@ -910,7 +910,7 @@ const TalentTable: React.FC = () => {
   };
 
   // Navegación
-  const goBack = () => navigate(-1);
+  const goBack = () => navigate("/dashboard/requerimientos");
 
   // Validaciones
   const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
@@ -994,16 +994,44 @@ const TalentTable: React.FC = () => {
           onClose={handleModalSolicitudEquipoClose}
         />
       )}
-      <div className="p-4">
-        <div className="flex flex-col gap-4">
+      <div className="flex h-full flex-col overflow-x-hidden">
+        <div className="flex shrink-0 items-center justify-between mb-2">
           <h3 className="text-2xl font-semibold flex gap-2">
             <BackButton backClicked={goBack} />
             Módulo para búsqueda de talentos
           </h3>
 
-          {/* Información del requerimiento */}
-          <div className="bg-white shadow-md rounded-lg p-4 w-full">
-            <div className="flex flex-col gap-2">
+          {/* Acciones principales */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setSearchTerm("");
+                setSearchResults([]);
+                setIsModalOpen(true);
+                handleSearch("");
+              }}
+              disabled={buttonsDisabled}
+              className={`btn ${
+                buttonsDisabled ? "btn-disabled" : "btn-blue"
+              }`}
+            >
+              Agregar Talento
+            </button>
+            <button
+              onClick={handleConfirmOpen}
+              disabled={buttonsDisabled}
+              className={`btn ${
+                buttonsDisabled ? "btn-disabled" : "btn-primary"
+              }`}
+            >
+              Finalizar
+            </button>
+          </div>
+        </div>
+
+        {/* Información del requerimiento */}
+        <div className="shrink-0 bg-white shadow-md rounded-lg p-4 w-full mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-2">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Id:</span>{" "}
                 {idRequerimiento}
@@ -1035,41 +1063,13 @@ const TalentTable: React.FC = () => {
                     .join(", ") || "Cargando..."
                 }`}
               </p>
-            </div>
-          </div>
-
-          {/* Acciones principales */}
-          <div className="flex justify-between w-full pb-4">
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setSearchResults([]);
-                setIsModalOpen(true);
-                handleSearch("");
-              }}
-              disabled={buttonsDisabled}
-              className={`btn ${
-                buttonsDisabled ? "btn-disabled" : "btn-blue"
-              }`}
-            >
-              Agregar Talento
-            </button>
-            <button
-              onClick={handleConfirmOpen}
-              disabled={buttonsDisabled}
-              className={`btn ${
-                buttonsDisabled ? "btn-disabled" : "btn-primary"
-              }`}
-            >
-              Finalizar
-            </button>
           </div>
         </div>
 
         {/* Tabla de talentos */}
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto">
+        <div className="table-container min-h-0 flex-1">
+          <div className="table-wrapper h-full overflow-auto">
+            <table className="table">
               <TableHeader />
               <tbody>
                 {localTalents.length > 0 ? (

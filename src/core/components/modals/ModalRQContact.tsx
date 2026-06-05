@@ -113,7 +113,7 @@ export const ModalRQContact = ({
 
   return (
     <>
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60]">
         <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 relative w-full md:w-[90%] lg:w-[500px] min-h-[570px]">
           {postloading && (
             <div className="absolute rounded-lg inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">

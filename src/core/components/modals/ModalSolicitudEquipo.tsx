@@ -199,7 +199,7 @@ export const ModalSolicitudEquipo = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60]">
       <div className="bg-white rounded-lg shadow-lg p-3 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto">
         <div className="flex items-center justify-between p-2">
           <h3 className="text-lg font-medium">Datos de Solicitud Equipo</h3>
