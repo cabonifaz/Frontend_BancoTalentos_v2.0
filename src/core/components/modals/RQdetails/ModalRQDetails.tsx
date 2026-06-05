@@ -399,15 +399,18 @@ export const ModalRQDetails = ({
       {(reqLoading || postloading || loadTariff) && (
         <Loading opacity="opacity-20" />
       )}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] min-h-[570px] overflow-y-auto max-h-[570px] relative">
-          <header className="flex items-center justify-between">
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] p-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 overflow-hidden relative flex flex-col">
+          <header className="flex shrink-0 items-center justify-between">
             <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
             <CloseModalButton onClick={onClose} />
           </header>
 
           <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)}>
+            <form
+              onSubmit={methods.handleSubmit(onSubmit)}
+              className="flex min-h-0 flex-1 flex-col"
+            >
               <Tabs
                 isDataLoading={reqLoading}
                 tabs={[

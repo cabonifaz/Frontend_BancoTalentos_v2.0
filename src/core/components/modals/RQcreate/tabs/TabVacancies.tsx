@@ -318,7 +318,7 @@ export const TabVacancies = ({
           onClose={closeModalAddCareer}
         />
       )}
-      <div className="flex flex-col h-[calc(570px-120px)]">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="mb-1 text-end">
           <button
             type="button"
@@ -328,7 +328,7 @@ export const TabVacancies = ({
             Agregar
           </button>
         </div>
-        <div className="p-1 flex-1 overflow-visible">
+        <div className="min-h-0 flex-1 overflow-visible p-1">
           <div className="table-container h-full">
             <div className="table-wrapper h-full overflow-y-auto">
               <table className="table">

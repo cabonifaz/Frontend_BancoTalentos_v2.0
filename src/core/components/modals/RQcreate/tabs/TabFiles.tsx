@@ -61,7 +61,7 @@ export const TabFiles = ({ fileOptions, filesParms }: TabProps) => {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(570px-120px)]">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Archivos */}
         <div className="mx-4">
           <div className="flex items-center justify-between">
@@ -88,7 +88,7 @@ export const TabFiles = ({ fileOptions, filesParms }: TabProps) => {
             accept={allowedFileTypes}
           />
         </div>
-        <div className="mt-2 flex-1 overflow-y-auto">
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
           {/**@marker files map */}
           {archivos.map((archivo, index) => (
             <div

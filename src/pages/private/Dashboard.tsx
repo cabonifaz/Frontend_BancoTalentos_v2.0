@@ -1,6 +1,12 @@
-import { ReactNode, useState } from "react";
+import {
+  MouseEvent as ReactMouseEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Utils } from "../../core/utilities/utils";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { Home, FileText, Link2, Users, LogOut, X } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
@@ -16,18 +22,20 @@ const railNav = [
   { icon: Link2,    label: "Generar enlace",    path: "/dashboard/generarEnlaceRequerimiento" },
 ] as const;
 
+let sidebarOpenSnapshot = false;
+let sidebarClickOpenSnapshot = false;
+let lastPointerPosition: { x: number; y: number } | null = null;
+let lastSidebarBounds: DOMRect | null = null;
+
 export const Dashboard = ({ children }: Props) => {
   const [redirect, setRedirect]       = useState(false);
-  const [isSidebarOpen, setSidebar]   = useState(false);
-  const [isClickOpen, setIsClickOpen] = useState(false);
+  const [isSidebarOpen, setSidebar]   = useState(sidebarOpenSnapshot);
+  const [isClickOpen, setIsClickOpen] = useState(sidebarClickOpenSnapshot);
+  const railRef                        = useRef<HTMLElement | null>(null);
+  const sidebarRef                     = useRef<HTMLDivElement | null>(null);
   const token                          = localStorage.getItem("token");
   const navigate                       = useNavigate();
-
-  if (!token) return <Navigate to={"/login"} replace />;
-
-  const fullName    = Utils.decodeJwt(token).fullname;
-  const firstLetter = fullName.charAt(0);
-  const rol         = Utils.decodeJwt(token).roles[0];
+  const location                       = useLocation();
 
   const logout = () => {
     Utils.removeToken();
@@ -35,16 +43,115 @@ export const Dashboard = ({ children }: Props) => {
     enqueueSnackbar("Sesión cerrada", { variant: "success" });
   };
 
-  const openSidebar  = () => { setSidebar(true); setIsClickOpen(true); };
-  const closeSidebar = () => { setSidebar(false); setIsClickOpen(false); };
+  const setSidebarOpen = (value: boolean) => {
+    sidebarOpenSnapshot = value;
+    setSidebar(value);
+  };
 
-  const handleRailMouseEnter    = () => setSidebar(true);
-  const handleSidebarMouseLeave = () => { if (!isClickOpen) setSidebar(false); };
+  const setClickOpen = (value: boolean) => {
+    sidebarClickOpenSnapshot = value;
+    setIsClickOpen(value);
+  };
+
+  const openSidebar  = () => { setSidebarOpen(true); setClickOpen(true); };
+  const closeSidebar = () => { setSidebarOpen(false); setClickOpen(false); };
+
+  const rememberSidebarBounds = () => {
+    const sidebarBounds = sidebarRef.current?.getBoundingClientRect();
+    const railBounds = railRef.current?.getBoundingClientRect();
+
+    lastSidebarBounds = sidebarBounds || railBounds || lastSidebarBounds;
+  };
+
+  const isPointerInsideSidebar = (x: number, y: number) => {
+    rememberSidebarBounds();
+
+    if (
+      lastSidebarBounds &&
+      x >= lastSidebarBounds.left &&
+      x <= lastSidebarBounds.right &&
+      y >= lastSidebarBounds.top &&
+      y <= lastSidebarBounds.bottom
+    ) {
+      return true;
+    }
+
+    const pointerTarget = document.elementFromPoint(x, y);
+
+    return (
+      !!pointerTarget &&
+      (railRef.current?.contains(pointerTarget) ||
+        sidebarRef.current?.contains(pointerTarget))
+    );
+  };
+
+  const closeSidebarIfPointerOutside = () => {
+    const position = lastPointerPosition;
+    if (!position) {
+      closeSidebar();
+      return;
+    }
+
+    if (!isPointerInsideSidebar(position.x, position.y)) {
+      closeSidebar();
+    }
+  };
+
+  const handleRailMouseEnter    = () => setSidebarOpen(true);
+  const handleSidebarMouseLeave = (
+    event: ReactMouseEvent<HTMLDivElement>,
+  ) => {
+    lastPointerPosition = { x: event.clientX, y: event.clientY };
+    requestAnimationFrame(closeSidebarIfPointerOutside);
+  };
 
   const handleNav = (path: string) => {
-    closeSidebar();
+    rememberSidebarBounds();
     navigate(path);
   };
+
+  useEffect(() => {
+    if (!isSidebarOpen) return;
+
+    rememberSidebarBounds();
+
+    const handlePointerMove = (event: PointerEvent) => {
+      lastPointerPosition = { x: event.clientX, y: event.clientY };
+
+      if (!isPointerInsideSidebar(event.clientX, event.clientY)) {
+        closeSidebar();
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (!isSidebarOpen || !lastPointerPosition) return;
+
+    const frame = requestAnimationFrame(() => {
+      const { x, y } = lastPointerPosition || {};
+      if (x === undefined || y === undefined) return;
+
+      if (!isPointerInsideSidebar(x, y)) closeSidebar();
+    });
+
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, isSidebarOpen]);
+
+  if (!token) return <Navigate to={"/login"} replace />;
+
+  const fullName    = Utils.decodeJwt(token).fullname;
+  const firstLetter = fullName.charAt(0);
+  const rol         = Utils.decodeJwt(token).roles[0];
 
   if (redirect) return <Navigate to={"/login"} replace />;
 
@@ -52,7 +159,7 @@ export const Dashboard = ({ children }: Props) => {
     <DashboardContext.Provider value={{ openSidebar, userInfo: { fullName, firstLetter, rol } }}>
 
       {/* ─── Collapsed navigation rail (always visible) ──────────────────── */}
-      <aside className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none" onMouseEnter={handleRailMouseEnter}>
+      <aside ref={railRef} className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none" onMouseEnter={handleRailMouseEnter}>
 
         {/* User avatar — triggers the expanded sidebar */}
         <div className="flex flex-col items-center pt-5 pb-3 border-b border-gray-200">
@@ -108,6 +215,7 @@ export const Dashboard = ({ children }: Props) => {
 
       {/* ─── Expanded sidebar (slides over the rail from the left) ────────── */}
       <div
+        ref={sidebarRef}
         className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -170,8 +278,16 @@ export const Dashboard = ({ children }: Props) => {
           </button>
         </nav>
 
-        {/* Logout pinned at the bottom */}
-        <div className="px-3 pb-4 flex-shrink-0 border-t pt-2">
+        {/* Branding and logout pinned at the bottom */}
+        <div className="px-3 pb-4 flex-shrink-0 border-t pt-3">
+          <div className="flex justify-center pb-3">
+            <img
+              src="/assets/fractal-logo-BDT.png"
+              alt="Fractal"
+              className="h-10 w-auto"
+              style={{ maxWidth: 168 }}
+            />
+          </div>
           <button
             type="button"
             onClick={logout}
@@ -183,19 +299,21 @@ export const Dashboard = ({ children }: Props) => {
         </div>
       </div>
 
-      <div className="pl-16">{children}</div>
+      <div className="h-screen pl-16">
+        <div className="h-full p-6">{children}</div>
+      </div>
 
       {/* ─── Fractal branding — rendered after page content so DOM order never ─── */}
       {/* ─── buries it beneath later-painted positioned elements               ─── */}
       <div
-        className="fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 select-none opacity-100 hover:opacity-0 transition-opacity duration-300"
+        className="pointer-events-none fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 select-none opacity-100"
         aria-hidden="true"
       >
         <img
           src="/assets/fractal-logo-BDT.png"
           alt="Fractal"
-          className="h-6 w-auto block"
-          style={{ maxWidth: 100 }}
+          className="h-8 w-auto block"
+          style={{ maxWidth: 132 }}
         />
       </div>
     </DashboardContext.Provider>

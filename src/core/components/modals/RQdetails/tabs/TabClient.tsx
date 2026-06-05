@@ -68,7 +68,7 @@ export const TabClient = ({
           idCliente={getValues("idCliente")}
         />
       )}
-      <div className="flex flex-col h-[calc(570px-120px)]">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Cliente */}
         <div className="flex items-center">
           <label className="text-sm font-medium text-gray-700">
@@ -113,7 +113,7 @@ export const TabClient = ({
           </button>
         </div>
 
-        <div className="mt-4 flex-1 overflow-y-auto custom-scroll">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto custom-scroll">
           <div className="table-container">
             <div className="table-wrapper">
               <table className="table">

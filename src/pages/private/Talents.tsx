@@ -328,7 +328,7 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
-        <div className="pt-3 pl-4 pr-4 overflow-x-hidden">
+        <div className="flex h-full flex-col overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
             <div className="flex flex-row items-center gap-3 w-full sm:w-auto flex-shrink-0">
@@ -490,7 +490,7 @@ export const Talents = () => {
               </div>
             </div>
           </div>
-          <div className="flex mt-4 gap-4 h-[calc(100vh-195px)] lg:h-[calc(100vh-76px)]">
+          <div className="flex mt-4 min-h-0 flex-1 gap-4">
             {/* Talents list */}
             <div className="flex flex-col w-full md:w-[340px] xl:w-[370px] flex-shrink-0 min-h-0">
               <div className="*:mb-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">

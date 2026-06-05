@@ -26,6 +26,7 @@ import { enqueueSnackbar } from "notistack";
 import { saveTalentFMI } from "../../core/services/apiService";
 import useFetchTalento from "../../core/hooks/useFetchTalento";
 import { format } from "date-fns";
+import { Dashboard } from "./Dashboard";
 
 const PantallaDatos = () => {
   const navigate = useNavigate();
@@ -176,27 +177,28 @@ const PantallaDatos = () => {
   };
 
   return (
-    <>
+    <Dashboard>
       {loadingParams && <Loading opacity="opacity-60" />}
       {loading && <Loading opacity="opacity-60" />}
       {loadingSaveTalent && <Loading opacity="opacity-60" />}
-      <div className="w-full lg:w-[65%] m-auto p-4 border-2 rounded-lg my-8">
-        {/* Data form */}
-        <form
-          onSubmit={handleSubmit(saveData)}
-          className="flex flex-col gap-8"
-        >
-          <h3 className="text-2xl font-semibold flex gap-2">
-            <BackButton backClicked={goBack} />
-            Datos Personales
-          </h3>
-          <InputForm
-            required={true}
-            name="nombres"
-            control={control}
-            label="Nombres"
-            error={errors.nombres}
-          />
+      <div>
+        <div className="w-full lg:w-[65%] mx-auto p-4 border-2 rounded-lg">
+          {/* Data form */}
+          <form
+            onSubmit={handleSubmit(saveData)}
+            className="flex flex-col gap-4"
+          >
+            <h3 className="text-2xl font-semibold flex gap-2">
+              <BackButton backClicked={goBack} />
+              Datos Personales
+            </h3>
+            <InputForm
+              required={true}
+              name="nombres"
+              control={control}
+              label="Nombres"
+              error={errors.nombres}
+            />
           <InputForm
             required={true}
             name="apellidoPaterno"
@@ -334,9 +336,10 @@ const PantallaDatos = () => {
               Guardar
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </>
+    </Dashboard>
   );
 };
 

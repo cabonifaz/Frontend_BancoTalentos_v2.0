@@ -135,9 +135,9 @@ export default function InterviewsPage() {
   return (
     <Dashboard>
       {loading && <Loading opacity="opacity-50" />}
-      <div className="pt-3 px-4">
+      <div className="flex h-full flex-col overflow-x-hidden">
         {/* Page header */}
-        <div className="flex justify-between items-center my-4">
+        <div className="flex shrink-0 justify-between items-center mb-2">
           <h2 className="text-2xl font-semibold">Entrevistas</h2>
           <button
             type="button"
@@ -150,7 +150,7 @@ export default function InterviewsPage() {
         </div>
 
         {/* Filters panel */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <div className="shrink-0 bg-white p-6 rounded-lg shadow-md mb-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
               <div className="flex-1">
@@ -218,8 +218,8 @@ export default function InterviewsPage() {
         </div>
 
         {/* Table */}
-        <div className="table-container shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-          <div className="table-wrapper">
+        <div className="table-container min-h-0 flex-1 shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+          <div className="table-wrapper h-full overflow-auto">
             <table className="table">
               <thead>
                 <tr className="table-header uppercase">
@@ -292,7 +292,7 @@ export default function InterviewsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-center items-center gap-6 my-8">
+        <div className="flex shrink-0 justify-center items-center gap-6 mt-4">
           <button
             className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
               currentPage === 1
