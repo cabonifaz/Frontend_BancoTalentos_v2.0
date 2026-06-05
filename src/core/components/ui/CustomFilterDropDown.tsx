@@ -57,7 +57,7 @@ export const CustomFilterDropDown = ({
             className={`
               ${panelSize}
               absolute
-              z-20
+              z-[43]
               my-4
               rounded-xl
               bg-white

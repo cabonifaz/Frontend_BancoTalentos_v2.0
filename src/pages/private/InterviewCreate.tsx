@@ -53,6 +53,18 @@ export default function InterviewCreatePage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
+
+  const goBack = () => {
+    if (prefill.idRequerimiento) {
+      navigate("/dashboard/tableAsignarTalento", {
+        replace: true,
+        state: { idRequerimiento: prefill.idRequerimiento },
+      });
+      return;
+    }
+
+    navigate("/dashboard/entrevistas");
+  };
   const rqInputRef = useRef<HTMLInputElement>(null);
 
   // get params
@@ -162,7 +174,7 @@ export default function InterviewCreatePage() {
       enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
         variant: "success",
       });
-      navigate("/dashboard/entrevistas");
+      goBack();
     } else {
       enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
         variant: "error",
@@ -260,20 +272,14 @@ export default function InterviewCreatePage() {
     <Dashboard>
       {loadingParams && <Loading opacity="opacity-50" />}
 
-      <div className="p-4 mx-4 xl:mx-16 pb-12">
+      <div>
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* ── Header ── */}
-          <div className="flex items-start justify-between gap-4 my-4">
+          <div className="flex items-start justify-between gap-4 mb-2">
             <div>
               <button
                 type="button"
-                onClick={() =>
-                  prefill.idRequerimiento
-                    ? navigate("/dashboard/tableAsignarTalento", {
-                        state: { idRequerimiento: prefill.idRequerimiento },
-                      })
-                    : navigate("/dashboard/entrevistas")
-                }
+                onClick={goBack}
                 className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline mb-2"
               >
                 <svg
@@ -303,7 +309,7 @@ export default function InterviewCreatePage() {
             <div className="flex items-center gap-2 shrink-0 pt-6">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/entrevistas")}
+                onClick={goBack}
                 className="btn btn-outline-gray px-5 py-2 text-sm"
               >
                 Cancelar

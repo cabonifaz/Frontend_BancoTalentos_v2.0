@@ -56,7 +56,7 @@ export const TabPostulant = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(570px-120px)]">
+    <div className="flex h-full min-h-0 flex-col">
       {downloadingFile && <Loading opacity="opacity-30" />}
       <div className="text-end">
         {rqState !== ESTADO_ATENDIDO && (

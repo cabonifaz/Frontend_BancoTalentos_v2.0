@@ -146,7 +146,7 @@ export const FilterDropDown = <T extends BaseOption>({
       {isOpen && (
         <OutsideClickHandler onOutsideClick={onToggle}>
           <div
-            className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-20 absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col`}
+            className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-[43] absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col`}
           >
             {searchable && (
               <div className="mb-2">

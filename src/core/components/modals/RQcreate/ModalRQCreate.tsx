@@ -262,14 +262,17 @@ export const ModalRQCreate = ({
       {(loadingTariff || loadingParams || postloading) && (
         <Loading opacity="opacity-10" />
       )}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] min-h-[570px] overflow-y-auto relative">
-          <header className="flex items-center justify-between">
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] p-4">
+        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 overflow-hidden relative flex flex-col">
+          <header className="flex shrink-0 items-center justify-between">
             <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
             <CloseModalButton onClick={onClose} />
           </header>
           <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)}>
+            <form
+              onSubmit={methods.handleSubmit(onSubmit)}
+              className="flex min-h-0 flex-1 flex-col"
+            >
               <Tabs
                 isDataLoading={false}
                 tabs={[
@@ -337,7 +340,7 @@ export const ModalRQCreate = ({
                 ]}
               />
               {/* Botones de acción */}
-              <div className="flex justify-end space-x-4 mt-6 me-1">
+              <div className="flex shrink-0 justify-end space-x-4 mt-4 me-1">
                 <button type="submit" className="btn btn-primary">
                   Agregar RQ
                 </button>

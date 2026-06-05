@@ -240,7 +240,7 @@ export const TabVacancies = ({
           availableDegrees={availableDegrees}
         />
       )}
-      <div className="flex flex-col h-[calc(570px-120px)]">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between my-2">
           <button
             type="button"
@@ -266,7 +266,7 @@ export const TabVacancies = ({
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-visible">
+        <div className="min-h-0 flex-1 overflow-visible">
           <div className="table-container h-full">
             <div className="table-wrapper h-full overflow-y-auto custom-scroll">
               <table className="table">

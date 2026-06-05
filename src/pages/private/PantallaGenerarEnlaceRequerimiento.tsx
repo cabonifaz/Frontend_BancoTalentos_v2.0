@@ -122,8 +122,8 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   return (
     <Dashboard>
       {isLoading && (<Loading opacity="opacity-60" />)}
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col gap-4">
+      <div className="flex h-full flex-col overflow-x-hidden">
+        <div className="flex shrink-0 items-center justify-between mb-2">
           <h3 className="text-2xl font-semibold">Generación de enlace</h3>
 
           {/* Agregar Requerimiento section */}
@@ -135,114 +135,114 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
               Agregar Requerimiento
             </button>
           </div>
+        </div>
 
-          {/* Selected requirements table */}
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-700 text-sm">
-                    <th className="py-3 px-4 text-center font-semibold">ID</th>
-                    <th className="py-3 px-4 text-center font-semibold">Título</th>
-                    <th className="py-3 px-4 text-center font-semibold">Código RQ</th>
-                    <th className="py-3 px-4 text-center font-semibold">Perfil</th>
-                    <th className="py-3 px-4 text-center font-semibold">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedRequirements.map((req) => (
-                    <tr key={req.idRequerimiento} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.idRequerimiento}</td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.titulo}</td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">{req.codigoRQ}</td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <select
-                          id="t-perfil"
-                          onChange={() => handleRQSelect(req.idRequerimiento)}
-                          ref={el => {
-                            if (el) perfilesRef.current[req.idRequerimiento] = el;
-                          }}
-                          defaultValue={req.lstPerfiles.length === 1 ? req.lstPerfiles[0].idPerfil : 0}
-                          className="border rounded-lg focus:outline-none cursor-pointer px-3 py-2 text-sm">
-                          <option value={0}>
-                            Seleccione un perfil
+        {/* Selected requirements table */}
+        <div className="table-container shrink-0">
+          <div className="table-wrapper max-h-[50vh] overflow-auto">
+            <table className="table">
+              <thead>
+                <tr className="table-header">
+                  <th className="table-header-cell text-center">ID</th>
+                  <th className="table-header-cell text-center">Título</th>
+                  <th className="table-header-cell text-center">Código RQ</th>
+                  <th className="table-header-cell text-center">Perfil</th>
+                  <th className="table-header-cell text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {selectedRequirements.map((req) => (
+                  <tr key={req.idRequerimiento} className="table-row">
+                    <td className="table-cell text-center">{req.idRequerimiento}</td>
+                    <td className="table-cell text-center">{req.titulo}</td>
+                    <td className="table-cell text-center">{req.codigoRQ}</td>
+                    <td className="table-cell text-center">
+                      <select
+                        id="t-perfil"
+                        onChange={() => handleRQSelect(req.idRequerimiento)}
+                        ref={el => {
+                          if (el) perfilesRef.current[req.idRequerimiento] = el;
+                        }}
+                        defaultValue={req.lstPerfiles.length === 1 ? req.lstPerfiles[0].idPerfil : 0}
+                        className="border rounded-lg focus:outline-none cursor-pointer px-3 py-2 text-sm">
+                        <option value={0}>
+                          Seleccione un perfil
+                        </option>
+                        {req.lstPerfiles?.map((perf) => (
+                          <option key={perf.idPerfil} value={perf.idPerfil}>
+                            {perf.perfil}
                           </option>
-                          {req.lstPerfiles?.map((perf) => (
-                            <option key={perf.idPerfil} value={perf.idPerfil}>
-                              {perf.perfil}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleRemoveRequirement(req.idRequerimiento)}
-                          className="btn btn-red"
-                        >
-                          Remover
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {selectedRequirements.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500">
-                        No hay requerimientos seleccionados
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="table-cell text-center">
+                      <button
+                        onClick={() => handleRemoveRequirement(req.idRequerimiento)}
+                        className="btn btn-actions btn-red"
+                      >
+                        Remover
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {selectedRequirements.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="table-empty">
+                      No hay requerimientos seleccionados
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+        </div>
 
-          {/* Generate link section */}
-          <div className="flex flex-col gap-4 mt-4">
-            <button
-              onClick={handleGenerateLink}
-              className="btn btn-primary w-fit"
-            >
-              Generar enlace
-            </button>
+        {/* Generate link section */}
+        <div className="flex shrink-0 flex-col gap-4 mt-3">
+          <button
+            onClick={handleGenerateLink}
+            className="btn btn-primary w-fit"
+          >
+            Generar enlace
+          </button>
 
-            {generatedLink && (
-              <div className="w-full">
-                <div className="relative flex items-center group">
-                  <input
-                    type="text"
-                    value={generatedLink}
-                    readOnly
-                    className="w-full input"
-                  />
-                  <button
-                    onClick={handleCopyToClipboard}
-                    className="absolute right-2 p-2 rounded-md transition-colors bg-white group-hover:bg-gray-100"
-                    aria-label="Copiar enlace"
-                  >
-                    {isCopied ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          {generatedLink && (
+            <div className="w-full">
+              <div className="relative flex items-center group">
+                <input
+                  type="text"
+                  value={generatedLink}
+                  readOnly
+                  className="w-full input"
+                />
+                <button
+                  onClick={handleCopyToClipboard}
+                  className="absolute right-2 p-2 rounded-md transition-colors bg-white group-hover:bg-gray-100"
+                  aria-label="Copiar enlace"
+                >
+                  {isCopied ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <div className="relative">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 hover:text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
-                    ) : (
-                      <div className="relative">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 hover:text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                        <span className="absolute -top-8 -left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          Copiar enlace
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                </div>
+                      <span className="absolute -top-8 -left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        Copiar enlace
+                      </span>
+                    </div>
+                  )}
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Requirement Selection Modal */}
         {isRequirementModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
             <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Buscar requerimiento</h2>

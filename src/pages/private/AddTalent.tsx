@@ -368,14 +368,17 @@ export const AddTalent = () => {
           />
         )}
         {/* main container */}
-        <div className="md:px-8 md:pt-8 flex justify-center max-h-screen">
+        <div className="flex h-full justify-center overflow-hidden">
           {/* form container */}
-          <div className="rounded-lg border flex flex-col shadow-lg">
+          <div className="rounded-lg border flex min-h-0 flex-col shadow-lg">
             {/* form */}
-            <form className="" onSubmit={handleSubmit(onSubmit)}>
+            <form
+              className="flex min-h-0 flex-1 flex-col"
+              onSubmit={handleSubmit(onSubmit)}
+            >
               {/* title */}
-              <div className="flex p-4 bg-white w-full md:w-[39.9rem] z-10 border-b rounded-lg border-gray-50 shadow-sm">
-                <div className="flex flex-col gap-4 text-[#3f3f46] w-1/2">
+              <div className="flex shrink-0 p-4 bg-white w-full md:w-[39.9rem] z-10 border-b rounded-t-lg border-gray-50 shadow-sm">
+                <div className="flex flex-col gap-1 text-[#3f3f46] w-1/2">
                   <h2 className="font-semibold text-xl">
                     Nuevo Talento
                   </h2>
@@ -413,7 +416,7 @@ export const AddTalent = () => {
                   </button>
                 </div>
               </div>
-              <div className="px-8 overflow-y-auto w-full md:w-[40rem] md:h-[70vh]">
+              <div className="min-h-0 flex-1 px-8 overflow-y-auto w-full md:w-[40rem]">
                 {/* files */}
                 <div>
                   <div className="flex justify-between items-center">

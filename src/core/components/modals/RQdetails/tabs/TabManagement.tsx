@@ -109,8 +109,8 @@ export const TabManagment = ({
   };
 
   return (
-    <div className="h-full flex flex-col px-4 overflow-scroll">
-      <div className="flex flex-col h-[calc(570px-120px)]">
+    <div className="flex h-full min-h-0 flex-col px-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {/* Contenido del formulario */}
         <div className="flex justify-end mb-1">
           <button

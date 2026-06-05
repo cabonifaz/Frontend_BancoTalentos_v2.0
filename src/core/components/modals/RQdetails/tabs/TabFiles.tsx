@@ -174,11 +174,11 @@ export const TabFiles = ({
 
   return (
     <>
-      <div className="p-4 h-full flex flex-col">
+      <div className="flex h-full min-h-0 flex-col p-4">
         {(postloading || deleteLoading || isLoading) && (
           <Loading opacity="opacity-60" />
         )}
-        <div className="flex flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           {/* Encabezado */}
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-gray-700">
@@ -205,7 +205,7 @@ export const TabFiles = ({
           />
 
           {/* Lista de archivos */}
-          <div className="mt-2 flex-1 overflow-y-auto mb-4">
+          <div className="mt-2 mb-4 min-h-0 flex-1 overflow-y-auto">
             {/**@marker files maps */}
             {files.map((file, index) => (
               <div

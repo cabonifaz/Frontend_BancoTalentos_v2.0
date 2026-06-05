@@ -107,7 +107,7 @@ export const TabClients = ({ clients, fetchTarifario }: TabProps) => {
           idCliente={getValues("idCliente")}
         />
       )}
-      <div className="flex flex-col h-[calc(570px-120px)]">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Cliente */}
         <div className="flex items-center">
           <label className="w-1/3 text-sm font-medium text-gray-700">
@@ -155,7 +155,7 @@ export const TabClients = ({ clients, fetchTarifario }: TabProps) => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="table-container">
             <div className="table-wrapper">
               <table className="table">
