@@ -274,8 +274,7 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
               <View key={index} style={styles.listItem}>
                 <Text style={styles.bullet}>•</Text>
                 <Text>
-                  {c.nombreHabilidad} - {c.aniosExperiencia}{" "}
-                  {t("años", "years")}
+                  {c.nombreHabilidad} {c.aniosExperiencia === 0 ? "" : `- ${c.aniosExperiencia} ${t("años", "years")}`}
                 </Text>
               </View>
             ))}
