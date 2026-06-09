@@ -20,6 +20,15 @@ export const CreateInterviewSchema = z.object({
     z.object({
       fullname: z.string().min(1, "El nombre completo es requerido"),
       email: z.string().email("Email inválido").optional().or(z.literal("")),
+      notificacion: z.boolean(),
+    }).superRefine((val, ctx) => {
+      if (val.notificacion && (!val.email || val.email.trim() === "")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El email es requerido cuando las notificaciones están activadas.",
+          path: ["email"],
+        });
+      }
     })
   ).optional(),
 });
