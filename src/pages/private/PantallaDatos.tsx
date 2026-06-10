@@ -31,55 +31,8 @@ import { Dashboard } from "./Dashboard";
 const PantallaDatos = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { talento, contract } =
-    (location.state as {
-      talento: TalentoFMI;
-      contract: {
-        duracionContrato: number;
-        idDuracionContrato: number;
-      };
-    }) || {};
-
-  // Función para convertir la duración del contrato al formato del formulario
-  const convertContractDuration = (
-    duration: number,
-    durationTypeId: number
-  ) => {
-    if (!duration || !durationTypeId) {
-      return { convertedDuration: 0, convertedTypeId: 1 };
-    }
-
-    switch (durationTypeId) {
-      case 1: // Días -> convertir a meses (aproximado: 30 días = 1 mes)
-        const monthsFromDays = Math.ceil(duration / 30);
-        return {
-          convertedDuration: monthsFromDays,
-          convertedTypeId: 1, // meses en este formulario
-        };
-
-      case 2: // Semanas -> convertir a meses (aproximado: 4 semanas = 1 mes)
-        const monthsFromWeeks = Math.ceil(duration / 4);
-        return {
-          convertedDuration: monthsFromWeeks,
-          convertedTypeId: 1, // meses en este formulario
-        };
-
-      case 3: // Meses -> mantener como meses
-        return {
-          convertedDuration: duration,
-          convertedTypeId: 1, // meses en este formulario
-        };
-
-      default:
-        return { convertedDuration: 0, convertedTypeId: 1 };
-    }
-  };
-
-  const { convertedDuration, convertedTypeId } =
-    convertContractDuration(
-      contract?.duracionContrato || 0,
-      contract?.idDuracionContrato || 0
-    );
+  const { talento } =
+    (location.state as { talento: TalentoFMI }) || {};
 
   const { paramsByMaestro, loading: loadingParams } =
     useParams();
@@ -121,8 +74,8 @@ const PantallaDatos = () => {
       telefono: "",
       dni: "",
       email: "",
-      tiempoContrato: convertedDuration,
-      idTiempoContrato: convertedTypeId,
+      tiempoContrato: 0,
+      idTiempoContrato: 0,
       fechaInicioLabores: "",
       // cargo: "",
       remuneracion: 0,
@@ -141,8 +94,8 @@ const PantallaDatos = () => {
         telefono: talentoDetails?.celular || "",
         dni: talentoDetails?.dni || "",
         email: talentoDetails?.email || "",
-        tiempoContrato: convertedDuration,
-        idTiempoContrato: convertedTypeId,
+        tiempoContrato: talentoDetails?.tiempoContrato || 0,
+        idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
         fechaInicioLabores: talentoDetails?.fechaInicioLabores
           ? format(
               new Date(talentoDetails.fechaInicioLabores),
@@ -156,7 +109,7 @@ const PantallaDatos = () => {
         ubicacion: talentoDetails?.ubicacion || "",
       });
     }
-  }, [talentoDetails, reset, convertedDuration, convertedTypeId]);
+  }, [talentoDetails, reset]);
 
   const saveData: SubmitHandler<DataFormType> = async (data) => {
     const { apellidoMaterno, ...cleanData } = data;
