@@ -27,22 +27,17 @@ import { useFetchClients } from "../../hooks/useFetchClients";
 import { AsignarTalentoType } from "../../models";
 import { useEffect, useMemo, useState } from "react";
 import { Utils } from "../../utilities/utils";
-import { addDays, addWeeks, addMonths, format } from "date-fns";
 
 interface Props {
   onClose: () => void;
   onConfirm: (talento: AsignarTalentoType) => void;
   currentTalent?: AsignarTalentoType | null;
-  durationContract?: number;
-  durationContractId?: number;
 }
 
 export const ModalIngreso = ({
   onClose,
   currentTalent,
   onConfirm,
-  durationContract,
-  durationContractId,
 }: Props) => {
   const { paramsByMaestro, loading: paramLoading } = useParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
@@ -85,9 +80,9 @@ export const ModalIngreso = ({
       idModalidadContrato: currentTalent?.idModalidadContrato || 0,
       nombres: currentTalent?.nombres || "",
       apellidos: currentTalent?.apellidos || "",
-      idArea: currentTalent?.idArea || 0,
+      idArea: defaultUnit || 0,
       idCliente: currentTalent?.idCliente || 0,
-      idMotivo: currentTalent?.idMotivo || 0,
+      idMotivo: defaultReason || 0,
       cargo: currentTalent?.perfil || "",
       horario: horarioTrabajo || "",
       montoBase: currentTalent?.montoBase || 0,
@@ -96,81 +91,19 @@ export const ModalIngreso = ({
       montoTrimestral: currentTalent?.montoTrimestral || 0,
       montoSemestral: currentTalent?.montoSemestral || 0,
       fchInicioContrato: currentTalent?.fchInicioContrato || "",
-      fchTerminoContrato: "",
+      fchTerminoContrato: currentTalent?.fchTerminoContrato || "",
       proyectoServicio: proyectoServicio || "",
       objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
       tieneEquipo: currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
-      tipoMoneda: 0,
+      tipoMoneda: currentTalent?.idMoneda || 0,
       idSedeDeclarar:
         sedeSunatList.find(
           (sede) => sede.nombre === currentTalent?.sedeDeclarar,
         )?.idSede || 0,
     },
   });
-
-  // Watch para la fecha de inicio de contrato
-  const fchInicioContrato = useWatch({
-    control,
-    name: "fchInicioContrato",
-  });
-
-  // Función para calcular la fecha de término basada en la duración del contrato
-  const calculateEndDate = (
-    startDate: string,
-    duration: number,
-    durationTypeId: number,
-  ) => {
-    if (!startDate || !duration || !durationTypeId) return "";
-
-    const start = new Date(startDate);
-    let endDate: Date;
-
-    switch (durationTypeId) {
-      case 1: // Días
-        endDate = addDays(start, duration);
-        break;
-      case 2: // Semanas
-        endDate = addWeeks(start, duration);
-        break;
-      case 3: // Meses
-        endDate = addMonths(start, duration);
-        break;
-      default:
-        return "";
-    }
-
-    return format(endDate, "yyyy-MM-dd");
-  };
-
-  // Efecto para calcular automáticamente la fecha de término
-  useEffect(() => {
-    if (fchInicioContrato && durationContract && durationContractId) {
-      const endDate = calculateEndDate(
-        fchInicioContrato,
-        durationContract,
-        durationContractId,
-      );
-      if (endDate) {
-        setValue("fchTerminoContrato", endDate);
-        clearErrors("fchTerminoContrato");
-        /* console.log("Fecha de inicio:", fchInicioContrato);
-        console.log(
-          "Duración y tipo:",
-          durationContract,
-          durationContractId
-        );
-        console.log("Fecha de término calculada:", endDate); */
-      }
-    }
-  }, [
-    fchInicioContrato,
-    durationContract,
-    durationContractId,
-    setValue,
-    clearErrors,
-  ]);
 
   // cargar valores por defecto desde parametros
   useEffect(() => {

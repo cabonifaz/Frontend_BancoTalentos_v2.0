@@ -76,17 +76,9 @@ export const TabVacancies = ({
 
   const cVacancies = watch("lstVacantes");
 
-  const getAvailableProfiles = (cIndex: number) => {
+  const getAvailableProfiles = () => {
     if (!tariff || tariff.length === 0) return [];
-
-    const selectedProfiles = cVacancies
-      .filter((_, index) => index !== cIndex)
-      .map((v) => v.idPerfil)
-      .filter((id) => id !== 0);
-
-    return tariff.filter(
-      (perfil) => !selectedProfiles.includes(perfil.idPerfil)
-    );
+    return tariff;
   };
 
   const handleProfileChange = (index: number, value: string) => {
@@ -354,27 +346,9 @@ export const TabVacancies = ({
                         );
                       }
 
-                      const availableProfiles =
-                        getAvailableProfiles(index);
+                      const availableProfiles = getAvailableProfiles();
                       const currentProfile =
                         cVacancies[index]?.idPerfil;
-                      const showCurrentProfile =
-                        currentProfile === 0 ||
-                        availableProfiles.some(
-                          (p) => p.idPerfil === currentProfile
-                        ) ||
-                        !tariff.some(
-                          (p) => p.idPerfil === currentProfile
-                        );
-
-                      const optionsToShow = showCurrentProfile
-                        ? [...availableProfiles]
-                        : [
-                            ...availableProfiles,
-                            ...tariff.filter(
-                              (p) => p.idPerfil === currentProfile
-                            ),
-                          ];
 
                       const tipoTarifa =
                         tariff.find(
@@ -392,7 +366,7 @@ export const TabVacancies = ({
                                   value: 0,
                                   label: "Seleccione un perfil",
                                 },
-                                ...optionsToShow.map((perfil) => ({
+                                ...availableProfiles.map((perfil) => ({
                                   value: perfil.idPerfil,
                                   label: perfil.perfil,
                                 })),
