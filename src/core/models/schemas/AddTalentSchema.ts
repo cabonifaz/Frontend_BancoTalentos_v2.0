@@ -204,9 +204,9 @@ export const AddTalentSchema = z.object({
             .pipe(
               z
                 .string()
-                .refine((val) => !val || val.length <= 5000, {
+                .refine((val) => !val || val.length <= 4000, {
                   message:
-                    "Las funciones no pueden exceder los 5000 caracteres",
+                    "Las funciones no pueden exceder los 4000 caracteres",
                 }),
             ),
 
