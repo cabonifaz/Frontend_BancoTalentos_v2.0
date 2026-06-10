@@ -53,6 +53,17 @@ export const ModalSolicitudEquipoFormSchema = z
       }),
     ),
   })
+  .refine(
+    (data) => {
+      const fechaSolicitud = new Date(data.fechaSolicitud);
+      const fechaEntrega = new Date(data.fechaEntrega);
+      return fechaEntrega >= fechaSolicitud;
+    },
+    {
+      message: "La fecha de entrega no puede ser menor a la fecha de solicitud",
+      path: ["fechaEntrega"],
+    }
+  )
   .superRefine((data, ctx) => {
     // Validación condicional para procesador, RAM y disco basada en PC o Laptop
     if (data.tipoHardware === 1 || data.tipoHardware === 2) {

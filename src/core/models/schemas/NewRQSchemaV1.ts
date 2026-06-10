@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const vacanteSchema = z.object({
+  tempVacancyId: z.string(),
   idPerfil: z
     .number({ invalid_type_error: "Debe seleccionar un perfil" })
     .min(1, "Debe seleccionar un perfil"),
@@ -15,6 +16,7 @@ const vacanteSchema = z.object({
 
 // Subschema: Skills por vacante
 const vacanteSkillSchema = z.object({
+  tempVacancyId: z.string(),
   idPerfil: z.number(),
   idSkill: z.number(),
   anios: z.coerce
@@ -28,6 +30,7 @@ const vacanteSkillSchema = z.object({
 
 // Subschema: Carreras por vacante
 const vacanteCareerSchema = z.object({
+  tempVacancyId: z.string(),
   idPerfil: z.number(),
   carrera: z.string().min(1, "La carrera es obligatoria"),
   idGrado: z.number().min(1, "Debe elegir un grado"),

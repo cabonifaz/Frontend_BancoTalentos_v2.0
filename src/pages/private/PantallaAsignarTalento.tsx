@@ -770,13 +770,7 @@ const TalentTable: React.FC = () => {
   // Actualizar talento
   const handleUpdateTalent = (talent: AsignarTalentoType) => {
     navigate("/dashboard/formDatos", {
-      state: {
-        talento: talent,
-        contract: {
-          duracionContrato: requerimiento?.duracionContrato || 0,
-          idDuracionContrato: requerimiento?.idDuracionContrato || 0,
-        },
-      },
+      state: { talento: talent },
     });
   };
 
@@ -893,7 +887,7 @@ const TalentTable: React.FC = () => {
 
       if (response.data.idTipoMensaje === 2) {
         setIsConfirmModalOpen(false);
-        showToast(response.data.mensaje, "success");
+        showToast("Operación completada con éxito", "success");
         fetchRequerimiento();
       } else {
         showToast(response.data.mensaje, "error");
@@ -982,8 +976,6 @@ const TalentTable: React.FC = () => {
           onConfirm={handleOnConfirmModalIngreso}
           currentTalent={currentTalento}
           onClose={handleModalIngresoClose}
-          durationContract={requerimiento?.duracionContrato}
-          durationContractId={requerimiento?.idDuracionContrato}
         />
       )}
       {showModalSolicitudEquipo && (
@@ -1120,7 +1112,7 @@ const TalentTable: React.FC = () => {
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={() => handleFinalize({ flagCorreo: true })}
-          message="¿Está seguro que desea finalizar y guardar los talentos seleccionados?"
+          message="¿Está seguro que desea finalizar y guardar los talentos confirmados?"
         />
 
         {/* Notificaciones */}

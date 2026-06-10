@@ -53,6 +53,7 @@ export const ModalSolicitudEquipo = ({
     control,
     handleSubmit,
     formState: { errors },
+    clearErrors,
     setValue,
     watch,
     trigger,
@@ -89,6 +90,19 @@ export const ModalSolicitudEquipo = ({
   const addNewSoftwareRow = () => {
     append({ producto: "", version: "" });
   };
+
+  const fechaSolicitud = watch("fechaSolicitud");
+  const fechaEntrega = watch("fechaEntrega");
+
+  useEffect(() => {
+    if (!fechaSolicitud || !fechaEntrega) return;
+
+    if (new Date(fechaEntrega) < new Date(fechaSolicitud)) {
+      trigger("fechaEntrega");
+    } else {
+      clearErrors("fechaEntrega");
+    }
+  }, [fechaSolicitud, fechaEntrega, clearErrors, trigger]);
 
   const tipoHardware = watch("tipoHardware");
   const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;
