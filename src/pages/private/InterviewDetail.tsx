@@ -1081,11 +1081,14 @@ const confirmUpload = async () => {
                               {...register(`entrevistadores.${index}.notificacion`)}
                               className="sr-only peer"
                             />
-                            <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                             <div className="flex items-center gap-1.5 text-xs text-gray-500">
                               <Mail className="w-3.5 h-3.5 text-gray-400" />
                               <span>Notificación por email</span>
                             </div>
+                            <span className="text-xs text-gray-400 transition-colors peer-checked:text-[var(--color-blue)]">
+                              Enviar al actualizar
+                            </span>
+                            <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
                           </label>
                         </div>
                       </div>
