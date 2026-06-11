@@ -56,7 +56,7 @@ export interface InterviewDetailDTO {
   idEtapa: number;
   etapa: string;
   enlaceEntrevista: string;
-  entrevistadores: { fullname: string; email?: string }[];
+  entrevistadores: { fullname: string; email?: string; notificacion: boolean }[];
   grabaciones: { enlace: string; fecha: string }[];
   calificacion: number;
   calificacionPersonal: number;
