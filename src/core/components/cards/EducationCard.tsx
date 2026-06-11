@@ -18,7 +18,7 @@ export const EducationCard = ({ data, onEdit }: Props) => {
             </span>
 
             <span>
-              {`${Utils.formatDateForYearInput(data?.fechaInicio)} - ${data?.flActualidad ? "Actualidad" : Utils.formatDateForYearInput(data.fechaFin)}`}
+              {`${data?.tipoFechaEducaciones === 2 ? Utils.formatDateForMonthInput(data?.fechaInicio) : Utils.formatDateForYearInput(data?.fechaInicio)} - ${data?.flActualidad ? "Actualidad" : data?.tipoFechaEducaciones === 2 ? Utils.formatDateForMonthInput(data.fechaFin) : Utils.formatDateForYearInput(data.fechaFin)}`}
             </span>
           </p>
         </div>

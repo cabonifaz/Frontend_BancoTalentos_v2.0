@@ -40,6 +40,7 @@ export interface AddTalentParams {
     fechaInicio: string;
     fechaFin?: string | null;
     flActualidad: number;
+    tipoFechaEducaciones?: number;
   }[];
   idiomas?: {
     idIdioma: number;
@@ -70,4 +71,5 @@ export interface AddTalentParams {
   idMonedaRxh?: number;
   montMaxRxh?: number;
   montMinRxh?: number;
+
 }
