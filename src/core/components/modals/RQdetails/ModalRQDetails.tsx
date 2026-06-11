@@ -41,6 +41,7 @@ interface ModalProps {
   onClose: () => void;
   handleAssingPost: (rqId: number) => void;
   updateRQData: () => void;
+  initialTab?: number;
 }
 
 export const ModalRQDetails = ({
@@ -50,6 +51,7 @@ export const ModalRQDetails = ({
   onClose,
   handleAssingPost,
   updateRQData,
+  initialTab = 0,
 }: ModalProps) => {
   // @marker params
   const { paramsByMaestro, refetchParams } = useParams();
@@ -413,6 +415,7 @@ export const ModalRQDetails = ({
             >
               <Tabs
                 isDataLoading={reqLoading}
+                initialTab={initialTab}
                 tabs={[
                   {
                     label: "Cliente",

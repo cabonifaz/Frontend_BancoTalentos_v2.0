@@ -103,7 +103,7 @@ export default function InterviewCreatePage() {
       etapa: 0,
       idsRqs: [],
       enlaceEntrevista: "",
-      entrevistadores: [{ fullname: "", email: "" }],
+      entrevistadores: [{ fullname: "", email: "", notificacion: false }],
     },
     mode: "onChange",
   });
@@ -165,7 +165,12 @@ export default function InterviewCreatePage() {
       estado: Number(data.estado),
       etapa: Number(data.etapa),
       enlaceEntrevista: data.enlaceEntrevista || "",
-      entrevistadores: JSON.stringify(data.entrevistadores || []),
+      entrevistadores: JSON.stringify(
+        (data.entrevistadores || []).map((e) => ({
+          ...e,
+          notificacion: e.notificacion ? 1 : 0,
+        }))
+      ),
     };
 
     const { result } = await execute(payload);
@@ -685,7 +690,7 @@ export default function InterviewCreatePage() {
                 </h3>
                 <button
                   type="button"
-                  onClick={() => appendInterviewer({ fullname: "", email: "" })}
+                  onClick={() => appendInterviewer({ fullname: "", email: "", notificacion: false })}
                   className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
                 >
                   <svg
@@ -710,69 +715,105 @@ export default function InterviewCreatePage() {
                 {interviewerFields.map((field, index) => (
                   <div
                     key={field.id}
-                    className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg relative"
+                    className="rounded-lg overflow-hidden border border-gray-200"
                   >
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
-                        Nombre Completo
-                      </label>
-                      <input
-                        {...register(`entrevistadores.${index}.fullname`)}
-                        placeholder="Ej: Ana García"
-                        className={`input w-full bg-white ${
-                          errors.entrevistadores?.[index]?.fullname
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {errors.entrevistadores?.[index]?.fullname && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.entrevistadores[index]?.fullname?.message}
-                        </p>
+                    {/* Inputs row */}
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 p-4 items-start bg-gray-50">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                          Nombre Completo
+                        </label>
+                        <input
+                          {...register(`entrevistadores.${index}.fullname`)}
+                          placeholder="Ej: Ana García"
+                          className={`input w-full bg-white ${
+                            errors.entrevistadores?.[index]?.fullname
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        />
+                        {errors.entrevistadores?.[index]?.fullname && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.entrevistadores[index]?.fullname?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
+                          Email (Opcional)
+                        </label>
+                        <input
+                          {...register(`entrevistadores.${index}.email`)}
+                          placeholder="ana.garcia@empresa.com"
+                          className={`input w-full bg-white ${
+                            errors.entrevistadores?.[index]?.email
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        />
+                        {errors.entrevistadores?.[index]?.email && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.entrevistadores[index]?.email?.message}
+                          </p>
+                        )}
+                      </div>
+                      {interviewerFields.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeInterviewer(index)}
+                          className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                          title="Eliminar entrevistador"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-5 h-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
                       )}
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">
-                        Email (Opcional)
-                      </label>
-                      <input
-                        {...register(`entrevistadores.${index}.email`)}
-                        placeholder="ana.garcia@empresa.com"
-                        className={`input w-full bg-white ${
-                          errors.entrevistadores?.[index]?.email
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {errors.entrevistadores?.[index]?.email && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.entrevistadores[index]?.email?.message}
-                        </p>
-                      )}
-                    </div>
-                    {interviewerFields.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeInterviewer(index)}
-                        className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Eliminar entrevistador"
-                      >
+
+                    {/* Email notification footer */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-white border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="w-5 h-5"
-                          viewBox="0 0 24 24"
+                          className="w-3.5 h-3.5 text-gray-400"
                           fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
                           strokeWidth={2}
                         >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
+                            d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
                           />
                         </svg>
-                      </button>
-                    )}
+                        <span>Notificación por email</span>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          id={`entrevistadores.${index}.notificacion`}
+                          {...register(`entrevistadores.${index}.notificacion`)}
+                          className="sr-only peer"
+                        />
+                        <span className="text-xs text-gray-400 transition-colors peer-checked:text-[var(--color-blue)]">
+                          Enviar al registrar
+                        </span>
+                        <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4" />
+                      </label>
+                    </div>
                   </div>
                 ))}
               </div>
