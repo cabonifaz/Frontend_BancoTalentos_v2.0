@@ -180,7 +180,7 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         <Text style={styles.fullname}>{fullname}</Text>
 
         <Text style={styles.paragraph}>
-          {talent?.descripcion ||
+          {talent?.descripcion?.replace(/(?<!\.)\n+/g, " ").trim() ||
             t(
               "Sin descripción disponible.",
               "No description available."
