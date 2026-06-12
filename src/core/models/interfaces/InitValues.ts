@@ -35,6 +35,7 @@ export const initialEducation: AddEducation = {
   fechaInicio: "",
   fechaFin: "",
   flActualidad: false,
+  tipoFechaEducaciones: 1,
 };
 
 export const initialLanguage: AddLanguage = {

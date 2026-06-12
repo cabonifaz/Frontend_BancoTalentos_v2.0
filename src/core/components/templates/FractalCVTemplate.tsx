@@ -225,10 +225,8 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                     {ed.carrera} - {ed.grado}
                   </Text>
                   <Text>
-                    {formatDateByLangOnlyYear(ed.fechaInicio, language)} -{" "}
-                    {ed.flActualidad
-                      ? t("Actualidad", "Present")
-                      : formatDateByLangOnlyYear(ed.fechaFin, language)}
+                    {ed.tipoFechaEducaciones === 2 ? formatDateByLang(ed.fechaInicio, language) : formatDateByLangOnlyYear(ed.fechaInicio, language)} -{" "} 
+                    {ed.flActualidad ? t("Actualidad", "Present") : ed.tipoFechaEducaciones === 2 ? formatDateByLang(ed.fechaFin, language) : formatDateByLangOnlyYear(ed.fechaFin, language)}
                   </Text>
                 </View>
               </View>

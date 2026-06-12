@@ -7,6 +7,7 @@ interface Props {
   children: ReactNode[];
   canRemoveFirst?: boolean;
   canAddSections?: boolean;
+  headerExtra?: ReactNode;
 }
 
 export const DynamicSection = ({
@@ -16,10 +17,14 @@ export const DynamicSection = ({
   children,
   canRemoveFirst = false,
   canAddSections = true,
+  headerExtra,
 }: Props) => {
   return (
     <div className="*:mb-4">
-      <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">{title}</h3>
+      <div className="flex items-center justify-between my-5">
+        <h3 className="text-[#3f3f46] text-lg font-semibold">{title}</h3>
+        {headerExtra && <div>{headerExtra}</div>}
+      </div>
       {children.map((child, index) => (
         <div key={index}>
           {(index > 0 || canRemoveFirst) && (

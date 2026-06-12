@@ -23,7 +23,6 @@ import { EducationsSection } from "..";
 import { useEffect } from "react";
 import { z } from "zod";
 import { trim, emptyToUndef } from "../../models/schemas/Validations";
-//import { Utils } from "../../utilities/utils";
 
 interface Props {
   idTalento?: number;
@@ -53,8 +52,8 @@ export const educationSchema = z
       z
         .string()
         .regex(
-          /^\d{4}$/,
-          "El año de inicio debe tener 4 dígitos",
+          /^\d{4}(-\d{2})?$/,
+          "La fecha de inicio es inválida",
         ),
     ),
 
@@ -64,41 +63,33 @@ export const educationSchema = z
     ),
 
     flActualidad: z.coerce.boolean(),
+
+    tipoFechaEducaciones: z.number().int().min(1).max(2).optional().default(1),
   })
   .superRefine((data, ctx) => {
-    // Si NO es actualidad, fechaFin es requerida
     if (!data.flActualidad) {
       if (!data.fechaFin) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "El año de fin es requerido",
+          message: "La fecha de fin es requerida",
           path: ["fechaFin"],
         });
-
         return;
       }
 
-      // Validar formato YYYY
-      if (!/^\d{4}$/.test(data.fechaFin)) {
+      if (!/^\d{4}(-\d{2})?$/.test(data.fechaFin)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "El año de fin debe tener 4 dígitos",
+          message: "La fecha de fin es inválida",
           path: ["fechaFin"],
         });
-
         return;
       }
 
-      // Validar rango
-      const inicio = Number(data.fechaInicio);
-      const fin = Number(data.fechaFin);
-
-      if (fin < inicio) {
+      if (data.fechaFin < data.fechaInicio) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message:
-            "El año de fin debe ser mayor o igual al año de inicio",
+          message: "La fecha de fin debe ser mayor o igual a la fecha de inicio",
           path: ["fechaFin"],
         });
       }
@@ -107,9 +98,23 @@ export const educationSchema = z
 
 export type EducationFormData = z.infer<typeof educationSchema>;
 
-// Tipo para el formulario con array de educaciones
 type EducationsArrayFormData = {
   educaciones: EducationFormData[];
+};
+
+const formatDateForMode = (date: string | null | undefined, mode: number): string => {
+  if (!date) return "";
+  if (mode === 2) {
+    // "YYYY-MM-DD" → "YYYY-MM"
+    if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.substring(0, 7);
+    // "DD/MM/YYYY" → "YYYY-MM"
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const [, mm, yyyy] = date.split("/");
+      return `${yyyy}-${mm}`;
+    }
+    return "";
+  }
+  return Utils.formatDateForYearInput(date);
 };
 
 export const ModalEducation = ({
@@ -137,6 +142,7 @@ export const ModalEducation = ({
           fechaInicio: "",
           fechaFin: "",
           flActualidad: false,
+          tipoFechaEducaciones: 1,
         },
       ],
     },
@@ -149,24 +155,25 @@ export const ModalEducation = ({
     formState: { errors },
     setValue,
     reset,
+    getValues,
   } = methods;
 
-  // Efecto para cargar datos cuando se edita
   useEffect(() => {
     if (educationRef.current) {
       const educacion = educationRef.current;
+      const mode = educacion.tipoFechaEducaciones ?? 1;
 
       setValue("educaciones.0", {
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio: Utils.formatDateForYearInput(educacion.fechaInicio),
-
-        fechaFin: !educacion.flActualidad ? Utils.formatDateForYearInput(educacion.fechaFin) : "",
-
+        fechaInicio: formatDateForMode(educacion.fechaInicio, mode),
+        fechaFin: !educacion.flActualidad
+          ? formatDateForMode(educacion.fechaFin, mode)
+          : "",
         flActualidad: educacion.flActualidad || false,
+        tipoFechaEducaciones: mode,
       });
-
     } else {
       reset({
         educaciones: [
@@ -177,6 +184,7 @@ export const ModalEducation = ({
             fechaInicio: "",
             fechaFin: "",
             flActualidad: false,
+            tipoFechaEducaciones: 1,
           },
         ],
       });
@@ -222,20 +230,27 @@ export const ModalEducation = ({
     if (!idTalento) return;
 
     const primeraEducacion = data.educaciones[0];
+    const isMonthYear = (primeraEducacion.tipoFechaEducaciones ?? 1) === 2;
 
     const requestData: AddOrUpdateEducationParams = {
-      idTalento: idTalento,
+      idTalento,
       institucion: primeraEducacion.institucion,
       carrera: primeraEducacion.carrera,
       grado: primeraEducacion.grado,
-      fechaInicio: `${primeraEducacion.fechaInicio}-01-01`,
-      fechaFin: primeraEducacion.flActualidad ? "" : `${primeraEducacion.fechaFin}-12-31` || "",
+      fechaInicio: isMonthYear
+        ? `${primeraEducacion.fechaInicio}-01`
+        : `${primeraEducacion.fechaInicio}-01-01`,
+      fechaFin: primeraEducacion.flActualidad
+        ? ""
+        : isMonthYear
+          ? `${primeraEducacion.fechaFin}-01`
+          : `${primeraEducacion.fechaFin}-12-31`,
       flActualidad: primeraEducacion.flActualidad ? 1 : 0,
+      tipoFechaEducaciones: primeraEducacion.tipoFechaEducaciones ?? 1,
     };
 
     if (isEditing && educationRef.current) {
-      requestData.idTalentoEducacion =
-        educationRef.current.idEducacion;
+      requestData.idTalentoEducacion = educationRef.current.idEducacion;
     }
 
     addOrUpdateData(requestData).then((response) => {
@@ -248,33 +263,30 @@ export const ModalEducation = ({
 
   const handleOnDelete = () => {
     if (educationRef.current && idTalento) {
-      deleteData(educationRef.current.idEducacion).then(
-        (response) => {
-          if (response.data.idMensaje === 2) {
-            if (onUpdate) onUpdate(idTalento);
-            handleCloseModal();
-          }
-        },
-      );
+      deleteData(educationRef.current.idEducacion).then((response) => {
+        if (response.data.idMensaje === 2) {
+          if (onUpdate) onUpdate(idTalento);
+          handleCloseModal();
+        }
+      });
     }
   };
 
   const handleCloseModal = () => {
     if (educationRef.current) {
       const educacion = educationRef.current;
+      const mode = getValues("educaciones.0.tipoFechaEducaciones") ?? 1;
 
       setValue("educaciones.0", {
         institucion: educacion.nombreInstitucion || "",
         carrera: educacion.carrera || "",
         grado: educacion.grado || "",
-        fechaInicio: educacion.fechaInicio
-          ? new Date(educacion.fechaInicio)
-              .getFullYear()
-              .toString()
+        fechaInicio: formatDateForMode(educacion.fechaInicio, mode),
+        fechaFin: !educacion.flActualidad
+          ? formatDateForMode(educacion.fechaFin, mode)
           : "",
-
-        fechaFin: !educacion.flActualidad ? Utils.formatDateForYearInput(educacion.fechaFin) : "",
         flActualidad: educacion.flActualidad || false,
+        tipoFechaEducaciones: mode,
       });
     }
     closeModal("modalEducation");
@@ -300,7 +312,6 @@ export const ModalEducation = ({
               : "Describe tu nueva experiencia educativa"}
           </h3>
 
-          {/* Botón de eliminar */}
           {isEditing && (
             <button
               type="button"
