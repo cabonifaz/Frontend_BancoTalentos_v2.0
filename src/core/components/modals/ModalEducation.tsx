@@ -105,7 +105,13 @@ type EducationsArrayFormData = {
 const formatDateForMode = (date: string | null | undefined, mode: number): string => {
   if (!date) return "";
   if (mode === 2) {
+    // "YYYY-MM-DD" → "YYYY-MM"
     if (/^\d{4}-\d{2}-\d{2}/.test(date)) return date.substring(0, 7);
+    // "DD/MM/YYYY" → "YYYY-MM"
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+      const [, mm, yyyy] = date.split("/");
+      return `${yyyy}-${mm}`;
+    }
     return "";
   }
   return Utils.formatDateForYearInput(date);
