@@ -187,7 +187,7 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.tipoFechaEducaciones` as Path<F>}
                 control={control}
                 render={({ field }) => {
-                  const checked = (field.value ?? 1) === 2;
+                  const checked = Number(field.value ?? 1) === 2;
                   return (
                     <button
                       type="button"
