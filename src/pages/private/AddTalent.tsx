@@ -208,15 +208,23 @@ export const AddTalent = () => {
       fechaFin: exp.flActualidad ? null : exp.fechaFin,
     }));
 
-    const cleanEducaciones = educaciones.map((edu) => ({
-      ...edu,
-
-      flActualidad: edu.flActualidad ? 1 : 0,
-
-      fechaInicio: `${edu.fechaInicio}-01-01`,
-      
-      fechaFin: edu.flActualidad ? null : edu.fechaFin ? `${edu.fechaFin}-12-31` : null,
-    }));
+    const cleanEducaciones = educaciones.map((edu) => {
+      const isMonthYear = (edu.tipoFechaEducaciones ?? 1) === 2;
+      return {
+        ...edu,
+        flActualidad: edu.flActualidad ? 1 : 0,
+        fechaInicio: isMonthYear
+          ? `${edu.fechaInicio}-01`
+          : `${edu.fechaInicio}-01-01`,
+        fechaFin: edu.flActualidad
+          ? null
+          : edu.fechaFin
+            ? isMonthYear
+              ? `${edu.fechaFin}-01`
+              : `${edu.fechaFin}-12-31`
+            : null,
+      };
+    });
 
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile!);

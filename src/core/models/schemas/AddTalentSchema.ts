@@ -262,8 +262,8 @@ export const AddTalentSchema = z.object({
           z
             .string()
             .regex(
-              /^\d{4}$/,
-              "El año de inicio debe tener 4 dígitos",
+              /^\d{4}(-\d{2})?$/,
+              "La fecha de inicio es inválida",
             ),
         ),
 
@@ -272,29 +272,23 @@ export const AddTalentSchema = z.object({
           z
             .string()
             .regex(
-              /^\d{4}$/,
-              "El año de fin debe tener 4 dígitos",
+              /^\d{4}(-\d{2})?$/,
+              "La fecha de fin es inválida",
             )
             .optional(),
         ),
 
         flActualidad: z.coerce.boolean(),
+        tipoFechaEducaciones: z.number().int().min(1).max(2).optional().default(1),
       })
       .refine(
         (data) => {
-          // Si es actualidad o no hay fecha fin
-          if (data.flActualidad || !data.fechaFin) {
-            return true;
-          }
-
-          const inicio = Number(data.fechaInicio);
-          const fin = Number(data.fechaFin);
-
-          return fin >= inicio;
+          if (data.flActualidad || !data.fechaFin) return true;
+          return data.fechaFin >= data.fechaInicio;
         },
         {
           message:
-            "El año de fin debe ser mayor al año de inicio",
+            "La fecha de fin debe ser mayor a la fecha de inicio",
           path: ["fechaFin"],
         },
       ),

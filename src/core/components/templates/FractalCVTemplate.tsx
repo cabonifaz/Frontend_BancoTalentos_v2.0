@@ -100,6 +100,21 @@ const styles = StyleSheet.create({
   bullet: {
     width: 15,
   },
+  // Experience header row: position wraps, date stays fixed on the right
+  expHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  expPosition: {
+    flex: 1,
+    fontWeight: "bold",
+    marginRight: 8,
+  },
+  expDate: {
+    flexShrink: 0,
+    fontWeight: "bold",
+  },
 });
 
 const Header = () => (
@@ -144,7 +159,6 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
 }) => {
   const t = (es: string, en: string) => (language === "ES" ? es : en);
 
-  // Determinamos qué secciones tienen contenido
   const hasWorkExperience =
     sorteWorkExperience && sorteWorkExperience.length > 0;
   const hasEducation =
@@ -152,12 +166,11 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
   const hasCertifications =
     talent?.certificaciones && talent.certificaciones.length > 0;
   const hasLanguages = talent?.idiomas && talent.idiomas.length > 0;
-
   const hasTechSkills =
-    talent?.habilidadesTecnicas &&
-    talent.habilidadesTecnicas.length > 0;
+    talent?.habilidadesTecnicas && talent.habilidadesTecnicas.length > 0;
+  const hasSoftSkills =
+    talent?.habilidadesBlandas && talent.habilidadesBlandas.length > 0;
 
-  // Contador para la numeración dinámica
   let sectionNumber = 1;
 
   return (
@@ -167,7 +180,7 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         <Text style={styles.fullname}>{fullname}</Text>
 
         <Text style={styles.paragraph}>
-          {talent?.descripcion ||
+          {talent?.descripcion?.replace(/(?<!\.)\n+/g, " ").trim() ||
             t(
               "Sin descripción disponible.",
               "No description available."
@@ -177,28 +190,44 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         {/* === Experiencia laboral === */}
         {hasWorkExperience && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionNumber++}.{" "}
-              {t("Experiencia laboral", "Work Experience")}
-            </Text>
+            {/*
+              minPresenceAhead prevents the section title from being
+              stranded alone at the bottom of a page.
+            */}
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}.{" "}
+                {t("Experiencia laboral", "Work Experience")}
+              </Text>
+            </View>
 
             {sorteWorkExperience.map((exp) => (
-              <View
-                key={exp.idExperiencia}
-                style={styles.itemContainer}
-                wrap={false}
-              >
-                <Text style={styles.bold}>{exp.nombreEmpresa}</Text>
-                <View style={styles.flexBetween}>
-                  <Text style={styles.bold}>{exp.puesto}</Text>
-                  <Text>
-                    {formatDateByLang(exp.fechaInicio, language)} -{" "}
-                    {exp.flActualidad
-                      ? t("Actualidad", "Present")
-                      : formatDateByLang(exp.fechaFin, language)}
-                  </Text>
+              <View key={exp.idExperiencia} style={styles.itemContainer}>
+                {/*
+                  The header (company + position + dates) is kept together
+                  with wrap={false} so these lines are never split across
+                  pages. Keeping this block short avoids large blank spaces.
+                */}
+                <View wrap={false}>
+                  <Text style={styles.bold}>{exp.nombreEmpresa}</Text>
+                  <View style={styles.expHeaderRow}>
+                    <Text style={styles.expPosition}>{exp.puesto}</Text>
+                    <Text style={styles.expDate}>
+                      {formatDateByLang(exp.fechaInicio, language)} -{" "}
+                      {exp.flActualidad
+                        ? t("Actualidad", "Present")
+                        : formatDateByLang(exp.fechaFin, language)}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={styles.paragraph}>{exp.funciones}</Text>
+                {/*
+                  Functions text is NOT wrapped in a wrap={false} block.
+                  Long text flows naturally across pages without leaving
+                  blank spaces.
+                */}
+                {exp.funciones ? (
+                  <Text style={styles.paragraph}>{exp.funciones}</Text>
+                ) : null}
               </View>
             ))}
           </View>
@@ -207,9 +236,11 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         {/* === Educación === */}
         {hasEducation && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionNumber++}. {t("Educación", "Education")}
-            </Text>
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}. {t("Educación", "Education")}
+              </Text>
+            </View>
 
             {talent?.educaciones?.map((ed, index) => (
               <View
@@ -225,10 +256,15 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
                     {ed.carrera} - {ed.grado}
                   </Text>
                   <Text>
-                    {formatDateByLangOnlyYear(ed.fechaInicio, language)} -{" "}
+                    {ed.tipoFechaEducaciones === 2
+                      ? formatDateByLang(ed.fechaInicio, language)
+                      : formatDateByLangOnlyYear(ed.fechaInicio, language)}{" "}
+                    -{" "}
                     {ed.flActualidad
                       ? t("Actualidad", "Present")
-                      : formatDateByLangOnlyYear(ed.fechaFin, language)}
+                      : ed.tipoFechaEducaciones === 2
+                        ? formatDateByLang(ed.fechaFin, language)
+                        : formatDateByLangOnlyYear(ed.fechaFin, language)}
                   </Text>
                 </View>
               </View>
@@ -239,10 +275,12 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         {/* === Certificaciones === */}
         {hasCertifications && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionNumber++}.{" "}
-              {t("Certificaciones", "Certifications")}
-            </Text>
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}.{" "}
+                {t("Certificaciones", "Certifications")}
+              </Text>
+            </View>
 
             {talent.certificaciones.map((c, index) => (
               <View
@@ -266,16 +304,39 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         {/* === Habilidades Técnicas === */}
         {hasTechSkills && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionNumber++}.{" "}
-              {t("Habilidades Técnicas", "Technical Skills")}
-            </Text>
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}.{" "}
+                {t("Habilidades Técnicas", "Technical Skills")}
+              </Text>
+            </View>
             {talent.habilidadesTecnicas?.map((c, index) => (
               <View key={index} style={styles.listItem}>
                 <Text style={styles.bullet}>•</Text>
                 <Text>
-                  {c.nombreHabilidad} {c.aniosExperiencia === 0 ? "" : `- ${c.aniosExperiencia} ${t("años", "years")}`}
+                  {c.nombreHabilidad}{" "}
+                  {c.aniosExperiencia === 0
+                    ? ""
+                    : `- ${c.aniosExperiencia} ${t("años", "years")}`}
                 </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* === Habilidades Blandas === */}
+        {hasSoftSkills && (
+          <View style={styles.section}>
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}.{" "}
+                {t("Habilidades Blandas", "Soft Skills")}
+              </Text>
+            </View>
+            {talent.habilidadesBlandas?.map((s, index) => (
+              <View key={index} style={styles.listItem}>
+                <Text style={styles.bullet}>•</Text>
+                <Text>{s.nombreHabilidad}</Text>
               </View>
             ))}
           </View>
@@ -284,9 +345,11 @@ export const FractalCVTemplate: React.FC<FractalCVTemplateProps> = ({
         {/* === Idiomas === */}
         {hasLanguages && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {sectionNumber++}. {t("Idiomas", "Languages")}
-            </Text>
+            <View minPresenceAhead={50}>
+              <Text style={styles.sectionTitle}>
+                {sectionNumber++}. {t("Idiomas", "Languages")}
+              </Text>
+            </View>
 
             <View>
               {talent?.idiomas?.map((lan, index) => (

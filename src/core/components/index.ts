@@ -25,3 +25,4 @@ export * from "./ui/Tabs";
 export * from "./modals/ModalsForTalentsPage";
 export * from "./ui/AutoComplete";
 export * from "./ui/YearPicker";
+export * from "./ui/MonthYearPicker";
