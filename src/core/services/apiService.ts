@@ -225,6 +225,18 @@ export const getUserFavourites = (): Promise<
   return axiosInstance.get("/bdt/user/getFavourites");
 };
 
+export const getUserInfo = (_?: null): Promise<
+  AxiosResponse<models.UserInfoResponse>
+> => {
+  return axiosInstance.get("/bdt/user/getUserInfo");
+};
+
+export const updateUserInfo = (
+  data: models.UpdateUserParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/user/updateUserInfo", data);
+};
+
 // FMI ENDPOINTS
 
 // requirements
