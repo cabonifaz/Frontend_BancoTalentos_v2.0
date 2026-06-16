@@ -8,7 +8,7 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { Home, FileText, Link2, Users, LogOut, X } from "lucide-react";
+import { Home, FileText, Link2, Users, LogOut, X, User } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
 
 interface Props {
@@ -20,6 +20,7 @@ const railNav = [
   { icon: FileText, label: "Requerimientos",    path: "/dashboard/requerimientos" },
   { icon: Users,    label: "Entrevistas",       path: "/dashboard/entrevistas" },
   { icon: Link2,    label: "Generar enlace",    path: "/dashboard/generarEnlaceRequerimiento" },
+  { icon: User,     label: "Mi cuenta",         path: "/dashboard/mi-cuenta" },
 ] as const;
 
 let sidebarOpenSnapshot = false;
@@ -275,6 +276,14 @@ export const Dashboard = ({ children }: Props) => {
           >
             <Link2 size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
             Generar enlace
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNav("/dashboard/mi-cuenta")}
+            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
+          >
+            <User size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
+            Mi cuenta
           </button>
         </nav>
 

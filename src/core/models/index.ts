@@ -43,3 +43,5 @@ export * from "./schemas/AddFileSchema";
 export * from "./schemas/DataFormSchema";
 export * from "./schemas/AddPostulanteSchema";
 export * from "./errors/app.error";
+export * from "./response/UserInfoResponse";
+export * from "./params/UpdateUserParams";
