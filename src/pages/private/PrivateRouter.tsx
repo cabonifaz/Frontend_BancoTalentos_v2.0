@@ -22,6 +22,10 @@ const Interviews = lazy(() => import("./Interviews"));
 const InterviewDetail = lazy(() => import("./InterviewDetail"));
 const InterviewCreate = lazy(() => import("./InterviewCreate"));
 
+const UserContact = lazy(() =>
+  import("./UserContact").then((m) => ({ default: m.UserContact })),
+);
+
 export const PrivateRouter = () => {
   return (
     <RoutesWithNotFound>
@@ -38,6 +42,7 @@ export const PrivateRouter = () => {
       <Route path="/entrevistas/nueva" element={<InterviewCreate />} />
       <Route path="/entrevistas/:id" element={<InterviewDetail />} />
       <Route path="/formDatos" element={<PantallaDatos />} />
+      <Route path="/mi-cuenta" element={<UserContact />} />
     </RoutesWithNotFound>
   );
 };
