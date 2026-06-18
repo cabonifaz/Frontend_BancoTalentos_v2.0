@@ -11,6 +11,7 @@ export interface CreateInterviewType {
   etapa: number;
   enlaceEntrevista: string;
   entrevistadores: string;
+  perfil: string;
 }
 
 export const createInterview = async (
@@ -69,6 +70,7 @@ export interface InterviewDetailDTO {
   notasEducacion: string;
   clienteResumen: string;
   motivoCancelacion: string;
+  perfil: string;
   selectedRQs: { id: number; label: string; cliente: string }[];
   files: any[];
 }
@@ -119,6 +121,7 @@ export interface UpdateInterviewPayload {
   notasEducacion: string;
   idsRqs: number[];
   motivoCancelacion: string;
+  perfil: string;
 }
 
 export const updateInterview = async (

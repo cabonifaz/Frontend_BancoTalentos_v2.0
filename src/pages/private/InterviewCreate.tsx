@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { getRequirements, getTalents } from "../../core/services/apiService";
+import { getRequirements, getTalents, getRequirementById } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
 import {
   RequirementItem,
@@ -11,6 +11,7 @@ import {
   TalentParams,
   TalentsResponse,
 } from "../../core/models";
+import type { Perfil } from "../../core/models/interfaces/Perfil";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -33,6 +34,8 @@ interface SelectedRQ {
   id: number;
   label: string;
   cliente: string;
+  codigoRQ: string;
+  lstPerfiles: Perfil[];
 }
 
 interface PrefillState {
@@ -103,6 +106,7 @@ export default function InterviewCreatePage() {
       estado: 1, // num1 = 1 is "Registrado"
       etapa: 0,
       idsRqs: [],
+      perfil: "",
       enlaceEntrevista: "",
       entrevistadores: [{ fullname: "", email: "", notificacion: false }],
     },
@@ -148,9 +152,26 @@ export default function InterviewCreatePage() {
         id: prefill.idRequerimiento,
         label: prefill.rqLabel || String(prefill.idRequerimiento),
         cliente: prefill.cliente || "",
+        codigoRQ: "",
+        lstPerfiles: [],
       };
       setSelectedRQs([rq]);
       setValue("idsRqs", [prefill.idRequerimiento], { shouldValidate: true });
+      getRequirementById(prefill.idRequerimiento)
+        .then((res) => {
+          const reqData = res.data.requerimiento;
+          setSelectedRQs([{
+            ...rq,
+            codigoRQ: reqData?.codigoRQ || "",
+            lstPerfiles: (reqData?.lstRqVacantes || []).map((v) => ({
+              idPerfil: v.idPerfil,
+              perfil: v.perfilProfesional,
+              vacantesTotales: v.cantidad,
+              vacantesCubiertas: 0,
+            })),
+          }]);
+        })
+        .catch(() => { /* keep without profiles */ });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -172,6 +193,7 @@ export default function InterviewCreatePage() {
           notificacion: e.notificacion ? 1 : 0,
         }))
       ),
+      perfil: data.perfil,
     };
 
     const { result } = await execute(payload);
@@ -231,7 +253,13 @@ export default function InterviewCreatePage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente },
+        {
+          id: req.idRequerimiento,
+          label: `${req.codigoRQ} - ${req.titulo}`,
+          cliente: req.cliente,
+          codigoRQ: req.codigoRQ,
+          lstPerfiles: req.lstPerfiles || [],
+        },
       ];
     }
     setSelectedRQs(newRQs);
@@ -244,6 +272,13 @@ export default function InterviewCreatePage() {
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
   };
+
+  const profileOptions = selectedRQs.flatMap((rq) =>
+    (rq.lstPerfiles || []).map((p) => ({
+      label: `${rq.codigoRQ} - ${p.perfil}`,
+      value: `${rq.codigoRQ} - ${p.perfil}`,
+    })),
+  );
 
   const removeRQ = (id: number) => {
     const newRQs = selectedRQs.filter((r: SelectedRQ) => r.id !== id);
@@ -624,49 +659,75 @@ export default function InterviewCreatePage() {
                 </div>
               </div>
 
-              {/* Etapa */}
-              <div className="flex flex-col gap-1">
-                <label className="input-label font-medium">
-                  Etapa de la Entrevista
-                </label>
-                <select
-                  {...register("etapa")}
-                  className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
-                >
-                  <option value={0}>Seleccione etapa</option>
-                  {interviewStages.map((stage) => (
-                    <option key={stage.idParametro} value={stage.num1}>
-                      {stage.string1}
-                    </option>
-                  ))}
-                </select>
-                {errors.etapa && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.etapa.message}
-                  </p>
-                )}
-              </div>
+              {/* Etapa · Estado · Perfil — same row */}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
+                {/* Etapa */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Etapa de la Entrevista
+                  </label>
+                  <select
+                    {...register("etapa")}
+                    className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
+                  >
+                    <option value={0}>Seleccione etapa</option>
+                    {interviewStages.map((stage) => (
+                      <option key={stage.idParametro} value={stage.num1}>
+                        {stage.string1}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.etapa && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.etapa.message}
+                    </p>
+                  )}
+                </div>
 
-              {/* Estado */}
-              <div className="flex flex-col gap-1">
-                <label className="input-label font-medium">
-                  Estado de la Entrevista
-                </label>
-                <select
-                  {...register("estado")}
-                  className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
-                >
-                  {interviewStates.map((state) => (
-                    <option key={state.idParametro} value={state.num1}>
-                      {state.string1}
-                    </option>
-                  ))}
-                </select>
-                {errors.estado && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.estado.message}
-                  </p>
-                )}
+                {/* Estado */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Estado de la Entrevista
+                  </label>
+                  <select
+                    {...register("estado")}
+                    className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
+                  >
+                    {interviewStates.map((state) => (
+                      <option key={state.idParametro} value={state.num1}>
+                        {state.string1}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.estado && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.estado.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Perfil / Puesto */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Perfil / Puesto <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    {...register("perfil")}
+                    className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                  >
+                    <option value="">Seleccione un perfil</option>
+                    {profileOptions.map((opt, i) => (
+                      <option key={i} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.perfil && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.perfil.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
