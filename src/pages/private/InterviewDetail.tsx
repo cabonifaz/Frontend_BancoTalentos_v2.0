@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { getRequirements } from "../../core/services/apiService";
+import { getRequirements, getRequirementById } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
 import {
   RequirementItem,
@@ -10,6 +10,7 @@ import {
   BaseResponseFMI,
   OperationResult,
 } from "../../core/models";
+import type { Perfil } from "../../core/models/interfaces/Perfil";
 import { Loading } from "../../core/components";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
@@ -68,6 +69,8 @@ interface SelectedRQ {
   id: number;
   label: string;
   cliente: string;
+  codigoRQ: string;
+  lstPerfiles: Perfil[];
 }
 
 interface UploadedFile {
@@ -206,9 +209,10 @@ export default function InterviewDetailPage() {
       estado: 0,
       etapa: 0,
       idsRqs: [],
+      perfil: "",
       enlaceEntrevista: "",
       entrevistadores: [{ fullname: "", email: "", notificacion: false }],
-      grabaciones: [{ enlace: "", fecha: "" }], 
+      grabaciones: [{ enlace: "", fecha: "" }],
       calificacion: 0,
       calificacionPersonal: 0,
       calificacionExperiencia: 0,
@@ -300,23 +304,14 @@ export default function InterviewDetailPage() {
       setTalentName(data.talento);
       setClientName(data.clienteResumen);
 
-      const rQS: SelectedRQ[] =
-        data.selectedRQs?.map((rq: any) => ({
-          id: rq.id,
-          label: rq.label,
-          cliente: rq.cliente
-        })) || [];
-      setSelectedRQs(rQS);
-
+      const savedRQs = data.selectedRQs || [];
       setValue("idTalento", data.idTalento);
       setValue("fecha", data.fecha);
       setValue("hora", data.hora);
       setValue("estado", Number(data.idEstado));
       setValue("etapa", data.idEtapa);
-      setValue(
-        "idsRqs",
-        rQS.map((r) => r.id),
-      );
+      setValue("idsRqs", savedRQs.map((r: any) => r.id));
+      setValue("perfil", data.perfil || "");
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
       setValue("entrevistadores", data.entrevistadores || [{ fullname: "", email: "" }]);
       setValue("grabaciones", data.grabaciones || [{ enlace: "", fecha: "" }]);
@@ -330,6 +325,38 @@ export default function InterviewDetailPage() {
       setValue("notasIdiomas", data.notasIdiomas);
       setValue("notasEducacion", data.notasEducacion);
       setValue("motivoCancelacion", data.motivoCancelacion);
+
+      // Fetch profiles for persisted RQs so the select has options available
+      if (savedRQs.length > 0) {
+        Promise.all(savedRQs.map((rq: any) => getRequirementById(rq.id)))
+          .then((results) => {
+            const enriched: SelectedRQ[] = savedRQs.map((rq: any, i: number) => {
+              const reqData = results[i]?.data?.requerimiento;
+              return {
+                id: rq.id,
+                label: rq.label,
+                cliente: rq.cliente,
+                codigoRQ: reqData?.codigoRQ || "",
+                lstPerfiles: (reqData?.lstRqVacantes || []).map((v: any) => ({
+                  idPerfil: v.idPerfil,
+                  perfil: v.perfilProfesional,
+                  vacantesTotales: v.cantidad,
+                  vacantesCubiertas: 0,
+                })),
+              };
+            });
+            setSelectedRQs(enriched);
+          })
+          .catch(() => {
+            setSelectedRQs(savedRQs.map((rq: any) => ({
+              ...rq,
+              codigoRQ: "",
+              lstPerfiles: [],
+            })));
+          });
+      } else {
+        setSelectedRQs([]);
+      }
 
       const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
         const ext = f.name?.split(".").pop()?.toLowerCase();
@@ -384,6 +411,7 @@ export default function InterviewDetailPage() {
       notasEducacion: data.notasEducacion || "",
       idsRqs: data.idsRqs,
       motivoCancelacion: data.motivoCancelacion || "",
+      perfil: data.perfil,
     };
 
     const res = await executeUpdate(payload);
@@ -420,6 +448,13 @@ export default function InterviewDetailPage() {
     }
   };
 
+  const profileOptions = selectedRQs.flatMap((rq) =>
+    (rq.lstPerfiles || []).map((p) => ({
+      label: `${rq.codigoRQ} - ${p.perfil}`,
+      value: `${rq.codigoRQ} - ${p.perfil}`,
+    })),
+  );
+
   const toggleRQSelection = (req: RequirementItem) => {
     let newRQs: SelectedRQ[];
     if (selectedRQs.find((r: SelectedRQ) => r.id === req.idRequerimiento)) {
@@ -429,10 +464,14 @@ export default function InterviewDetailPage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente},
+        {
+          id: req.idRequerimiento,
+          label: `${req.codigoRQ} - ${req.titulo}`,
+          cliente: req.cliente,
+          codigoRQ: req.codigoRQ,
+          lstPerfiles: req.lstPerfiles || [],
+        },
       ];
-
-
     }
     setSelectedRQs(newRQs);
     setValue(
@@ -839,17 +878,23 @@ const confirmUpload = async () => {
                     <label className="input-label font-medium mb-1">
                       Etapa de la Entrevista
                     </label>
-                    <select
-                      {...register("etapa")}
-                      className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
-                    >
-                      <option value={0}>Seleccione etapa</option>
-                      {interviewStages.map((stage) => (
-                        <option key={stage.idParametro} value={stage.num1}>
-                          {stage.string1}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="etapa"
+                      control={control}
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
+                        >
+                          <option value={0}>Seleccione etapa</option>
+                          {interviewStages.map((stage) => (
+                            <option key={stage.idParametro} value={stage.num1}>
+                              {stage.string1}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
                     {errors.etapa && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.etapa.message}
@@ -862,20 +907,55 @@ const confirmUpload = async () => {
                     <label className="input-label font-medium mb-1">
                       Estado de la Entrevista
                     </label>
-                    <select
-                      {...register("estado")}
-                      className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
-                    >
-                      <option value={0}>Seleccione estado</option>
-                      {interviewStates.map((state) => (
-                        <option key={state.idParametro} value={state.num1}>
-                          {state.string1}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="estado"
+                      control={control}
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
+                        >
+                          <option value={0}>Seleccione estado</option>
+                          {interviewStates.map((state) => (
+                            <option key={state.idParametro} value={state.num1}>
+                              {state.string1}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
                     {errors.estado && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors.estado.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Perfil / Puesto */}
+                  <div className="flex flex-col gap-1">
+                    <label className="input-label font-medium mb-1">
+                      Perfil / Puesto <span className="text-red-500">*</span>
+                    </label>
+                    <Controller
+                      name="perfil"
+                      control={control}
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                        >
+                          <option value="">Seleccione un perfil</option>
+                          {profileOptions.map((opt, i) => (
+                            <option key={i} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
+                    {errors.perfil && (
+                      <p className="text-red-500 text-xs mt-1 font-medium">
+                        {errors.perfil.message}
                       </p>
                     )}
                   </div>
