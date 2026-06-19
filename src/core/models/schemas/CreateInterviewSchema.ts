@@ -11,6 +11,7 @@ export const CreateInterviewSchema = z.object({
       required_error: "Debe seleccionar al menos un requerimiento",
     })
     .min(1, "Debe seleccionar al menos un requerimiento"),
+  perfil: z.string().min(1, "Seleccione un perfil"),
   enlaceEntrevista: z
     .string()
     .url("El enlace debe ser una URL válida")
