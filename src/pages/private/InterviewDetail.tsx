@@ -270,6 +270,11 @@ export default function InterviewDetailPage() {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Tracks whether the form has already been populated for the current
+  // interview. A re-fetch (e.g. after uploading a file) must refresh the
+  // files list without resetting the form and wiping unsaved edits.
+  const formInitializedRef = useRef(false);
+
   const {
     execute: fetchDetail,
     loading: loadingDetail,
@@ -294,6 +299,7 @@ export default function InterviewDetailPage() {
 
   useEffect(() => {
     if (isEditing && id) {
+      formInitializedRef.current = false;
       fetchDetail(Number(id));
     }
   }, [id, isEditing, fetchDetail]);
@@ -301,6 +307,37 @@ export default function InterviewDetailPage() {
   useEffect(() => {
     if (detailResult?.data) {
       const data = detailResult.data;
+
+      // Always refresh the files list so changes (e.g. an uploaded file)
+      // are reflected. This must run on every re-fetch.
+      const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
+        const ext = f.name?.split(".").pop()?.toLowerCase();
+        const iconType: UploadedFile["type"] =
+          ext === "pdf"
+            ? "pdf"
+            : ["jpg", "jpeg", "png", "gif"].includes(ext || "")
+              ? "img"
+              : "doc";
+
+        return {
+          id: f.id,
+          name: f.name,
+          date: f.date,
+          type: iconType,
+          idFileType: f.idFileType,
+          fileType: f.type || "Otro"
+          //path: f.pathFile || f.path,//ESTO SE TIENE QUE IR
+          //urlFile: f.urlFile// Y ESTO IGUAL Xd
+        };
+      });
+      setFiles(filesData);
+
+      // Populate the form fields only once per interview load. A background
+      // re-fetch (e.g. after uploading a file) must NOT overwrite the form,
+      // otherwise the user's unsaved edits would be wiped.
+      if (formInitializedRef.current) return;
+      formInitializedRef.current = true;
+
       setTalentName(data.talento);
       setClientName(data.clienteResumen);
 
@@ -357,28 +394,6 @@ export default function InterviewDetailPage() {
       } else {
         setSelectedRQs([]);
       }
-
-      const filesData: UploadedFile[] = (data.files || []).map((f: any) => {
-        const ext = f.name?.split(".").pop()?.toLowerCase();
-        const iconType: UploadedFile["type"] =
-          ext === "pdf"
-            ? "pdf"
-            : ["jpg", "jpeg", "png", "gif"].includes(ext || "")
-              ? "img"
-              : "doc";
-
-        return {
-          id: f.id,
-          name: f.name,
-          date: f.date,
-          type: iconType,
-          idFileType: f.idFileType,
-          fileType: f.type || "Otro"
-          //path: f.pathFile || f.path,//ESTO SE TIENE QUE IR
-          //urlFile: f.urlFile// Y ESTO IGUAL Xd
-        };
-      });
-      setFiles(filesData);
     }
   }, [detailResult, setValue]);
 
