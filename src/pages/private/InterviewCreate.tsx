@@ -59,6 +59,7 @@ export default function InterviewCreatePage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
+  const submissionLockRef = useRef(false);
 
   const goBack = () => {
     if (prefill.idRequerimiento) {
@@ -219,6 +220,9 @@ export default function InterviewCreatePage() {
   }, []);
 
   const onSubmit = async (data: CreateInterviewType) => {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
+
     console.log("Saving interview:", data);
 
     const payload = {
@@ -238,17 +242,21 @@ export default function InterviewCreatePage() {
       perfil: data.perfil,
     };
 
-    const { result } = await execute(payload);
+    try {
+      const { result } = await execute(payload);
 
-    if (result?.idTipoMensaje === 2) {
-      enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
-        variant: "success",
-      });
-      goBack();
-    } else {
-      enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
-        variant: "error",
-      });
+      if (result?.idTipoMensaje === 2) {
+        enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
+          variant: "success",
+        });
+        goBack();
+      } else {
+        enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
+          variant: "error",
+        });
+      }
+    } finally {
+      submissionLockRef.current = false;
     }
   };
 
@@ -399,7 +407,9 @@ export default function InterviewCreatePage() {
               </button>
               <button
                 type="submit"
-                className="btn btn-primary px-5 py-2 text-sm flex items-center gap-2"
+                disabled={loading}
+                aria-busy={loading}
+                className="btn btn-primary px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -415,7 +425,7 @@ export default function InterviewCreatePage() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Crear Entrevista
+                {loading ? "Creando..." : "Crear Entrevista"}
               </button>
             </div>
           </div>

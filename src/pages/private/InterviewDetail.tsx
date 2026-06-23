@@ -179,6 +179,7 @@ export default function InterviewDetailPage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
   const rqInputRef = useRef<HTMLInputElement>(null);
+  const saveLockRef = useRef(false);
 
   // Modal state for RQ Details
   const [selectedRqIdForModal, setSelectedRqIdForModal] = useState<number | null>(
@@ -441,7 +442,9 @@ export default function InterviewDetailPage() {
 
 
   const handleSave = async (data: UpdateInterviewType) => {
-    if (!id) return;
+    if (!id || saveLockRef.current) return;
+    saveLockRef.current = true;
+
     const payload: UpdateInterviewPayload = {
       idEntrevista: id ? parseInt(id, 10) : 0,
       idTalento: data.idTalento,
@@ -471,22 +474,26 @@ export default function InterviewDetailPage() {
       perfil: data.perfil,
     };
 
-    const res = await executeUpdate(payload);
+    try {
+      const res = await executeUpdate(payload);
 
-    if (res.result && res.result.idTipoMensaje === 2) {
-      enqueueSnackbar(
-        res.result.mensaje || "Entrevista actualizada con éxito",
-        {
-          variant: "success",
-        },
-      );
-    } else if (res.result) {
-      enqueueSnackbar(
-        res.result.mensaje || "Error al actualizar la entrevista",
-        {
-          variant: "error",
-        },
-      );
+      if (res.result && res.result.idTipoMensaje === 2) {
+        enqueueSnackbar(
+          res.result.mensaje || "Entrevista actualizada con éxito",
+          {
+            variant: "success",
+          },
+        );
+      } else if (res.result) {
+        enqueueSnackbar(
+          res.result.mensaje || "Error al actualizar la entrevista",
+          {
+            variant: "error",
+          },
+        );
+      }
+    } finally {
+      saveLockRef.current = false;
     }
   };
 
@@ -737,10 +744,12 @@ const confirmUpload = async () => {
               </button>
               <button
                 type="submit"
-                className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2"
+                disabled={loadingSave}
+                aria-busy={loadingSave}
+                className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Check size={16} />
-                Guardar Cambios
+                {loadingSave ? "Guardando..." : "Guardar Cambios"}
               </button>
             </div>
           </div>
