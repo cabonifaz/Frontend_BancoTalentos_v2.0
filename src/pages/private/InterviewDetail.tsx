@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
 import { getRequirements, getRequirementById } from "../../core/services/apiService";
@@ -27,10 +27,10 @@ import {
   generateDownloadUrl
 } from "../../core/services/interviews.service";
 
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useFieldArray, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  UpdateInterviewSchema,
+  createUpdateInterviewSchema,
   UpdateInterviewType,
 } from "../../core/models/schemas/UpdateInterviewSchema";
 import { useParams as useParamsContext } from "../../core/context/ParamsContext";
@@ -51,9 +51,11 @@ import {
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
+  ETAPA_ENTREVISTA_RS_LABEL,
   TIPO_ARCHIVO_ENTREVISTA,
   ESTADO_RQ,
 } from "../../core/utilities/constants";
+import { normalizeText } from "../../core/utilities/textUtils";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
 import { useFetchClients } from "../../core/hooks/useFetchClients";
 
@@ -177,6 +179,7 @@ export default function InterviewDetailPage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
   const rqInputRef = useRef<HTMLInputElement>(null);
+  const saveLockRef = useRef(false);
 
   // Modal state for RQ Details
   const [selectedRqIdForModal, setSelectedRqIdForModal] = useState<number | null>(
@@ -200,8 +203,31 @@ export default function InterviewDetailPage() {
 
   const { clientes: clients } = useFetchClients();
 
+  // num1 de la etapa "Entrevista con el equipo de R&S" (entrevistadores opcionales).
+  // En el resto de etapas se exige al menos un entrevistador.
+  const rsStageNum1 = useMemo(() => {
+    const stages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+    const target = normalizeText(ETAPA_ENTREVISTA_RS_LABEL);
+    const match = stages.find((s) => normalizeText(s.string1) === target);
+    return match ? match.num1 : null;
+  }, [paramsByMaestro]);
+
+  // El resolver es estable; lee el num1 vigente a través del ref para que el
+  // esquema siempre valide con el valor cargado de parámetros.
+  const rsStageNum1Ref = useRef<number | null>(null);
+  rsStageNum1Ref.current = rsStageNum1;
+  const interviewResolver = useMemo<Resolver<UpdateInterviewType>>(
+    () => (values, context, options) =>
+      zodResolver(createUpdateInterviewSchema(rsStageNum1Ref.current))(
+        values,
+        context,
+        options,
+      ),
+    [],
+  );
+
   const methods = useForm<UpdateInterviewType>({
-    resolver: zodResolver(UpdateInterviewSchema),
+    resolver: interviewResolver,
     defaultValues: {
       idTalento: 0,
       fecha: "",
@@ -211,7 +237,7 @@ export default function InterviewDetailPage() {
       idsRqs: [],
       perfil: "",
       enlaceEntrevista: "",
-      entrevistadores: [{ fullname: "", email: "", notificacion: false }],
+      entrevistadores: [],
       grabaciones: [{ enlace: "", fecha: "" }],
       calificacion: 0,
       calificacionPersonal: 0,
@@ -255,6 +281,23 @@ export default function InterviewDetailPage() {
   });
 
   const formValues = watch();
+
+  // Si la etapa exige entrevistadores y no hay ninguno, mostramos una fila vacía
+  // para guiar al usuario.
+  const etapaValue = watch("etapa");
+  useEffect(() => {
+    const etapa = Number(etapaValue);
+    const isRS = rsStageNum1 != null && etapa === rsStageNum1;
+    if (etapa >= 1 && !isRS && interviewerFields.length === 0) {
+      appendInterviewer({ fullname: "", email: "", notificacion: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapaValue, rsStageNum1]);
+
+  // Los entrevistadores son obligatorios en toda etapa distinta a R&S.
+  const entrevistadoresRequeridos =
+    Number(etapaValue) >= 1 &&
+    !(rsStageNum1 != null && Number(etapaValue) === rsStageNum1);
 
   const [talentName, setTalentName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -350,7 +393,7 @@ export default function InterviewDetailPage() {
       setValue("idsRqs", savedRQs.map((r: any) => r.id));
       setValue("perfil", data.perfil || "");
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
-      setValue("entrevistadores", data.entrevistadores || [{ fullname: "", email: "" }]);
+      setValue("entrevistadores", data.entrevistadores || []);
       setValue("grabaciones", data.grabaciones || [{ enlace: "", fecha: "" }]);
       setValue("calificacion", data.calificacion);
       setValue("calificacionPersonal", data.calificacionPersonal || 0);
@@ -399,7 +442,9 @@ export default function InterviewDetailPage() {
 
 
   const handleSave = async (data: UpdateInterviewType) => {
-    if (!id) return;
+    if (!id || saveLockRef.current) return;
+    saveLockRef.current = true;
+
     const payload: UpdateInterviewPayload = {
       idEntrevista: id ? parseInt(id, 10) : 0,
       idTalento: data.idTalento,
@@ -429,22 +474,26 @@ export default function InterviewDetailPage() {
       perfil: data.perfil,
     };
 
-    const res = await executeUpdate(payload);
+    try {
+      const res = await executeUpdate(payload);
 
-    if (res.result && res.result.idTipoMensaje === 2) {
-      enqueueSnackbar(
-        res.result.mensaje || "Entrevista actualizada con éxito",
-        {
-          variant: "success",
-        },
-      );
-    } else if (res.result) {
-      enqueueSnackbar(
-        res.result.mensaje || "Error al actualizar la entrevista",
-        {
-          variant: "error",
-        },
-      );
+      if (res.result && res.result.idTipoMensaje === 2) {
+        enqueueSnackbar(
+          res.result.mensaje || "Entrevista actualizada con éxito",
+          {
+            variant: "success",
+          },
+        );
+      } else if (res.result) {
+        enqueueSnackbar(
+          res.result.mensaje || "Error al actualizar la entrevista",
+          {
+            variant: "error",
+          },
+        );
+      }
+    } finally {
+      saveLockRef.current = false;
     }
   };
 
@@ -695,10 +744,12 @@ const confirmUpload = async () => {
               </button>
               <button
                 type="submit"
-                className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2"
+                disabled={loadingSave}
+                aria-busy={loadingSave}
+                className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Check size={16} />
-                Guardar Cambios
+                {loadingSave ? "Guardando..." : "Guardar Cambios"}
               </button>
             </div>
           </div>
@@ -837,7 +888,7 @@ const confirmUpload = async () => {
                     {/* Enlace de Entrevista */}
                     <div className="md:col-span-2 flex flex-col gap-1">
                       <label className="input-label font-medium mb-1">
-                        Enlace de la Entrevista
+                        Enlace de la Entrevista *
                       </label>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
@@ -1095,7 +1146,7 @@ const confirmUpload = async () => {
                           d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
                         />
                       </svg>
-                      Entrevistadores
+                      Entrevistadores {entrevistadoresRequeridos ? "*" : "(Opcional)"}
                     </h3>
                     <button
                       type="button"
@@ -1108,6 +1159,16 @@ const confirmUpload = async () => {
                       Agregar Entrevistador
                     </button>
                   </div>
+
+                  {(errors.entrevistadores as { message?: string } | undefined)
+                    ?.message && (
+                    <p className="text-red-500 text-xs mb-3">
+                      {
+                        (errors.entrevistadores as { message?: string })
+                          .message
+                      }
+                    </p>
+                  )}
 
                   <div className="space-y-4">
                     {interviewerFields.map((field, index) => (
@@ -1155,7 +1216,7 @@ const confirmUpload = async () => {
                               </p>
                             )}
                           </div>
-                          {interviewerFields.length > 1 && (
+                          {interviewerFields.length > 0 && (
                             <button
                               type="button"
                               onClick={() => removeInterviewer(index)}

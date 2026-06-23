@@ -55,6 +55,10 @@ export const ESTADO_ENTREVISTA = "43";
 export const ETAPA_ENTREVISTA = "44";
 export const TIPO_ARCHIVO_ENTREVISTA = "45";
 
+// Etapa de entrevista en la que los entrevistadores son opcionales.
+// En cualquier otra etapa se exige al menos un entrevistador.
+export const ETAPA_ENTREVISTA_RS_LABEL = "Entrevista con el equipo de R&S";
+
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
 export const GROUP_MODALIDAD_PLANILLA = 1;
