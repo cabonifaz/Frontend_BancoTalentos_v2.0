@@ -338,7 +338,7 @@ export const Talents = () => {
         />
         <div className="flex h-full flex-col overflow-x-hidden">
           {/* Options section */}
-          <div className="flex flex-col-reverse sm:flex-row w-full lg:h-12 items-center sm:justify-between gap-4">
+          <div className="flex flex-col-reverse sm:flex-row w-full 2xl:min-h-12 items-center sm:justify-between gap-4">
             <div className="flex flex-row items-center gap-3 w-full sm:w-auto flex-shrink-0">
               <button
                 type="button"
@@ -352,9 +352,9 @@ export const Talents = () => {
                 talentsData?.total || 0
               } resultados encontrados`}</p>
             </div>
-            <div className="flex lg:flex-row flex-col-reverse items-center w-full flex-1 min-w-0 gap-4 lg:gap-8 lg:h-12">
+            <div className="flex 2xl:flex-row flex-col-reverse items-center w-full flex-1 min-w-0 gap-4 2xl:gap-6">
               {/* Filters */}
-              <div className="flex flex-row flex-grow justify-between lg:justify-around lg:gap-4 items-center w-full">
+              <div className="flex flex-row flex-wrap flex-grow justify-center gap-2 2xl:flex-nowrap 2xl:justify-around 2xl:gap-4 items-center w-full">
                 <FilterDropDown
                   name="habilidades"
                   label="Habilidades"
@@ -428,7 +428,7 @@ export const Talents = () => {
                   </CustomFilterDropDown>
 
                   <CustomFilterDropDown
-                    label="Experiencia educativa"
+                    label="Educacion"
                     isOpen={openDropdown === 4}
                     onToggle={() =>
                       setOpenDropdown(openDropdown === 4 ? null : 4)
@@ -527,8 +527,8 @@ export const Talents = () => {
                 />
               </div>
               {/* Search */}
-              <div className="flex items-center justify-between w-full gap-4">
-                <div className="flex relative h-10 w-11/12">
+              <div className="flex items-center justify-between w-full 2xl:w-[360px] 2xl:flex-shrink-0 gap-4">
+                <div className="flex relative h-10 flex-1 min-w-0">
                   <Search className="absolute top-2 left-3" size={20} />
 
                   <input
@@ -542,7 +542,7 @@ export const Talents = () => {
                 <button
                   type="button"
                   onClick={() => handleSearch()}
-                  className="btn btn-primary"
+                  className="btn btn-primary flex-shrink-0"
                 >
                   Buscar
                 </button>
