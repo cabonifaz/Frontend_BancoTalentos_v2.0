@@ -40,6 +40,7 @@ import {
   TalentDetailsSkeleton,
 } from "../../core/components";
 import { CustomFilterDropDown } from "../../core/components/ui/CustomFilterDropDown";
+import { SearchableSelect } from "../../core/components/ui/SearchableSelect";
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 import { MODAL_FRACTAL_CV } from "../../core/utilities/modalsIds";
@@ -57,7 +58,11 @@ export const Talents = () => {
     null,
   );
   const [yearsExperience, setYearsExperience] = useState("");
-  const [jobPosition, setJobPosition] = useState(""); 
+  const [jobPosition, setJobPosition] = useState("");
+  const [educationName, setEducationName] = useState("");
+  const [selectedAcademicGrade, setSelectedAcademicGrade] = useState<
+    number | null
+  >(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const experienceRef = useRef<Experience | null>(null);
@@ -77,6 +82,7 @@ export const Talents = () => {
 
   const skillOptions = paramsByMaestro[19] || [];
   const englishLevels = paramsByMaestro[16] || [];
+  const academicGrades = paramsByMaestro[38] || [];
 
   const { favourites: favouritesData, fetchFavourites } =
     useFavouritesContext();
@@ -144,6 +150,8 @@ export const Talents = () => {
         ? Number(yearsExperience)
         : undefined,
       jobPosition: jobPosition || undefined,
+      educationName: educationName.trim() || undefined,
+      idAcademicGrade: selectedAcademicGrade || undefined,
     };
   };
 
@@ -416,6 +424,57 @@ export const Talents = () => {
                         />
                       </div>
 
+                    </div>
+                  </CustomFilterDropDown>
+
+                  <CustomFilterDropDown
+                    label="Experiencia educativa"
+                    isOpen={openDropdown === 4}
+                    onToggle={() =>
+                      setOpenDropdown(openDropdown === 4 ? null : 4)
+                    }
+                    active={!!educationName || !!selectedAcademicGrade}
+                    onClear={() => {
+                      setEducationName("");
+                      setSelectedAcademicGrade(null);
+                    }}
+                  >
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Curso / Carrera / Diplomado
+                        </label>
+
+                        <input
+                          type="text"
+                          placeholder="Ej: Ingeniería de Sistemas"
+                          value={educationName}
+                          onChange={(e) =>
+                            setEducationName(e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          Grado académico
+                        </label>
+
+                        <SearchableSelect
+                          placeholder="Selecciona un grado"
+                          options={academicGrades.map((grade) => ({
+                            label: grade.string1,
+                            value: grade.num1,
+                          }))}
+                          value={selectedAcademicGrade ?? ""}
+                          onChange={(value) =>
+                            setSelectedAcademicGrade(
+                              value === "" ? null : Number(value),
+                            )
+                          }
+                        />
+                      </div>
                     </div>
                   </CustomFilterDropDown>
 

@@ -6,4 +6,6 @@ export interface TalentParams {
     idTalentCollection?: number;
     yearsExperience?: number;
     jobPosition?: string;
+    educationName?: string;
+    idAcademicGrade?: number;
 }
