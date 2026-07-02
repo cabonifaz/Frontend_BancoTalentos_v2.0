@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { getRequirements, getTalents } from "../../core/services/apiService";
+import { getRequirements, getTalents, getRequirementById } from "../../core/services/apiService";
 import { useApi } from "../../core/hooks/useApi";
 import {
   RequirementItem,
@@ -11,12 +11,13 @@ import {
   TalentParams,
   TalentsResponse,
 } from "../../core/models";
+import type { Perfil } from "../../core/models/interfaces/Perfil";
 import { useSnackbar } from "notistack";
 import { handleError } from "../../core/utilities/errorHandler";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  CreateInterviewSchema,
+  createCreateInterviewSchema,
   CreateInterviewType,
 } from "../../core/models/schemas/CreateInterviewSchema";
 import { useParams } from "../../core/context/ParamsContext";
@@ -24,7 +25,9 @@ import { Loading } from "../../core/components";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
+  ETAPA_ENTREVISTA_RS_LABEL,
 } from "../../core/utilities/constants";
+import { normalizeText } from "../../core/utilities/textUtils";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { createInterview } from "../../core/services/interviews.service";
 import { Mail } from "lucide-react";
@@ -33,6 +36,8 @@ interface SelectedRQ {
   id: number;
   label: string;
   cliente: string;
+  codigoRQ: string;
+  lstPerfiles: Perfil[];
 }
 
 interface PrefillState {
@@ -54,6 +59,7 @@ export default function InterviewCreatePage() {
   const [selectedRQs, setSelectedRQs] = useState<SelectedRQ[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const rqSuggestionsRef = useRef<HTMLDivElement>(null);
+  const submissionLockRef = useRef(false);
 
   const goBack = () => {
     if (prefill.idRequerimiento) {
@@ -73,6 +79,29 @@ export default function InterviewCreatePage() {
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+
+  // num1 de la etapa "Entrevista con el equipo de R&S" (entrevistadores opcionales).
+  // En el resto de etapas se exige al menos un entrevistador.
+  const rsStageNum1 = useMemo(() => {
+    const stages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+    const target = normalizeText(ETAPA_ENTREVISTA_RS_LABEL);
+    const match = stages.find((s) => normalizeText(s.string1) === target);
+    return match ? match.num1 : null;
+  }, [paramsByMaestro]);
+
+  // El resolver es estable; lee el num1 vigente a través del ref para que el
+  // esquema siempre valide con el valor cargado de parámetros.
+  const rsStageNum1Ref = useRef<number | null>(null);
+  rsStageNum1Ref.current = rsStageNum1;
+  const interviewResolver = useMemo<Resolver<CreateInterviewType>>(
+    () => (values, context, options) =>
+      zodResolver(createCreateInterviewSchema(rsStageNum1Ref.current))(
+        values,
+        context,
+        options,
+      ),
+    [],
+  );
 
   const {
     loading: loadingTalents,
@@ -96,15 +125,16 @@ export default function InterviewCreatePage() {
   const { result, loading, execute } = useAsyncService(createInterview);
 
   const methods = useForm<CreateInterviewType>({
-    resolver: zodResolver(CreateInterviewSchema),
+    resolver: interviewResolver,
     defaultValues: {
       fecha: "",
       hora: "",
       estado: 1, // num1 = 1 is "Registrado"
       etapa: 0,
       idsRqs: [],
+      perfil: "",
       enlaceEntrevista: "",
-      entrevistadores: [{ fullname: "", email: "", notificacion: false }],
+      entrevistadores: [],
     },
     mode: "onChange",
   });
@@ -138,6 +168,23 @@ export default function InterviewCreatePage() {
     register("idTalento");
   }, [register]);
 
+  // Si la etapa exige entrevistadores y no hay ninguno, mostramos una fila vacía
+  // para guiar al usuario.
+  const etapaValue = watch("etapa");
+  useEffect(() => {
+    const etapa = Number(etapaValue);
+    const isRS = rsStageNum1 != null && etapa === rsStageNum1;
+    if (etapa >= 1 && !isRS && interviewerFields.length === 0) {
+      appendInterviewer({ fullname: "", email: "", notificacion: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapaValue, rsStageNum1]);
+
+  // Los entrevistadores son obligatorios en toda etapa distinta a R&S.
+  const entrevistadoresRequeridos =
+    Number(etapaValue) >= 1 &&
+    !(rsStageNum1 != null && Number(etapaValue) === rsStageNum1);
+
   useEffect(() => {
     if (prefill.idTalento) {
       setTalentSearchValue(prefill.talentName || "");
@@ -148,14 +195,34 @@ export default function InterviewCreatePage() {
         id: prefill.idRequerimiento,
         label: prefill.rqLabel || String(prefill.idRequerimiento),
         cliente: prefill.cliente || "",
+        codigoRQ: "",
+        lstPerfiles: [],
       };
       setSelectedRQs([rq]);
       setValue("idsRqs", [prefill.idRequerimiento], { shouldValidate: true });
+      getRequirementById(prefill.idRequerimiento)
+        .then((res) => {
+          const reqData = res.data.requerimiento;
+          setSelectedRQs([{
+            ...rq,
+            codigoRQ: reqData?.codigoRQ || "",
+            lstPerfiles: (reqData?.lstRqVacantes || []).map((v) => ({
+              idPerfil: v.idPerfil,
+              perfil: v.perfilProfesional,
+              vacantesTotales: v.cantidad,
+              vacantesCubiertas: 0,
+            })),
+          }]);
+        })
+        .catch(() => { /* keep without profiles */ });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit = async (data: CreateInterviewType) => {
+    if (submissionLockRef.current) return;
+    submissionLockRef.current = true;
+
     console.log("Saving interview:", data);
 
     const payload = {
@@ -172,19 +239,24 @@ export default function InterviewCreatePage() {
           notificacion: e.notificacion ? 1 : 0,
         }))
       ),
+      perfil: data.perfil,
     };
 
-    const { result } = await execute(payload);
+    try {
+      const { result } = await execute(payload);
 
-    if (result?.idTipoMensaje === 2) {
-      enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
-        variant: "success",
-      });
-      goBack();
-    } else {
-      enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
-        variant: "error",
-      });
+      if (result?.idTipoMensaje === 2) {
+        enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
+          variant: "success",
+        });
+        goBack();
+      } else {
+        enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
+          variant: "error",
+        });
+      }
+    } finally {
+      submissionLockRef.current = false;
     }
   };
 
@@ -231,7 +303,13 @@ export default function InterviewCreatePage() {
     } else {
       newRQs = [
         ...selectedRQs,
-        { id: req.idRequerimiento, label: `${req.codigoRQ} - ${req.titulo}`, cliente: req.cliente },
+        {
+          id: req.idRequerimiento,
+          label: `${req.codigoRQ} - ${req.titulo}`,
+          cliente: req.cliente,
+          codigoRQ: req.codigoRQ,
+          lstPerfiles: req.lstPerfiles || [],
+        },
       ];
     }
     setSelectedRQs(newRQs);
@@ -244,6 +322,13 @@ export default function InterviewCreatePage() {
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
   };
+
+  const profileOptions = selectedRQs.flatMap((rq) =>
+    (rq.lstPerfiles || []).map((p) => ({
+      label: `${rq.codigoRQ} - ${p.perfil}`,
+      value: `${rq.codigoRQ} - ${p.perfil}`,
+    })),
+  );
 
   const removeRQ = (id: number) => {
     const newRQs = selectedRQs.filter((r: SelectedRQ) => r.id !== id);
@@ -322,7 +407,9 @@ export default function InterviewCreatePage() {
               </button>
               <button
                 type="submit"
-                className="btn btn-primary px-5 py-2 text-sm flex items-center gap-2"
+                disabled={loading}
+                aria-busy={loading}
+                className="btn btn-primary px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -338,7 +425,7 @@ export default function InterviewCreatePage() {
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                Crear Entrevista
+                {loading ? "Creando..." : "Crear Entrevista"}
               </button>
             </div>
           </div>
@@ -560,7 +647,7 @@ export default function InterviewCreatePage() {
                 {/* Enlace de Entrevista */}
                 <div className="lg:col-span-2 flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">
-                    Enlace de la Entrevista
+                    Enlace de la Entrevista *
                   </label>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
@@ -624,49 +711,75 @@ export default function InterviewCreatePage() {
                 </div>
               </div>
 
-              {/* Etapa */}
-              <div className="flex flex-col gap-1">
-                <label className="input-label font-medium">
-                  Etapa de la Entrevista
-                </label>
-                <select
-                  {...register("etapa")}
-                  className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
-                >
-                  <option value={0}>Seleccione etapa</option>
-                  {interviewStages.map((stage) => (
-                    <option key={stage.idParametro} value={stage.num1}>
-                      {stage.string1}
-                    </option>
-                  ))}
-                </select>
-                {errors.etapa && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.etapa.message}
-                  </p>
-                )}
-              </div>
+              {/* Etapa · Estado · Perfil — same row */}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
+                {/* Etapa */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Etapa de la Entrevista
+                  </label>
+                  <select
+                    {...register("etapa")}
+                    className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
+                  >
+                    <option value={0}>Seleccione etapa</option>
+                    {interviewStages.map((stage) => (
+                      <option key={stage.idParametro} value={stage.num1}>
+                        {stage.string1}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.etapa && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.etapa.message}
+                    </p>
+                  )}
+                </div>
 
-              {/* Estado */}
-              <div className="flex flex-col gap-1">
-                <label className="input-label font-medium">
-                  Estado de la Entrevista
-                </label>
-                <select
-                  {...register("estado")}
-                  className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
-                >
-                  {interviewStates.map((state) => (
-                    <option key={state.idParametro} value={state.num1}>
-                      {state.string1}
-                    </option>
-                  ))}
-                </select>
-                {errors.estado && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.estado.message}
-                  </p>
-                )}
+                {/* Estado */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Estado de la Entrevista
+                  </label>
+                  <select
+                    {...register("estado")}
+                    className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
+                  >
+                    {interviewStates.map((state) => (
+                      <option key={state.idParametro} value={state.num1}>
+                        {state.string1}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.estado && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.estado.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Perfil / Puesto */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium">
+                    Perfil / Puesto <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    {...register("perfil")}
+                    className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                  >
+                    <option value="">Seleccione un perfil</option>
+                    {profileOptions.map((opt, i) => (
+                      <option key={i} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.perfil && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.perfil.message}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -687,7 +800,7 @@ export default function InterviewCreatePage() {
                       d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
                     />
                   </svg>
-                  Entrevistadores
+                  Entrevistadores {entrevistadoresRequeridos ? "*" : "(Opcional)"}
                 </h3>
                 <button
                   type="button"
@@ -711,6 +824,16 @@ export default function InterviewCreatePage() {
                   Agregar Entrevistador
                 </button>
               </div>
+
+              {(errors.entrevistadores as { message?: string } | undefined)
+                ?.message && (
+                <p className="text-red-500 text-xs mb-3">
+                  {
+                    (errors.entrevistadores as { message?: string })
+                      .message
+                  }
+                </p>
+              )}
 
               <div className="space-y-4">
                 {interviewerFields.map((field, index) => (
@@ -758,7 +881,7 @@ export default function InterviewCreatePage() {
                           </p>
                         )}
                       </div>
-                      {interviewerFields.length > 1 && (
+                      {interviewerFields.length > 0 && (
                         <button
                           type="button"
                           onClick={() => removeInterviewer(index)}

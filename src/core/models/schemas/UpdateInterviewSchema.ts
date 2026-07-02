@@ -11,11 +11,11 @@ export const UpdateInterviewSchema = z.object({
       required_error: "Debe seleccionar al menos un requerimiento",
     })
     .min(1, "Debe seleccionar al menos un requerimiento"),
+  perfil: z.string().min(1, "Seleccione un perfil"),
   enlaceEntrevista: z
     .string()
-    .url("El enlace debe ser una URL válida")
-    .optional()
-    .or(z.literal("")),
+    .min(1, "El enlace de la entrevista es requerido")
+    .url("El enlace debe ser una URL válida"),
   entrevistadores: z.array(
     z.object({
       fullname: z.string().min(1, "El nombre completo es requerido"),
@@ -52,3 +52,23 @@ export const UpdateInterviewSchema = z.object({
 });
 
 export type UpdateInterviewType = z.infer<typeof UpdateInterviewSchema>;
+
+/**
+ * Esquema que exige al menos un entrevistador cuando la etapa seleccionada
+ * es distinta a "Entrevista con el equipo de R&S".
+ *
+ * @param rsStageNum1 num1 de la etapa R&S (entrevistadores opcionales).
+ *                    Si es null (parámetros aún no cargados) no se exige.
+ */
+export const createUpdateInterviewSchema = (rsStageNum1: number | null) =>
+  UpdateInterviewSchema.superRefine((data, ctx) => {
+    const etapa = Number(data.etapa);
+    const isRS = rsStageNum1 != null && etapa === rsStageNum1;
+    if (etapa >= 1 && !isRS && (!data.entrevistadores || data.entrevistadores.length === 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debe agregar al menos un entrevistador para esta etapa.",
+        path: ["entrevistadores"],
+      });
+    }
+  });

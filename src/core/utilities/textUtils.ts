@@ -1,4 +1,16 @@
 /**
+ * Normaliza texto para comparaciones: minúsculas, sin tildes y sin espacios sobrantes.
+ */
+export const normalizeText = (text: string | null | undefined): string => {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize("NFD") // descompone caracteres con tilde
+    .replace(/[̀-ͯ]/g, ""); // elimina los diacriticos
+};
+
+/**
  * Sanitiza texto eliminando espacios extras, emojis y caracteres no pertinentes
  */
 export const sanitizeText = (text: string): string => {
