@@ -1,4 +1,5 @@
 export interface SoftSkill {
+  id: number;
   nombreHabilidad: string;
 }
 

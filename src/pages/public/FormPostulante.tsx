@@ -1,5 +1,5 @@
 import { useParams } from "../../core/context/ParamsContext";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
 import {
@@ -8,14 +8,12 @@ import {
   Controller,
   FormProvider,
 } from "react-hook-form";
-import { isDirty, isValid } from "zod";
 import {
   Loading,
   EducationsSection,
   ExperiencesSection,
   FileInput,
   LanguagesSection,
-  SoftSkillsSection,
   TechSkillsSection,
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
@@ -37,15 +35,26 @@ import {
   DOCUMENTO_CV,
   ARCHIVO_IMAGEN,
   DOCUMENTO_FOTO_PERFIL,
+  FRASES_IA_MAESTRO,
 } from "../../core/utilities/constants";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
+import { validateFile } from "../../core/utilities/validation";
+import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
+import { useFetchCVData } from "../../core/hooks/useFetchCVData";
+import { useCompleteExtForm } from "../../core/hooks/useCompleteExtForm";
+import { useModal } from "../../core/context/ModalContext";
+import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
+import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
+
+import { processText } from "../../core/utilities/textUtils";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
-  const { paramsByMaestro, loading: loadingParams } = useParams(
-    "12, 13, 15, 16, 19, 20",
-  );
+  const { paramsByMaestro, loading: loadingParams } = useParams() as { paramsByMaestro: any; loading: boolean };
   const countryCode = useRef<HTMLParagraphElement>(null);
 
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -58,20 +67,23 @@ export const FormPostulante = () => {
   const idiomas = paramsByMaestro[15] || [];
   const nivelesIdioma = paramsByMaestro[16] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
-  const habilidadesBlandas = paramsByMaestro[20] || [];
+  const coins = paramsByMaestro[2] || [];
+  const disponibilidades = paramsByMaestro[31] || [];
+  const frasesIA = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
-  const { loading: loadingAddPostulante, fetch: addPostulante } = useApi<
-    BaseResponseFMI,
-    AddPostulanteParams
-  >(addPostulanteService, {
-    onError: (error) => handleError(error, enqueueSnackbar),
-    onSuccess: (response) =>
-      handleResponse({
-        response: response,
-        showSuccessMessage: true,
-        enqueueSnackbar: enqueueSnackbar,
-      }),
-  });
+  const { loading: loadingAddPostulante, fetch: addPostulante } =
+    useApi<BaseResponseFMI, AddPostulanteParams>(
+      addPostulanteService,
+      {
+        onError: (error) => handleError(error, enqueueSnackbar),
+        onSuccess: (response) =>
+          handleResponse({
+            response: response,
+            showSuccessMessage: true,
+            enqueueSnackbar: enqueueSnackbar,
+          }),
+      },
+    );
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
     InsertUpdateResponse,
@@ -88,14 +100,8 @@ export const FormPostulante = () => {
 
   const methods = useForm<AddPostulanteType>({
     resolver: zodResolver(AddPostulanteSchema),
-    mode: "onChange",
-    defaultValues: {
-      montoInicialPlanilla: 0,
-      montoFinalPlanilla: 0,
-      montoInicialRxH: 0,
-      montoFinalRxH: 0,
-      idMoneda: 0,
-    },
+    mode: "all",
+    defaultValues: initialFormValuesPostulante,
   });
 
   const {
@@ -103,8 +109,9 @@ export const FormPostulante = () => {
     handleSubmit,
     control,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty, isValid },
     reset,
+    setValue,
   } = methods;
 
   const watchCountryPhone = watch("codigoPais");
@@ -112,13 +119,12 @@ export const FormPostulante = () => {
   // const watchCity = watch("idCiudad");
 
   const ciudadesFiltradas = watchCountry
-    ? ciudades.filter((ciudad) => ciudad.num2 === watchCountry)
+    ? ciudades.filter((ciudad: any) => ciudad.num2 === watchCountry)
     : [];
 
   const onSubmit: SubmitHandler<AddPostulanteType> = async (data) => {
     setCvFileErrors("");
     setFotoFileErrors("");
-
     // Validación manual
     if (!data.cv[0] || !(data.cv[0] instanceof File)) {
       setCvFileErrors("El CV es requerido");
@@ -129,19 +135,23 @@ export const FormPostulante = () => {
       return;
     }
 
-    // Validación manual
-    if (!data.foto[0] || !(data.foto[0] instanceof File)) {
-      setFotoFileErrors("La foto es requerida");
-      return;
+    // Validación manual de foto
+    const photoFile = data.foto?.[0];
+    if (photoFile && photoFile instanceof File) {
+      const { isValid } = validateFile(photoFile, [
+        "png",
+        "jpeg",
+        "jpg",
+      ]);
+      if (!isValid) {
+        setFotoFileErrors(
+          "La foto debe ser un archivo PNG, JPEG o JPG",
+        );
+        return;
+      }
     }
-    if (
-      !data.foto[0].name.endsWith(".png") &&
-      !data.foto[0].name.endsWith(".jpeg") &&
-      !data.foto[0].name.endsWith(".jpg")
-    ) {
-      setFotoFileErrors("La foto debe ser un archivo PNG, JPEG o JPG");
-      return;
-    }
+
+    setFotoFileErrors("");
 
     const {
       codigoPais,
@@ -150,50 +160,67 @@ export const FormPostulante = () => {
       educaciones,
       cv,
       foto,
-      idMoneda,
+      /* idMoneda, */
+      disponibilidad,
+      salaryExpectations,
       ...filterData
     } = data;
-    const phone = countryCode.current?.textContent + " " + telefono.trim();
+    const phone =
+      countryCode.current?.textContent + " " + telefono.trim();
 
     const cleanExperiencias = experiencias.map((exp) => ({
       ...exp,
       flActualidad: exp.flActualidad ? 1 : 0,
       fechaFin: exp.flActualidad ? null : exp.fechaFin,
+      funciones: exp.funciones,
     }));
 
-    const cleanEducaciones = educaciones.map((edu) => ({
+    const cleanEducaciones = educaciones?.map((edu) => ({
       ...edu,
-      flActualidad: edu.flActualidad ? 1 : 0,
-      fechaFin: edu.flActualidad ? null : edu.fechaFin,
+      flActualidad: edu?.flActualidad ? 1 : 0,
+      fechaFin: edu?.flActualidad ? null : edu?.fechaFin,
     }));
 
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile!);
-      const fotoBase64 = await Utils.fileToBase64(fotoFile!);
+      const fotoBase64 = photoFile
+        ? await Utils.fileToBase64(fotoFile!)
+        : undefined;
 
       const cleanData: AddTalentParams = {
+        disponibilidad: data.disponibilidad?.join(","),
         telefono: phone,
-        idMoneda:
-          data.idMoneda === 0 || data.idMoneda === undefined
-            ? null
-            : data.idMoneda,
+        idMonedaPlan: salaryExpectations?.planilla?.coin,
+        idMonedaRxh: salaryExpectations?.rxh?.coin,
+        montoInicialPlanilla: salaryExpectations?.planilla?.min,
+        montoFinalPlanilla: salaryExpectations?.planilla?.max,
+        montoInicialRxH: salaryExpectations?.rxh?.min,
+        montoFinalRxH: salaryExpectations?.rxh?.max,
+        idMoneda: null,
         ...filterData,
         experiencias: cleanExperiencias,
         educaciones: cleanEducaciones,
         cvArchivo: {
           stringB64: cvBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(cvFile?.name),
+          nombreArchivo: Utils.getFileNameWithoutExtension(
+            cvFile?.name,
+          ),
           extensionArchivo: "pdf",
           idTipoArchivo: ARCHIVO_PDF,
           idTipoDocumento: DOCUMENTO_CV,
         },
-        fotoArchivo: {
-          stringB64: fotoBase64,
-          nombreArchivo: Utils.getFileNameWithoutExtension(fotoFile?.name),
-          extensionArchivo: Utils.detectarFormatoDesdeBase64(fotoBase64),
-          idTipoArchivo: ARCHIVO_IMAGEN,
-          idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
-        },
+        fotoArchivo: fotoBase64
+          ? {
+              stringB64: fotoBase64,
+              nombreArchivo: Utils.getFileNameWithoutExtension(
+                fotoFile?.name,
+              ),
+              extensionArchivo:
+                Utils.detectarFormatoDesdeBase64(fotoBase64),
+              idTipoArchivo: ARCHIVO_IMAGEN,
+              idTipoDocumento: DOCUMENTO_FOTO_PERFIL,
+            }
+          : undefined,
       };
 
       // Save talent data in BDT
@@ -201,7 +228,13 @@ export const FormPostulante = () => {
         // on success register postulante in FMI
         if (response.data.idMensaje === 2) {
           const idTalent = response.data.idNuevo;
-          const ubicacion = `${paises.find((item) => item.num1 === data.idPais)?.string1}, ${ciudades.find((item) => item.num1 === data.idCiudad)?.string1}`;
+          const ubicacion = `${
+            paises.find((item: any) => item.num1 === data.idPais)
+              ?.string1
+          }, ${
+            ciudades.find((item: any) => item.num1 === data.idCiudad)
+              ?.string1
+          }`;
 
           if (idTalent) {
             addPostulante({
@@ -215,12 +248,7 @@ export const FormPostulante = () => {
               tiempoContrato: null,
               idTiempoContrato: null,
               fechaInicioLabores: null,
-              cargo: data.puesto,
               remuneracion: null,
-              idMoneda:
-                data.idMoneda === 0 || data.idMoneda === undefined
-                  ? null
-                  : data.idMoneda,
               idModalidad: null,
               ubicacion: ubicacion,
               tieneEquipo: data?.tieneEquipo || false,
@@ -240,7 +268,9 @@ export const FormPostulante = () => {
         }
       });
     } catch (error) {
-      enqueueSnackbar("error al cargar archivos", { variant: "warning" });
+      enqueueSnackbar("error al cargar archivos", {
+        variant: "warning",
+      });
     }
   };
 
@@ -258,10 +288,66 @@ export const FormPostulante = () => {
     }
   };
 
+  /** Analizar CV con IA */
+  const { fetchCVDetails } = useFetchCVData();
+  const { completeForm, idCiudad } = useCompleteExtForm();
+  const { isModalOpen, closeModal, openModal } = useModal();
+  const [canClose, setCanClose] = useState<boolean>(false);
+  const [canCloseMessage, setCanCloseMessage] = useState<
+    string | undefined
+  >();
+
+  useEffect(() => {
+    if (idCiudad && idCiudad !== 0) setValue("idCiudad", idCiudad);
+  }, [idCiudad, setValue]);
+
+  const handleAnalize = async () => {
+    if (!cvFile) {
+      enqueueSnackbar("Por favor, suba un CV para analizar", {
+        variant: "warning",
+      });
+      return;
+    }
+
+    try {
+      // Open modal
+      setCanClose(false);
+      setCanCloseMessage(undefined);
+      openModal(MODAL_AI_WORKING);
+
+      // Extract data using backend service
+      const cvDetails = await fetchCVDetails(cvFile);
+
+      // Autocomplete form
+      completeForm(
+        cvDetails,
+        setValue,
+        paises,
+        ciudades,
+        habilidadesTecnicas,
+      );
+      setCanCloseMessage(
+        "Formulario completado, revise los campos antes de enviar",
+      );
+    } catch (error: any) {
+      setCanCloseMessage(error?.message || "Error al analizar el CV");
+    } finally {
+      setCanClose(true);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
-      {(loadingAddPostulante || loadingAddTalent || loadingParams) && (
-        <Loading opacity="opacity-60" />
+      {(loadingAddPostulante ||
+        loadingAddTalent ||
+        loadingParams) && <Loading opacity="opacity-60" />}
+      {isModalOpen(MODAL_AI_WORKING) && (
+        <ModalWorkingAI
+          canClose={canClose}
+          randomPhrases={frasesIA}
+          onClose={() => closeModal(MODAL_AI_WORKING)}
+          canCloseMessage={canCloseMessage}
+        />
       )}
       <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center">
         {/* Background geometric elements */}
@@ -274,7 +360,10 @@ export const FormPostulante = () => {
           <div className="relative pb-2">
             <div className="border border-gray-200 border-b-0 rounded-t-lg shadow-sm p-8 bg-white relative z-10">
               <div className="flex justify-center">
-                <img src="/assets/fractal-logo-BDT.png" alt="fractal logo" />
+                <img
+                  src="/assets/fractal-logo-BDT.png"
+                  alt="fractal logo"
+                />
               </div>
               <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
                 Registro de Postulante
@@ -289,31 +378,67 @@ export const FormPostulante = () => {
                 <div className="px-8 overflow-y-auto w-full md:h-[70vh]">
                   {/* files */}
                   <div>
-                    <h3 className="text-[#3f3f46] text-lg">Curriculum Vitae</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-[#3f3f46] text-lg">
+                        Curriculum Vitae
+                      </h3>
+                      <button
+                        className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                        type="button"
+                        onClick={() => {
+                          reset(initialFormValuesPostulante);
+                          setCvFile(null);
+                          setCvFileErrors("");
+                        }}
+                      >
+                        Limpiar
+                      </button>
+                      {cvFile && (
+                        <button
+                          className="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                          type="button"
+                          onClick={handleAnalize}
+                        >
+                          Completar con IA
+                        </button>
+                      )}
+                    </div>
+
                     <FileInput<AddPostulanteType>
                       register={register}
                       errors={errors}
                       name="cv"
                       initialText="Sube un archivo"
                       acceptedTypes=".pdf"
-                      onChange={(file) => handleFileChange("cv", file)}
+                      onChange={(file) =>
+                        handleFileChange("cv", file)
+                      }
                       value={cvFile}
                     />
                     {cvFileErrors !== "" && (
-                      <p className="text-red-400 text-sm">{cvFileErrors}</p>
+                      <p className="text-red-400 text-sm">
+                        {cvFileErrors}
+                      </p>
                     )}
-                    <h3 className="text-[#3f3f46] text-lg">Foto de perfil</h3>
+
+                    <h3 className="text-[#3f3f46] text-lg">
+                      Foto de perfil
+                    </h3>
                     <FileInput<AddPostulanteType>
                       register={register}
                       errors={errors}
                       name="foto"
                       initialText="Sube una foto"
                       acceptedTypes=".png, .jpeg, .jpg"
-                      onChange={(file) => handleFileChange("foto", file)}
+                      onChange={(file) =>
+                        handleFileChange("foto", file)
+                      }
                       value={fotoFile}
                     />
                     {fotoFileErrors !== "" && (
-                      <p className="text-red-400 text-sm">{fotoFileErrors}</p>
+                      <p className="text-red-400 text-sm">
+                        {fotoFileErrors}
+                      </p>
                     )}
                   </div>
                   {/* Data */}
@@ -326,7 +451,8 @@ export const FormPostulante = () => {
                         htmlFor="dni"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Doc. Identidad<span className="text-red-400">*</span>
+                        Doc. Identidad
+                        <span className="text-red-400">*</span>
                       </label>
                       <input
                         {...register("dni")}
@@ -366,7 +492,8 @@ export const FormPostulante = () => {
                         htmlFor="lastname-f"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Apellido paterno<span className="text-red-400">*</span>
+                        Apellido paterno
+                        <span className="text-red-400">*</span>
                       </label>
                       <input
                         {...register("apellidoPaterno")}
@@ -406,17 +533,23 @@ export const FormPostulante = () => {
                         htmlFor="countrycode"
                         className="text-[#636d7c] text-sm px-1"
                       >
-                        Número de Celular<span className="text-red-400">*</span>
+                        Número de Celular
+                        <span className="text-red-400">*</span>
                       </label>
                       <select
                         id="countrycode"
                         autoComplete="tel-country-code"
-                        {...register("codigoPais", { valueAsNumber: true })}
+                        {...register("codigoPais", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
-                        {paises.map((pais) => (
-                          <option key={pais.idParametro} value={pais.num1}>
+                        {paises.map((pais: any) => (
+                          <option
+                            key={pais.idParametro}
+                            value={pais.num1}
+                          >
                             {pais.string1}
                           </option>
                         ))}
@@ -432,7 +565,12 @@ export const FormPostulante = () => {
                           className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
                         >
                           {watchCountryPhone
-                            ? `${paises.find((p) => p.num1 === watchCountryPhone)?.string3 || "00"}`
+                            ? `${
+                                paises.find(
+                                  (p: any) =>
+                                    p.num1 === watchCountryPhone,
+                                )?.string3 || "00"
+                              }`
                             : "+00"}
                         </p>
                         <input
@@ -471,58 +609,127 @@ export const FormPostulante = () => {
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="description"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Descripción<span className="text-red-400">*</span>
-                      </label>
-                      <textarea
-                        {...register("descripcion")}
-                        id="description"
-                        className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Descripción"
-                      ></textarea>
+                      <div className="flex justify-between items-center px-1">
+                        <label
+                          htmlFor="description"
+                          className="text-[#636d7c] text-sm"
+                        >
+                          Presentación
+                        </label>
+                        {/* CONTADOR DE CARACTERES */}
+                        <span
+                          className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}
+                        >
+                          {watch("descripcion")?.length || 0} / 5000
+                        </span>
+                      </div>
+                      <div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span>
+                          Los emojis y espacios extras se eliminarán
+                          automáticamente
+                        </span>
+                      </div>
+                      <Controller
+                        name="descripcion"
+                        control={control}
+                        render={({ field }) => (
+                          <textarea
+                            {...field}
+                            id="description"
+                            maxLength={5000}
+                            className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5] transition-colors"
+                            placeholder="Cuéntanos sobre ti..."
+                            onBlur={(e) => {
+                              // Sanitizar cuando el usuario sale del campo
+                              const {
+                                text,
+                                wasSanitized,
+                                wasTruncated,
+                              } = processText(e.target.value, 5000);
+
+                              if (text !== e.target.value) {
+                                field.onChange(text);
+
+                                if (wasTruncated) {
+                                  enqueueSnackbar(
+                                    "La presentación se interrumpió a los 5,000 caracteres",
+                                    { variant: "warning" },
+                                  );
+                                } else if (wasSanitized) {
+                                  enqueueSnackbar(
+                                    "Se limpiaron caracteres especiales de la presentación",
+                                    { variant: "info" },
+                                  );
+                                }
+                              }
+
+                              field.onBlur();
+                            }}
+                          />
+                        )}
+                      />
+                      {/* MENSAJE DE ERROR - MÁXIMO 5000 */}
+                      {(watch("descripcion")?.length ?? 0) > 5000 && (
+                        <p className="text-red-400 text-sm flex items-center gap-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          La presentación no debe exceder los 5,000
+                          caracteres
+                        </p>
+                      )}
+                      {/* MENSAJE DE ERROR DEL SCHEMA */}
                       {errors.descripcion && (
                         <p className="text-red-400 text-sm">
                           {errors.descripcion.message}
                         </p>
                       )}
                     </div>
+
                     <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="puestoAnt"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Puesto actual<span className="text-red-400">*</span>
+                      <label className="text-[#636d7c] text-sm px-1">
+                        Disponibilidad{" "}
+                        <span className="text-red-400">*</span>
                       </label>
-                      <input
-                        {...register("puesto")}
-                        id="puestoAnt"
-                        type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Puesto actual"
-                      />
-                      {errors.puesto && (
-                        <p className="text-red-400 text-sm">
-                          {errors.puesto.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="availability"
-                        className="text-[#636d7c] text-sm px-1"
-                      >
-                        Disponibilidad<span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        {...register("disponibilidad")}
-                        id="availability"
-                        type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
-                        placeholder="Disponibilidad"
-                      />
+
+                      {disponibilidades?.map((d: any) => (
+                        <label
+                          className="flex items-center gap-2"
+                          key={d.num1}
+                        >
+                          <input
+                            type="checkbox"
+                            value={d.num1}
+                            {...register("disponibilidad")}
+                            className="w-4 h-4"
+                          />
+                          <span>{d.string1}</span>
+                        </label>
+                      ))}
+
                       {errors.disponibilidad && (
                         <p className="text-red-400 text-sm">
                           {errors.disponibilidad.message}
@@ -545,12 +752,17 @@ export const FormPostulante = () => {
                       <select
                         id="country"
                         autoComplete="country"
-                        {...register("idPais", { valueAsNumber: true })}
+                        {...register("idPais", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
                       >
                         <option value={0}>Seleccione un país</option>
-                        {paises.map((pais) => (
-                          <option key={pais.idParametro} value={pais.num1}>
+                        {paises.map((pais: any) => (
+                          <option
+                            key={pais.idParametro}
+                            value={pais.num1}
+                          >
                             {pais.string1}
                           </option>
                         ))}
@@ -571,12 +783,19 @@ export const FormPostulante = () => {
                       <select
                         id="city"
                         autoComplete="address-level2"
-                        {...register("idCiudad", { valueAsNumber: true })}
+                        {...register("idCiudad", {
+                          valueAsNumber: true,
+                        })}
                         className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
                       >
-                        <option value={0}>Seleccione una ciudad</option>
-                        {ciudadesFiltradas.map((ciudad) => (
-                          <option key={ciudad.idParametro} value={ciudad.num1}>
+                        <option value={0}>
+                          Seleccione una ciudad
+                        </option>
+                        {ciudadesFiltradas.map((ciudad: any) => (
+                          <option
+                            key={ciudad.idParametro}
+                            value={ciudad.num1}
+                          >
                             {ciudad.string1}
                           </option>
                         ))}
@@ -588,20 +807,22 @@ export const FormPostulante = () => {
                       )}
                     </div>
                   </div>
+                  {/* Salary */}
+                  <SalaryExpectSectionExter
+                    coins={coins.map((c: any) => ({
+                      idCoin: c.num1,
+                      stringVal: c.string1,
+                    }))}
+                    control={control}
+                    errors={errors}
+                  />
+
                   {/* Tech skills */}
                   <TechSkillsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
                     habilidadesTecnicas={habilidadesTecnicas}
-                    dropdownWithSearch={false}
-                    shouldShowEmptyForm={true}
-                  />
-                  {/* Soft skills */}
-                  <SoftSkillsSection<AddPostulanteType>
-                    control={control}
-                    errors={errors}
-                    habilidadesBlandas={habilidadesBlandas}
-                    dropdownWithSearch={false}
+                    dropdownWithSearch={true}
                     shouldShowEmptyForm={true}
                   />
                   {/* Experience */}
@@ -615,7 +836,7 @@ export const FormPostulante = () => {
                   <EducationsSection<AddPostulanteType>
                     control={control}
                     errors={errors}
-                    shouldShowEmptyForm={true}
+                    shouldShowEmptyForm={false}
                   />
 
                   {/* Languages */}
@@ -688,7 +909,9 @@ export const FormPostulante = () => {
                               checked={field.value === true}
                               onChange={() => field.onChange(true)}
                             />
-                            <span className="ml-2 text-gray-700">Sí</span>
+                            <span className="ml-2 text-gray-700">
+                              Sí
+                            </span>
                           </label>
                           <label className="flex items-center cursor-pointer">
                             <input
@@ -697,7 +920,9 @@ export const FormPostulante = () => {
                               checked={field.value === false}
                               onChange={() => field.onChange(false)}
                             />
-                            <span className="ml-2 text-gray-700">No</span>
+                            <span className="ml-2 text-gray-700">
+                              No
+                            </span>
                           </label>
                         </div>
                         {errors.tieneEquipo && (
@@ -712,10 +937,11 @@ export const FormPostulante = () => {
                   <div className="pt-4">
                     <button
                       type="submit"
-                      disabled={!isDirty || !isValid || registerRef.current}
+                      disabled={
+                        !isDirty || !isValid || registerRef.current
+                      }
                       className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
                                         ${
-                                          !isDirty ||
                                           !isValid ||
                                           registerRef.current
                                             ? "btn-disabled"

@@ -4,4 +4,8 @@ export interface TalentParams {
     techAbilities?: string;
     idEnglishLevel?: number;
     idTalentCollection?: number;
+    yearsExperience?: number;
+    jobPosition?: string;
+    educationName?: string;
+    idAcademicGrade?: number;
 }

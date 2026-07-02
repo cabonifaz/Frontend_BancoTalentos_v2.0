@@ -6,6 +6,7 @@ export interface Education {
     fechaInicio: string;
     fechaFin: string;
     flActualidad: boolean;
+    tipoFechaEducaciones?: number;
 }
 
 export interface AddEducation extends Omit<Education, 'idEducacion' | 'nombreInstitucion'> {
@@ -17,4 +18,5 @@ export interface AddOrUpdateEducationParams extends Omit<Education, 'idEducacion
     idTalento: number;
     institucion: string;
     flActualidad: 1 | 0;
+    tipoFechaEducaciones?: number;
 }

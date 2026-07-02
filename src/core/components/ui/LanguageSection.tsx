@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import {
   FieldValues,
   Controller,
-  Control,
   useFieldArray,
   ArrayPath,
   Path,
@@ -22,6 +21,7 @@ export const LanguagesSection = <F extends FieldValues>({
   idiomas,
   nivelesIdioma,
   shouldShowEmptyForm = true,
+  shouldAddElements = true,
 }: LanguagesSectionProps<F>) => {
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
@@ -57,6 +57,7 @@ export const LanguagesSection = <F extends FieldValues>({
       }
       onRemove={remove}
       canRemoveFirst={!shouldShowEmptyForm}
+      canAddSections={shouldAddElements}
     >
       {fields.map((field, index) => (
         <div key={field.id}>
@@ -71,7 +72,6 @@ export const LanguagesSection = <F extends FieldValues>({
             <Controller
               name={`idiomas.${index}.idIdioma` as Path<F>}
               control={control}
-              rules={{ required: "Seleccione un idioma" }}
               render={({ field: controllerField }) => (
                 <select
                   {...controllerField}
@@ -109,7 +109,6 @@ export const LanguagesSection = <F extends FieldValues>({
             <Controller
               name={`idiomas.${index}.idNivel` as Path<F>}
               control={control}
-              rules={{ required: "Seleccione un nivel" }}
               render={({ field: controllerField }) => (
                 <select
                   {...controllerField}
@@ -137,35 +136,39 @@ export const LanguagesSection = <F extends FieldValues>({
           </div>
 
           {/* Estrellas */}
-          <div id="rating-container" className="flex items-center my-6 gap-2">
-            <Controller
-              name={`idiomas.${index}.estrellas` as Path<F>}
-              control={control}
-              rules={{ required: "Debe seleccionar estrellas" }}
-              render={({ field: controllerField }) => (
-                <>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <div
-                      key={star}
-                      className="star cursor-pointer"
-                      onClick={() => controllerField.onChange(star)}
-                    >
-                      <img
-                        src={
-                          (controllerField.value ?? 0) >= star
-                            ? "/assets/ic_fill_star.svg"
-                            : "/assets/ic_outline_star.svg"
-                        }
-                        alt={`Star ${star}`}
-                        className="star-icon w-6 h-6"
-                      />
-                    </div>
-                  ))}
-                </>
-              )}
-            />
+          <div className="flex flex-col my-2">
+            <label className="text-[#71717A] text-sm px-1 mb-2">
+              Nivel de dominio<span className="text-red-400">*</span>
+            </label>
+            <div className="flex items-center gap-2">
+              <Controller
+                name={`idiomas.${index}.estrellas` as Path<F>}
+                control={control}
+                render={({ field: controllerField }) => (
+                  <>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <div
+                        key={star}
+                        className="star cursor-pointer"
+                        onClick={() => controllerField.onChange(star)}
+                      >
+                        <img
+                          src={
+                            (controllerField.value ?? 0) >= star
+                              ? "/assets/ic_fill_star.svg"
+                              : "/assets/ic_outline_star.svg"
+                          }
+                          alt={`Star ${star}`}
+                          className="star-icon w-6 h-6"
+                        />
+                      </div>
+                    ))}
+                  </>
+                )}
+              />
+            </div>
             {(errors as any)?.idiomas?.[index]?.estrellas && (
-              <p className="text-red-400 text-sm ms-4">
+              <p className="text-red-400 text-sm mt-2">
                 {(errors as any).idiomas[index]?.estrellas?.message as string}
               </p>
             )}

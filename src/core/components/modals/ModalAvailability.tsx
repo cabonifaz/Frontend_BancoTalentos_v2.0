@@ -1,78 +1,162 @@
 import { enqueueSnackbar } from "notistack";
-import { useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { useModal } from "../../context/ModalContext";
 import { useApi } from "../../hooks/useApi";
 import { BaseResponse } from "../../models";
 import { TalentAvailabilityParams } from "../../models/params/TalentUpdateParams";
 import { updateTalentAvailability } from "../../services/apiService";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
+import {
+  handleError,
+  handleResponse,
+} from "../../utilities/errorHandler";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
 import { validateText } from "../../utilities/validation";
 
 interface Props {
-    idTalento?: number;
-    availability?: string;
-    onUpdate?: (idTalento: number) => void;
+  idTalento?: number;
+  availability?: string;
+  onUpdate?: (idTalento: number) => void;
 }
 
-export const ModalAvailability = ({ idTalento, availability, onUpdate }: Props) => {
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const { closeModal } = useModal();
-    const availabilityRef = useRef<HTMLInputElement>(null);
+// Opciones desde local, para evitar hacer demasiadas llamadas a la API
+const availabilityOptions = [
+  { idParametro: 1, string1: "Presencial" },
+  { idParametro: 2, string1: "Remoto" },
+  { idParametro: 3, string1: "Híbrido" },
+];
 
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentAvailabilityParams>(updateTalentAvailability, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
-    });
+export const ModalAvailability = ({
+  idTalento,
+  availability = "",
+  onUpdate,
+}: Props) => {
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const { closeModal } = useModal();
+  const [selectedAvailabilities, setSelectedAvailabilities] =
+    useState<number[]>([]);
 
-    const handleOnConfirm = () => {
-        setErrors({});
-        const newErrors: { [key: string]: string } = {};
-        if (availabilityRef.current && idTalento) {
-            const disponibilidad = availabilityRef.current.value;
+  const { loading, fetch: updateData } = useApi<
+    BaseResponse,
+    TalentAvailabilityParams
+  >(updateTalentAvailability, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) =>
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      }),
+  });
 
-            const textValidation = validateText(disponibilidad);
-            if (!textValidation.isValid) {
-                newErrors.availability = textValidation.message || "Error de validación.";
-            }
+  // Sincronizar el estado con la prop cuando cambie
+  useEffect(() => {
+    if (availability)
+      setSelectedAvailabilities(
+        availability
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => /^\d+$/.test(id))
+          .map((id) => Number(id))
+      );
+    else setSelectedAvailabilities([]);
+  }, [availability]);
 
-            if (Object.keys(newErrors).length > 0) {
-                setErrors(newErrors);
-                return;
-            }
+  const handleCheckboxChange = (id: number) => {
+    setSelectedAvailabilities((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
-            updateData({
-                idTalento: idTalento,
-                disponibilidad: disponibilidad
-            }).then((response) => {
-                if (response.data.idMensaje === 2) {
-                    if (onUpdate) onUpdate(idTalento);
-                    closeModal("modalAvailability");
-                }
-            });
-        }
+  const validateField = (selected: number[]) => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (selected.length === 0) {
+      newErrors.availability = "La disponibilidad es requerida";
     }
 
-    return (
-        <Modal id="modalAvailability" title="Edita tu disponibilidad" confirmationLabel="Editar" onConfirm={handleOnConfirm}>
-            {loading && (<Loading opacity="opacity-60" />)}
-            <div>
-                <h3 className="text-[#71717A] text-sm mt-6">¿Tiempo de nueva disponibilidad?. Edítela</h3>
-                <div className="flex flex-col my-2">
-                    <label htmlFor="availability" className="input-label">Disponibilidad</label>
-                    <input
-                        type="text"
-                        id="availability"
-                        name="availability"
-                        ref={availabilityRef}
-                        defaultValue={availability}
-                        placeholder="Disponibilidad"
-                        className="input" />
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-                    {errors.availability && <p className="text-red-500 text-sm mt-2">{errors.availability}</p>}
-                </div>
-            </div>
-        </Modal>
+  const handleOnConfirm = () => {
+    const isValid = validateField(selectedAvailabilities);
+
+    if (!isValid || !idTalento) return;
+
+    const filteredAvailabilities = selectedAvailabilities.filter(
+      (id) => id <= 3
     );
-}
+    const availabilityString = filteredAvailabilities.join(",");
+
+    updateData({
+      idTalento: idTalento,
+      disponibilidad: availabilityString,
+    }).then((response) => {
+      if (response.data.idMensaje === 2) {
+        if (onUpdate) onUpdate(idTalento);
+        closeModal("modalAvailability");
+        setErrors({ availability: "" });
+      }
+    });
+  };
+
+  const handleCloseModal = () => {
+    // Restaurar el valor original al cerrar/cancelar
+    setSelectedAvailabilities(
+      availability
+        ? availability
+            .split(",")
+            .map((id) => Number(id.trim()))
+            .filter((id) => !isNaN(id))
+        : []
+    );
+    setErrors({});
+    closeModal("modalAvailability");
+  };
+
+  return (
+    <Modal
+      id="modalAvailability"
+      title="Edita tu disponibilidad"
+      confirmationLabel="Editar"
+      onConfirm={handleOnConfirm}
+      onClose={handleCloseModal}
+    >
+      {loading && <Loading opacity="opacity-60" />}
+      <div>
+        <h3 className="text-[#71717A] text-sm mt-6">
+          ¿Nueva disponibilidad?. Edítela
+        </h3>
+        <div className="flex flex-col my-2">
+          <label htmlFor="availability" className="input-label">
+            Disponibilidad
+          </label>
+          {availabilityOptions.map((d) => (
+            <label
+              className="flex items-center gap-2"
+              key={d.idParametro}
+            >
+              <input
+                type="checkbox"
+                value={d.idParametro}
+                className="w-4 h-4"
+                checked={selectedAvailabilities.includes(
+                  d.idParametro
+                )}
+                onChange={() => handleCheckboxChange(d.idParametro)}
+              />
+              <span>{d.string1}</span>
+            </label>
+          ))}
+
+          {errors.availability && (
+            <p className="text-red-500 text-sm mt-2">
+              {errors.availability}
+            </p>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+};

@@ -1,4 +1,7 @@
-import { useRef, useState, ChangeEvent, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useEffect } from "react";
 import { useParams } from "../../context/ParamsContext";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
@@ -9,213 +12,375 @@ import { enqueueSnackbar } from "notistack";
 import { updateTalentSalary } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
-import { validateCurrency, validateSalary } from "../../utilities/validation";
-import { MODALIDAD_PLANILLA, MODALIDAD_RXH } from "../../utilities/constants";
+
+// --- Helpers ---
+const toNumberOrUndef = (val: string | number): number | undefined => {
+  if (val === "" || val === null || val === undefined) return undefined;
+  const num = Number(val);
+  return isNaN(num) || num < 0 ? undefined : Math.round(num * 100) / 100;
+};
+
+// --- Schema con validación cruzada para cada modalidad ---
+const salaryBlock = z
+  .object({
+    coin: z.number().int().optional(),
+    min: z.number().positive("Minimo debe ser mayor que 0").optional(),
+    max: z.number().positive("Maximo debe ser mayor que 0").optional(),
+  })
+  .refine(
+    (data) => {
+      // Si alguno está lleno, los demás deben ser obligatorios
+      const filled =
+        data.coin !== undefined ||
+        data.min !== undefined ||
+        data.max !== undefined;
+      if (!filled) return true; // todo vacío está bien
+      return (
+        data.coin !== undefined &&
+        data.min !== undefined &&
+        data.max !== undefined
+      );
+    },
+    { message: "Debe completar moneda, mínimo y máximo", path: ["coin"] }
+  )
+  .refine(
+    (data) => {
+      if (data.min !== undefined && data.max !== undefined) {
+        return data.max >= data.min;
+      }
+      return true;
+    },
+    { message: "El máximo debe ser mayor o igual al mínimo", path: ["max"] }
+  );
+
+const salarySchema = z.object({
+  rxh: salaryBlock,
+  planilla: salaryBlock,
+});
+
+// --- Tipos ---
+type SalaryFormData = z.infer<typeof salarySchema>;
 
 interface Props {
-    idTalento?: number;
-    idMoneda?: number;
-    idModalidadFacturacion?: number;
-    moneda?: string;
-    initPlan?: number;
-    endPlan?: number;
-    initRxH?: number;
-    endRxH?: number;
-    updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
+  idTalento?: number;
+  initPlan?: number;
+  endPlan?: number;
+  initRxH?: number;
+  endRxH?: number;
+  idMonedaPlan?: number;
+  idMonedaRxh?: number;
+  updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
-export const ModalSalary = ({ idTalento, idMoneda, moneda, initPlan, endPlan, initRxH, endRxH, idModalidadFacturacion, updateTalentList }: Props) => {
-    const { paramsByMaestro } = useParams();
-    const { closeModal } = useModal();
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [inputValues, setInputValues] = useState({
-        montoInicial: '0',
-        montoFinal: '0',
-    });
+export const ModalSalary = ({
+  idTalento,
+  initPlan,
+  endPlan,
+  initRxH,
+  endRxH,
+  idMonedaPlan,
+  idMonedaRxh,
+  updateTalentList,
+}: Props) => {
+  const { paramsByMaestro } = useParams();
+  const { closeModal, isModalOpen } = useModal();
 
-    useEffect(() => {
-        const newMontoInicial = idModalidadFacturacion === MODALIDAD_RXH
-            ? initRxH?.toString()
-            : initPlan?.toString();
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<SalaryFormData>({
+    resolver: zodResolver(salarySchema),
+    defaultValues: {
+      rxh: {
+        coin: idMonedaRxh,
+        min: initRxH,
+        max: endRxH,
+      },
+      planilla: {
+        coin: idMonedaPlan,
+        min: initPlan,
+        max: endPlan,
+      },
+    },
+    mode: "onChange",
+  });
 
-        const newMontoFinal = idModalidadFacturacion === MODALIDAD_RXH
-            ? endRxH?.toString()
-            : endPlan?.toString();
-
-        // Solo actualiza si los valores no son undefined
-        if (newMontoInicial !== undefined && newMontoFinal !== undefined) {
-            setInputValues({
-                montoInicial: newMontoInicial,
-                montoFinal: newMontoFinal,
-            });
-        }
-    }, [idModalidadFacturacion, initPlan, endPlan, initRxH, endRxH]);
-
-    const currencyRef = useRef<HTMLSelectElement>(null);
-    const modalidadFacturacionRef = useRef<HTMLSelectElement>(null);
-
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentSalaryParams>(updateTalentSalary, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar })
-    });
-
-    const monedas = paramsByMaestro[2] || [];
-    const modalidadFacturacion = paramsByMaestro[32] || [];
-
-    const handleNumberChange = (e: ChangeEvent<HTMLInputElement>, fieldName: keyof typeof inputValues) => {
-        let inputValue = e.target.value;
-
-        if (/^(\d+\.?\d*|\.\d+)$/.test(inputValue) || inputValue === "") {
-            if (inputValue.includes('.')) {
-                const parts = inputValue.split('.');
-                if (parts[1].length > 2) {
-                    inputValue = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-            }
-
-            setInputValues(prev => ({
-                ...prev,
-                [fieldName]: inputValue
-            }));
-        } else if (inputValue === ".") {
-            setInputValues(prev => ({
-                ...prev,
-                [fieldName]: "0."
-            }));
-        }
-    };
-
-    const handleOnConfirm = () => {
-        setErrors({});
-        const newErrors: { [key: string]: string } = {};
-
-        if (currencyRef.current && idTalento) {
-            const idCurrency = Number(currencyRef.current.value);
-            const modalidadFacturacion = Number(modalidadFacturacionRef.current?.value);
-            const initPlanilla = modalidadFacturacion === MODALIDAD_PLANILLA ? Number(inputValues.montoInicial) : 0;
-            const endPlanilla = modalidadFacturacion === MODALIDAD_PLANILLA ? Number(inputValues.montoFinal) : 0;
-            const initRxH = modalidadFacturacion === MODALIDAD_RXH ? Number(inputValues.montoInicial) : 0;
-            const endRxH = modalidadFacturacion === MODALIDAD_RXH ? Number(inputValues.montoFinal) : 0;
-
-            const currencyValidation = validateCurrency(idCurrency);
-            if (!currencyValidation.isValid) {
-                newErrors.currency = currencyValidation.message || "Error de validación.";
-            }
-
-            const montoInicialValidation = validateSalary(Number(inputValues.montoInicial));
-            if (!montoInicialValidation.isValid) {
-                newErrors.initPlan = montoInicialValidation.message || "Error de validación.";
-            }
-
-            const montoFinalValidation = validateSalary(Number(inputValues.montoFinal));
-            if (!montoFinalValidation.isValid) {
-                newErrors.endPlan = montoFinalValidation.message || "Error de validación.";
-            }
-
-            if (Object.keys(newErrors).length > 0) {
-                setErrors(newErrors);
-                return;
-            }
-
-            updateData({
-                idTalento: idTalento,
-                idMoneda: idCurrency,
-                montoInicialPlanilla: initPlanilla,
-                montoFinalPlanilla: endPlanilla,
-                montoInicialRxH: initRxH,
-                montoFinalRxH: endRxH,
-                idModalidadFacturacion: modalidadFacturacion
-            }).then(
-                (response) => {
-                    if (response.data.idMensaje === 2) {
-                        closeModal("modalSalary");
-                        if (idTalento && updateTalentList && currencyRef.current) {
-                            const selectedIndex = currencyRef.current.selectedIndex;
-                            const selectedOption = currencyRef.current.options[selectedIndex];
-
-                            updateTalentList(
-                                idTalento,
-                                {
-                                    moneda: selectedOption.getAttribute('data-code') ?? moneda,
-                                    idModalidadFacturacion: modalidadFacturacion,
-                                    montoInicialPlanilla: initPlanilla,
-                                    montoFinalPlanilla: endPlanilla,
-                                    montoInicialRxH: initRxH,
-                                    montoFinalRxH: endRxH
-                                }
-                            );
-                        }
-                    }
-                }
-            );
-        }
+  // Reiniciar valores al abrir modal
+  useEffect(() => {
+    if (isModalOpen("modalSalary")) {
+      reset({
+        rxh: { coin: idMonedaRxh, min: initRxH, max: endRxH },
+        planilla: { coin: idMonedaPlan, min: initPlan, max: endPlan },
+      });
     }
+  }, [
+    isModalOpen,
+    reset,
+    initPlan,
+    endPlan,
+    initRxH,
+    endRxH,
+    idMonedaPlan,
+    idMonedaRxh,
+  ]);
 
-    return (
-        <Modal id="modalSalary" title="Modifica tu banda salarial" confirmationLabel="Editar" onConfirm={handleOnConfirm}>
-            {loading && (<Loading opacity="opacity-60" />)}
-            <div>
-                <h3 className="text-[#71717A] text-sm my-3">Agrega el rango de tus espectativas salariales.</h3>
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="currency" className="input-label">Moneda</label>
-                    <select
-                        id="currency"
-                        ref={currencyRef}
-                        name="currency"
-                        defaultValue={idMoneda || 0}
-                        className="input w-full">
-                        <option value={0}>Seleccione una moneda</option>
-                        {monedas.map((moneda) => (
-                            <option key={moneda.idParametro} value={moneda.num1} data-code={moneda.num1 === 3 ? moneda.string2 : moneda.string3}>
-                                {moneda.string1}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.currency && <p className="text-red-500 text-sm mt-2">{errors.currency}</p>}
-                    <label htmlFor="modalidadFacturacion" className="input-label">Modalidad de facturación</label>
-                    <select
-                        id="modalidadFacturacion"
-                        ref={modalidadFacturacionRef}
-                        defaultValue={idModalidadFacturacion || 0}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer">
-                        <option value={0}>Seleccione la modalidad de facturación</option>
-                        {modalidadFacturacion.map((mod) => (
-                            <option key={mod.idParametro} value={mod.num1}>
-                                {mod.string1}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <h3 className="w-full my-2">Montos</h3>
-                <div className="flex w-full gap-8">
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="montoInicial" className="input-label">Monto inicial</label>
-                        <input
-                            type="text"
-                            value={inputValues.montoInicial}
-                            onChange={(e) => handleNumberChange(e, 'montoInicial')}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            onFocus={(e) => e.currentTarget.select()}
-                            name="montoInicial"
-                            className="input"
-                            inputMode="decimal" />
-                        {errors.montoInicial && <p className="text-red-500 text-sm mt-2">{errors.montoInicial}</p>}
-                    </div>
-                    <div className="flex flex-col w-1/2">
-                        <label htmlFor="montoFinal" className="input-label">Monto final</label>
-                        <input
-                            type="text"
-                            value={inputValues.montoFinal}
-                            onChange={(e) => handleNumberChange(e, 'montoFinal')}
-                            name="montoFinal"
-                            onFocus={(e) => e.currentTarget.select()}
-                            onWheel={(e) => e.currentTarget.blur()}
-                            className="input"
-                            inputMode="decimal" />
-                        {errors.montoFinal && <p className="text-red-500 text-sm mt-2">{errors.montoFinal}</p>}
-                    </div>
-                </div>
+  const { loading, fetch: updateData } = useApi<
+    BaseResponse,
+    TalentSalaryParams
+  >(updateTalentSalary, {
+    onError: (error) => handleError(error, enqueueSnackbar),
+    onSuccess: (response) => {
+      handleResponse({
+        response: response,
+        showSuccessMessage: true,
+        enqueueSnackbar: enqueueSnackbar,
+      });
+    },
+  });
+
+  const monedas = paramsByMaestro[2] || [];
+
+  const onSubmit = (data: SalaryFormData) => {
+    if (!idTalento) return;
+
+    updateData({
+      idTalento,
+      montoInicialPlanilla: data.planilla.min ?? 0,
+      montoFinalPlanilla: data.planilla.max ?? 0,
+      montoInicialRxH: data.rxh.min ?? 0,
+      montoFinalRxH: data.rxh.max ?? 0,
+      idModalidadFacturacion: 0,
+      // Enviamos la información de la monedas por modalidad
+      idMonedaPlan: data.planilla.coin ?? 0,
+      idMonedaRxh: data.rxh.coin ?? 0,
+    }).then((response) => {
+      if (response.data.idMensaje === 2) {
+        handleCloseModal();
+        if (idTalento && updateTalentList) {
+          updateTalentList(idTalento, {
+            montoInicialPlanilla: data.planilla.min ?? 0,
+            montoFinalPlanilla: data.planilla.max ?? 0,
+            montoInicialRxH: data.rxh.min ?? 0,
+            montoFinalRxH: data.rxh.max ?? 0,
+            idMonedaPlan: data.planilla.coin ?? 0,
+            idMonedaRxh: data.rxh.coin ?? 0,
+          });
+        }
+      }
+    });
+  };
+
+  const handleCloseModal = () => {
+    reset();
+    closeModal("modalSalary");
+  };
+
+  return (
+    <Modal
+      id="modalSalary"
+      title="Modifica tu banda salarial"
+      confirmationLabel="Editar"
+      onConfirm={handleSubmit(onSubmit)}
+      onClose={handleCloseModal}
+    >
+      {loading && <Loading opacity="opacity-60" />}
+
+      <div>
+        <h3 className="text-[#71717A] text-sm my-3">
+          Agrega el rango de tus expectativas salariales.
+        </h3>
+
+        {/* --- Tabla de expectativas salariales --- */}
+        <div className="border rounded-lg divide-y">
+          {/* RxH */}
+          <div>
+            <div className="bg-gray-100 text-sm font-medium text-gray-700 p-2 text-center">
+              Locación de Servicios (RxH)
             </div>
-        </Modal>
-    );
-}
+            <div className="grid grid-cols-3 bg-gray-50 text-xs text-gray-600">
+              <div className="p-2 border-r">Moneda</div>
+              <div className="p-2 border-r text-center">Mínimo</div>
+              <div className="p-2 text-center">Máximo</div>
+            </div>
+            <div className="grid grid-cols-3">
+              <Controller
+                name="rxh.coin"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                    className="p-2 border-r text-sm"
+                  >
+                    <option value="">Elija una moneda</option>
+                    {monedas.map((monedaOption) => (
+                      <option
+                        key={monedaOption.idParametro}
+                        value={monedaOption.num1}
+                      >
+                        {monedaOption.string1}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <Controller
+                name="rxh.min"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 border-r text-sm text-right outline-none"
+                  />
+                )}
+              />
+              <Controller
+                name="rxh.max"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 text-sm text-right outline-none"
+                  />
+                )}
+              />
+            </div>
+            {errors.rxh?.coin && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.coin.message}
+              </span>
+            )}
+            {errors.rxh?.min && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.min.message}
+              </span>
+            )}
+            {errors.rxh?.max && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.rxh.max.message}
+              </span>
+            )}
+          </div>
+
+          {/* Planilla */}
+          <div>
+            <div className="bg-gray-100 text-sm font-medium text-gray-700 p-2 text-center">
+              Régimen General (Planilla)
+            </div>
+            <div className="grid grid-cols-3 bg-gray-50 text-xs text-gray-600">
+              <div className="p-2 border-r">Moneda</div>
+              <div className="p-2 border-r text-center">Mínimo</div>
+              <div className="p-2 text-center">Máximo</div>
+            </div>
+            <div className="grid grid-cols-3">
+              <Controller
+                name="planilla.coin"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value)
+                      )
+                    }
+                    className="p-2 border-r text-sm"
+                  >
+                    <option value="">Elija una moneda</option>
+                    {monedas.map((monedaOption) => (
+                      <option
+                        key={monedaOption.idParametro}
+                        value={monedaOption.num1}
+                      >
+                        {monedaOption.string1}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              <Controller
+                name="planilla.min"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 border-r text-sm text-right outline-none"
+                  />
+                )}
+              />
+              <Controller
+                name="planilla.max"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(toNumberOrUndef(e.target.value))
+                    }
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    className="p-2 text-sm text-right outline-none"
+                  />
+                )}
+              />
+            </div>
+            {errors.planilla?.coin && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.coin.message}
+              </span>
+            )}
+            {errors.planilla?.min && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.min.message}
+              </span>
+            )}
+            {errors.planilla?.max && (
+              <span className="text-red-500 text-xs p-2 block">
+                {errors.planilla.max.message}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};

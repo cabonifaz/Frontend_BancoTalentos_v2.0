@@ -1,125 +1,57 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
+import React from "react";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Param, ParamsResponse } from "../models";
 import { axiosInstanceNoToken } from "../services/axiosService";
+import { ALL_PARAMS_IDS } from "../utilities/constants";
 
-interface ParamContextType {
-  paramsByMaestro: Record<number, Param[]>;
-  loading: boolean;
-  error: string | null;
-  fetchAndCacheParams: (idMaestros: string) => Promise<void>;
-  refetchAndCacheParams: (idMaestros: string) => Promise<void>;
-}
+const PARAMS_QUERY_KEY = ["params"];
 
-const ParamContext = createContext<ParamContextType | undefined>(undefined);
+const fetchAllParams = async (): Promise<Record<string | number, Param[]>> => {
+  const response = await axiosInstanceNoToken.get<ParamsResponse>(
+    `/bdt/params?groupIdMaestros=${ALL_PARAMS_IDS}`,
+  );
 
-export const ParamsProvider = ({ children }: { children: ReactNode }) => {
-  const [paramsByMaestro, setParamsByMaestro] = useState<
-    Record<number, Param[]>
-  >({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fetchedIds, setFetchedIds] = useState<Set<string>>(new Set());
+  const parametros = response.data.paramsList || [];
 
-  const fetchParamsFromAPI = useCallback(
-    async (idMaestros: string, force: boolean = false) => {
-      if (!force && fetchedIds.has(idMaestros)) return;
+  if (response.data.result.idMensaje !== 2 || parametros.length === 0) {
+    throw new Error(response.data.result.mensaje);
+  }
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await axiosInstanceNoToken.get<ParamsResponse>(
-          `/bdt/params?groupIdMaestros=${idMaestros}`,
-        );
-
-        const parametros = response.data.paramsList || [];
-
-        if (response.data.result.idMensaje === 2 && parametros.length > 0) {
-          const groupedData = parametros.reduce(
-            (acc, param) => {
-              acc[param.idMaestro] = acc[param.idMaestro] || [];
-              acc[param.idMaestro].push(param);
-              return acc;
-            },
-            {} as Record<number, Param[]>,
-          );
-
-          setParamsByMaestro((prev) => ({ ...prev, ...groupedData }));
-          setFetchedIds((prev) => new Set(prev).add(idMaestros));
-        } else {
-          setError(response.data.result.mensaje);
-        }
-      } catch (err) {
-        const errorMessage = axios.isAxiosError(err)
-          ? err.response?.data?.result?.mensaje || err.message
-          : "Error desconocido";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+  return parametros.reduce(
+    (acc, param) => {
+      acc[param.idMaestro] = acc[param.idMaestro] || [];
+      acc[param.idMaestro].push(param);
+      return acc;
     },
-    [fetchedIds],
-  );
-
-  const fetchAndCacheParams = useCallback(
-    (idMaestros: string) => fetchParamsFromAPI(idMaestros, false),
-    [fetchParamsFromAPI],
-  );
-
-  const refetchAndCacheParams = useCallback(
-    (idMaestros: string) => fetchParamsFromAPI(idMaestros, true),
-    [fetchParamsFromAPI],
-  );
-
-  return (
-    <ParamContext.Provider
-      value={{
-        paramsByMaestro,
-        loading,
-        error,
-        fetchAndCacheParams,
-        refetchAndCacheParams,
-      }}
-    >
-      {children}
-    </ParamContext.Provider>
+    {} as Record<string | number, Param[]>,
   );
 };
 
-export const useParams = (idMaestros?: string) => {
-  const context = useContext(ParamContext);
+export const useParams = () => {
+  const queryClient = useQueryClient();
 
-  if (!context) {
-    throw new Error("useParams debe usarse dentro de un ParamsProvider");
-  }
+  const { data, isLoading, error } = useQuery({
+    queryKey: PARAMS_QUERY_KEY,
+    queryFn: fetchAllParams,
+    retry: 10,
+    staleTime: 1000 * 60 * 20, // 20 minutes
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
 
-  const {
-    paramsByMaestro,
-    loading,
-    error,
-    fetchAndCacheParams,
-    refetchAndCacheParams,
-  } = context;
+  const refetchParams = () =>
+    queryClient.invalidateQueries({ queryKey: PARAMS_QUERY_KEY });
 
-  useEffect(() => {
-    if (idMaestros) {
-      fetchAndCacheParams(idMaestros);
-    }
-  }, [idMaestros, fetchAndCacheParams]);
+  const paramsByMaestro: Record<string | number, Param[]> = data ?? {};
 
   return {
     paramsByMaestro,
-    loading,
-    error,
-    fetchParams: fetchAndCacheParams,
-    refetchParams: refetchAndCacheParams,
+    loading: isLoading,
+    error: axios.isAxiosError(error) ? error.message : (error as Error)?.message ?? null,
+    refetchParams,
   };
 };
+
+// kept for backwards compatibility — QueryClientProvider is in App.tsx
+export const ParamsProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;

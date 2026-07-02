@@ -10,4 +10,5 @@ export interface DynamicSectionProps<F extends FieldValues> {
   errors: FieldErrors<F>;
   setValue?: UseFormSetValue<F>;
   shouldShowEmptyForm?: boolean;
+  shouldAddElements?: boolean;
 }
