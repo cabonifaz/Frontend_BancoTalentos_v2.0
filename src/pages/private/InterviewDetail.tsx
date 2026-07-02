@@ -52,10 +52,12 @@ import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
   ETAPA_ENTREVISTA_RS_LABEL,
+  ETAPA_ENTREVISTA_CLIENTE_LABEL,
   TIPO_ARCHIVO_ENTREVISTA,
   ESTADO_RQ,
 } from "../../core/utilities/constants";
 import { normalizeText } from "../../core/utilities/textUtils";
+import { ClientInterviewerSelect } from "../../core/components/ui/ClientInterviewerSelect";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
 import { useFetchClients } from "../../core/hooks/useFetchClients";
 
@@ -71,6 +73,7 @@ interface SelectedRQ {
   id: number;
   label: string;
   cliente: string;
+  idCliente?: number;
   codigoRQ: string;
   lstPerfiles: Perfil[];
 }
@@ -212,6 +215,15 @@ export default function InterviewDetailPage() {
     return match ? match.num1 : null;
   }, [paramsByMaestro]);
 
+  // num1 de la etapa "Entrevista técnica con cliente": habilita el selector
+  // de clientes registrados como entrevistadores.
+  const clienteStageNum1 = useMemo(() => {
+    const stages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+    const target = normalizeText(ETAPA_ENTREVISTA_CLIENTE_LABEL);
+    const match = stages.find((s) => normalizeText(s.string1) === target);
+    return match ? match.num1 : null;
+  }, [paramsByMaestro]);
+
   // El resolver es estable; lee el num1 vigente a través del ref para que el
   // esquema siempre valide con el valor cargado de parámetros.
   const rsStageNum1Ref = useRef<number | null>(null);
@@ -298,6 +310,13 @@ export default function InterviewDetailPage() {
   const entrevistadoresRequeridos =
     Number(etapaValue) >= 1 &&
     !(rsStageNum1 != null && Number(etapaValue) === rsStageNum1);
+
+  // En la etapa "Entrevista técnica con cliente" se muestra el selector de
+  // clientes registrados. idCliente se toma del primer RQ seleccionado.
+  const isClienteStage =
+    clienteStageNum1 != null && Number(etapaValue) === clienteStageNum1;
+  const selectedClienteId =
+    selectedRQs.find((r) => r.idCliente)?.idCliente ?? null;
 
   const [talentName, setTalentName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -416,6 +435,7 @@ export default function InterviewDetailPage() {
                 id: rq.id,
                 label: rq.label,
                 cliente: rq.cliente,
+                idCliente: reqData?.idCliente,
                 codigoRQ: reqData?.codigoRQ || "",
                 lstPerfiles: (reqData?.lstRqVacantes || []).map((v: any) => ({
                   idPerfil: v.idPerfil,
@@ -521,7 +541,10 @@ export default function InterviewDetailPage() {
 
   const toggleRQSelection = (req: RequirementItem) => {
     let newRQs: SelectedRQ[];
-    if (selectedRQs.find((r: SelectedRQ) => r.id === req.idRequerimiento)) {
+    const isRemoving = !!selectedRQs.find(
+      (r: SelectedRQ) => r.id === req.idRequerimiento,
+    );
+    if (isRemoving) {
       newRQs = selectedRQs.filter(
         (r: SelectedRQ) => r.id !== req.idRequerimiento,
       );
@@ -552,6 +575,25 @@ export default function InterviewDetailPage() {
 
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
+
+    // Enriquecer con idCliente para cargar los contactos del cliente en la
+    // etapa "Entrevista técnica con cliente".
+    if (!isRemoving) {
+      getRequirementById(req.idRequerimiento)
+        .then((res) => {
+          const idCliente = res.data.requerimiento?.idCliente;
+          if (idCliente) {
+            setSelectedRQs((prev) =>
+              prev.map((r) =>
+                r.id === req.idRequerimiento ? { ...r, idCliente } : r,
+              ),
+            );
+          }
+        })
+        .catch(() => {
+          /* sin idCliente: el selector mostrará el mensaje de ayuda */
+        });
+    }
   };
 
   const removeRQ = (id: number) => {
@@ -1168,6 +1210,22 @@ const confirmUpload = async () => {
                           .message
                       }
                     </p>
+                  )}
+
+                  {isClienteStage && (
+                    <ClientInterviewerSelect
+                      idCliente={selectedClienteId}
+                      onAdd={({ fullname, email }) =>
+                        appendInterviewer({
+                          fullname,
+                          email,
+                          notificacion: false,
+                        })
+                      }
+                      addedEmails={(formValues.entrevistadores || [])
+                        .map((e) => e.email || "")
+                        .filter(Boolean)}
+                    />
                   )}
 
                   <div className="space-y-4">

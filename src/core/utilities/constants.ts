@@ -57,6 +57,10 @@ export const TIPO_ARCHIVO_ENTREVISTA = "45";
 // En cualquier otra etapa se exige al menos un entrevistador.
 export const ETAPA_ENTREVISTA_RS_LABEL = "Entrevista con el equipo de R&S";
 
+// Etapa de entrevista en la que se permite agregar clientes registrados
+// (contactos del cliente) como entrevistadores.
+export const ETAPA_ENTREVISTA_CLIENTE_LABEL = "Entrevista técnica con cliente";
+
 // GRUPOS DE MODALIDADES (NUM2 EN PARAMETROS)
 export const GROUP_MODALIDAD_LOC_SERVICIOS = 2;
 export const GROUP_MODALIDAD_PLANILLA = 1;
