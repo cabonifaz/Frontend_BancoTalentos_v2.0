@@ -26,8 +26,10 @@ import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
   ETAPA_ENTREVISTA_RS_LABEL,
+  ETAPA_ENTREVISTA_CLIENTE_LABEL,
 } from "../../core/utilities/constants";
 import { normalizeText } from "../../core/utilities/textUtils";
+import { ClientInterviewerSelect } from "../../core/components/ui/ClientInterviewerSelect";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { createInterview } from "../../core/services/interviews.service";
 import { Mail } from "lucide-react";
@@ -36,6 +38,7 @@ interface SelectedRQ {
   id: number;
   label: string;
   cliente: string;
+  idCliente?: number;
   codigoRQ: string;
   lstPerfiles: Perfil[];
 }
@@ -85,6 +88,15 @@ export default function InterviewCreatePage() {
   const rsStageNum1 = useMemo(() => {
     const stages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
     const target = normalizeText(ETAPA_ENTREVISTA_RS_LABEL);
+    const match = stages.find((s) => normalizeText(s.string1) === target);
+    return match ? match.num1 : null;
+  }, [paramsByMaestro]);
+
+  // num1 de la etapa "Entrevista técnica con cliente": habilita el selector
+  // de clientes registrados como entrevistadores.
+  const clienteStageNum1 = useMemo(() => {
+    const stages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+    const target = normalizeText(ETAPA_ENTREVISTA_CLIENTE_LABEL);
     const match = stages.find((s) => normalizeText(s.string1) === target);
     return match ? match.num1 : null;
   }, [paramsByMaestro]);
@@ -185,6 +197,13 @@ export default function InterviewCreatePage() {
     Number(etapaValue) >= 1 &&
     !(rsStageNum1 != null && Number(etapaValue) === rsStageNum1);
 
+  // En la etapa "Entrevista técnica con cliente" se muestra el selector de
+  // clientes registrados. idCliente se toma del primer RQ seleccionado.
+  const isClienteStage =
+    clienteStageNum1 != null && Number(etapaValue) === clienteStageNum1;
+  const selectedClienteId =
+    selectedRQs.find((r) => r.idCliente)?.idCliente ?? null;
+
   useEffect(() => {
     if (prefill.idTalento) {
       setTalentSearchValue(prefill.talentName || "");
@@ -206,6 +225,7 @@ export default function InterviewCreatePage() {
           setSelectedRQs([{
             ...rq,
             codigoRQ: reqData?.codigoRQ || "",
+            idCliente: reqData?.idCliente,
             lstPerfiles: (reqData?.lstRqVacantes || []).map((v) => ({
               idPerfil: v.idPerfil,
               perfil: v.perfilProfesional,
@@ -296,7 +316,10 @@ export default function InterviewCreatePage() {
 
   const toggleRQSelection = (req: RequirementItem) => {
     let newRQs: SelectedRQ[];
-    if (selectedRQs.find((r: SelectedRQ) => r.id === req.idRequerimiento)) {
+    const isRemoving = !!selectedRQs.find(
+      (r: SelectedRQ) => r.id === req.idRequerimiento,
+    );
+    if (isRemoving) {
       newRQs = selectedRQs.filter(
         (r: SelectedRQ) => r.id !== req.idRequerimiento,
       );
@@ -321,6 +344,25 @@ export default function InterviewCreatePage() {
 
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
+
+    // Enriquecer con idCliente para cargar los contactos del cliente en la
+    // etapa "Entrevista técnica con cliente".
+    if (!isRemoving) {
+      getRequirementById(req.idRequerimiento)
+        .then((res) => {
+          const idCliente = res.data.requerimiento?.idCliente;
+          if (idCliente) {
+            setSelectedRQs((prev) =>
+              prev.map((r) =>
+                r.id === req.idRequerimiento ? { ...r, idCliente } : r,
+              ),
+            );
+          }
+        })
+        .catch(() => {
+          /* sin idCliente: el selector mostrará el mensaje de ayuda */
+        });
+    }
   };
 
   const profileOptions = selectedRQs.flatMap((rq) =>
@@ -833,6 +875,18 @@ export default function InterviewCreatePage() {
                       .message
                   }
                 </p>
+              )}
+
+              {isClienteStage && (
+                <ClientInterviewerSelect
+                  idCliente={selectedClienteId}
+                  onAdd={({ fullname, email }) =>
+                    appendInterviewer({ fullname, email, notificacion: false })
+                  }
+                  addedEmails={(formValues.entrevistadores || [])
+                    .map((e) => e.email || "")
+                    .filter(Boolean)}
+                />
               )}
 
               <div className="space-y-4">
