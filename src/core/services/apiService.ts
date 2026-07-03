@@ -125,6 +125,39 @@ export const uploadTalentCert = (
   return axiosInstance.post("/bdt/talent/uploadTalentFile", data);
 };
 
+// ─── Subida de archivos de talento vía URL pre-firmada (S3 directo) ───────────
+// Interfaces en models/interfaces/TalentFilePresigned.ts
+
+/** 1) Pide al backend una URL PUT pre-firmada para subir a S3. */
+export const generateTalentUploadUrl = (
+  data: models.TalentUploadUrlRequest
+): Promise<AxiosResponse<models.TalentPresignedUrlResponse>> => {
+  return axiosInstance.post("/bdt/talent/file/upload-url", data);
+};
+
+/** 2) Sube el archivo directamente a S3 usando la URL pre-firmada. */
+export const uploadFileToS3 = (url: string, file: File): Promise<Response> => {
+  return fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+};
+
+/** 3) Confirma en el backend para registrar el archivo en BD. */
+export const confirmTalentUpload = (
+  data: models.TalentConfirmUploadRequest
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/talent/file/confirm-upload", data);
+};
+
+/** Genera una URL GET pre-firmada para descargar el archivo desde S3. */
+export const generateTalentDownloadUrl = (
+  data: models.TalentDownloadUrlRequest
+): Promise<AxiosResponse<models.TalentPresignedUrlResponse>> => {
+  return axiosInstance.post("/bdt/talent/file/download-url", data);
+};
+
 export const updateTalentSalary = (
   data: talentUpdate.TalentSalaryParams
 ): Promise<AxiosResponse<models.BaseResponse>> => {
@@ -280,6 +313,30 @@ export const addReqFiles = (
   data: models.AddReqFilesParams
 ): Promise<AxiosResponse<models.BaseResponse>> => {
   return axiosInstanceFMI.post("/fmi/requirement/file/save", data);
+};
+
+// ─── Archivos de requerimiento vía URL pre-firmada (S3 directo) ───────────────
+// Interfaces en models/interfaces/RqFilePresigned.ts
+
+/** Detalle/actualizar RQ: pide URL PUT pre-firmada para un archivo. */
+export const generateRqUploadUrl = (
+  data: models.RqUploadUrlRequest
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post("/fmi/requirement/file/upload-url", data);
+};
+
+/** Confirma en BD un archivo de RQ ya subido a S3. */
+export const confirmRqUpload = (
+  data: models.RqConfirmUploadRequest
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.post("/fmi/requirement/file/confirm-upload", data);
+};
+
+/** URL GET pre-firmada para descargar un archivo de RQ. */
+export const generateRqDownloadUrl = (
+  data: { idArchivo: number }
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post("/fmi/requirement/file/download-url", data);
 };
 
 // Talento FMI

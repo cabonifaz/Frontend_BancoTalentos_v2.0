@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { axiosInstanceFMI } from "../services/axiosService";
-import { FileRqResponse } from "../models/response/FileRqResponse";
-import { downloadAnyFile } from "../utilities/file-utils";
+import { generateRqDownloadUrl } from "../services/apiService";
 import { enqueueSnackbar } from "notistack";
 
 export const useDownloadRqFile = () => {
@@ -10,30 +8,17 @@ export const useDownloadRqFile = () => {
   const downloadFile = async (rqFile: number) => {
     try {
       setIsLoading(true);
-      const { data } = await axiosInstanceFMI.get<FileRqResponse>(
-        `fmi/requirement/file?idArchivo=${rqFile}`
-      );
+      const { data } = await generateRqDownloadUrl({ idArchivo: rqFile });
 
-      const { file, ext, result } = data;
-
-      if (result.idTipoMensaje === 2 && file.trim() !== "") {
-        try {
-          downloadAnyFile(file, ext);
-          enqueueSnackbar({
-            message: "Archivo descargado",
-            variant: "success",
-          });
-        } catch {
-          enqueueSnackbar({
-            message: "No se pudo descargar el archivo",
-            variant: "warning",
-          });
-        }
-      } else
+      if (data.result?.idTipoMensaje === 2 && data.url) {
+        // Descarga directa desde S3 con URL pre-firmada (no pasa por el backend).
+        window.open(data.url, "_blank");
+      } else {
         enqueueSnackbar({
-          message: "Archivo no encontrado",
+          message: "Archivo no disponible",
           variant: "warning",
         });
+      }
     } catch (error) {
       enqueueSnackbar({ message: "Ha ocurrido un error", variant: "error" });
     } finally {

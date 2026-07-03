@@ -16,6 +16,8 @@ export * from "./interfaces/RequirementItem";
 export * from "./interfaces/TalentoFMI";
 export * from "./interfaces/TalentoDetailFMI";
 export * from "./interfaces/ReqVacante";
+export * from "./interfaces/TalentFilePresigned";
+export * from "./interfaces/RqFilePresigned";
 export * from "./params/AddTalentParams";
 export * from "./response/LoginResponse";
 export * from "./response/BaseResponse";

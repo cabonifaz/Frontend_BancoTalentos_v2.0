@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { TabData } from "./tabs/TabData";
 import { TabClients } from "./tabs/TabClients";
 import { Client } from "../../../models/interfaces/Client";
-import { Param } from "../../../models";
+import { Param, SaveRequirementResponse } from "../../../models";
 import { format } from "date-fns";
 import { TabVacancies } from "./tabs/TabVacancies";
 import { Loading } from "../../ui/Loading";
@@ -29,6 +29,7 @@ import { TabFiles } from "./tabs/TabFiles";
 import { TabManagement } from "./tabs/TabManagment";
 import { Utils } from "../../../utilities/utils";
 import { usePostHook } from "../../../hooks/usePostHook";
+import { uploadFileToS3 } from "../../../services/apiService";
 import { enqueueSnackbar } from "notistack";
 
 interface TabLabelProps {
@@ -126,25 +127,23 @@ export const ModalRQCreate = ({
       // 1. Transformar el estado a número
       const idCliente = Number(data.idCliente);
 
-      // 2. Transformar los archivos
-      const lstArchivos = await Promise.all(
-        data.lstArchivos?.map(async (f) => {
-          const base64 = await Utils.fileToBase64(f.file);
-          const { nombreArchivo, extensionArchivo } =
-            Utils.getFileNameAndExtension(f.name);
-          const idTipoArchivo = Utils.getTipoArchivoId(
-            extensionArchivo,
-            fileExtensionsParams,
-          );
-          return {
-            string64: base64,
-            nombreArchivo,
-            extensionArchivo,
-            idTipoArchivo,
-            idTipoArchivoRQ: f.idTipoArchivoRQ,
-          };
-        }) || [],
-      );
+      // 2. Transformar los archivos: solo metadata (sin base64). El archivo se
+      //    subirá directo a S3 con la URL pre-firmada que devuelve el backend.
+      const lstArchivos = (data.lstArchivos || []).map((f) => {
+        const { nombreArchivo, extensionArchivo } =
+          Utils.getFileNameAndExtension(f.name);
+        const idTipoArchivo = Utils.getTipoArchivoId(
+          extensionArchivo,
+          fileExtensionsParams,
+        );
+        return {
+          nombreArchivo,
+          extensionArchivo,
+          idTipoArchivo,
+          idTipoArchivoRQ: f.idTipoArchivoRQ,
+          contentType: f.file.type,
+        };
+      });
 
       /** Modalidad fact */
       const modalidadFact = data.idModalidadFact?.join(",");
@@ -188,10 +187,46 @@ export const ModalRQCreate = ({
         return;
       } */
 
-      // 4. Enviar los datos al servidor
-      const response = await postData("/fmi/requirement/save", payload);
+      // 4. Enviar los datos al servidor. La respuesta trae las URLs PUT
+      //    pre-firmadas de los archivos (mismo orden que lstArchivos).
+      const response = (await postData(
+        "/fmi/requirement/save",
+        payload,
+      )) as SaveRequirementResponse;
 
       if (response.idTipoMensaje === 2) {
+        // 5. Subir cada archivo (en memoria) a S3 con su URL pre-firmada.
+        const urls = response.archivos || [];
+        const failed: string[] = [];
+
+        for (let i = 0; i < urls.length; i++) {
+          const target = urls[i];
+          const localFile = data.lstArchivos?.[i]?.file;
+          if (!target?.url || !localFile) continue;
+
+          // Reintento simple (hasta 2 intentos) por archivo.
+          let uploaded = false;
+          for (let attempt = 0; attempt < 2 && !uploaded; attempt++) {
+            try {
+              const res = await uploadFileToS3(target.url, localFile);
+              uploaded = res.ok;
+            } catch {
+              uploaded = false;
+            }
+          }
+          if (!uploaded) failed.push(target.fileName);
+        }
+
+        // 6. El RQ ya está creado; si algún archivo falló, se notifica aparte.
+        if (failed.length > 0) {
+          enqueueSnackbar({
+            message: `El RQ se creó, pero no se pudieron subir ${failed.length} archivo(s): ${failed.join(
+              ", ",
+            )}. Puedes reintentar desde el detalle del RQ.`,
+            variant: "warning",
+          });
+        }
+
         onClose();
         updateRQData();
       }
