@@ -9,7 +9,12 @@ import { useEffect, useState } from "react";
 import { useDeleteHook } from "../../../../hooks/useDeleteHook";
 import { useDownloadRqFile } from "../../../../hooks/useDownloadRqFile";
 import { Utils } from "../../../../utilities/utils";
-import { usePostHook } from "../../../../hooks/usePostHook";
+import {
+  confirmRqUpload,
+  generateRqUploadUrl,
+  uploadFileToS3,
+} from "../../../../services/apiService";
+import { enqueueSnackbar } from "notistack";
 import { Loading } from "../../../ui/Loading";
 import { allowedFileExtensions } from "../../../../utilities/file-utils";
 
@@ -45,7 +50,7 @@ export const TabFiles = ({
     (f) => f.idRequerimientoArchivo === 0
   );
   const [isLoading, downloadFile] = useDownloadRqFile();
-  const { postData, postloading } = usePostHook();
+  const [uploading, setUploading] = useState(false);
 
   // Formulario independiente con su propio esquema de validación
   const {
@@ -92,36 +97,72 @@ export const TabFiles = ({
 
     if (newFiles.length === 0) return;
 
-    const lstArchivos = await Promise.all(
-      newFiles.map(async (archivo) => {
-        const base64 = await Utils.fileToBase64(archivo.file);
-        const { nombreArchivo, extensionArchivo } =
-          Utils.getFileNameAndExtension(archivo.name);
+    setUploading(true);
+    const failed: string[] = [];
+
+    try {
+      // Por cada archivo nuevo: URL pre-firmada → PUT a S3 → confirmar en BD.
+      for (const archivo of newFiles) {
+        const file = archivo.file as File;
+        const { extensionArchivo } = Utils.getFileNameAndExtension(
+          archivo.name
+        );
         const idTipoArchivo = Utils.getTipoArchivoId(
           extensionArchivo,
           extensionsParams
         );
-        return {
-          string64: base64,
-          nombreArchivo,
-          extensionArchivo,
-          idTipoArchivo,
-          idTipoArchivoRQ: archivo.idTipoArchivoRq,
-        };
-      }) || []
-    );
 
-    const payload = {
-      idRequerimiento: rqId,
-      lstArchivos,
-    };
+        try {
+          // 1. URL PUT pre-firmada
+          const { data: presigned } = await generateRqUploadUrl({
+            idRequerimiento: rqId,
+            idTipoArchivoRQ: archivo.idTipoArchivoRq ?? 0,
+            fileName: archivo.name,
+            contentType: file.type,
+          });
 
-    const response = await postData(
-      "/fmi/requirement/file/save",
-      payload
-    );
-    if (response.idTipoMensaje === 2) {
+          if (presigned.result?.idTipoMensaje !== 2) {
+            failed.push(archivo.name);
+            continue;
+          }
+
+          // 2. Subida directa a S3
+          const s3Response = await uploadFileToS3(presigned.url, file);
+          if (!s3Response.ok) {
+            failed.push(archivo.name);
+            continue;
+          }
+
+          // 3. Confirmar en el backend
+          const { data: confirm } = await confirmRqUpload({
+            idRequerimiento: rqId,
+            idTipoArchivoRQ: archivo.idTipoArchivoRq ?? 0,
+            idTipoArchivo,
+            nombreArchivo: presigned.fileName,
+            path: presigned.path,
+          });
+
+          if (confirm.idTipoMensaje !== 2) failed.push(archivo.name);
+        } catch {
+          failed.push(archivo.name);
+        }
+      }
+
+      if (failed.length > 0) {
+        enqueueSnackbar({
+          message: `No se pudieron subir: ${failed.join(", ")}`,
+          variant: "warning",
+        });
+      } else {
+        enqueueSnackbar({
+          message: "Archivos subidos con éxito",
+          variant: "success",
+        });
+      }
+
       fetchRequirement();
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -175,7 +216,7 @@ export const TabFiles = ({
   return (
     <>
       <div className="flex h-full min-h-0 flex-col p-4">
-        {(postloading || deleteLoading || isLoading) && (
+        {(uploading || deleteLoading || isLoading) && (
           <Loading opacity="opacity-60" />
         )}
         <div className="flex min-h-0 flex-1 flex-col">

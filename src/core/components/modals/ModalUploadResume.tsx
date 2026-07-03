@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../hooks/useApi";
-import { BaseResponse } from "../../models";
-import { TalentCvParams } from "../../models/params/TalentUpdateParams";
-import { updateTalentCv } from "../../services/apiService";
+import {
+    confirmTalentUpload,
+    generateTalentUploadUrl,
+    uploadFileToS3,
+} from "../../services/apiService";
 import { ARCHIVO_PDF, DOCUMENTO_CV } from "../../utilities/constants";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
-import { Utils } from "../../utilities/utils";
+import { handleError } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
 import { useModal } from "../../context/ModalContext";
@@ -21,13 +21,9 @@ interface Props {
 export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => {
     const [fileName, setFileName] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const cvRef = useRef<HTMLInputElement>(null);
     const { closeModal } = useModal();
-
-    const { loading, fetch: updateData } = useApi<BaseResponse, TalentCvParams>(updateTalentCv, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: true, enqueueSnackbar: enqueueSnackbar }),
-    });
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null;
@@ -36,31 +32,65 @@ export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => 
     };
 
     const handleOnConfirm = async () => {
-        if (cvRef.current && cvRef.current.files && idTalento && idArchivo) {
-            const cv = cvRef.current.files[0];
-            const validation = validateFile(cv, ['pdf']);
+        const cv = cvRef.current?.files?.[0];
+        if (!cv || !idTalento || !idArchivo) return;
 
-            if (!validation.isValid) {
-                setError(validation.message || "Error de validación.");
+        const validation = validateFile(cv, ['pdf']);
+        if (!validation.isValid) {
+            setError(validation.message || "Error de validación.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // 1. Pedir URL PUT pre-firmada al backend
+            const { data: presigned } = await generateTalentUploadUrl({
+                idTalento,
+                idTipoDocumento: DOCUMENTO_CV,
+                fileName: cv.name,
+                contentType: cv.type,
+            });
+
+            if (presigned.result?.idMensaje !== 2) {
+                enqueueSnackbar(
+                    presigned.result?.mensaje || "No se pudo generar la URL de subida",
+                    { variant: "error" },
+                );
                 return;
             }
 
-            const cvB64 = await Utils.fileToBase64(cv);
+            // 2. Subir el archivo directamente a S3
+            const s3Response = await uploadFileToS3(presigned.url, cv);
+            if (!s3Response.ok) {
+                enqueueSnackbar("Error subiendo el archivo a S3", { variant: "error" });
+                return;
+            }
 
-            updateData({
-                idTalento: idTalento,
-                idArchivo: idArchivo,
-                string64: cvB64,
-                nombreArchivo: Utils.getFileNameWithoutExtension(cv.name),
-                extensionArchivo: "pdf",
-                idTipoArchivo: ARCHIVO_PDF,
+            // 3. Confirmar en el backend. Al enviar idArchivo se reemplaza el CV existente.
+            const { data: confirm } = await confirmTalentUpload({
+                idTalento,
+                idArchivo,
                 idTipoDocumento: DOCUMENTO_CV,
-            }).then((response) => {
-                if (response.data.idMensaje === 2 && idTalento) {
-                    closeModal("modalUploadResume");
-                    onUpdate(idTalento);
-                }
+                idTipoArchivo: ARCHIVO_PDF,
+                nombreArchivo: presigned.fileName,
+                path: presigned.path,
             });
+
+            if (confirm.idMensaje === 2) {
+                enqueueSnackbar(confirm.mensaje || "CV actualizado con éxito", {
+                    variant: "success",
+                });
+                closeModal("modalUploadResume");
+                onUpdate(idTalento);
+            } else {
+                enqueueSnackbar(confirm.mensaje || "Error al actualizar el CV", {
+                    variant: "error",
+                });
+            }
+        } catch (err) {
+            handleError(err, enqueueSnackbar);
+        } finally {
+            setLoading(false);
         }
     }
 
