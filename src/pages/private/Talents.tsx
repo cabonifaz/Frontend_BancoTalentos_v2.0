@@ -43,7 +43,10 @@ import { CustomFilterDropDown } from "../../core/components/ui/CustomFilterDropD
 import { SearchableSelect } from "../../core/components/ui/SearchableSelect";
 import { useParams } from "../../core/context/ParamsContext";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
-import { MODAL_FRACTAL_CV } from "../../core/utilities/modalsIds";
+import {
+  MODAL_FRACTAL_CV,
+  MODAL_UPDATE_WITH_CV,
+} from "../../core/utilities/modalsIds";
 import { useRemoveSkill } from "../../core/hooks/talents/useRemoveSkills";
 
 export const Talents = () => {
@@ -749,6 +752,20 @@ export const Talents = () => {
                                 className="h-5 w-5"
                               />
                               Contactar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openModal(MODAL_UPDATE_WITH_CV)
+                              }
+                              className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
+                            >
+                              <img
+                                src="/assets/ic_add.svg"
+                                alt="icon update cv"
+                                className="h-5 w-5 invert-[1]"
+                              />
+                              Actualizar con CV
                             </button>
                             <div className="flex gap-4 justify-center items-end">
                               <div
