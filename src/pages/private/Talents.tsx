@@ -867,7 +867,7 @@ export const Talents = () => {
                               src="/assets/ic_upload.svg"
                             />
                             <span className="block text-[var(--color-blue)] font-normal mt-1">
-                              Sube un archivo
+                              Gestiona los archivos del talento
                             </span>
                           </div>
                         </button>
