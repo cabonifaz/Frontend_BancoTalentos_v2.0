@@ -54,6 +54,7 @@ export const initialFormValues: AddTalentType = {
   email: "",
   descripcion: "",
   disponibilidad: [],
+  procedencia: "",
   idPais: 0,
   idCiudad: 0,
   /* montoInicial: 0,

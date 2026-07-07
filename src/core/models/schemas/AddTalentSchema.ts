@@ -118,6 +118,11 @@ export const AddTalentSchema = z.object({
     .min(1, "Debes selecionar al menos una disponibilidad"),
   // puesto: z.preprocess(trim, z.string().min(1, "El puesto es requerido")),
 
+  procedencia: z.preprocess(
+    emptyToUndef,
+    z.string({ required_error: "La procedencia es requerida" }).min(1, "La procedencia es requerida"),
+  ),
+
   idPais: z.coerce.number().min(1, "Seleccione un país"),
   idCiudad: z.coerce.number().min(1, "Seleccione una ciudad"),
 

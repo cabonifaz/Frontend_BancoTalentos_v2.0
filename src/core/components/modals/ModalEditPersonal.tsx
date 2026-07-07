@@ -15,6 +15,7 @@ import { Modal } from "./Modal";
 import { useEffect, useMemo } from "react";
 import { AddTalentParams } from "../../models";
 import { Loading } from "../ui/Loading";
+import { PROCEDENCIA_OPTIONS } from "../../utilities/constants";
 
 interface Props {
   idTalento?: number;
@@ -63,6 +64,7 @@ export const ModalEditPersonal = ({
       nombres: "",
       apellidoPaterno: "",
       apellidoMaterno: "",
+      procedencia: "",
       idPais: 0,
       idCiudad: 0,
     },
@@ -83,6 +85,7 @@ export const ModalEditPersonal = ({
           apellidoPaterno: (data as any).apellidos?.split(" ")[0] || "",
           apellidoMaterno: (data as any).apellidos?.split(" ")[1] || "",
           dni: data.dni || "",
+          procedencia: data.procedencia || "",
           idPais: paisValido ? data.idPais : 0,
           idCiudad: data.idCiudad || 0,
         });
@@ -108,6 +111,7 @@ export const ModalEditPersonal = ({
       nombres: data.nombres,
       apellidoPaterno: data.apellidoPaterno,
       apellidoMaterno: data.apellidoMaterno || null,
+      procedencia: data.procedencia,
       idPais: Number(data.idPais),
       idCiudad: Number(data.idCiudad),
     };
@@ -260,6 +264,27 @@ export const ModalEditPersonal = ({
           {errors.idCiudad && (
             <p className="text-red-500 text-sm">
               {String(errors.idCiudad.message)}
+            </p>
+          )}
+        </div>
+
+        {/* PROCEDENCIA */}
+
+        <div className="flex flex-col gap-1">
+          <label className="text-[11px] font-medium text-gray-500">
+            Procedencia
+          </label>
+          <select {...register("procedencia")} className={inputStyle}>
+            <option value="">Seleccione una procedencia</option>
+            {PROCEDENCIA_OPTIONS.map((op) => (
+              <option key={op} value={op}>
+                {op}
+              </option>
+            ))}
+          </select>
+          {errors.procedencia && (
+            <p className="text-red-500 text-sm">
+              {errors.procedencia.message}
             </p>
           )}
         </div>

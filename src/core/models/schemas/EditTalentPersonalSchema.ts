@@ -5,6 +5,7 @@ export const EditTalentPersonalSchema = z.object({
   nombres: z.string().min(1, "El nombre es requerido"),
   apellidoPaterno: z.string().min(1, "El apellido paterno es requerido"),
   apellidoMaterno: z.string().optional(),
+  procedencia: z.string().min(1, "La procedencia es requerida"),
   idPais: z.coerce.number().optional(),
   idCiudad: z.coerce.number().optional(),
 }).refine((data) => {

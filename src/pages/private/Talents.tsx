@@ -31,6 +31,7 @@ import {
   LanguageCard,
   OptionsButton,
   EducationCard,
+  FileCard,
   FilterDropDown,
   ExperienceCard,
   ModalsForTalentsPage,
@@ -48,6 +49,7 @@ import {
   MODAL_UPDATE_WITH_CV,
 } from "../../core/utilities/modalsIds";
 import { useRemoveSkill } from "../../core/hooks/talents/useRemoveSkills";
+import { useDownloadTalentFile } from "../../core/hooks/talents/useDownloadTalentFile";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -122,6 +124,8 @@ export const Talents = () => {
 
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
+
+  const { downloadingId, downloadFile } = useDownloadTalentFile();
 
   const buildTalentParams = (
     nPag: number,
@@ -607,9 +611,10 @@ export const Talents = () => {
                         <p className="text-[#2e2e2e]">Volver</p>
                       </button>
                       {/* Talent main info */}
-                      <div className="flex flex-col sm:flex-row items-center w-full justify-between">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start w-full justify-between">
                         <div className="flex gap-10 sm:h-28">
-                          <div className="relative">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="relative">
                             {talentDets?.photoUrl ||
                             talent.photoUrl ? (
                               <img
@@ -641,6 +646,16 @@ export const Talents = () => {
                                 className="opacity-40 hover:opacity-100"
                               />
                             </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openModal("modalEditPersonal")
+                              }
+                              className="text-[var(--color-blue)]"
+                            >
+                              Editar perfil
+                            </button>
                           </div>
                           <div className="flex flex-col">
                             <div className="flex gap-2 items-center w-fit">
@@ -661,6 +676,12 @@ export const Talents = () => {
                                 className="h-5 w-5"
                               />
                               {`${talent.pais}, ${talent.ciudad}`}
+                            </p>
+                            <p className="text-sm text-[#71717A] my-1 w-fit">
+                              Procedencia:{" "}
+                              <span className="text-[#3f3f46]">
+                                {talentDets?.procedencia || "—"}
+                              </span>
                             </p>
                             <div className="text-sm text-[#71717A] flex items-center gap-2 my-2 xl:m-0">
                               <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
@@ -716,7 +737,7 @@ export const Talents = () => {
                           </div>
                         </div>
 
-                        <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end sm:h-28 my-4 sm:my-0">
+                        <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end my-4 sm:my-0">
                           {/* CV */}
                           <OptionsButton
                             options={[
@@ -739,63 +760,8 @@ export const Talents = () => {
 
                           {/* Contact */}
                           <div className="flex flex-col gap-4">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal("modalContact")
-                              }
-                              className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
-                            >
-                              <img
-                                src="/assets/ic_phone.svg"
-                                alt="icon contact"
-                                className="h-5 w-5"
-                              />
-                              Contactar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal(MODAL_UPDATE_WITH_CV)
-                              }
-                              className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
-                            >
-                              <img
-                                src="/assets/ic_add.svg"
-                                alt="icon update cv"
-                                className="h-5 w-5 invert-[1]"
-                              />
-                              Actualizar con CV
-                            </button>
+                            {/* Social networks */}
                             <div className="flex gap-4 justify-center items-end">
-                              <div
-                                className={`${
-                                  !talentDets?.github
-                                    ? "pointer-events-none opacity-50"
-                                    : ""
-                                }`}
-                              >
-                                <a
-                                  href={
-                                    formatUrl(
-                                      talentDets?.github || "",
-                                    ) || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) =>
-                                    !talentDets?.github &&
-                                    e.preventDefault()
-                                  }
-                                >
-                                  <img
-                                    src="/assets/ic_github.svg"
-                                    alt="icon github"
-                                    className="h-6 w-6 mb-1 opacity-40 hover:opacity-80"
-                                  />
-                                </a>
-                              </div>
-
                               <div
                                 className={`${
                                   !talentDets?.linkedin
@@ -823,6 +789,34 @@ export const Talents = () => {
                                   />
                                 </a>
                               </div>
+
+                              <div
+                                className={`${
+                                  !talentDets?.github
+                                    ? "pointer-events-none opacity-50"
+                                    : ""
+                                }`}
+                              >
+                                <a
+                                  href={
+                                    formatUrl(
+                                      talentDets?.github || "",
+                                    ) || "#"
+                                  }
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) =>
+                                    !talentDets?.github &&
+                                    e.preventDefault()
+                                  }
+                                >
+                                  <img
+                                    src="/assets/ic_github.svg"
+                                    alt="icon github"
+                                    className="h-6 w-6 mb-1 opacity-40 hover:opacity-80"
+                                  />
+                                </a>
+                              </div>
                               <button
                                 type="button"
                                 onClick={() =>
@@ -836,41 +830,54 @@ export const Talents = () => {
                                 />
                               </button>
                             </div>
+
+                            {/* Contactar */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openModal("modalContact")
+                              }
+                              className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
+                            >
+                              <img
+                                src="/assets/ic_phone.svg"
+                                alt="icon contact"
+                                className="h-5 w-5"
+                              />
+                              Contactar
+                            </button>
+
+                            {/* Actualizar Talento con IA */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openModal(MODAL_UPDATE_WITH_CV)
+                              }
+                              className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
+                            >
+                              <img
+                                src="/assets/ic_add.svg"
+                                alt="icon update cv"
+                                className="h-5 w-5 invert-[1]"
+                              />
+                              Actualizar Talento con IA
+                            </button>
+
+                            {/* Sube un archivo del talento */}
+                            <button
+                              type="button"
+                              onClick={() => openModal("modalUploadCert")}
+                              className="flex items-center justify-center w-36 text-center rounded-lg focus:outline-none text-[var(--color-blue)] bg-gray-50 hover:bg-gray-100 px-4 py-2 gap-2"
+                            >
+                              <img
+                                src="/assets/ic_upload.svg"
+                                alt="icon upload"
+                                className="h-5 w-5 shrink-0"
+                              />
+                              Sube un archivo del talento
+                            </button>
                           </div>
                         </div>
-                      </div>
-                      <div>
-                        <button
-                          className="text-[var(--color-blue)]"
-                          onClick={() =>
-                            openModal("modalEditPersonal")
-                          }
-                        >
-                          Editar perfil
-                        </button>
-                      </div>
-                      {/* File upload */}
-                      <div className="flex flex-col md:flex-row items-center w-full justify-between gap-4 my-8">
-                        <p className="text-[var(--color-blue)] text-justify flex-grow">
-                          Sube tu certificado o diploma que respalde
-                          tus aptitudes.
-                        </p>
-                        <button
-                          type="button"
-                          className="rounded-lg overflow-hidden my-8 py-6 px-8 sm:my-0 bg-gray-50 hover:bg-gray-100 flex-grow"
-                          onClick={() => openModal("modalUploadCert")}
-                        >
-                          <div className="flex flex-col items-center">
-                            <img
-                              alt="File Icon"
-                              className="mb-3 w-8 h-8"
-                              src="/assets/ic_upload.svg"
-                            />
-                            <span className="block text-[var(--color-blue)] font-normal mt-1">
-                              Gestiona los archivos del talento
-                            </span>
-                          </div>
-                        </button>
                       </div>
                       {/* Skills */}
                       <div className="flex flex-col sm:flex-row w-full">
@@ -1100,6 +1107,34 @@ export const Talents = () => {
                                 }
                               />
                             ),
+                          )}
+                        </div>
+                      </div>
+                      {/* Files */}
+                      <div className="flex flex-col pb-8">
+                        <h2 className="text-[#52525B] font-semibold my-2">
+                          Archivos
+                        </h2>
+                        <div className="flex flex-col">
+                          {talentDets?.files &&
+                          talentDets.files.length > 0 ? (
+                            talentDets.files.map((file) => (
+                              <FileCard
+                                key={file.idArchivo}
+                                data={file}
+                                downloading={
+                                  downloadingId === file.idArchivo
+                                }
+                                onDownload={() =>
+                                  downloadFile(file.idArchivo)
+                                }
+                              />
+                            ))
+                          ) : (
+                            <p className="text-[#71717A] text-sm">
+                              Este talento aún no tiene archivos
+                              registrados.
+                            </p>
                           )}
                         </div>
                       </div>

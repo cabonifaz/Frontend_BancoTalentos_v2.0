@@ -9,6 +9,7 @@ export interface AddTalentParams {
   github?: string;
   descripcion?: string;
   disponibilidad?: string;
+  procedencia?: string;
   puesto?: string;
   idPais?: number;
   idCiudad?: number;

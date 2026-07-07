@@ -181,7 +181,6 @@ export const ModalsForTalentsPage = ({
 
         <ModalUploadCert
           idTalento={talent?.idTalento}
-          files={talentDet?.files}
           onUpdate={handleUpdate}
         />
 
