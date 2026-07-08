@@ -93,35 +93,31 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
     }
 
     return (
-        <Modal id="modalUploadCert" title="Subir un certificado o diploma" confirmationLabel="Subir" onConfirm={handleOnConfirm}>
+        <Modal id="modalUploadCert" title="Sube un archivo del talento" confirmationLabel="Subir" onConfirm={handleOnConfirm}>
             {loading && (<Loading opacity="opacity-60" />)}
-            <div>
-                <div className="rounded-lg overflow-hidden py-4">
-                    <div className="w-full">
-                        <div className="relative h-32 rounded-lg border-2 border-gray-100 flex justify-center items-center hover:bg-gray-100">
-                            <div className="absolute flex flex-col items-center py-12">
-                                <img
-                                    alt="File Icon"
-                                    className="mb-3 mt-6 w-8 h-8"
-                                    src="/assets/ic_upload.svg"
-                                />
-                                <span className="block text-[#0b85c3] font-normal mt-1">
-                                    {fileName || "Sube tu nuevo certificado o diploma"}
-                                </span>
-                                <span className="text-sm text-[#71717A] mb-6">{fileName ? "" : "PDF"}</span>
-                            </div>
-                            <input
-                                type="file"
-                                name="cert"
-                                ref={certRef}
-                                accept=".pdf"
-                                onChange={handleFileChange}
-                                className="h-full w-full opacity-0 cursor-pointer"
-                            />
-                        </div>
-                        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            <div className="pt-2">
+                <div className="relative h-32 rounded-lg border-2 border-dashed border-gray-200 flex justify-center items-center transition-colors hover:border-[#0b85c3] hover:bg-[#f5fbff]">
+                    <div className="absolute flex flex-col items-center pointer-events-none">
+                        <img
+                            alt="File Icon"
+                            className="mb-2 w-8 h-8"
+                            src="/assets/ic_upload.svg"
+                        />
+                        <span className="block text-[#0b85c3] font-normal">
+                            {fileName || "Arrastra o selecciona un certificado o diploma"}
+                        </span>
+                        <span className="text-sm text-[#71717A]">{fileName ? "" : "Formato PDF"}</span>
                     </div>
+                    <input
+                        type="file"
+                        name="cert"
+                        ref={certRef}
+                        accept=".pdf"
+                        onChange={handleFileChange}
+                        className="h-full w-full opacity-0 cursor-pointer"
+                    />
                 </div>
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
         </Modal>
     );

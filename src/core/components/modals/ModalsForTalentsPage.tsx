@@ -88,6 +88,11 @@ const ModalEditPersonal = lazy(() =>
     default: m.ModalEditPersonal,
   })),
 );
+const ModalUpdateWithCV = lazy(() =>
+  import("./ModalUpdateWithCV").then((m) => ({
+    default: m.ModalUpdateWithCV,
+  })),
+);
 
 interface Props {
   talent?: Talent;
@@ -230,6 +235,12 @@ export const ModalsForTalentsPage = ({
           idTalento={talent?.idTalento}
           onUpdate={handleUpdate}
           updateTalentList={updateTalentList}
+        />
+
+        <ModalUpdateWithCV
+          idTalento={talent?.idTalento}
+          talentDet={talentDet}
+          onUpdate={handleUpdate}
         />
       </Suspense>
     </>
