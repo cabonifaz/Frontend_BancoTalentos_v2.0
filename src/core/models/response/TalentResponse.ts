@@ -18,6 +18,7 @@ export interface TalentResponse {
   photoUrl: string;
   descripcion: string;
   disponibilidad: string;
+  procedencia?: string;
   idColeccion: number[];
   idMoneda: number;
   files: TalentFile[];

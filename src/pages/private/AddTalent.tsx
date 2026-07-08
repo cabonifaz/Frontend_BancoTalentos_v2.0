@@ -41,6 +41,7 @@ import {
   DOCUMENTO_CV,
   DOCUMENTO_FOTO_PERFIL,
   FRASES_IA_MAESTRO,
+  PROCEDENCIA_OPTIONS,
 } from "../../core/utilities/constants";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
@@ -726,6 +727,34 @@ export const AddTalent = () => {
                     {errors.disponibilidad && (
                       <p className="text-red-400 text-sm">
                         {errors.disponibilidad.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor="procedencia"
+                      className="text-[#636d7c] text-sm px-1"
+                    >
+                      Procedencia
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="procedencia"
+                      {...register("procedencia")}
+                      className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
+                    >
+                      <option value="">
+                        Seleccione una procedencia
+                      </option>
+                      {PROCEDENCIA_OPTIONS.map((op) => (
+                        <option key={op} value={op}>
+                          {op}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.procedencia && (
+                      <p className="text-red-400 text-sm">
+                        {errors.procedencia.message}
                       </p>
                     )}
                   </div>

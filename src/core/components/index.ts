@@ -3,6 +3,7 @@ export * from "./cards/FeedbackCard";
 export * from "./cards/EducationCard";
 export * from "./cards/ExperienceCard";
 export * from "./cards/LanguageCard";
+export * from "./cards/FileCard";
 export * from "./cards/SkeletonTalentCard";
 export * from "./ui/InputForm";
 export * from "./ui/Loading";
