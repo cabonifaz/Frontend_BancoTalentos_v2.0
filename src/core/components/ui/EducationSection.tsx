@@ -22,6 +22,7 @@ export const EducationsSection = <F extends FieldValues>({
   errors,
   shouldShowEmptyForm = true,
   shouldAddElements = true,
+  itemVariant = "plain",
 }: EducationsSectionProps<F>) => {
   const { setValue, getValues, clearErrors } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
@@ -81,6 +82,7 @@ export const EducationsSection = <F extends FieldValues>({
       onRemove={remove}
       canRemoveFirst={!shouldShowEmptyForm}
       canAddSections={shouldAddElements}
+      itemVariant={itemVariant}
     >
       {fields.map((field, index) => {
         const isMonthYearMode =

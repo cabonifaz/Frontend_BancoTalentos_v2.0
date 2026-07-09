@@ -1,3 +1,4 @@
+import { Heart, MapPin } from "lucide-react";
 import { Talent } from "../../models/interfaces/Talent";
 import { Utils } from "../../utilities/utils";
 
@@ -32,11 +33,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
           {Utils.getStars(talent.estrellas)}
         </div>
         <p className="text-sm text-[#71717A] flex my-1 lg:h-5 min-w-0">
-          <img
-            src="/assets/ic_location.svg"
-            alt="location icon"
-            className="h-5 w-5 shrink-0"
-          />
+          <MapPin className="h-5 w-5 shrink-0" />
           <span className="truncate">{`${talent.pais}, ${talent.ciudad}`}</span>
         </p>
         <div className="text-sm text-[#71717A]">
@@ -62,11 +59,7 @@ export const TalentCard = ({ talent, selectTalent }: Props) => {
       </div>
       {talent.esFavorito === 1 && (
         <div className="absolute right-4 top-2">
-          <img
-            src="/assets/ic_fill_heart.svg"
-            alt="fav"
-            className="h-5 w-5"
-          />
+          <Heart className="h-5 w-5" color="#e9399a" fill="#e9399a" />
         </div>
       )}
     </div>

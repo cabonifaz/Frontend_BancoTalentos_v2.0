@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
@@ -98,11 +99,7 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
             <div className="pt-2">
                 <div className="relative h-32 rounded-lg border-2 border-dashed border-gray-200 flex justify-center items-center transition-colors hover:border-[#0b85c3] hover:bg-[#f5fbff]">
                     <div className="absolute flex flex-col items-center pointer-events-none">
-                        <img
-                            alt="File Icon"
-                            className="mb-2 w-8 h-8"
-                            src="/assets/ic_upload.svg"
-                        />
+                        <Upload className="mb-2 w-8 h-8 text-[#0b85c3]" />
                         <span className="block text-[#0b85c3] font-normal">
                             {fileName || "Arrastra o selecciona un certificado o diploma"}
                         </span>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { OutsideClickHandler } from "./OutsideClickHandler";
 
 interface ButtonSelectProps {
@@ -26,11 +27,7 @@ export const OptionsButton = ({
         className={`${buttonStyle} flex justify-between items-center`}
       >
         {buttonLabel}
-        <img
-          src="/assets/ic_arrow_down.svg"
-          alt="icon arrow down"
-          className="w-6 h-6"
-        />
+        <ChevronDown className="w-6 h-6" />
       </button>
 
       {isOpen && (

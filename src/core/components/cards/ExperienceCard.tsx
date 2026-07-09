@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { Experience } from "../../models/interfaces/Experience";
 import { Utils } from "../../utilities/utils";
 
@@ -28,11 +29,7 @@ export const ExperienceCard = ({ data, onEdit }: Props) => {
           onClick={onEdit}
           className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12"
         >
-          <img
-            src="/assets/ic_edit.svg"
-            alt="edit icon"
-            className="w-6 h-6 opacity-40 hover:opacity-100"
-          />
+          <Pencil className="w-6 h-6 opacity-40 hover:opacity-100" />
         </button>
       </div>
     </div>

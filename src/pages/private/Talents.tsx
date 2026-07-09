@@ -1,4 +1,17 @@
-import { Search } from "lucide-react";
+import {
+  ArrowLeft,
+  Github,
+  Linkedin,
+  MapPin,
+  Pencil,
+  Phone,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Upload,
+  UserRound,
+} from "lucide-react";
 import { Dashboard } from "./Dashboard";
 import { Utils } from "../../core/utilities/utils";
 import React, { useEffect, useRef, useState } from "react";
@@ -352,7 +365,7 @@ export const Talents = () => {
                 onClick={() => navigate("/dashboard/nuevo-talento")}
                 className="flex-1 sm:flex-none xl:w-fit flex items-center whitespace-nowrap gap-1 btn btn-outline-blue"
               >
-                <img src="/assets/ic_add.svg" alt="add talent icon" />
+                <Plus className="w-5 h-5" />
                 <span>Nuevo Talento</span>
               </button>
               <p className="text-sm text-[#71717A] hidden xl:block whitespace-nowrap">{`${
@@ -603,11 +616,7 @@ export const Talents = () => {
                         onClick={() => setTalentPanelVisible(false)}
                         className="w-fit px-4 py-2 rounded-xl bg-[#e4e4e7] flex gap-4 md:hidden justify-end items-center my-4"
                       >
-                        <img
-                          src="/assets/ic_go_back.svg"
-                          alt="icon close"
-                          className="h-4 w-4 md:h-6 md:w-6"
-                        />
+                        <ArrowLeft className="h-4 w-4 md:h-6 md:w-6" />
                         <p className="text-[#2e2e2e]">Volver</p>
                       </button>
                       {/* Talent main info */}
@@ -626,11 +635,7 @@ export const Talents = () => {
                                 className="h-24 w-24 rounded-full border"
                               />
                             ) : (
-                              <img
-                                src="/assets/ic_no_image.svg"
-                                alt={`Foto de ${talent.nombres}`}
-                                className="h-24 w-24 rounded-full border"
-                              />
+                              <UserRound className="h-24 w-24 rounded-full border p-5 text-gray-300" />
                             )}
 
                             <button
@@ -640,11 +645,7 @@ export const Talents = () => {
                               }
                               className="absolute bottom-4 -right-2 h-9 w-9 bg-white shadow-lg rounded-full p-2 hover:bg-zinc-50"
                             >
-                              <img
-                                src="/assets/ic_edit.svg"
-                                alt="edit icon"
-                                className="opacity-40 hover:opacity-100"
-                              />
+                              <Pencil className="w-5 h-5 opacity-40 hover:opacity-100" />
                             </button>
                             </div>
                             <button
@@ -670,11 +671,7 @@ export const Talents = () => {
                               />
                             </div>
                             <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
-                              <img
-                                src="/assets/ic_location.svg"
-                                alt="location icon"
-                                className="h-5 w-5"
-                              />
+                              <MapPin className="h-5 w-5" />
                               {`${talent.pais}, ${talent.ciudad}`}
                             </p>
                             <p className="text-sm text-[#71717A] my-1 w-fit">
@@ -717,11 +714,7 @@ export const Talents = () => {
                                 }
                                 className="hover:rounded-full hover:shadow-inner px-2 flex-shrink-0"
                               >
-                                <img
-                                  src="/assets/ic_edit.svg"
-                                  alt="icon edit"
-                                  className="h-4 w-4 mb-1 opacity-40 hover:opacity-80"
-                                />
+                                <Pencil className="h-4 w-4 mb-1 opacity-40 hover:opacity-80" />
                               </button>
                             </div>
                             <div className="flex flex-col xl:flex-row xl:gap-2 xl:items-center">
@@ -782,11 +775,7 @@ export const Talents = () => {
                                     e.preventDefault()
                                   }
                                 >
-                                  <img
-                                    src="/assets/ic_linkedin.svg"
-                                    alt="icon linkedin"
-                                    className="h-8 w-8 opacity-40 hover:opacity-80"
-                                  />
+                                  <Linkedin className="h-7 w-7 opacity-40 hover:opacity-80" />
                                 </a>
                               </div>
 
@@ -810,11 +799,7 @@ export const Talents = () => {
                                     e.preventDefault()
                                   }
                                 >
-                                  <img
-                                    src="/assets/ic_github.svg"
-                                    alt="icon github"
-                                    className="h-6 w-6 mb-1 opacity-40 hover:opacity-80"
-                                  />
+                                  <Github className="h-5 w-5 mb-1 opacity-40 hover:opacity-80" />
                                 </a>
                               </div>
                               <button
@@ -823,11 +808,7 @@ export const Talents = () => {
                                   openModal("modalSocialMedia")
                                 }
                               >
-                                <img
-                                  src="/assets/ic_edit.svg"
-                                  alt="icon edit"
-                                  className="h-6 w-6 mb-1 opacity-40 hover:opacity-80"
-                                />
+                                <Pencil className="h-5 w-5 mb-1 opacity-40 hover:opacity-80" />
                               </button>
                             </div>
 
@@ -839,11 +820,7 @@ export const Talents = () => {
                               }
                               className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
                             >
-                              <img
-                                src="/assets/ic_phone.svg"
-                                alt="icon contact"
-                                className="h-5 w-5"
-                              />
+                              <Phone className="h-5 w-5" />
                               Contactar
                             </button>
 
@@ -855,11 +832,7 @@ export const Talents = () => {
                               }
                               className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
                             >
-                              <img
-                                src="/assets/ic_add.svg"
-                                alt="icon update cv"
-                                className="h-5 w-5 invert-[1]"
-                              />
+                              <Sparkles className="h-5 w-5" />
                               Actualizar Talento con IA
                             </button>
 
@@ -869,11 +842,7 @@ export const Talents = () => {
                               onClick={() => openModal("modalUploadCert")}
                               className="flex items-center justify-center w-36 text-center rounded-lg focus:outline-none text-[var(--color-blue)] bg-gray-50 hover:bg-gray-100 px-4 py-2 gap-2"
                             >
-                              <img
-                                src="/assets/ic_upload.svg"
-                                alt="icon upload"
-                                className="h-5 w-5 shrink-0"
-                              />
+                              <Upload className="h-5 w-5 shrink-0" />
                               Sube un archivo del talento
                             </button>
                           </div>
@@ -894,11 +863,7 @@ export const Talents = () => {
                               }
                               className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                             >
-                              <img
-                                src="/assets/ic_add_dark.svg"
-                                alt="add skill soft"
-                                className="w-5 h-5"
-                              />
+                              <Plus className="w-5 h-5" />
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -919,10 +884,8 @@ export const Talents = () => {
                                   type="button"
                                   title="Remover habilidad"
                                 >
-                                  <img
+                                  <Trash2
                                     className="w-5 h-5"
-                                    src="assets/ic_remove.png"
-                                    alt="Remove icon"
                                     onClick={() =>
                                       handleRemoveTechnicalSkill(
                                         item.idHabTec,
@@ -948,11 +911,7 @@ export const Talents = () => {
                               }
                               className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                             >
-                              <img
-                                src="/assets/ic_add_dark.svg"
-                                alt="add skill soft"
-                                className="w-5 h-5"
-                              />
+                              <Plus className="w-5 h-5" />
                             </button>
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -969,10 +928,8 @@ export const Talents = () => {
                                   type="button"
                                   title="Remover habilidad"
                                 >
-                                  <img
+                                  <Trash2
                                     className="w-5 h-5"
-                                    src="assets/ic_remove.png"
-                                    alt="Remove icon"
                                     onClick={() =>
                                       handleRemoveSoftSkill(
                                         item.id,
@@ -1000,11 +957,7 @@ export const Talents = () => {
                             onClick={() => openModal("modalSummary")}
                             className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5"
                           >
-                            <img
-                              src="/assets/ic_edit.svg"
-                              alt="edit icon"
-                              className="opacity-40 hover:opacity-100"
-                            />
+                            <Pencil className="w-5 h-5 opacity-40 hover:opacity-100" />
                           </button>
                         </div>
                       </div>
@@ -1024,11 +977,7 @@ export const Talents = () => {
                             }
                             className="bg-white hover:shadow-lg hover:rounded-full hover:bg-zinc-50 w-5"
                           >
-                            <img
-                              src="/assets/ic_edit.svg"
-                              alt="edit icon"
-                              className="opacity-40 hover:opacity-100"
-                            />
+                            <Pencil className="w-5 h-5 opacity-40 hover:opacity-100" />
                           </button>
                         </p>
                       </div>
@@ -1046,11 +995,7 @@ export const Talents = () => {
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
-                            <img
-                              src="/assets/ic_add_dark.svg"
-                              alt="add exp tech"
-                              className="w-5 h-5"
-                            />
+                            <Plus className="w-5 h-5" />
                           </button>
                         </h2>
                         <div className="flex flex-col">
@@ -1085,11 +1030,7 @@ export const Talents = () => {
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
-                            <img
-                              src="/assets/ic_add_dark.svg"
-                              alt="add skill soft"
-                              className="w-5 h-5"
-                            />
+                            <Plus className="w-5 h-5" />
                           </button>
                         </h2>
                         <div className="flex flex-col">
@@ -1152,11 +1093,7 @@ export const Talents = () => {
                             }
                             className="text-[#52525B] rounded-full p-1 hover:shadow-inner"
                           >
-                            <img
-                              src="/assets/ic_add_dark.svg"
-                              alt="add skill soft"
-                              className="w-5 h-5"
-                            />
+                            <Plus className="w-5 h-5" />
                           </button>
                         </h2>
                         <div className="flex flex-col">
@@ -1209,11 +1146,7 @@ export const Talents = () => {
                           }
                           className="text-[#52525B] text-sm rounded-lg my-2 p-2 hover:text-[#27272A] hover:shadow-[0px_0px_4px_4px_rgba(0,0,0,0.05)] flex items-center gap-2 w-fit"
                         >
-                          <img
-                            src="/assets/ic_add_dark.svg"
-                            alt="add skill soft"
-                            className="w-5 h-5"
-                          />
+                          <Plus className="w-5 h-5" />
                           Dar nuevo feedback
                         </button>
                       </div>

@@ -1,4 +1,7 @@
-﻿import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { enqueueSnackbar } from "notistack";
 import { Modal } from "./Modal";
 import { useModal } from "../../context/ModalContext";
@@ -8,6 +11,9 @@ import { MODAL_UPDATE_WITH_CV } from "../../utilities/modalsIds";
 import { useFetchCVDiff } from "../../hooks/useFetchCVDiff";
 import { IACVResponse } from "../../models/response/AICVResponse";
 import { Param, TalentResponse } from "../../models";
+import { EducationsSection, TechSkillsSection } from "..";
+import { educationSchema, EducationFormData } from "./ModalEducation";
+import { techSkillSchema, TechSkillFormData } from "./ModalTechSkills";
 import {
   addOrUpdateTalentEducation,
   addOrUpdateTalentExperience,
@@ -27,6 +33,19 @@ type DiffData = IACVResponse["data"];
 type DiffExp = NonNullable<DiffData["workExps"]>[number];
 type Step = "upload" | "loading" | "review";
 
+/**
+ * Formularios editables reutilizando los MISMOS componentes/validaciones del
+ * módulo de detalle del talento:
+ * - Habilidades técnicas: `TechSkillsSection` + `techSkillSchema`.
+ * - Educación: `EducationsSection` + `educationSchema` (incluye el toggle
+ *   "Año" / "Mes + Año" y su validación de fechas).
+ * Se conservan `idEducacion` como campo passthrough para poder actualizar una
+ * educación existente (mejora) en lugar de crear una nueva.
+ */
+type TechForm = { habilidadesTecnicas: TechSkillFormData[] };
+type EduItem = EducationFormData & { idEducacion?: number | null };
+type EduForm = { educaciones: EduItem[] };
+
 /** Normaliza texto para comparar/matchear catálogos (sin tildes ni mayúsculas). */
 const normalizeText = (text: string | null | undefined) =>
   (text || "")
@@ -39,6 +58,17 @@ const normalizeText = (text: string | null | undefined) =>
 const findCatalogId = (name: string | null, catalog: Param[]) => {
   const target = normalizeText(name);
   return catalog?.find((p) => normalizeText(p.string1) === target)?.num1 ?? 0;
+};
+
+/**
+ * Convierte una fecha `yyyy-MM-dd` (formato que devuelve la IA) al formato que
+ * esperan los selectores de `EducationsSection`:
+ * - modo 1 (solo año)  → "yyyy"
+ * - modo 2 (mes + año) → "yyyy-MM"
+ */
+const toFormDate = (date: string | null | undefined, mode: number): string => {
+  if (!date) return "";
+  return mode === 2 ? date.substring(0, 7) : date.substring(0, 4);
 };
 
 type ExpErrors = {
@@ -79,7 +109,8 @@ const validateExp = (exp: DiffExp): ExpErrors => {
 /**
  * Modal del "Analizador de Diferencias": permite subir un nuevo CV, compararlo
  * con la IA contra la información actual del talento y aplicar únicamente los
- * cambios nuevos/mejorados que el usuario confirme.
+ * cambios nuevos/mejorados que el usuario confirme. Todas las secciones
+ * (habilidades técnicas, experiencia y educación) son editables antes de guardar.
  */
 export const ModalUpdateWithCV = ({
   idTalento,
@@ -104,6 +135,28 @@ export const ModalUpdateWithCV = ({
   // respuesta original de la IA.
   const [editableExps, setEditableExps] = useState<DiffExp[]>([]);
 
+  // Formularios editables (reutilizan los componentes del módulo de detalle).
+  // Los resolvers NO exigen mínimo de elementos: las secciones pueden quedar
+  // vacías si el usuario elimina todo lo detectado por la IA.
+  const techMethods = useForm<TechForm>({
+    resolver: zodResolver(
+      z.object({ habilidadesTecnicas: z.array(techSkillSchema) }),
+    ) as any,
+    defaultValues: { habilidadesTecnicas: [] },
+    mode: "onChange",
+  });
+  const eduMethods = useForm<EduForm>({
+    resolver: zodResolver(
+      z.object({ educaciones: z.array(educationSchema) }),
+    ) as any,
+    defaultValues: { educaciones: [] },
+    mode: "onChange",
+  });
+
+  // Suscripción a los valores de los formularios para habilitar/contar en vivo.
+  const techItems = techMethods.watch("habilidadesTecnicas");
+  const eduItems = eduMethods.watch("educaciones");
+
   const isSelected = (key: string) => !unchecked.has(key);
   const toggle = (key: string) =>
     setUnchecked((prev) => {
@@ -125,6 +178,8 @@ export const ModalUpdateWithCV = ({
     setApplying(false);
     setUnchecked(new Set());
     setEditableExps([]);
+    techMethods.reset({ habilidadesTecnicas: [] });
+    eduMethods.reset({ educaciones: [] });
   };
 
   const handleClose = () => {
@@ -151,8 +206,35 @@ export const ModalUpdateWithCV = ({
     try {
       setStep("loading");
       const response = await fetchCVDiff(idTalento, cvFile);
-      setDiff(response.data);
-      setEditableExps(response.data.workExps || []);
+      const data = response.data;
+      setDiff(data);
+      setEditableExps(data.workExps || []);
+
+      // Sembrar el formulario de habilidades técnicas con lo detectado por la IA.
+      techMethods.reset({
+        habilidadesTecnicas: (data.tecSkills || []).map((s) => ({
+          idHabilidad:
+            s.idHabTec || findCatalogId(s.nombreHabilidad, techCatalog) || 0,
+          habilidad: s.nombreHabilidad || "",
+          anios: s.aniosExperiencia ?? 0,
+        })),
+      });
+
+      // Sembrar el formulario de educación. La IA entrega fechas `yyyy-MM-dd`,
+      // por lo que usamos el modo "solo año" (1) como predeterminado.
+      eduMethods.reset({
+        educaciones: (data.edExps || []).map((e) => ({
+          institucion: e.nombreInstitucion || "",
+          carrera: e.carrera || "",
+          grado: e.grado || "",
+          fechaInicio: toFormDate(e.fechaInicio, 1),
+          fechaFin: e.flActualidad === 1 ? "" : toFormDate(e.fechaFin, 1),
+          flActualidad: e.flActualidad === 1,
+          tipoFechaEducaciones: 1,
+          idEducacion: e.idEducacion ?? null,
+        })),
+      });
+
       setStep("review");
     } catch (error: any) {
       enqueueSnackbar(error?.message || "Error al analizar el CV", {
@@ -162,7 +244,17 @@ export const ModalUpdateWithCV = ({
     }
   };
 
-  /** Total de cambios detectados por la IA. */
+  // Al entrar a la revisión, validar los formularios sembrados para que el
+  // estado `isValid` refleje de inmediato si faltan campos requeridos.
+  useEffect(() => {
+    if (step === "review") {
+      techMethods.trigger();
+      eduMethods.trigger();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  /** Total de cambios detectados por la IA (para el aviso "sin cambios"). */
   const changeCount = useMemo(() => {
     if (!diff) return 0;
     return (
@@ -187,14 +279,41 @@ export const ModalUpdateWithCV = ({
       isSelected(`exp-${i}`) && Object.keys(expErrors[i]).length > 0,
   );
 
+  // Idiomas/experiencias/otros seleccionados para saber si hay algo que aplicar.
+  const selectedExpCount = editableExps.filter((_, i) =>
+    isSelected(`exp-${i}`),
+  ).length;
+  const selectedLangCount = (diff?.langs || []).filter(
+    (l, i) => isSelected(`lang-${i}`) && l.idIdioma,
+  ).length;
+  const presentacionSelected =
+    !!diff?.presentacion && isSelected("presentacion");
+  const socialSelected =
+    !!(diff?.social?.linkedin || diff?.social?.github) && isSelected("social");
+
+  const hasChangesToApply =
+    (techItems?.length || 0) > 0 ||
+    (eduItems?.length || 0) > 0 ||
+    selectedExpCount > 0 ||
+    selectedLangCount > 0 ||
+    presentacionSelected ||
+    socialSelected;
+
+  const techValid = techMethods.formState.isValid;
+  const eduValid = eduMethods.formState.isValid;
+
   const handleApply = async () => {
     if (!idTalento || !diff) return;
 
-    // No permitir confirmar mientras existan errores de validación en alguna
-    // experiencia seleccionada.
-    if (hasBlockingExpErrors) {
+    // Validar los formularios editables antes de aplicar. No permitir confirmar
+    // mientras existan errores de validación en cualquier sección editable.
+    const [techOk, eduOk] = await Promise.all([
+      techMethods.trigger(),
+      eduMethods.trigger(),
+    ]);
+    if (!techOk || !eduOk || hasBlockingExpErrors) {
       enqueueSnackbar(
-        "Completa los campos requeridos de las experiencias antes de guardar",
+        "Corrige los campos requeridos antes de guardar los cambios",
         { variant: "warning" },
       );
       return;
@@ -202,19 +321,19 @@ export const ModalUpdateWithCV = ({
 
     const tasks: Promise<any>[] = [];
 
-    // Habilidades técnicas — mismo comportamiento que "Nuevo Talento":
-    // si la habilidad existe en el catálogo se asocia; si no existe, se envía con
-    // idHabilidad=0 y el nombre para que el backend la CREE y luego la asocie.
-    diff.tecSkills?.forEach((skill, i) => {
-      if (!isSelected(`tec-${i}`) || !skill.nombreHabilidad) return;
-      const idHabilidad =
-        skill.idHabTec || findCatalogId(skill.nombreHabilidad, techCatalog);
+    // Habilidades técnicas — se envían los valores EDITADOS por el usuario.
+    // Mismo comportamiento que "Nuevo Talento": si la habilidad existe en el
+    // catálogo se asocia (idHabilidad>0); si no existe, se envía idHabilidad=0 y
+    // el nombre para que el backend la CREE y luego la asocie.
+    (techMethods.getValues("habilidadesTecnicas") || []).forEach((skill) => {
+      const name = (skill.habilidad || "").trim();
+      if (!name) return;
       tasks.push(
         addTalentTechSkill({
           idTalento,
-          idHabilidad: idHabilidad || 0,
-          habilidad: skill.nombreHabilidad.toUpperCase(),
-          anios: skill.aniosExperiencia ?? 0,
+          idHabilidad: skill.idHabilidad || 0,
+          habilidad: name.toUpperCase(),
+          anios: skill.anios ?? 0,
         }),
       );
     });
@@ -242,22 +361,29 @@ export const ModalUpdateWithCV = ({
       );
     });
 
-    // Educaciones (nuevas o mejoradas)
-    diff.edExps?.forEach((edu, i) => {
-      if (!isSelected(`edu-${i}`)) return;
+    // Educaciones — se envían los valores EDITADOS con la misma lógica de fechas
+    // de `ModalEducation` (modo año → yyyy-01-01 / yyyy-12-31; modo mes+año → yyyy-MM-01).
+    (eduMethods.getValues("educaciones") || []).forEach((edu) => {
+      const isMonthYear = (edu.tipoFechaEducaciones ?? 1) === 2;
       tasks.push(
         addOrUpdateTalentEducation({
           idTalento,
           ...(edu.idEducacion
             ? { idTalentoEducacion: edu.idEducacion }
             : {}),
-          institucion: edu.nombreInstitucion || "",
-          carrera: edu.carrera || "",
-          grado: edu.grado || "",
-          fechaInicio: edu.fechaInicio || "",
-          fechaFin: edu.flActualidad === 1 ? "" : edu.fechaFin || "",
-          flActualidad: edu.flActualidad === 1 ? 1 : 0,
-          tipoFechaEducaciones: 1,
+          institucion: edu.institucion,
+          carrera: edu.carrera,
+          grado: edu.grado,
+          fechaInicio: isMonthYear
+            ? `${edu.fechaInicio}-01`
+            : `${edu.fechaInicio}-01-01`,
+          fechaFin: edu.flActualidad
+            ? ""
+            : isMonthYear
+              ? `${edu.fechaFin}-01`
+              : `${edu.fechaFin}-12-31`,
+          flActualidad: edu.flActualidad ? 1 : 0,
+          tipoFechaEducaciones: edu.tipoFechaEducaciones ?? 1,
         }),
       );
     });
@@ -416,241 +542,233 @@ export const ModalUpdateWithCV = ({
       {step === "review" && diff && (
         <div className="mt-4 flex max-h-[60vh] flex-col gap-4 overflow-y-auto pr-1">
           {changeCount === 0 ? (
-            <p className="py-8 text-center text-sm text-[#52525B]">
+            <p className="rounded-lg bg-gray-50 p-3 text-sm text-[#52525B]">
               La IA no encontró información nueva ni mejoras respecto a lo que ya
-              está registrado.
+              está registrado. Puedes agregar información manualmente si lo
+              deseas.
             </p>
           ) : (
-            <>
-              <p className="text-sm text-[#71717A]">
-                Revisa los cambios propuestos y desmarca los que no quieras
-                aplicar.
+            <p className="text-sm text-[#71717A]">
+              Revisa y corrige la información propuesta. Puedes editar los
+              campos, agregar o eliminar elementos, y desmarcar lo que no quieras
+              aplicar.
+            </p>
+          )}
+
+          <DiffSection
+            title="Presentación mejorada"
+            items={diff.presentacion ? [diff.presentacion] : []}
+            renderItem={() => (
+              <SelectableRow
+                checked={isSelected("presentacion")}
+                onToggle={() => toggle("presentacion")}
+              >
+                <p className="whitespace-pre-line text-sm">
+                  {diff.presentacion}
+                </p>
+              </SelectableRow>
+            )}
+          />
+
+          {/* Habilidades técnicas — editable (mismo componente que el detalle). */}
+          <div className="flex flex-col gap-1">
+            <h4 className="text-sm font-semibold text-[#3f3f46]">
+              Habilidades técnicas
+            </h4>
+            <p className="text-xs text-[#71717A]">
+              Corrige el nombre o los años, elimina las que no correspondan o
+              agrega nuevas antes de guardar.
+            </p>
+            <FormProvider {...techMethods}>
+              <TechSkillsSection
+                control={techMethods.control}
+                errors={techMethods.formState.errors}
+                habilidadesTecnicas={techCatalog}
+                dropdownWithSearch={true}
+                shouldShowEmptyForm={false}
+                shouldAddElements={true}
+                itemVariant="card"
+              />
+            </FormProvider>
+          </div>
+
+          {editableExps.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <h4 className="text-sm font-semibold text-[#3f3f46]">
+                Experiencia laboral (nueva o mejorada)
+              </h4>
+              <p className="text-xs text-[#71717A]">
+                Revisa y corrige los datos detectados. Puedes completar campos
+                vacíos antes de guardar.
               </p>
-
-              <DiffSection
-                title="Presentación mejorada"
-                items={diff.presentacion ? [diff.presentacion] : []}
-                renderItem={() => (
-                  <SelectableRow
-                    checked={isSelected("presentacion")}
-                    onToggle={() => toggle("presentacion")}
-                  >
-                    <p className="whitespace-pre-line text-sm">
-                      {diff.presentacion}
-                    </p>
-                  </SelectableRow>
-                )}
-              />
-
-              <DiffSection
-                title="Nuevas habilidades técnicas"
-                items={diff.tecSkills || []}
-                renderItem={(skill, i) => (
-                  <SelectableRow
-                    key={`tec-${i}`}
-                    checked={isSelected(`tec-${i}`)}
-                    onToggle={() => toggle(`tec-${i}`)}
-                  >
-                    <span className="text-sm font-medium">
-                      {skill.nombreHabilidad}
-                    </span>
-                    {skill.aniosExperiencia ? (
-                      <span className="ml-2 text-xs text-[#71717A]">
-                        {skill.aniosExperiencia} año(s)
-                      </span>
-                    ) : null}
-                  </SelectableRow>
-                )}
-              />
-
-              {editableExps.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <h4 className="text-sm font-semibold text-[#3f3f46]">
-                    Experiencia laboral (nueva o mejorada)
-                  </h4>
-                  <p className="text-xs text-[#71717A]">
-                    Revisa y corrige los datos detectados. Puedes completar
-                    campos vacíos antes de guardar.
-                  </p>
-                  <div className="flex flex-col gap-3">
-                    {editableExps.map((exp, i) => {
-                      const isCurrent = exp.flActualidad === 1;
-                      return (
-                        <div
-                          key={`exp-${i}`}
-                          className="rounded-lg border border-gray-200 p-3"
-                        >
-                          <div className="mb-3 flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isSelected(`exp-${i}`)}
-                              onChange={() => toggle(`exp-${i}`)}
-                              className="h-4 w-4 shrink-0"
-                            />
-                            <span className="text-xs text-[#71717A]">
-                              Incluir esta experiencia
-                            </span>
-                            {exp.idExperiencia ? (
-                              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                                mejora
-                              </span>
-                            ) : (
-                              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                                nueva
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <FieldInput
-                              label="Empresa"
-                              required
-                              value={exp.nombreEmpresa || ""}
-                              onChange={(v) =>
-                                updateExp(i, { nombreEmpresa: v })
-                              }
-                              placeholder="Nombre de la empresa"
-                              error={expErrors[i].empresa}
-                            />
-                            <FieldInput
-                              label="Puesto"
-                              required
-                              value={exp.puesto || ""}
-                              onChange={(v) => updateExp(i, { puesto: v })}
-                              placeholder="Cargo o puesto"
-                              error={expErrors[i].puesto}
-                            />
-                            <FieldInput
-                              label="Fecha de inicio"
-                              required
-                              type="date"
-                              value={exp.fechaInicio || ""}
-                              onChange={(v) =>
-                                updateExp(i, { fechaInicio: v })
-                              }
-                              error={expErrors[i].fechaInicio}
-                            />
-                            <FieldInput
-                              label="Fecha de fin"
-                              required={!isCurrent}
-                              type="date"
-                              value={isCurrent ? "" : exp.fechaFin || ""}
-                              disabled={isCurrent}
-                              onChange={(v) => updateExp(i, { fechaFin: v })}
-                              error={isCurrent ? undefined : expErrors[i].fechaFin}
-                            />
-                          </div>
-
-                          <label className="mt-3 flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isCurrent}
-                              onChange={(e) =>
-                                updateExp(i, {
-                                  flActualidad: e.target.checked ? 1 : 0,
-                                  ...(e.target.checked
-                                    ? { fechaFin: null }
-                                    : {}),
-                                })
-                              }
-                              className="h-4 w-4"
-                            />
-                            <span className="text-sm text-[#52525B]">
-                              Trabajo actual
-                            </span>
-                          </label>
-
-                          <div className="mt-3 flex flex-col gap-1">
-                            <label className="text-xs text-[#71717A]">
-                              Funciones / Descripción
-                            </label>
-                            <textarea
-                              value={exp.funciones || ""}
-                              onChange={(e) =>
-                                updateExp(i, { funciones: e.target.value })
-                              }
-                              rows={4}
-                              placeholder="Describe las funciones y responsabilidades"
-                              className="w-full resize-y rounded-lg border border-gray-300 p-2 text-sm focus:border-[#4F46E5] focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <DiffSection
-                title="Educación (nueva o mejorada)"
-                items={diff.edExps || []}
-                renderItem={(edu, i) => (
-                  <SelectableRow
-                    key={`edu-${i}`}
-                    checked={isSelected(`edu-${i}`)}
-                    onToggle={() => toggle(`edu-${i}`)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold">
-                        {edu.carrera} · {edu.nombreInstitucion}
-                        {edu.idEducacion ? (
-                          <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+              <div className="flex flex-col gap-3">
+                {editableExps.map((exp, i) => {
+                  const isCurrent = exp.flActualidad === 1;
+                  return (
+                    <div
+                      key={`exp-${i}`}
+                      className="rounded-lg border border-gray-200 p-3"
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected(`exp-${i}`)}
+                          onChange={() => toggle(`exp-${i}`)}
+                          className="h-4 w-4 shrink-0"
+                        />
+                        <span className="text-xs text-[#71717A]">
+                          Incluir esta experiencia
+                        </span>
+                        {exp.idExperiencia ? (
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                             mejora
                           </span>
                         ) : (
-                          <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
                             nueva
                           </span>
                         )}
-                      </span>
-                    </div>
-                  </SelectableRow>
-                )}
-              />
-
-              <DiffSection
-                title="Idiomas (nuevos o mejorados)"
-                items={diff.langs || []}
-                renderItem={(lang, i) => (
-                  <SelectableRow
-                    key={`lang-${i}`}
-                    checked={isSelected(`lang-${i}`)}
-                    onToggle={() => toggle(`lang-${i}`)}
-                  >
-                    <span className="text-sm font-medium">
-                      {lang.nombreIdioma}
-                      {lang.nivelIdioma ? (
-                        <span className="ml-2 text-xs text-[#71717A]">
-                          {lang.nivelIdioma}
-                        </span>
-                      ) : null}
-                    </span>
-                  </SelectableRow>
-                )}
-              />
-
-              {(diff.social?.linkedin || diff.social?.github) && (
-                <DiffSection
-                  title="Redes sociales"
-                  items={[diff.social]}
-                  renderItem={(social) => (
-                    <SelectableRow
-                      checked={isSelected("social")}
-                      onToggle={() => toggle("social")}
-                    >
-                      <div className="flex flex-col text-sm">
-                        {social.linkedin && (
-                          <span>LinkedIn: {social.linkedin}</span>
-                        )}
-                        {social.github && (
-                          <span>GitHub: {social.github}</span>
-                        )}
                       </div>
-                    </SelectableRow>
-                  )}
-                />
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <FieldInput
+                          label="Empresa"
+                          required
+                          value={exp.nombreEmpresa || ""}
+                          onChange={(v) =>
+                            updateExp(i, { nombreEmpresa: v })
+                          }
+                          placeholder="Nombre de la empresa"
+                          error={expErrors[i].empresa}
+                        />
+                        <FieldInput
+                          label="Puesto"
+                          required
+                          value={exp.puesto || ""}
+                          onChange={(v) => updateExp(i, { puesto: v })}
+                          placeholder="Cargo o puesto"
+                          error={expErrors[i].puesto}
+                        />
+                        <FieldInput
+                          label="Fecha de inicio"
+                          required
+                          type="date"
+                          value={exp.fechaInicio || ""}
+                          onChange={(v) =>
+                            updateExp(i, { fechaInicio: v })
+                          }
+                          error={expErrors[i].fechaInicio}
+                        />
+                        <FieldInput
+                          label="Fecha de fin"
+                          required={!isCurrent}
+                          type="date"
+                          value={isCurrent ? "" : exp.fechaFin || ""}
+                          disabled={isCurrent}
+                          onChange={(v) => updateExp(i, { fechaFin: v })}
+                          error={isCurrent ? undefined : expErrors[i].fechaFin}
+                        />
+                      </div>
+
+                      <label className="mt-3 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isCurrent}
+                          onChange={(e) =>
+                            updateExp(i, {
+                              flActualidad: e.target.checked ? 1 : 0,
+                              ...(e.target.checked
+                                ? { fechaFin: null }
+                                : {}),
+                            })
+                          }
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm text-[#52525B]">
+                          Trabajo actual
+                        </span>
+                      </label>
+
+                      <div className="mt-3 flex flex-col gap-1">
+                        <label className="text-xs text-[#71717A]">
+                          Funciones / Descripción
+                        </label>
+                        <textarea
+                          value={exp.funciones || ""}
+                          onChange={(e) =>
+                            updateExp(i, { funciones: e.target.value })
+                          }
+                          rows={4}
+                          placeholder="Describe las funciones y responsabilidades"
+                          className="w-full resize-y rounded-lg border border-gray-300 p-2 text-sm focus:border-[#4F46E5] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Educación — editable reutilizando EducationsSection (mismo UX/validación). */}
+          <div className="flex flex-col gap-1">
+            <h4 className="text-sm font-semibold text-[#3f3f46]">Educación</h4>
+            <p className="text-xs text-[#71717A]">
+              Corrige institución, carrera, grado y fechas (año o mes + año),
+              elimina o agrega estudios antes de guardar.
+            </p>
+            <FormProvider {...eduMethods}>
+              <EducationsSection
+                control={eduMethods.control}
+                errors={eduMethods.formState.errors}
+                shouldShowEmptyForm={false}
+                shouldAddElements={true}
+                itemVariant="card"
+              />
+            </FormProvider>
+          </div>
+
+          <DiffSection
+            title="Idiomas (nuevos o mejorados)"
+            items={diff.langs || []}
+            renderItem={(lang, i) => (
+              <SelectableRow
+                key={`lang-${i}`}
+                checked={isSelected(`lang-${i}`)}
+                onToggle={() => toggle(`lang-${i}`)}
+              >
+                <span className="text-sm font-medium">
+                  {lang.nombreIdioma}
+                  {lang.nivelIdioma ? (
+                    <span className="ml-2 text-xs text-[#71717A]">
+                      {lang.nivelIdioma}
+                    </span>
+                  ) : null}
+                </span>
+              </SelectableRow>
+            )}
+          />
+
+          {(diff.social?.linkedin || diff.social?.github) && (
+            <DiffSection
+              title="Redes sociales"
+              items={[diff.social]}
+              renderItem={(social) => (
+                <SelectableRow
+                  checked={isSelected("social")}
+                  onToggle={() => toggle("social")}
+                >
+                  <div className="flex flex-col text-sm">
+                    {social.linkedin && (
+                      <span>LinkedIn: {social.linkedin}</span>
+                    )}
+                    {social.github && (
+                      <span>GitHub: {social.github}</span>
+                    )}
+                  </div>
+                </SelectableRow>
               )}
-            </>
+            />
           )}
 
           <div className="mt-2 flex gap-4 *:px-4 *:py-3">
@@ -664,7 +782,13 @@ export const ModalUpdateWithCV = ({
             <button
               type="button"
               onClick={handleApply}
-              disabled={changeCount === 0 || hasBlockingExpErrors}
+              disabled={
+                applying ||
+                !hasChangesToApply ||
+                hasBlockingExpErrors ||
+                !techValid ||
+                !eduValid
+              }
               className="flex w-1/2 items-center justify-center font-semibold btn btn-primary disabled:opacity-50"
             >
               Aplicar cambios
