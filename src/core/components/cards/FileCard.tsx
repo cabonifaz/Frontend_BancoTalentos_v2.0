@@ -1,3 +1,4 @@
+import { Download, FileText } from "lucide-react";
 import { TalentFile } from "../../models";
 
 interface Props {
@@ -10,11 +11,7 @@ export const FileCard = ({ data, onDownload, downloading = false }: Props) => {
   return (
     <div className="flex items-center justify-between rounded-md my-1 px-2 sm:px-6 py-4 bg-[#f4f4f5] w-full">
       <div className="flex gap-3 sm:gap-6 items-center min-w-0">
-        <img
-          src="/assets/ic_pdf_info.svg"
-          alt="file icon"
-          className="w-8 h-8 shrink-0"
-        />
+        <FileText className="w-8 h-8 shrink-0 text-[#71717A]" />
         <div className="flex flex-col gap-1 min-w-0">
           <h2
             className="text-[#27272A] text-base truncate"
@@ -45,11 +42,7 @@ export const FileCard = ({ data, onDownload, downloading = false }: Props) => {
           title="Descargar"
           className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12 disabled:opacity-50"
         >
-          <img
-            src="/assets/ic_upload.svg"
-            alt="download icon"
-            className="w-6 h-6 rotate-180 opacity-40 hover:opacity-100"
-          />
+          <Download className="w-6 h-6 opacity-40 hover:opacity-100" />
         </button>
       </div>
     </div>
