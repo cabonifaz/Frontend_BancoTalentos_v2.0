@@ -23,6 +23,7 @@ export const TechSkillsSection = <F extends FieldValues>({
   dropdownWithSearch,
   shouldShowEmptyForm = true,
   shouldAddElements = true,
+  itemVariant = "plain",
 }: TechSkillsSectionProps<F>) => {
   const { setValue } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
@@ -83,6 +84,7 @@ export const TechSkillsSection = <F extends FieldValues>({
       onRemove={(index) => remove(index)}
       canRemoveFirst={!shouldShowEmptyForm}
       canAddSections={shouldAddElements}
+      itemVariant={itemVariant}
     >
       {fields.map((field, index) => (
         <div key={field.id}>
