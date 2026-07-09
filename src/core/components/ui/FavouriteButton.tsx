@@ -1,4 +1,5 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { Heart } from "lucide-react";
 import { useModal } from "../../context/ModalContext";
 import { useFavouritesContext } from "../../context/FavouritesContext";
 import { Modal } from "../modals/Modal";
@@ -88,7 +89,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
                 type="button"
                 onClick={() => openModal("modalFavourite")}
                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0">
-                <img src={localIsFavourited === 1 || isInAnyCollection ? "/assets/ic_fill_heart.svg" : "/assets/ic_outline_heart.svg"} alt="icon favourite" className="h-5 w-5" />
+                <Heart className="h-5 w-5" color="#e9399a" fill={localIsFavourited === 1 || isInAnyCollection ? "#e9399a" : "none"} />
             </button>
             <Modal id="modalFavourite" title="Añadir a" showButtonOptions={false} width="small">
                 <div className="flex flex-col gap-2">

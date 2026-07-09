@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { Modal } from "./Modal";
 import { useApi } from "../../hooks/useApi";
@@ -156,11 +157,7 @@ export const ModalContact = ({
               onClick={() => copyToClipboard(emailValue)}
               className="w-12 h-12 p-3 ms-4 bg-[#4F46E5] rounded-lg"
             >
-              <img
-                src="/assets/ic_copy.svg"
-                alt="icon copy"
-                className="invert-[1]"
-              />
+              <Copy className="w-6 h-6 text-white" />
             </button>
           </div>
           {errors.email && (
@@ -196,11 +193,7 @@ export const ModalContact = ({
               }
               className="w-12 h-12 ms-4 p-3 bg-[#4F46E5] rounded-lg justify-self-end"
             >
-              <img
-                src="/assets/ic_copy.svg"
-                alt="icon copy"
-                className="invert-[1]"
-              />
+              <Copy className="w-6 h-6 text-white" />
             </button>
           </div>
           {errors.phone && (

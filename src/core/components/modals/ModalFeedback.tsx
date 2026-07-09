@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
@@ -186,11 +187,7 @@ export const ModalFeedback = ({
             onClick={handleOnDelete}
             className="absolute -right-2 top-0 rounded-lg hover:bg-red-50 w-10 h-10"
           >
-            <img
-              src="/assets/ic_delete_bdt.svg"
-              alt="delete icon"
-              className="w-6 h-6 mx-auto"
-            />
+            <Trash2 className="w-6 h-6 mx-auto text-red-500" />
           </button>
         )}
 
