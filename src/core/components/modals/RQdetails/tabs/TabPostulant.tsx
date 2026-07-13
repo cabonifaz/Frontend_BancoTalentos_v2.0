@@ -1,16 +1,8 @@
 import { useModal } from "../../../../context/ModalContext";
-import { useApi } from "../../../../hooks/useApi";
-import { FileResponse } from "../../../../models";
 import { ReqTalento } from "../../../../models/interfaces/ReqTalento";
-import { getCvFile } from "../../../../services/apiService";
 import { ESTADO_ATENDIDO } from "../../../../utilities/constants";
-import {
-  handleError,
-  handleResponse,
-} from "../../../../utilities/errorHandler";
 import { MODAL_DETALLES_RQ } from "../../../../utilities/modalsIds";
-import { Utils } from "../../../../utilities/utils";
-import { enqueueSnackbar } from "notistack";
+import { useViewTalentFile } from "../../../../hooks/talents/useViewTalentFile";
 import { Loading } from "../../../ui/Loading";
 
 interface TabProps {
@@ -29,29 +21,14 @@ export const TabPostulant = ({
   const { closeModal, isModalOpen } = useModal();
 
   /**
-   * Fetch CV file for talent
+   * Abre el CV del postulante en el visor del navegador vía URL pre-firmada.
    */
-  const { loading: downloadingFile, fetch } = useApi<
-    FileResponse,
-    number
-  >(getCvFile, {
-    onError: (error) => handleError(error, enqueueSnackbar),
-    onSuccess: (response) =>
-      handleResponse({
-        response: response,
-        showSuccessMessage: false,
-        enqueueSnackbar: enqueueSnackbar,
-      }),
-  });
+  const { viewingId, viewFile } = useViewTalentFile();
+  const downloadingFile = viewingId !== null;
 
   const openFile = (index: number) => {
     if (talents[index].idCvFile) {
-      fetch(talents[index].idCvFile).then((response) => {
-        if (response.data.result.idMensaje === 2) {
-          const archivoB64 = response.data.archivo;
-          Utils.openPdfDocument(archivoB64);
-        }
-      });
+      viewFile(talents[index].idCvFile);
     }
   };
 
