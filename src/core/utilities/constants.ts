@@ -10,6 +10,24 @@ export const DOCUMENTO_CERT_DIP = 99;
 export const DOCUMENTO_CV_FR_ES = 5;
 export const DOCUMENTO_CV_FR_EN = 6;
 
+// Validación de subida de archivos de postulante (debe coincidir con el backend).
+export const POSTULANT_ALLOWED_EXTENSIONS: string[] = [
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "zip",
+];
+export const POSTULANT_MAX_FILE_SIZE_MB = 10;
+
+// Maestro (PARAMETROS) de tipos de documento de postulante: NUM1 = id, STRING1 = descripción.
+export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
+
 // RQ STATE
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;
@@ -72,7 +90,7 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45";
+export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46";
 
 // PROCEDENCIA DEL TALENTO — se maneja como texto (string), no como ID.
 // El valor seleccionado es exactamente el texto de la opción.

@@ -339,6 +339,57 @@ export const generateRqDownloadUrl = (
   return axiosInstanceFMI.post("/fmi/requirement/file/download-url", data);
 };
 
+// ─── Archivos de postulante (REQUERIMIENTO_TALENTO) vía URL pre-firmada ───────
+// Interfaces en models/interfaces/PostulantFilePresigned.ts
+
+/** Pide una URL PUT pre-firmada para subir un archivo de postulante a S3. */
+export const generatePostulantUploadUrl = (
+  data: models.PostulantUploadUrlRequest
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/upload-url",
+    data
+  );
+};
+
+/** Confirma en BD un archivo de postulante ya subido a S3. */
+export const confirmPostulantUpload = (
+  data: models.PostulantConfirmUploadRequest
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/confirm-upload",
+    data
+  );
+};
+
+/** Lista los archivos de un postulante. */
+export const listPostulantFiles = (
+  idRequerimientoTalento: number
+): Promise<AxiosResponse<models.PostulantFileListResponse>> => {
+  return axiosInstanceFMI.get(
+    `/fmi/requirement/postulant/file/list?idRequerimientoTalento=${idRequerimientoTalento}`
+  );
+};
+
+/** URL GET pre-firmada para descargar un archivo de postulante. */
+export const generatePostulantDownloadUrl = (
+  data: models.PostulantDownloadUrlRequest
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/download-url",
+    data
+  );
+};
+
+/** Eliminación lógica de un archivo de postulante. */
+export const removePostulantFile = (
+  idArchivo: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.delete(
+    `/fmi/requirement/postulant/file/remove?idArchivo=${idArchivo}`
+  );
+};
+
 // Talento FMI
 export const saveTalentFMI = (
   data: models.SaveTalentFMIParams
