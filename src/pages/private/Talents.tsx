@@ -7,6 +7,7 @@ import {
   Phone,
   Plus,
   Search,
+  Angry,
   Sparkles,
   Trash2,
   Upload,
@@ -63,6 +64,10 @@ import {
 } from "../../core/utilities/modalsIds";
 import { useRemoveSkill } from "../../core/hooks/talents/useRemoveSkills";
 import { useDownloadTalentFile } from "../../core/hooks/talents/useDownloadTalentFile";
+import {
+  ModalAddToBlacklist,
+  MODAL_ADD_TO_BLACKLIST,
+} from "../../core/components/modals/ModalAddToBlacklist";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -356,6 +361,7 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
+        <ModalAddToBlacklist talent={talent} />
         <div className="flex h-full flex-col overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full 2xl:min-h-12 items-center sm:justify-between gap-4">
@@ -669,6 +675,16 @@ export const Talents = () => {
                                   talentDets?.idColeccion || []
                                 }
                               />
+                              <button
+                                type="button"
+                                title="Agregar a lista negra"
+                                onClick={() =>
+                                  openModal(MODAL_ADD_TO_BLACKLIST)
+                                }
+                                className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                              >
+                                <Angry className="h-5 w-5 text-gray-500 hover:text-gray-800" />
+                              </button>
                             </div>
                             <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
                               <MapPin className="h-5 w-5" />

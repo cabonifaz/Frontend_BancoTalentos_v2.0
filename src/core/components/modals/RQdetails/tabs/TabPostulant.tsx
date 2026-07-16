@@ -9,6 +9,8 @@ import { ModalPostulantFiles } from "../../ModalPostulantFiles";
 
 interface TabProps {
   rqId: number;
+  /** Cliente del RQ: los tipos de documento del postulante son por cliente. */
+  idCliente: number;
   rqState: number;
   talents: ReqTalento[];
   handleAssign: (reqId: number) => void;
@@ -16,6 +18,7 @@ interface TabProps {
 
 export const TabPostulant = ({
   rqId,
+  idCliente,
   rqState,
   talents,
   handleAssign,
@@ -164,6 +167,7 @@ export const TabPostulant = ({
       {filesFor && (
         <ModalPostulantFiles
           rqId={rqId}
+          idCliente={idCliente}
           postulant={filesFor}
           onClose={() => setFilesFor(null)}
         />

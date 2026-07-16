@@ -12,6 +12,9 @@ const AddTalent = lazy(() =>
 const Requirements = lazy(() =>
   import("./Requirements").then((m) => ({ default: m.Requirements })),
 );
+const Blacklist = lazy(() =>
+  import("./Blacklist").then((m) => ({ default: m.Blacklist })),
+);
 const TalentTable = lazy(() => import("./PantallaAsignarTalento"));
 const PantallaDatos = lazy(() => import("./PantallaDatos"));
 const PantallaGenerarEnlaceRequerimiento = lazy(
@@ -33,6 +36,7 @@ export const PrivateRouter = () => {
       <Route path="/talentos" element={<Talents />} />
       <Route path="/nuevo-talento" element={<AddTalent />} />
       <Route path="/requerimientos" element={<Requirements />} />
+      <Route path="/lista-negra" element={<Blacklist />} />
       <Route path="/tableAsignarTalento" element={<TalentTable />} />
       <Route
         path="/generarEnlaceRequerimiento"

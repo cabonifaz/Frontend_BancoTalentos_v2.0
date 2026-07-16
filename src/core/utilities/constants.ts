@@ -25,7 +25,9 @@ export const POSTULANT_ALLOWED_EXTENSIONS: string[] = [
 ];
 export const POSTULANT_MAX_FILE_SIZE_MB = 10;
 
-// Maestro (PARAMETROS) de tipos de documento de postulante: NUM1 = id, STRING1 = descripción.
+// Maestro (PARAMETROS) de tipos de documento de postulante. Se configura por
+// cliente: NUM1 = id del tipo, NUM2 = idCliente, NUM3 = 1 obligatorio /
+// 0 opcional, STRING1 = descripción.
 export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
 
 // RQ STATE

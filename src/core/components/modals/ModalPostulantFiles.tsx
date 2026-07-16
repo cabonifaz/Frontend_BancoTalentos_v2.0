@@ -13,6 +13,8 @@ import { CloseModalButton } from "../ui/CloseModalButton";
 
 interface ModalProps {
   rqId: number;
+  /** Cliente del RQ: los tipos de documento se configuran por cliente. */
+  idCliente: number;
   postulant: ReqTalento;
   onClose: () => void;
 }
@@ -25,7 +27,12 @@ const selectClass =
  * de Postulantes con el postulante ya seleccionado: carga y gestiona sus archivos vía
  * URL pre-firmada (sin combo de selección).
  */
-export const ModalPostulantFiles = ({ rqId, postulant, onClose }: ModalProps) => {
+export const ModalPostulantFiles = ({
+  rqId,
+  idCliente,
+  postulant,
+  onClose,
+}: ModalProps) => {
   const {
     files,
     selectedId,
@@ -41,7 +48,11 @@ export const ModalPostulantFiles = ({ rqId, postulant, onClose }: ModalProps) =>
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Catálogo dinámico de tipos de documento (maestro 46): num1 = id, string1 = descripción.
+  // Catálogo dinámico de tipos de documento (maestro 46): son 4 filas fijas,
+  // una por tipo, y los 4 se ofrecen a todos los clientes. num1 = id,
+  // string1 = descripción. La obligatoriedad es por cliente: el tipo es
+  // obligatorio para el cliente que figure en su num2 y opcional para todos
+  // los demás (por eso num2 = 0 no marca a nadie). num3 no se usa.
   const { paramsByMaestro } = useParams();
   const docTypes = paramsByMaestro[MAESTRO_TIPO_ARCHIVO_POSTULANTE] || [];
   const typeLabel = (id: number) =>
@@ -162,7 +173,9 @@ export const ModalPostulantFiles = ({ rqId, postulant, onClose }: ModalProps) =>
                 <option value="">Elija un tipo</option>
                 {docTypes.map((type) => (
                   <option key={type.num1} value={type.num1}>
-                    {type.string1}
+                    {type.num2 === idCliente
+                      ? `${type.string1} (Obligatorio)`
+                      : type.string1}
                   </option>
                 ))}
               </select>
