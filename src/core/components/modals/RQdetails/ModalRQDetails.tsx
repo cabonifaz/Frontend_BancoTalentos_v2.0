@@ -480,6 +480,7 @@ export const ModalRQDetails = ({
                     children: (
                       <TabPostulant
                         rqId={rqId}
+                        idCliente={res?.requerimiento.idCliente || 0}
                         rqState={res?.requerimiento.idEstado || 0}
                         handleAssign={handleAssingPost}
                         talents={res?.requerimiento.lstRqTalento || []}

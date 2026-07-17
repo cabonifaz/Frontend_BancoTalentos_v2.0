@@ -8,7 +8,7 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { Home, FileText, Link2, Users, LogOut, X, User } from "lucide-react";
+import { Home, FileText, Link2, Users, LogOut, X, User, Angry } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
 
 interface Props {
@@ -18,6 +18,7 @@ interface Props {
 const railNav = [
   { icon: Home,     label: "Inicio",           path: "/dashboard/talentos" },
   { icon: FileText, label: "Requerimientos",    path: "/dashboard/requerimientos" },
+  { icon: Angry,    label: "Lista Negra",       path: "/dashboard/lista-negra" },
   { icon: Users,    label: "Entrevistas",       path: "/dashboard/entrevistas" },
   { icon: Link2,    label: "Generar enlace",    path: "/dashboard/generarEnlaceRequerimiento" },
   { icon: User,     label: "Mi cuenta",         path: "/dashboard/mi-cuenta" },
@@ -260,6 +261,14 @@ export const Dashboard = ({ children }: Props) => {
           >
             <FileText size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
             Requerimientos
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNav("/dashboard/lista-negra")}
+            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
+          >
+            <Angry size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
+            Lista Negra
           </button>
           <button
             type="button"

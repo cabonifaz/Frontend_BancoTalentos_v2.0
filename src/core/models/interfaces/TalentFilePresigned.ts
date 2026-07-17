@@ -27,4 +27,10 @@ export interface TalentConfirmUploadRequest {
 
 export interface TalentDownloadUrlRequest {
   idFile: number;
+  /**
+   * Si es `true`, la URL pre-firmada se genera para visualización inline
+   * (visor de PDF/imagen). Si se omite, el archivo se descarga (comportamiento
+   * original).
+   */
+  inline?: boolean;
 }
