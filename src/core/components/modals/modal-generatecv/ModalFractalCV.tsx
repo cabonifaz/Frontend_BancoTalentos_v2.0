@@ -14,12 +14,8 @@ import { PDFViewer } from "@react-pdf/renderer";
 import { FractalCVTemplate } from "../../templates/FractalCVTemplate";
 import { useTranslateTalentData } from "../../../hooks/useTranslateTalentData";
 import { TalentForFractalCV } from "../../../models/interfaces/TalentDataForFractal";
-import { UploadTalentFileRequest } from "../../../models/requests/talent";
-import {
-  useAddLangCV,
-  useFetchFile,
-  useUpdateCVLang,
-} from "../../../hooks";
+import { useViewTalentFile } from "../../../hooks/talents/useViewTalentFile";
+import { useUploadTalentFileS3 } from "../../../hooks/talents/useUploadTalentFileS3";
 import {
   ARCHIVO_PDF,
   DOCUMENTO_CV_FR_EN,
@@ -32,6 +28,17 @@ const notifySuccess = (message: string) =>
 
 const notifyError = (message: string) =>
   enqueueSnackbar({ message, variant: "error" });
+
+// Convierte el PDF generado (base64 crudo) en un File para subirlo a S3.
+const base64ToPdfFile = (base64: string, fileName: string): File => {
+  const byteCharacters = atob(base64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new File([byteArray], fileName, { type: "application/pdf" });
+};
 
 export interface ModalFractalCVProps {
   language?: "ES" | "EN";
@@ -53,7 +60,8 @@ export const ModalFractalCV = ({
   );
   const [existingFile, setExistingFile] = useState<any>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
-  const { isLoading: fetchingCV, fetchFile } = useFetchFile();
+  const { viewingId, viewFile } = useViewTalentFile();
+  const fetchingCV = viewingId !== null;
 
   useEffect(() => {
     if (!talentDet || !talent) return;
@@ -112,7 +120,7 @@ export const ModalFractalCV = ({
     setShowPreview(false);
   };
 
-  const openFile = async () => {
+  const openFile = () => {
     const lookingFor =
       language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
 
@@ -120,13 +128,10 @@ export const ModalFractalCV = ({
       (file) => file.idTipoDocumento === lookingFor,
     );
 
-    try {
-      const response = await fetchFile(cvFile?.idArchivo || 0);
-      const { archivo, result } = response;
-      if (result.idMensaje == 2) Utils.openPdfDocument(archivo);
-      else notifyError(result.mensaje);
-    } catch (error) {
-      notifyError("Error al abrir el arhivo");
+    if (cvFile?.idArchivo) {
+      viewFile(cvFile.idArchivo);
+    } else {
+      notifyError("No se encontró el archivo");
     }
   };
 
@@ -140,9 +145,7 @@ export const ModalFractalCV = ({
   const { getPDFWorker, isLoading: converting } = usePDFFromReact();
   const { isLoading: isTranslating, translateTalentData } =
     useTranslateTalentData();
-  const { isLoading: isUploading, addFile } = useAddLangCV();
-  const { isLoading: isUpdating, addFile: updateFile } =
-    useUpdateCVLang();
+  const { isLoading: isSavingFile, uploadFile } = useUploadTalentFileS3();
 
   // === Función para generar el PDF (sin guardar) ===
   const handleGenerate = async () => {
@@ -185,65 +188,63 @@ export const ModalFractalCV = ({
     }
   };
 
-  // === Función para guardar (nuevo archivo) ===
+  // === Función para guardar (nuevo archivo) vía URL pre-firmada ===
   const handleSave = async () => {
-    if (!generatedPDF || !talent) return;
+    if (!generatedPDF || !talent?.idTalento) return;
 
     try {
       const idTipoDocumento =
         language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
+      const fileName = `${getFullname().replace(
+        /\s+/g,
+        "_",
+      )}_CV_${language}.pdf`;
+      const file = base64ToPdfFile(generatedPDF, fileName);
 
-      const uploadRequest: UploadTalentFileRequest = {
-        idTalento: talent.idTalento ?? undefined,
-        nombreArchivo: `${getFullname().replace(
-          /\s+/g,
-          "_",
-        )}_CV_${language}`,
-        extensionArchivo: "pdf",
+      await uploadFile({
+        idTalento: talent.idTalento,
+        idTipoDocumento,
         idTipoArchivo: ARCHIVO_PDF,
-        idTipoDocumento: idTipoDocumento,
-        string64: generatedPDF,
-      };
+        file,
+      });
 
-      await addFile(uploadRequest);
       notifySuccess("CV guardado correctamente");
       setGeneratedPDF(null);
       onUpdate(talent.idTalento);
     } catch (error) {
       if (error instanceof AppError) notifyError(error.message);
-      notifyError("Error al guardar el CV.");
+      else notifyError("Error al guardar el CV.");
     }
   };
 
-  // === Función para actualizar (archivo existente) ===
+  // === Función para actualizar (archivo existente) vía URL pre-firmada ===
   const handleUpdate = async () => {
-    if (!generatedPDF || !talent || !existingFile) return;
+    if (!generatedPDF || !talent?.idTalento || !existingFile) return;
 
     try {
       const idTipoDocumento =
         language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
+      const fileName = `${getFullname().replace(
+        /\s+/g,
+        "_",
+      )}_CV_${language}.pdf`;
+      const file = base64ToPdfFile(generatedPDF, fileName);
 
-      const updateRequest: UploadTalentFileRequest = {
-        idArchivo: existingFile.idArchivo,
-        idTalento: talent.idTalento ?? undefined,
-        nombreArchivo: `${getFullname().replace(
-          /\s+/g,
-          "_",
-        )}_CV_${language}`,
-        extensionArchivo: "pdf",
+      await uploadFile({
+        idTalento: talent.idTalento,
+        idTipoDocumento,
         idTipoArchivo: ARCHIVO_PDF,
-        idTipoDocumento: idTipoDocumento,
-        string64: generatedPDF,
-      };
+        file,
+        idArchivo: existingFile.idArchivo,
+      });
 
-      await updateFile(updateRequest);
       notifySuccess("CV actualizado correctamente");
       setGeneratedPDF(null);
       setShowPreview(false);
       onUpdate(talent.idTalento);
     } catch (error) {
       if (error instanceof AppError) notifyError(error.message);
-      notifyError("Error al actualizar el CV.");
+      else notifyError("Error al actualizar el CV.");
     }
   };
 
@@ -256,8 +257,7 @@ export const ModalFractalCV = ({
   const isLoading =
     converting ||
     isTranslating ||
-    isUploading ||
-    isUpdating ||
+    isSavingFile ||
     fetchingCV;
 
   return (

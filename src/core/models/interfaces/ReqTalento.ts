@@ -1,4 +1,5 @@
 export interface ReqTalento {
+  idRequerimientoTalento: number;
   idTalento: number;
   nombresTalento: string;
   apellidosTalento: string;

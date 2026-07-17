@@ -1,20 +1,16 @@
+import { useState } from "react";
 import { useModal } from "../../../../context/ModalContext";
-import { useApi } from "../../../../hooks/useApi";
-import { FileResponse } from "../../../../models";
 import { ReqTalento } from "../../../../models/interfaces/ReqTalento";
-import { getCvFile } from "../../../../services/apiService";
 import { ESTADO_ATENDIDO } from "../../../../utilities/constants";
-import {
-  handleError,
-  handleResponse,
-} from "../../../../utilities/errorHandler";
 import { MODAL_DETALLES_RQ } from "../../../../utilities/modalsIds";
-import { Utils } from "../../../../utilities/utils";
-import { enqueueSnackbar } from "notistack";
+import { useViewTalentFile } from "../../../../hooks/talents/useViewTalentFile";
 import { Loading } from "../../../ui/Loading";
+import { ModalPostulantFiles } from "../../ModalPostulantFiles";
 
 interface TabProps {
   rqId: number;
+  /** Cliente del RQ: los tipos de documento del postulante son por cliente. */
+  idCliente: number;
   rqState: number;
   talents: ReqTalento[];
   handleAssign: (reqId: number) => void;
@@ -22,36 +18,25 @@ interface TabProps {
 
 export const TabPostulant = ({
   rqId,
+  idCliente,
   rqState,
   talents,
   handleAssign,
 }: TabProps) => {
   const { closeModal, isModalOpen } = useModal();
 
+  // Postulante cuyo modal de archivos está abierto (null = cerrado).
+  const [filesFor, setFilesFor] = useState<ReqTalento | null>(null);
+
   /**
-   * Fetch CV file for talent
+   * Abre el CV del postulante en el visor del navegador vía URL pre-firmada.
    */
-  const { loading: downloadingFile, fetch } = useApi<
-    FileResponse,
-    number
-  >(getCvFile, {
-    onError: (error) => handleError(error, enqueueSnackbar),
-    onSuccess: (response) =>
-      handleResponse({
-        response: response,
-        showSuccessMessage: false,
-        enqueueSnackbar: enqueueSnackbar,
-      }),
-  });
+  const { viewingId, viewFile } = useViewTalentFile();
+  const downloadingFile = viewingId !== null;
 
   const openFile = (index: number) => {
     if (talents[index].idCvFile) {
-      fetch(talents[index].idCvFile).then((response) => {
-        if (response.data.result.idMensaje === 2) {
-          const archivoB64 = response.data.archivo;
-          Utils.openPdfDocument(archivoB64);
-        }
-      });
+      viewFile(talents[index].idCvFile);
     }
   };
 
@@ -102,12 +87,15 @@ export const TabPostulant = ({
               <th scope="col" className="table-header-cell">
                 Perfil
               </th>
+              <th scope="col" className="table-header-cell">
+                Archivos
+              </th>
             </tr>
           </thead>
           <tbody>
             {talents.length === 0 ? (
               <tr>
-                <td colSpan={7} className="table-empty">
+                <td colSpan={9} className="table-empty">
                   No hay postulantes disponibles.
                 </td>
               </tr>
@@ -155,12 +143,35 @@ export const TabPostulant = ({
                     </span>
                   </td>
                   <td className="table-cell">{talent.perfil}</td>
+                  <td className="text-center">
+                    <button
+                      type="button"
+                      title="Ver archivos del postulante"
+                      className="p-1 hover:rounded-full hover:bg-gray-100 hover:shadow-lg"
+                      onClick={() => setFilesFor(talent)}
+                    >
+                      <img
+                        src="/assets/ic_preview_file.png"
+                        alt="archivos"
+                        className="h-5 w-5"
+                      />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {filesFor && (
+        <ModalPostulantFiles
+          rqId={rqId}
+          idCliente={idCliente}
+          postulant={filesFor}
+          onClose={() => setFilesFor(null)}
+        />
+      )}
     </div>
   );
 };

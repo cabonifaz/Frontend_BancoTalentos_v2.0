@@ -339,6 +339,57 @@ export const generateRqDownloadUrl = (
   return axiosInstanceFMI.post("/fmi/requirement/file/download-url", data);
 };
 
+// ─── Archivos de postulante (REQUERIMIENTO_TALENTO) vía URL pre-firmada ───────
+// Interfaces en models/interfaces/PostulantFilePresigned.ts
+
+/** Pide una URL PUT pre-firmada para subir un archivo de postulante a S3. */
+export const generatePostulantUploadUrl = (
+  data: models.PostulantUploadUrlRequest
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/upload-url",
+    data
+  );
+};
+
+/** Confirma en BD un archivo de postulante ya subido a S3. */
+export const confirmPostulantUpload = (
+  data: models.PostulantConfirmUploadRequest
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/confirm-upload",
+    data
+  );
+};
+
+/** Lista los archivos de un postulante. */
+export const listPostulantFiles = (
+  idRequerimientoTalento: number
+): Promise<AxiosResponse<models.PostulantFileListResponse>> => {
+  return axiosInstanceFMI.get(
+    `/fmi/requirement/postulant/file/list?idRequerimientoTalento=${idRequerimientoTalento}`
+  );
+};
+
+/** URL GET pre-firmada para descargar un archivo de postulante. */
+export const generatePostulantDownloadUrl = (
+  data: models.PostulantDownloadUrlRequest
+): Promise<AxiosResponse<models.RqPresignedUrlResponse>> => {
+  return axiosInstanceFMI.post(
+    "/fmi/requirement/postulant/file/download-url",
+    data
+  );
+};
+
+/** Eliminación lógica de un archivo de postulante. */
+export const removePostulantFile = (
+  idArchivo: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.delete(
+    `/fmi/requirement/postulant/file/remove?idArchivo=${idArchivo}`
+  );
+};
+
 // Talento FMI
 export const saveTalentFMI = (
   data: models.SaveTalentFMIParams
@@ -366,9 +417,9 @@ export const addPostulanteService = (
 export const updatePersonalDetails = (
   data: Partial<models.AddTalentParams>
 ): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
-    const token = 
-        localStorage.getItem("token") || 
-        localStorage.getItem("authToken") || 
+    const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
         "";
 
     return axiosInstanceNoToken.post(
@@ -380,4 +431,53 @@ export const updatePersonalDetails = (
             }
         }
     );
+};
+
+// blacklist (lista negra)
+export const createBlacklist = (
+  data: models.BlacklistCreateParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/blacklist/create", data);
+};
+
+export const updateBlacklist = (
+  data: models.BlacklistUpdateParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/blacklist/update", data);
+};
+
+/** El motivo va en el body: es texto libre de hasta 1000 caracteres. */
+export const removeBlacklist = (
+  data: models.BlacklistRemoveParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete("/bdt/blacklist/remove", { data });
+};
+
+export const getBlacklist = (params: {
+  nombre?: string;
+  idCliente?: number;
+  pagina?: number;
+}): Promise<AxiosResponse<models.BlacklistListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/blacklist/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const getBlacklistHistory = (params: {
+  idTalento: number;
+  idCliente?: number;
+  pagina?: number;
+}): Promise<AxiosResponse<models.BlacklistHistoryResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/blacklist/history${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+/** Valida si el talento está restringido para el cliente del requerimiento. */
+export const validateBlacklist = (params: {
+  idTalento: number;
+  idRequerimiento: number;
+}): Promise<AxiosResponse<models.BlacklistValidateResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  return axiosInstance.get(`/bdt/blacklist/validate?${queryString}`);
 };

@@ -1,13 +1,9 @@
 import { Eye, FileText, Pencil } from "lucide-react";
-import { enqueueSnackbar } from "notistack";
 import { useModal } from "../../context/ModalContext";
-import { useApi } from "../../hooks/useApi";
-import { FileResponse, TalentFile } from "../../models";
-import { getCvFile } from "../../services/apiService";
-import { handleError, handleResponse } from "../../utilities/errorHandler";
+import { TalentFile } from "../../models";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
-import { Utils } from "../../utilities/utils";
+import { useViewTalentFile } from "../../hooks/talents/useViewTalentFile";
 
 interface Props {
     cvData?: TalentFile;
@@ -16,10 +12,8 @@ interface Props {
 export const ModalResume = ({ cvData }: Props) => {
     const { openModal, closeModal } = useModal();
 
-    const { loading, fetch } = useApi<FileResponse, number>(getCvFile, {
-        onError: (error) => handleError(error, enqueueSnackbar),
-        onSuccess: (response) => handleResponse({ response: response, showSuccessMessage: false, enqueueSnackbar: enqueueSnackbar }),
-    });
+    const { viewingId, viewFile } = useViewTalentFile();
+    const loading = viewingId !== null;
 
     const replaceResumeFile = () => {
         closeModal("modalCv");
@@ -28,12 +22,7 @@ export const ModalResume = ({ cvData }: Props) => {
 
     const openFile = () => {
         if (cvData?.idArchivo) {
-            fetch(cvData.idArchivo).then((response) => {
-                if (response.data.result.idMensaje === 2) {
-                    const archivoB64 = response.data.archivo;
-                    Utils.openPdfDocument(archivoB64);
-                }
-            });
+            viewFile(cvData.idArchivo);
         }
     }
 
