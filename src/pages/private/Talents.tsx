@@ -722,7 +722,11 @@ export const Talents = () => {
                                     .map((c) => (
                                       <span
                                         key={c.idCliente}
-                                        className="max-w-[120px] truncate rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"
+                                        className={`rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ${
+                                          c.idCliente === 0
+                                            ? "whitespace-nowrap"
+                                            : "max-w-[120px] truncate"
+                                        }`}
                                       >
                                         {c.cliente}
                                       </span>
