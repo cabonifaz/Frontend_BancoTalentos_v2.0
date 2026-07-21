@@ -886,7 +886,10 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesTecnicas || []
                             ).map((item) => (
-                              <React.Fragment key={item.idHabTec}>
+                              <div
+                                key={item.idHabTec}
+                                className="inline-flex items-center gap-1"
+                              >
                                 <p
                                   className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
                                 >
@@ -899,6 +902,7 @@ export const Talents = () => {
                                 <button
                                   type="button"
                                   title="Remover habilidad"
+                                  className="shrink-0"
                                 >
                                   <Trash2
                                     className="w-5 h-5"
@@ -910,7 +914,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </React.Fragment>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -934,7 +938,10 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesBlandas || []
                             ).map((item) => (
-                              <React.Fragment key={item.id}>
+                              <div
+                                key={item.id}
+                                className="inline-flex items-center gap-1"
+                              >
                                 <p
                                   className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
                                 >
@@ -943,6 +950,7 @@ export const Talents = () => {
                                 <button
                                   type="button"
                                   title="Remover habilidad"
+                                  className="shrink-0"
                                 >
                                   <Trash2
                                     className="w-5 h-5"
@@ -954,7 +962,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </React.Fragment>
+                              </div>
                             ))}
                           </div>
                         </div>

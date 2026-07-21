@@ -1,3 +1,4 @@
+import { GraduationCap, Pencil, Trash2, Wrench } from "lucide-react";
 import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
@@ -239,11 +240,7 @@ export const TabVacancies = ({
             onClick={toggleEdit}
             className="focus:outline-none ms-2"
           >
-            <img
-              src="/assets/ic_edit.svg"
-              alt="Editar"
-              className="w-7 h-7"
-            />
+            <Pencil className="w-7 h-7" />
           </button>
           <div className="flex items-center gap-2">
             <button
@@ -505,11 +502,7 @@ export const TabVacancies = ({
                                   openModalCareers(idVacante);
                                 }}
                               >
-                                <img
-                                  className="w-6 h-6"
-                                  src="/assets/ic_student.png"
-                                  alt="admin-settings-male"
-                                />
+                                <GraduationCap className="w-6 h-6" />
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                                   {getTotalCareersForVacancy(
                                     field.idRequerimientoVacante
@@ -526,11 +519,7 @@ export const TabVacancies = ({
                                   handleOpenModal(idVacante);
                                 }}
                               >
-                                <img
-                                  src="/assets/ic_skills.png"
-                                  alt="icon add"
-                                  className="w-6 h-6"
-                                />
+                                <Wrench className="w-6 h-6" />
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                                   {getTotalSkillsForVacancy(
                                     field.idRequerimientoVacante
@@ -550,11 +539,7 @@ export const TabVacancies = ({
                                   handleRemoveVacante(index)
                                 }
                               >
-                                <img
-                                  src="/assets/ic_remove.png"
-                                  alt="icon remove"
-                                  className="w-6 h-6"
-                                />
+                                <Trash2 className="w-6 h-6 text-red-500" />
                               </button>
                             )}
                           </td>

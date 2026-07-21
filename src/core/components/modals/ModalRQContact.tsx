@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { ReqContacto } from "../../models/interfaces/ReqContacto";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -130,11 +131,7 @@ export const ModalRQContact = ({
             onClick={onClose}
             className="absolute top-4 right-4 focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
 
           <form className="space-y-4" onSubmit={handleSubmit(submitData)}>

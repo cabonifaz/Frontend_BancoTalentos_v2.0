@@ -1,3 +1,4 @@
+import { GraduationCap, Trash2, Wrench } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
 import { Utils } from "../../../../utilities/utils";
@@ -465,11 +466,7 @@ export const TabVacancies = ({
                                   )
                                 }
                               >
-                                <img
-                                  className="w-6 h-6"
-                                  src="/assets/ic_student.png"
-                                  alt="admin-settings-male"
-                                />
+                                <GraduationCap className="w-6 h-6" />
                                 {/**@marker skills careers */}
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                                   {getTotalCareersForVacancy(tempVacancyId)}
@@ -486,11 +483,7 @@ export const TabVacancies = ({
                                   );
                                 }}
                               >
-                                <img
-                                  src="/assets/ic_skills.png"
-                                  alt="icon add"
-                                  className="w-6 h-6"
-                                />
+                                <Wrench className="w-6 h-6" />
                                 <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                                   {getTotalSkillsForVacancy(tempVacancyId)}
                                 </span>
@@ -506,11 +499,7 @@ export const TabVacancies = ({
                                 handleRemoveVacante(index)
                               }
                             >
-                              <img
-                                src="/assets/ic_remove.png"
-                                alt="icon remove"
-                                className="w-6 h-6"
-                              />
+                              <Trash2 className="w-6 h-6 text-red-500" />
                             </button>
                           </td>
                         </tr>
