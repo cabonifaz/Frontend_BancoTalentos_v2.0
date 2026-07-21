@@ -144,9 +144,10 @@ export const Talents = () => {
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
 
-  // Estado de lista negra del talento abierto: pinta el icono de calavera si
-  // está restringido para cualquier cliente (global o específico).
-  const { isBlacklisted, checkBlacklisted } = useTalentBlacklistStatus();
+  // Estado de lista negra del talento abierto: pinta el icono y lista los
+  // clientes de los que está restringido (global o específicos).
+  const { isBlacklisted, restrictedClients, checkBlacklisted } =
+    useTalentBlacklistStatus();
 
   const { downloadingId, downloadFile } = useDownloadTalentFile();
 
@@ -701,11 +702,38 @@ export const Talents = () => {
                                 <Angry
                                   className={`h-5 w-5 ${
                                     isBlacklisted
-                                      ? "text-red-600"
+                                      ? "fill-red-500 text-red-700"
                                       : "text-gray-500 hover:text-gray-800"
                                   }`}
                                 />
                               </button>
+
+                              {/* Clientes de los que está restringido; si son
+                                  muchos, el tooltip nativo los muestra todos. */}
+                              {restrictedClients.length > 0 && (
+                                <div
+                                  className="flex flex-wrap items-center gap-1"
+                                  title={restrictedClients
+                                    .map((c) => c.cliente)
+                                    .join(", ")}
+                                >
+                                  {restrictedClients
+                                    .slice(0, 3)
+                                    .map((c) => (
+                                      <span
+                                        key={c.idCliente}
+                                        className="max-w-[120px] truncate rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"
+                                      >
+                                        {c.cliente}
+                                      </span>
+                                    ))}
+                                  {restrictedClients.length > 3 && (
+                                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                                      +{restrictedClients.length - 3}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
                               <MapPin className="h-5 w-5" />

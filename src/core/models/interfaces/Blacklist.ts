@@ -24,6 +24,12 @@ export interface BlacklistHistory {
   fchcre: string;
 }
 
+/** Cliente del que un talento está restringido (0 = "TODOS LOS CLIENTES"). */
+export interface BlacklistStatusClient {
+  idCliente: number;
+  cliente: string;
+}
+
 /**
  * Resultado de validar a un talento contra la lista negra al asignarlo a un
  * requerimiento. Si `bloqueado` es false, el resto de campos viene nulo.
