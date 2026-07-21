@@ -4,9 +4,9 @@ import { AlertTriangle, Search } from "lucide-react";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
 import { useModal } from "../../context/ModalContext";
-import { useFetchClients } from "../../hooks/useFetchClients";
 import { useBlacklist } from "../../hooks/blacklist/useBlacklist";
 import { BlacklistItem, BlacklistKeptClient } from "../../models";
+import { Client } from "../../models/interfaces/Client";
 
 export const MODAL_REMOVE_GLOBAL_RESTRICTION = "modalRemoveGlobalRestriction";
 
@@ -14,6 +14,9 @@ interface Props {
   /** Restricción global (idCliente = 0) que se va a levantar. */
   restriction: BlacklistItem | null;
   talentName?: string;
+  /** Listado de clientes, izado al padre para no volver a pedir /fmi/client/list. */
+  clientes: Client[];
+  loadingClients: boolean;
   /** Se invoca cuando algo cambió en BD, para que el padre recargue. */
   onDone: () => void;
 }
@@ -31,10 +34,11 @@ const inputClass =
 export const ModalRemoveGlobalRestriction = ({
   restriction,
   talentName,
+  clientes,
+  loadingClients,
   onDone,
 }: Props) => {
   const { closeModal, isModalOpen } = useModal();
-  const { clientes, loading: loadingClients } = useFetchClients();
   const { replaceGlobalRestriction, saving } = useBlacklist();
 
   const [kept, setKept] = useState<Record<number, boolean>>({});

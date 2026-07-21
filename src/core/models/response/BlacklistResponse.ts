@@ -23,3 +23,9 @@ export interface BlacklistValidateResponse {
   result: BaseResponse;
   validacion: BlacklistValidation;
 }
+
+export interface BlacklistStatusResponse {
+  result: BaseResponse;
+  /** true si el talento tiene alguna restricción activa (cualquier cliente). */
+  bloqueado: boolean;
+}

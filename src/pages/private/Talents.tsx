@@ -68,6 +68,7 @@ import {
   ModalAddToBlacklist,
   MODAL_ADD_TO_BLACKLIST,
 } from "../../core/components/modals/ModalAddToBlacklist";
+import { useTalentBlacklistStatus } from "../../core/hooks/blacklist/useTalentBlacklistStatus";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -142,6 +143,10 @@ export const Talents = () => {
 
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
+
+  // Estado de lista negra del talento abierto: pinta el icono de calavera si
+  // está restringido para cualquier cliente (global o específico).
+  const { isBlacklisted, checkBlacklisted } = useTalentBlacklistStatus();
 
   const { downloadingId, downloadFile } = useDownloadTalentFile();
 
@@ -255,8 +260,9 @@ export const Talents = () => {
 
     if (id) {
       fetchTalentDets(id);
+      checkBlacklisted(id);
     }
-  }, [fetchTalentDets, talent]);
+  }, [fetchTalentDets, checkBlacklisted, talent]);
 
   const handleOpenModal = <T,>(
     modalId: string,
@@ -361,7 +367,12 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
-        <ModalAddToBlacklist talent={talent} />
+        <ModalAddToBlacklist
+          talent={talent}
+          onRestricted={() =>
+            talent && checkBlacklisted(talent.idTalento)
+          }
+        />
         <div className="flex h-full flex-col overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full 2xl:min-h-12 items-center sm:justify-between gap-4">
@@ -677,13 +688,23 @@ export const Talents = () => {
                               />
                               <button
                                 type="button"
-                                title="Agregar a lista negra"
+                                title={
+                                  isBlacklisted
+                                    ? "Talento en lista negra"
+                                    : "Agregar a lista negra"
+                                }
                                 onClick={() =>
                                   openModal(MODAL_ADD_TO_BLACKLIST)
                                 }
                                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0"
                               >
-                                <Angry className="h-5 w-5 text-gray-500 hover:text-gray-800" />
+                                <Angry
+                                  className={`h-5 w-5 ${
+                                    isBlacklisted
+                                      ? "text-red-600"
+                                      : "text-gray-500 hover:text-gray-800"
+                                  }`}
+                                />
                               </button>
                             </div>
                             <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">

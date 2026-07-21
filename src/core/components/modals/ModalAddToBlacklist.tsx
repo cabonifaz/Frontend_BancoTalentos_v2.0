@@ -11,6 +11,8 @@ export const MODAL_ADD_TO_BLACKLIST = "modalAddToBlacklist";
 
 interface Props {
   talent: Talent | null;
+  /** Se llama tras restringir con éxito, para refrescar el estado de lista negra. */
+  onRestricted?: () => void;
 }
 
 const selectClass =
@@ -21,7 +23,7 @@ const selectClass =
  * del detalle de talento. Permite elegir un cliente específico o "TODOS LOS
  * CLIENTES" (idCliente = 0) y un motivo.
  */
-export const ModalAddToBlacklist = ({ talent }: Props) => {
+export const ModalAddToBlacklist = ({ talent, onRestricted }: Props) => {
   const { closeModal } = useModal();
   const { clientes } = useFetchClients();
   const { createRestriction, saving } = useBlacklist();
@@ -58,6 +60,7 @@ export const ModalAddToBlacklist = ({ talent }: Props) => {
     if (ok) {
       reset();
       closeModal(MODAL_ADD_TO_BLACKLIST);
+      onRestricted?.();
     }
   };
 
