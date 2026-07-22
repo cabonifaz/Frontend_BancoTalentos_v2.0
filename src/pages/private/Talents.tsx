@@ -68,6 +68,7 @@ import {
   ModalAddToBlacklist,
   MODAL_ADD_TO_BLACKLIST,
 } from "../../core/components/modals/ModalAddToBlacklist";
+import { useTalentBlacklistStatus } from "../../core/hooks/blacklist/useTalentBlacklistStatus";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -142,6 +143,35 @@ export const Talents = () => {
 
   const { isLoading, removeTechnicalSkill, removeSoftSkill } =
     useRemoveSkill();
+
+  // Estado de lista negra del talento abierto: pinta el icono y lista los
+  // clientes de los que está restringido (global o específicos).
+  const { isBlacklisted, restrictedClients, checkBlacklisted } =
+    useTalentBlacklistStatus();
+
+  // Popover con los clientes restringidos que no caben en los chips visibles.
+  const [showMoreRestricted, setShowMoreRestricted] = useState(false);
+  const moreRestrictedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMoreRestricted) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        moreRestrictedRef.current &&
+        !moreRestrictedRef.current.contains(e.target as Node)
+      ) {
+        setShowMoreRestricted(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreRestricted]);
+
+  // Al cambiar de talento se cierra el popover.
+  useEffect(() => {
+    setShowMoreRestricted(false);
+  }, [restrictedClients]);
 
   const { downloadingId, downloadFile } = useDownloadTalentFile();
 
@@ -255,8 +285,9 @@ export const Talents = () => {
 
     if (id) {
       fetchTalentDets(id);
+      checkBlacklisted(id);
     }
-  }, [fetchTalentDets, talent]);
+  }, [fetchTalentDets, checkBlacklisted, talent]);
 
   const handleOpenModal = <T,>(
     modalId: string,
@@ -361,7 +392,12 @@ export const Talents = () => {
           updateTalentList={handleTalentUpdate}
           cvLang={cvLang}
         />
-        <ModalAddToBlacklist talent={talent} />
+        <ModalAddToBlacklist
+          talent={talent}
+          onRestricted={() =>
+            talent && checkBlacklisted(talent.idTalento)
+          }
+        />
         <div className="flex h-full flex-col overflow-x-hidden">
           {/* Options section */}
           <div className="flex flex-col-reverse sm:flex-row w-full 2xl:min-h-12 items-center sm:justify-between gap-4">
@@ -677,14 +713,75 @@ export const Talents = () => {
                               />
                               <button
                                 type="button"
-                                title="Agregar a lista negra"
+                                title={
+                                  isBlacklisted
+                                    ? "Talento en lista negra"
+                                    : "Agregar a lista negra"
+                                }
                                 onClick={() =>
                                   openModal(MODAL_ADD_TO_BLACKLIST)
                                 }
                                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0"
                               >
-                                <Angry className="h-5 w-5 text-gray-500 hover:text-gray-800" />
+                                <Angry
+                                  className={`h-5 w-5 ${
+                                    isBlacklisted
+                                      ? "fill-red-500 text-red-700"
+                                      : "text-gray-500 hover:text-gray-800"
+                                  }`}
+                                />
                               </button>
+
+                              {/* Clientes de los que está restringido; los que
+                                  no caben se despliegan al pulsar el "+N". */}
+                              {restrictedClients.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-1">
+                                  {restrictedClients
+                                    .slice(0, 3)
+                                    .map((c) => (
+                                      <span
+                                        key={c.idCliente}
+                                        className={`rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ${
+                                          c.idCliente === 0
+                                            ? "whitespace-nowrap"
+                                            : "max-w-[120px] truncate"
+                                        }`}
+                                      >
+                                        {c.cliente}
+                                      </span>
+                                    ))}
+                                  {restrictedClients.length > 3 && (
+                                    <div
+                                      ref={moreRestrictedRef}
+                                      className="relative"
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setShowMoreRestricted((v) => !v)
+                                        }
+                                        className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition-colors"
+                                      >
+                                        +{restrictedClients.length - 3}
+                                      </button>
+                                      {showMoreRestricted && (
+                                        <div className="absolute left-0 top-full z-10 mt-1 max-h-48 w-max min-w-[140px] max-w-[240px] overflow-y-auto rounded-md border border-red-200 bg-white p-1 shadow-lg">
+                                          {restrictedClients
+                                            .slice(3)
+                                            .map((c) => (
+                                              <div
+                                                key={c.idCliente}
+                                                className="truncate rounded px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                                              >
+                                                {c.cliente}
+                                              </div>
+                                            ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <p className="text-sm text-[#71717A] flex items-end my-1 w-fit">
                               <MapPin className="h-5 w-5" />
@@ -886,7 +983,10 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesTecnicas || []
                             ).map((item) => (
-                              <React.Fragment key={item.idHabTec}>
+                              <div
+                                key={item.idHabTec}
+                                className="inline-flex items-center gap-1"
+                              >
                                 <p
                                   className="text-[var(--color-blue)] text-sm bg-[#f5f9ff] px-3 rounded-full font-semibold py-1"
                                 >
@@ -899,6 +999,7 @@ export const Talents = () => {
                                 <button
                                   type="button"
                                   title="Remover habilidad"
+                                  className="shrink-0"
                                 >
                                   <Trash2
                                     className="w-5 h-5"
@@ -910,7 +1011,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </React.Fragment>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -934,7 +1035,10 @@ export const Talents = () => {
                             {(
                               talentDets?.habilidadesBlandas || []
                             ).map((item) => (
-                              <React.Fragment key={item.id}>
+                              <div
+                                key={item.id}
+                                className="inline-flex items-center gap-1"
+                              >
                                 <p
                                   className="text-[#c11574] text-sm bg-[#fef6fa] px-3 rounded-full font-semibold py-1"
                                 >
@@ -943,6 +1047,7 @@ export const Talents = () => {
                                 <button
                                   type="button"
                                   title="Remover habilidad"
+                                  className="shrink-0"
                                 >
                                   <Trash2
                                     className="w-5 h-5"
@@ -954,7 +1059,7 @@ export const Talents = () => {
                                     }
                                   />
                                 </button>
-                              </React.Fragment>
+                              </div>
                             ))}
                           </div>
                         </div>

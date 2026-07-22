@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { CircleAlert } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { axiosInstanceFMI } from "../../core/services/axiosService";
 import BackButton from "../../core/components/ui/BackButton";
@@ -136,10 +137,9 @@ const TableRow: React.FC<TableRowProps> = ({
           <p>{talento?.situacion || ""}</p>
           {talento.idSituacion === 2 && (
             <div className="w-fit relative group">
-              <img
-                src="/assets/ic_error.svg"
-                alt="icon tooltip ocupado"
+              <CircleAlert
                 className="min-w-5 min-h-5 w-5 h-5 cursor-pointer"
+                color="#ef4444"
               />
               <div className="absolute invisible group-hover:visible z-10 left-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
                 <p className="text-start">{talento?.tooltip || ""}</p>

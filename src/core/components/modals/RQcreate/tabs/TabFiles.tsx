@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
 import { useState } from "react";
@@ -151,11 +152,7 @@ export const TabFiles = ({ fileOptions, filesParms }: TabProps) => {
                 onClick={() => handleRemoveFile(index)}
                 className="text-red-500 hover:text-red-600 focus:outline-none"
               >
-                <img
-                  src="/assets/ic_remove.png"
-                  alt="icon close"
-                  className="w-5 h-5"
-                />
+                <Trash2 className="w-5 h-5" />
               </button>
             </div>
           ))}

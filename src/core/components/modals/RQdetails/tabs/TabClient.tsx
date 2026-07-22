@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { Client } from "../../../../models/interfaces/Client";
@@ -198,10 +199,7 @@ export const TabClient = ({
                               }
                               className="w-7 h-7"
                             >
-                              <img
-                                src="/assets/ic_edit.svg"
-                                alt="edit icon"
-                              />
+                              <Pencil className="w-7 h-7" />
                             </button>
                           </div>
                         </td>

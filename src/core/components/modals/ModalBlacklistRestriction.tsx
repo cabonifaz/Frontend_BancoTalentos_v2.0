@@ -4,10 +4,10 @@ import { Search, X } from "lucide-react";
 import { Modal } from "./Modal";
 import { Loading } from "../ui/Loading";
 import { useModal } from "../../context/ModalContext";
-import { useFetchClients } from "../../hooks/useFetchClients";
 import { useBlacklist } from "../../hooks/blacklist/useBlacklist";
 import { getTalents } from "../../services/apiService";
 import { BlacklistItem, Talent } from "../../models";
+import { Client } from "../../models/interfaces/Client";
 
 export const MODAL_BLACKLIST_RESTRICTION = "modalBlacklistRestriction";
 
@@ -21,6 +21,8 @@ interface Props {
    * cualquier talento desde el propio módulo sin pasar por el detalle.
    */
   allowTalentSearch?: boolean;
+  /** Listado de clientes, izado al padre para no volver a pedir /fmi/client/list. */
+  clientes: Client[];
   onSaved: () => void;
 }
 
@@ -42,10 +44,10 @@ export const ModalBlacklistRestriction = ({
   talentName,
   restriction,
   allowTalentSearch = false,
+  clientes,
   onSaved,
 }: Props) => {
   const { closeModal, isModalOpen } = useModal();
-  const { clientes } = useFetchClients();
   const { createRestriction, updateRestriction, saving } = useBlacklist();
 
   const [idCliente, setIdCliente] = useState<number | "">("");
