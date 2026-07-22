@@ -149,6 +149,30 @@ export const Talents = () => {
   const { isBlacklisted, restrictedClients, checkBlacklisted } =
     useTalentBlacklistStatus();
 
+  // Popover con los clientes restringidos que no caben en los chips visibles.
+  const [showMoreRestricted, setShowMoreRestricted] = useState(false);
+  const moreRestrictedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMoreRestricted) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        moreRestrictedRef.current &&
+        !moreRestrictedRef.current.contains(e.target as Node)
+      ) {
+        setShowMoreRestricted(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreRestricted]);
+
+  // Al cambiar de talento se cierra el popover.
+  useEffect(() => {
+    setShowMoreRestricted(false);
+  }, [restrictedClients]);
+
   const { downloadingId, downloadFile } = useDownloadTalentFile();
 
   const buildTalentParams = (
@@ -708,15 +732,10 @@ export const Talents = () => {
                                 />
                               </button>
 
-                              {/* Clientes de los que está restringido; si son
-                                  muchos, el tooltip nativo los muestra todos. */}
+                              {/* Clientes de los que está restringido; los que
+                                  no caben se despliegan al pulsar el "+N". */}
                               {restrictedClients.length > 0 && (
-                                <div
-                                  className="flex flex-wrap items-center gap-1"
-                                  title={restrictedClients
-                                    .map((c) => c.cliente)
-                                    .join(", ")}
-                                >
+                                <div className="flex flex-wrap items-center gap-1">
                                   {restrictedClients
                                     .slice(0, 3)
                                     .map((c) => (
@@ -732,9 +751,34 @@ export const Talents = () => {
                                       </span>
                                     ))}
                                   {restrictedClients.length > 3 && (
-                                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                                      +{restrictedClients.length - 3}
-                                    </span>
+                                    <div
+                                      ref={moreRestrictedRef}
+                                      className="relative"
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setShowMoreRestricted((v) => !v)
+                                        }
+                                        className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition-colors"
+                                      >
+                                        +{restrictedClients.length - 3}
+                                      </button>
+                                      {showMoreRestricted && (
+                                        <div className="absolute left-0 top-full z-10 mt-1 max-h-48 w-max min-w-[140px] max-w-[240px] overflow-y-auto rounded-md border border-red-200 bg-white p-1 shadow-lg">
+                                          {restrictedClients
+                                            .slice(3)
+                                            .map((c) => (
+                                              <div
+                                                key={c.idCliente}
+                                                className="truncate rounded px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                                              >
+                                                {c.cliente}
+                                              </div>
+                                            ))}
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}
