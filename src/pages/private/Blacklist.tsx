@@ -57,7 +57,9 @@ interface TalentGroup {
 
 export const Blacklist = () => {
   const { openModal } = useModal();
-  const { clientes } = useFetchClients();
+  // Único punto donde se pide /fmi/client/list en el módulo: se iza aquí y se
+  // pasa a los modales por props para no repetir la llamada por cada modal.
+  const { clientes, loading: loadingClients } = useFetchClients();
   const {
     items,
     total,
@@ -293,6 +295,7 @@ export const Blacklist = () => {
           talentName={pickTalent ? undefined : selectedGroup?.nombreTalento}
           restriction={editingRestriction}
           allowTalentSearch={pickTalent}
+          clientes={clientes}
           onSaved={refreshAfterSave}
         />
 
@@ -305,6 +308,8 @@ export const Blacklist = () => {
         <ModalRemoveGlobalRestriction
           restriction={removingRestriction}
           talentName={selectedGroup?.nombreTalento}
+          clientes={clientes}
+          loadingClients={loadingClients}
           onDone={refreshAfterRemove}
         />
 

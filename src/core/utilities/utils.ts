@@ -1,5 +1,6 @@
 import { format, isValid, parse } from "date-fns";
 import { createElement, ReactNode } from "react";
+import { Star } from "lucide-react";
 import { Param } from "../models";
 
 type fileNameType = string | undefined | null;
@@ -18,18 +19,17 @@ export class Utils {
 
   static getStars = (rating: number): ReactNode[] => {
     const getFilledStar = (key: string): ReactNode => {
-      return createElement("img", {
-        src: "/assets/ic_fill_star.svg",
-        alt: "filled star icon",
+      return createElement(Star, {
+        color: "#faab34",
+        fill: "#faab34",
         className: "h-5 w-5",
         key: key,
       });
     };
 
     const getOutlinedStar = (key: string): ReactNode => {
-      return createElement("img", {
-        src: "/assets/ic_outline_star.svg",
-        alt: "outlined star icon",
+      return createElement(Star, {
+        color: "#faab34",
         className: "h-5 w-5",
         key: key,
       });

@@ -2,6 +2,7 @@ import { BaseResponse } from "./BaseResponse";
 import {
   BlacklistHistory,
   BlacklistItem,
+  BlacklistStatusClient,
   BlacklistValidation,
 } from "../interfaces/Blacklist";
 
@@ -22,4 +23,12 @@ export interface BlacklistHistoryResponse {
 export interface BlacklistValidateResponse {
   result: BaseResponse;
   validacion: BlacklistValidation;
+}
+
+export interface BlacklistStatusResponse {
+  result: BaseResponse;
+  /** true si el talento tiene alguna restricción activa (cualquier cliente). */
+  bloqueado: boolean;
+  /** Clientes de los que está restringido (uno global = "TODOS LOS CLIENTES"). */
+  clientes: BlacklistStatusClient[];
 }

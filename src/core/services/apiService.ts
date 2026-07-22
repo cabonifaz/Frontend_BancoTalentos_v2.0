@@ -481,3 +481,10 @@ export const validateBlacklist = (params: {
   const queryString = Utils.buildQueryString(params);
   return axiosInstance.get(`/bdt/blacklist/validate?${queryString}`);
 };
+
+/** Indica si el talento tiene alguna restricción activa (cualquier cliente). */
+export const getTalentBlacklistStatus = (
+  idTalento: number
+): Promise<AxiosResponse<models.BlacklistStatusResponse>> => {
+  return axiosInstance.get(`/bdt/blacklist/status?idTalento=${idTalento}`);
+};

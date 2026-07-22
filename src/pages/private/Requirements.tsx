@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
 import {
   ReqListParams,
   RequerimientosResponse,
@@ -245,16 +246,17 @@ export const Requirements = () => {
     });
   };
 
-  const getAlertIconPath = (idAlerta: number): string => {
+  const getAlertIcon = (idAlerta: number) => {
+    const className = "w-5 h-5 cursor-pointer min-w-5 min-h-5";
     switch (idAlerta) {
       case 1:
-        return "/assets/ic_success.svg"; // Alerta baja
+        return <CircleCheck className={className} color="#22c55e" />; // Alerta baja
       case 2:
-        return "/assets/ic_warning.svg"; // Alerta media
+        return <TriangleAlert className={className} color="#f59e0b" />; // Alerta media
       case 3:
-        return "/assets/ic_error.svg"; // Alerta alta
+        return <CircleAlert className={className} color="#ef4444" />; // Alerta alta
       default:
-        return "/assets/ic_success.svg";
+        return <CircleCheck className={className} color="#22c55e" />;
     }
   };
 
@@ -494,11 +496,7 @@ export const Requirements = () => {
                           {req?.idAlerta !== null &&
                             req?.idAlerta > 0 && (
                               <div className="relative inline-block group">
-                                <img
-                                  src={getAlertIconPath(req.idAlerta)}
-                                  alt="icon estado alerta RQ"
-                                  className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                                />
+                                {getAlertIcon(req.idAlerta)}
                                 <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
                                   Vence: {req.fechaVencimiento}
                                   <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>

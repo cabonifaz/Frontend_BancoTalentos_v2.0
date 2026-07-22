@@ -3,6 +3,7 @@ import {
   useFieldArray,
   useFormContext,
 } from "react-hook-form";
+import { Pencil } from "lucide-react";
 import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
 import { DropdownForm } from "../../../forms";
 import { NumberInput } from "../../../ui/InputNumber";
@@ -118,11 +119,7 @@ export const TabManagment = ({
             onClick={handleToggleEdit}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_edit.svg"
-              alt="Editar"
-              className="w-7 h-7"
-            />
+            <Pencil className="w-7 h-7" />
           </button>
         </div>
 

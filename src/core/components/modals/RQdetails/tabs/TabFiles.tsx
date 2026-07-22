@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   AddFilesSchemaType,
@@ -260,11 +261,7 @@ export const TabFiles = ({
                   }}
                   className="text-blue-500 hover:text-blue-600 focus:outline-none"
                 >
-                  <img
-                    src="/assets/ic_preview_file.png"
-                    alt="icon preview"
-                    className="w-5 h-5"
-                  />
+                  <Eye className="w-5 h-5" />
                 </button>
                 <span className="text-sm text-gray-700 truncate flex-1 mr-2">
                   {file.name}
@@ -341,11 +338,7 @@ export const TabFiles = ({
                   }
                   className="text-red-500 hover:text-red-600 focus:outline-none"
                 >
-                  <img
-                    src="/assets/ic_remove.png"
-                    alt="icon close"
-                    className="w-5 h-5"
-                  />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             ))}

@@ -1,3 +1,4 @@
+import { Eye, FolderOpen } from "lucide-react";
 import { useState } from "react";
 import { useModal } from "../../../../context/ModalContext";
 import { ReqTalento } from "../../../../models/interfaces/ReqTalento";
@@ -108,11 +109,7 @@ export const TabPostulant = ({
                       className="hover:shadow-lg hover:rounded-full hover:bg-gray-100"
                       onClick={() => openFile(index)}
                     >
-                      <img
-                        src="/assets/ic_show_pass.svg"
-                        alt="icon eye"
-                        className="w-5 h-5"
-                      />
+                      <Eye className="w-5 h-5" />
                     </button>
                   </td>
                   <td className="table-cell">
@@ -150,11 +147,7 @@ export const TabPostulant = ({
                       className="p-1 hover:rounded-full hover:bg-gray-100 hover:shadow-lg"
                       onClick={() => setFilesFor(talent)}
                     >
-                      <img
-                        src="/assets/ic_preview_file.png"
-                        alt="archivos"
-                        className="h-5 w-5"
-                      />
+                      <FolderOpen className="h-5 w-5" />
                     </button>
                   </td>
                 </tr>
