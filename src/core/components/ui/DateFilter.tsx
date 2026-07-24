@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { OutsideClickHandler } from "./OutsideClickHandler";
@@ -44,7 +45,7 @@ export const DateFilter = ({ label, onDateSelected }: Props) => {
                             }}
                             className="flex items-center"
                         >
-                            <img src="/assets/ic_close_bdt.svg" alt="icon close" className="h-5 w-5" />
+                            <X className="h-5 w-5" />
                         </button>
                     )}
                 </div>

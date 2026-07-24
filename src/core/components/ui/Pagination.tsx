@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 
 interface Props {
     totalItems: number;
@@ -75,7 +76,7 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }
                 onClick={handleFirst}
                 disabled={currentPage === 1}
                 className={currentPage === 1 ? '' : "hover:bg-slate-50"}>
-                <img src="/assets/ic_first_page.svg" alt="first page icon" className="h-6 w-6" />
+                <ChevronsLeft className="h-6 w-6" />
             </button>
 
             <button
@@ -83,7 +84,7 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }
                 onClick={handlePrevious}
                 disabled={currentPage === 1}
                 className={currentPage === 1 ? '' : "hover:bg-slate-50"}>
-                <img src="/assets/ic_previous_page.svg" alt="previous page icon" className="h-6 w-6" />
+                <ChevronLeft className="h-6 w-6" />
             </button>
 
             {pageRange.map(
@@ -103,7 +104,7 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }
                 onClick={handleNext}
                 disabled={currentPage === totalPages}
                 className={currentPage === totalPages ? '' : "hover:bg-slate-50"}>
-                <img src="/assets/ic_next_page.svg" alt="next page icon" className="h-6 w-6" />
+                <ChevronRight className="h-6 w-6" />
             </button>
 
             <button
@@ -111,7 +112,7 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }
                 onClick={handleLast}
                 disabled={currentPage === totalPages}
                 className={currentPage === totalPages ? '' : "hover:bg-slate-50"}>
-                <img src="/assets/ic_last_page.svg" alt="last page icon" className="h-6 w-6" />
+                <ChevronsRight className="h-6 w-6" />
             </button>
         </div>
     );

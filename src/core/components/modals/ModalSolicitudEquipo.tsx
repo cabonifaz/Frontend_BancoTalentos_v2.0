@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { DropdownForm, InputForm } from "../forms";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
@@ -222,11 +223,7 @@ export const ModalSolicitudEquipo = ({
             onClick={handleCancel}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
         </div>
 

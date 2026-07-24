@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   DropdownForm,
@@ -195,11 +196,7 @@ export const ModalIngreso = ({
             onClick={onClose}
             className="focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
