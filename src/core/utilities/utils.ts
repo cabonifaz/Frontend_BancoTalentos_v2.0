@@ -68,6 +68,21 @@ export class Utils {
     localStorage.removeItem("token");
   };
 
+  /**
+   * Devuelve los IDs de rol (numéricos) del usuario a partir del JWT.
+   * En el token, `id_roles` contiene los IDs numéricos (p. ej. [1]) mientras que
+   * `roles` contiene los nombres (p. ej. ["ADMIN"]).
+   */
+  static getUserRoles = (token?: string): number[] => {
+    if (!token) return [];
+    const decoded = this.decodeJwt(token);
+    const raw = decoded?.id_roles;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((r: unknown) => Number(r))
+      .filter((n: number) => !Number.isNaN(n));
+  };
+
   static decodeJwt = (token: string): any => {
     try {
       const base64Url = token.split(".")[1];

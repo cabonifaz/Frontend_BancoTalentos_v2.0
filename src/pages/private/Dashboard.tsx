@@ -8,21 +8,13 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { Home, FileText, Link2, Users, LogOut, X, User, Angry } from "lucide-react";
+import { LogOut, X } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
+import { getAllowedModules } from "../../core/config/navigation";
 
 interface Props {
   children: ReactNode;
 }
-
-const railNav = [
-  { icon: Home,     label: "Inicio",           path: "/dashboard/talentos" },
-  { icon: FileText, label: "Requerimientos",    path: "/dashboard/requerimientos" },
-  { icon: Angry,    label: "Lista Negra",       path: "/dashboard/lista-negra" },
-  { icon: Users,    label: "Entrevistas",       path: "/dashboard/entrevistas" },
-  { icon: Link2,    label: "Generar enlace",    path: "/dashboard/generarEnlaceRequerimiento" },
-  { icon: User,     label: "Mi cuenta",         path: "/dashboard/mi-cuenta" },
-] as const;
 
 let sidebarOpenSnapshot = false;
 let sidebarClickOpenSnapshot = false;
@@ -153,7 +145,9 @@ export const Dashboard = ({ children }: Props) => {
 
   const fullName    = Utils.decodeJwt(token).fullname;
   const firstLetter = fullName.charAt(0);
-  const rol         = Utils.decodeJwt(token).roles[0];
+  const roles       = Utils.getUserRoles(token);
+  const rol         = Utils.decodeJwt(token).roles?.[0] ?? "";
+  const visibleNav  = getAllowedModules(roles);
 
   if (redirect) return <Navigate to={"/login"} replace />;
 
@@ -179,7 +173,7 @@ export const Dashboard = ({ children }: Props) => {
 
         {/* Quick-access nav icons */}
         <nav className="flex flex-col items-center pt-3 gap-0.5 flex-1">
-          {railNav.map(({ icon: Icon, label, path }) => (
+          {visibleNav.map(({ icon: Icon, label, path }) => (
             <button
               key={path}
               type="button"
@@ -246,54 +240,17 @@ export const Dashboard = ({ children }: Props) => {
 
         {/* Navigation items */}
         <nav className="flex flex-col py-3 px-3 gap-0.5 flex-1 overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/talentos")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <Home size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Inicio
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/requerimientos")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <FileText size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Requerimientos
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/lista-negra")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <Angry size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Lista Negra
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/entrevistas")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <Users size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Entrevistas
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/generarEnlaceRequerimiento")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <Link2 size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Generar enlace
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNav("/dashboard/mi-cuenta")}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
-          >
-            <User size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
-            Mi cuenta
-          </button>
+          {visibleNav.map(({ icon: Icon, label, path }) => (
+            <button
+              key={path}
+              type="button"
+              onClick={() => handleNav(path)}
+              className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
+            >
+              <Icon size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
+              {label}
+            </button>
+          ))}
         </nav>
 
         {/* Branding and logout pinned at the bottom */}
