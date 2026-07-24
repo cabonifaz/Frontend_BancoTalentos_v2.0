@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X, Pencil } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { AppError } from "../../models";
 import { Loading } from "../ui/Loading";
@@ -194,11 +195,7 @@ export const ModalDetailsVacCarreras = ({
               onClick={toggleEditMode}
             >
               {modalMode === MODAL_MODES.EDIT ? "Cancelar" : "Editar"}
-              <img
-                src="/assets/ic_edit.svg"
-                alt="icon edit"
-                className="w-5 h-5"
-              />
+              <Pencil className="w-5 h-5" />
             </button>
 
             <button
@@ -206,11 +203,7 @@ export const ModalDetailsVacCarreras = ({
               onClick={onClose}
               className="focus:outline-none"
             >
-              <img
-                src="/assets/ic_close_x.svg"
-                alt="icon close"
-                className="w-5 h-5"
-              />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -274,11 +267,7 @@ export const ModalDetailsVacCarreras = ({
                       title="Eliminar carrera"
                       onClick={() => handleRemoveCareer(c.carrera)}
                     >
-                      <img
-                        src="/assets/ic_close_x.svg"
-                        alt="icon close"
-                        className="w-4 h-4"
-                      />
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>

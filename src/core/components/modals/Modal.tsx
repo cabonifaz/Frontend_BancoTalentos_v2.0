@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { X, Check } from "lucide-react";
 import { useModal } from "../../context/ModalContext";
 
 interface Props {
@@ -57,11 +58,7 @@ export const Modal = ({
             className="flex items-center hover:bg-gray-100 rounded-full"
             onClick={onModalClose.bind(null, id)}
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
         </div>
         {children}
@@ -73,11 +70,7 @@ export const Modal = ({
             onClick={onModalClose.bind(null, id)}
             className="flex items-center w-1/2 font-semibold btn btn-outline-gray"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon cancel"
-              className="w-4 h-4"
-            />
+            <X className="w-4 h-4" />
             <p className="mx-auto">{cancellationLabel}</p>
           </button>
           <button
@@ -85,11 +78,7 @@ export const Modal = ({
             onClick={onConfirm}
             className="flex items-center w-1/2 font-semibold btn btn-primary"
           >
-            <img
-              src="/assets/ic_check.svg"
-              alt="icon check"
-              className="w-5 h-5 invert-[1]"
-            />
+            <Check className="w-5 h-5" />
             <p className="mx-auto">{confirmationLabel}</p>
           </button>
         </div>

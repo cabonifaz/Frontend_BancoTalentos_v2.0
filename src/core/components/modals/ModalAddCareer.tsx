@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { X } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 
 export type CareerProps = {
@@ -81,11 +82,7 @@ export const AddCareerModal = ({
           onClick={onClose}
           className="absolute top-4 right-4 focus:outline-none"
         >
-          <img
-            src="/assets/ic_close_x.svg"
-            alt="close"
-            className="w-6 h-6"
-          />
+          <X className="w-6 h-6" />
         </button>
 
         {/* Inputs */}
@@ -211,11 +208,7 @@ export const AddCareerModal = ({
                     title="Eliminar carrera"
                     onClick={() => handleRemoveCareer(career.label)}
                   >
-                    <img
-                      src="/assets/ic_close_x.svg"
-                      alt="icon close"
-                      className="w-4 h-4"
-                    />
+                    <X className="w-4 h-4" />
                   </button>
                 </li>
               );

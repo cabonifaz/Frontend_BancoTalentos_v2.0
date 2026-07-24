@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { enqueueSnackbar } from "notistack";
@@ -139,11 +140,7 @@ export const ModalRQContactV2 = ({
             onClick={onClose}
             className="absolute top-4 right-4 focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
 
           <div className="space-y-4">

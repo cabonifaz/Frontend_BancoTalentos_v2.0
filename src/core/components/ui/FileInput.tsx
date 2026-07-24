@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Upload, FileCheck } from "lucide-react";
 import { AddTalentType } from "../../models/schemas/AddTalentSchema";
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 
@@ -31,13 +31,11 @@ export const FileInput = <F extends FieldValues>({
       <div className="w-full">
         <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200">
           <div className="absolute flex flex-col items-center">
-            <img
-              alt="File Icon"
-              className="mb-3 w-8 h-8"
-              src={
-                value ? "/assets/ic_file_selected.svg" : "/assets/ic_upload.svg"
-              }
-            />
+            {value ? (
+              <FileCheck className="mb-3 w-8 h-8 text-[#0b85c3]" />
+            ) : (
+              <Upload className="mb-3 w-8 h-8 text-[#0b85c3]" />
+            )}
             <span className="block text-[#0b85c3] font-normal mt-1">
               {value ? value.name : initialText}
             </span>

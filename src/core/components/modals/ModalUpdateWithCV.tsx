@@ -1,3 +1,4 @@
+import { Upload } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -485,12 +486,7 @@ export const ModalUpdateWithCV = ({
             talento y te propondrá únicamente la información nueva o mejorada.
           </p>
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-6 hover:bg-gray-50">
-            <img
-              src="/assets/ic_upload.svg"
-              alt="upload"
-              className="h-8 w-8 opacity-60"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
+            <Upload className="h-8 w-8 opacity-60" />
             <span className="text-sm text-[#52525B]">
               {cvFile ? cvFile.name : "Selecciona un archivo PDF"}
             </span>

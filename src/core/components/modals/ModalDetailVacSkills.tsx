@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X, Pencil } from "lucide-react";
 import { Autocomplete } from "../ui/AutoComplete";
 import { enqueueSnackbar } from "notistack";
 import { AppError } from "../../models";
@@ -256,11 +257,7 @@ export const ModalDetailsVacSkills = ({
               onClick={changeEditMode}
             >
               {modalMode === MODAL_MODES.EDIT ? "Cancelar" : "Editar"}
-              <img
-                src="/assets/ic_edit.svg"
-                alt="icon edit"
-                className="w-6 h-6"
-              />
+              <Pencil className="w-6 h-6" />
             </button>
           </div>
 
@@ -269,11 +266,7 @@ export const ModalDetailsVacSkills = ({
             onClick={handleOnClose}
             className="absolute top-4 right-4 focus:outline-none"
           >
-            <img
-              src="/assets/ic_close_x.svg"
-              alt="icon close"
-              className="w-6 h-6"
-            />
+            <X className="w-6 h-6" />
           </button>
 
           <div className="flex flex-col gap-4">
@@ -400,11 +393,7 @@ export const ModalDetailsVacSkills = ({
                               handleRemoveSkill(skill.idHabilidad)
                             }
                           >
-                            <img
-                              src="/assets/ic_close_x.svg"
-                              alt="icon close"
-                              className="w-4 h-4"
-                            />
+                            <X className="w-4 h-4" />
                           </button>
                         )}
                       </div>

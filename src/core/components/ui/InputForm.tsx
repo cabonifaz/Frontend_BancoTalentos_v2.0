@@ -1,5 +1,6 @@
 import { Control, Controller, FieldError } from "react-hook-form";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Props {
   name: string;
@@ -56,17 +57,9 @@ export const InputForm = ({
             className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500 hover:text-gray-700"
           >
             {passwordVisible ? (
-              <img
-                src="/assets/ic_show_pass.svg"
-                alt="Mostrar contraseña"
-                className="w-full h-full"
-              />
+              <Eye className="w-full h-full" aria-label="Mostrar contraseña" />
             ) : (
-              <img
-                src="/assets/ic_hide_pass.svg"
-                alt="Ocultar contraseña"
-                className="w-full h-full"
-              />
+              <EyeOff className="w-full h-full" aria-label="Ocultar contraseña" />
             )}
           </button>
         )}
