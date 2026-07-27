@@ -66,6 +66,7 @@ import {
   isVirtualType,
   isPresencialType,
   deriveLocationOptions,
+  deriveLocationLabelMap,
   deriveUniqueClientNames,
   buildInterviewTypeFields,
   resolveTipoEntrevistaId,
@@ -394,6 +395,12 @@ export default function InterviewDetailPage() {
   // Ubicaciones disponibles derivadas de los clientes únicos de los RQ.
   const locationOptions = useMemo(
     () => deriveLocationOptions(selectedRQs),
+    [selectedRQs],
+  );
+
+  // Etiquetas legibles (url -> "Ubicación (Cliente)") para no mostrar el enlace.
+  const locationLabels = useMemo(
+    () => deriveLocationLabelMap(selectedRQs),
     [selectedRQs],
   );
 
@@ -1096,7 +1103,13 @@ const confirmUpload = async () => {
                       <label className="input-label font-medium mb-1">
                         Tipo de Entrevista <span className="text-red-500">*</span>
                       </label>
-                      <label className="flex items-center gap-3 cursor-pointer select-none h-[46px]">
+                      <label
+                        className={`flex items-center justify-center gap-4 cursor-pointer select-none h-[46px] px-4 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
+                          errors.tipoEntrevista
+                            ? "border-red-500"
+                            : "border-gray-200"
+                        }`}
+                      >
                         <input
                           type="checkbox"
                           checked={isPresencial}
@@ -1211,6 +1224,7 @@ const confirmUpload = async () => {
                           </label>
                           <InterviewLocationField
                             options={locationOptions}
+                            optionLabels={locationLabels}
                             value={ubicacionValue || ""}
                             isCustom={ubicacionCustom}
                             onChange={(val, custom) => {

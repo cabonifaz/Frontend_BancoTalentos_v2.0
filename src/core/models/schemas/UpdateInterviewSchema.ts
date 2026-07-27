@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   isVirtualType,
   isPresencialType,
+  isGoogleMapsUrl,
   DIRECCION_MAX_LENGTH,
 } from "../../utilities/interviewType";
 
@@ -100,10 +101,18 @@ export const createUpdateInterviewSchema = (rsStageNum1: number | null) =>
         });
       }
     } else if (isPresencialType(data.tipoEntrevista)) {
-      if (!(data.ubicacion || "").trim()) {
+      const ubicacion = (data.ubicacion || "").trim();
+      if (!ubicacion) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "La ubicación es requerida",
+          path: ["ubicacion"],
+        });
+      } else if (!isGoogleMapsUrl(ubicacion)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "La ubicación debe ser un enlace de Google Maps (p. ej. https://maps.google.com/...)",
           path: ["ubicacion"],
         });
       }

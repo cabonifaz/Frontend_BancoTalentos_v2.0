@@ -8,6 +8,11 @@ const CUSTOM_LOCATION = "__CUSTOM_LOCATION__";
 interface Props {
   /** Ubicaciones únicas derivadas de los clientes de los RQ seleccionados. */
   options: string[];
+  /**
+   * Etiquetas legibles por ubicación (`url -> "Ubicación (Cliente)"`). La lista
+   * guarda el enlace de Google Maps como valor, pero muestra esta etiqueta.
+   */
+  optionLabels?: Record<string, string>;
   /** Valor actual de la ubicación. */
   value: string;
   /** Indica si el valor actual es una entrada manual (no viene de la lista). */
@@ -27,6 +32,7 @@ interface Props {
  */
 export const InterviewLocationField = ({
   options,
+  optionLabels,
   value,
   isCustom,
   onChange,
@@ -35,10 +41,13 @@ export const InterviewLocationField = ({
 }: Props) => {
   const selectOptions = useMemo(
     () => [
-      ...options.map((loc) => ({ value: loc, label: loc })),
+      ...options.map((loc) => ({
+        value: loc,
+        label: optionLabels?.[loc] ?? loc,
+      })),
       { value: CUSTOM_LOCATION, label: "＋ Otra ubicación (escribir manualmente)" },
     ],
-    [options],
+    [options, optionLabels],
   );
 
   if (isCustom) {

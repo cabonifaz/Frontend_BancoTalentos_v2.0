@@ -110,6 +110,29 @@ export const deriveLocationOptions = (rqs: RqClientInfo[]): string[] => {
   return Array.from(new Set(locations));
 };
 
+/**
+ * Etiquetas legibles para las ubicaciones de cliente. Como la ubicación guardada
+ * es un enlace de Google Maps (feo de mostrar), se rotula con el nombre del
+ * cliente del que proviene: `Ubicación (NombreCliente)`.
+ *
+ * Devuelve un mapa `urlUbicacion -> etiqueta`. Si dos clientes comparten la misma
+ * URL, se conserva el primero (coherente con la deduplicación por URL de
+ * `deriveLocationOptions`).
+ */
+export const deriveLocationLabelMap = (
+  rqs: RqClientInfo[],
+): Record<string, string> => {
+  const uniqueClients = deriveUniqueClients(rqs);
+  const map: Record<string, string> = {};
+  for (const c of uniqueClients) {
+    const url = (c.ubicacion || "").trim();
+    if (!url || map[url]) continue;
+    const name = (c.cliente || "").trim();
+    map[url] = name ? `Ubicación (${name})` : "Ubicación";
+  }
+  return map;
+};
+
 export interface InterviewTypeFields {
   tipoEntrevista: string;
   enlaceEntrevista: string | null;
@@ -155,3 +178,36 @@ export const buildInterviewTypeFields = (data: {
 
 /** Longitud máxima de la dirección física (PRESENCIAL). */
 export const DIRECCION_MAX_LENGTH = 500;
+
+/**
+ * Valida que un texto sea un enlace de geoubicación de Google Maps.
+ * Acepta los formatos habituales:
+ *   - https://www.google.com/maps/...            (incluye google.<tld>, p. ej. google.com.pe)
+ *   - https://maps.google.com/...
+ *   - https://maps.app.goo.gl/...                (enlaces cortos para compartir)
+ *   - https://goo.gl/maps/...                    (enlaces cortos heredados)
+ * Se usa para validar la ubicación ingresada manualmente en entrevistas PRESENCIALES.
+ */
+export const isGoogleMapsUrl = (value?: string | null): boolean => {
+  const v = (value || "").trim();
+  if (!v) return false;
+  let url: URL;
+  try {
+    url = new URL(v);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase();
+  const path = url.pathname.toLowerCase();
+  // Enlaces cortos para compartir.
+  if (host === "maps.app.goo.gl") return true;
+  if (host === "goo.gl" && path.startsWith("/maps")) return true;
+  // Subdominio de mapas: maps.google.<tld>
+  if (/^maps\.google\.[a-z.]+$/.test(host)) return true;
+  // Dominio principal con ruta de mapas: (www.)google.<tld>/maps...
+  if (/^(www\.)?google\.[a-z.]+$/.test(host) && path.startsWith("/maps")) {
+    return true;
+  }
+  return false;
+};

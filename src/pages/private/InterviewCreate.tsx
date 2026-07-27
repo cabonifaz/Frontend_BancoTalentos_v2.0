@@ -36,6 +36,7 @@ import {
   isVirtualType,
   isPresencialType,
   deriveLocationOptions,
+  deriveLocationLabelMap,
   deriveUniqueClientNames,
   buildInterviewTypeFields,
   resolveTipoEntrevistaId,
@@ -195,6 +196,12 @@ export default function InterviewCreatePage() {
   // Ubicaciones disponibles derivadas de los clientes únicos de los RQ.
   const locationOptions = useMemo(
     () => deriveLocationOptions(selectedRQs),
+    [selectedRQs],
+  );
+
+  // Etiquetas legibles (url -> "Ubicación (Cliente)") para no mostrar el enlace.
+  const locationLabels = useMemo(
+    () => deriveLocationLabelMap(selectedRQs),
     [selectedRQs],
   );
 
@@ -912,6 +919,7 @@ export default function InterviewCreatePage() {
                       </label>
                       <InterviewLocationField
                         options={locationOptions}
+                        optionLabels={locationLabels}
                         value={ubicacionValue || ""}
                         isCustom={ubicacionCustom}
                         onChange={(val, custom) => {
