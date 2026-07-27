@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  isVirtualType,
+  isPresencialType,
+  DIRECCION_MAX_LENGTH,
+} from "../../utilities/interviewType";
 
 export const CreateInterviewSchema = z.object({
   idTalento: z.number().min(1, "El talento es requerido"),
@@ -12,10 +17,17 @@ export const CreateInterviewSchema = z.object({
     })
     .min(1, "Debe seleccionar al menos un requerimiento"),
   perfil: z.string().min(1, "Seleccione un perfil"),
-  enlaceEntrevista: z
+  // Tipo de entrevista (maestro 47): PRESENCIAL / VIRTUAL.
+  tipoEntrevista: z.string().min(1, "Seleccione el tipo de entrevista"),
+  // Campos dependientes del tipo. La obligatoriedad real se valida de forma
+  // condicional en el superRefine del factory según el tipo seleccionado.
+  enlaceEntrevista: z.string().optional().default(""),
+  ubicacion: z.string().optional().default(""),
+  direccion: z
     .string()
-    .min(1, "El enlace de la entrevista es requerido")
-    .url("El enlace debe ser una URL válida"),
+    .max(DIRECCION_MAX_LENGTH, `La dirección no debe exceder ${DIRECCION_MAX_LENGTH} caracteres`)
+    .optional()
+    .default(""),
   entrevistadores: z.array(
     z.object({
       fullname: z.string().min(1, "El nombre completo es requerido"),
@@ -52,5 +64,38 @@ export const createCreateInterviewSchema = (rsStageNum1: number | null) =>
         message: "Debe agregar al menos un entrevistador para esta etapa.",
         path: ["entrevistadores"],
       });
+    }
+
+    // Validación condicional según el tipo de entrevista.
+    if (isVirtualType(data.tipoEntrevista)) {
+      const enlace = (data.enlaceEntrevista || "").trim();
+      if (!enlace) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El enlace de la entrevista es requerido",
+          path: ["enlaceEntrevista"],
+        });
+      } else if (!z.string().url().safeParse(enlace).success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "El enlace debe ser una URL válida",
+          path: ["enlaceEntrevista"],
+        });
+      }
+    } else if (isPresencialType(data.tipoEntrevista)) {
+      if (!(data.ubicacion || "").trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La ubicación es requerida",
+          path: ["ubicacion"],
+        });
+      }
+      if (!(data.direccion || "").trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "La dirección es requerida",
+          path: ["direccion"],
+        });
+      }
     }
   });
