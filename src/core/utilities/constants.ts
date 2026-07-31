@@ -23,11 +23,6 @@ export const POSTULANT_ALLOWED_EXTENSIONS: string[] = [
 ];
 export const POSTULANT_MAX_FILE_SIZE_MB = 10;
 
-// Maestro (PARAMETROS) de tipos de documento de postulante. Se configura por
-// cliente: NUM1 = id del tipo, NUM2 = idCliente, NUM3 = 1 obligatorio /
-// 0 opcional, STRING1 = descripción.
-export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
-
 // RQ STATE
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;
@@ -72,6 +67,13 @@ export const TIPO_ARCHIVO = "17";
 export const ESTADO_ENTREVISTA = "43";
 export const ETAPA_ENTREVISTA = "44";
 export const TIPO_ARCHIVO_ENTREVISTA = "45";
+export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
+export const TIPO_ENTREVISTA = "47";
+
+// Tipos de entrevista (valores en string1 del maestro 47). Se comparan de forma
+// normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
+export const TIPO_ENTREVISTA_PRESENCIAL_LABEL = "PRESENCIAL";
+export const TIPO_ENTREVISTA_VIRTUAL_LABEL = "VIRTUAL";
 
 // Etapa de entrevista en la que los entrevistadores son opcionales.
 // En cualquier otra etapa se exige al menos un entrevistador.
@@ -90,7 +92,7 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46";
+export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46,47";
 
 // PROCEDENCIA DEL TALENTO — se maneja como texto (string), no como ID.
 // El valor seleccionado es exactamente el texto de la opción.

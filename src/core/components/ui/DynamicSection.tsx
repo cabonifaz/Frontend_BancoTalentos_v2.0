@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { X } from "lucide-react";
 
 interface Props {
   title: string;
@@ -47,11 +48,7 @@ export const DynamicSection = ({
                     aria-label="Eliminar"
                     className="-mr-1 -mt-1 rounded-full p-1 hover:bg-[#fff6f6]"
                   >
-                    <img
-                      src="/assets/ic_close.svg"
-                      alt="icon close"
-                      className="h-5 w-5"
-                    />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
               )}
@@ -70,11 +67,7 @@ export const DynamicSection = ({
                   onClick={() => onRemove(index)}
                   className="max-w-16 max-h-16 bg-white z-10 p-2 stroke-orange-200"
                 >
-                  <img
-                    src="/assets/ic_close.svg"
-                    alt="icon close"
-                    className="hover:bg-[#fff6f6] rounded-full"
-                  />
+                  <X className="w-6 h-6 hover:bg-[#fff6f6] rounded-full" />
                 </button>
               </div>
             )}

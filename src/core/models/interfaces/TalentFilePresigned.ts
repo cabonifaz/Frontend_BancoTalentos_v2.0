@@ -7,6 +7,12 @@ export interface TalentUploadUrlRequest {
   idTipoDocumento: number;
   fileName: string;
   contentType: string;
+  /**
+   * Si se envía (reemplazo), el backend genera la URL para SOBRESCRIBIR el archivo
+   * existente in-place (misma key en S3). Así la ruta en BD no cambia y basta con
+   * que el PUT devuelva 200 (no hace falta confirmar).
+   */
+  idArchivo?: number;
 }
 
 export interface TalentPresignedUrlResponse {
@@ -14,6 +20,12 @@ export interface TalentPresignedUrlResponse {
   url: string;
   path: string;
   fileName: string;
+  /**
+   * En subida: indica si tras el PUT hay que llamar a confirm-upload para
+   * registrar la ruta en BD. `false` en un reemplazo in-place (misma key), donde
+   * el 200 del PUT es suficiente.
+   */
+  requiresConfirm?: boolean;
 }
 
 export interface TalentConfirmUploadRequest {

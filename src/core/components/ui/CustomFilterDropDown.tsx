@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { X } from "lucide-react";
 import { OutsideClickHandler } from "./OutsideClickHandler";
 
 interface Props {
@@ -41,11 +42,7 @@ export const CustomFilterDropDown = ({
               }}
               className="flex items-center"
             >
-              <img
-                src="/assets/ic_close_bdt.svg"
-                alt="icon close"
-                className="h-5 w-5"
-              />
+              <X className="h-5 w-5" />
             </button>
           )}
         </div>

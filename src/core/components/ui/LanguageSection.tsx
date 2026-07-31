@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Star } from "lucide-react";
 import {
   FieldValues,
   Controller,
@@ -152,14 +153,13 @@ export const LanguagesSection = <F extends FieldValues>({
                         className="star cursor-pointer"
                         onClick={() => controllerField.onChange(star)}
                       >
-                        <img
-                          src={
+                        <Star
+                          aria-label={`Star ${star}`}
+                          className={`star-icon w-6 h-6 ${
                             (controllerField.value ?? 0) >= star
-                              ? "/assets/ic_fill_star.svg"
-                              : "/assets/ic_outline_star.svg"
-                          }
-                          alt={`Star ${star}`}
-                          className="star-icon w-6 h-6"
+                              ? "text-amber-400 fill-amber-400"
+                              : "text-gray-300"
+                          }`}
                         />
                       </div>
                     ))}

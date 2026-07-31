@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Upload, Download, Trash2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { ReqTalento } from "../../models/interfaces/ReqTalento";
 import {
@@ -143,11 +144,7 @@ export const ModalPostulantFiles = ({
                   : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
               }`}
             >
-              <img
-                src="/assets/ic_preview_file.png"
-                alt="subir archivo"
-                className="mb-2 h-6 w-6 opacity-70"
-              />
+              <Upload className="mb-2 h-6 w-6 text-gray-500 opacity-70" />
               <p className="text-sm text-gray-600">
                 Arrastra un archivo aquí o haz clic para seleccionar
               </p>
@@ -213,11 +210,7 @@ export const ModalPostulantFiles = ({
                         }
                         className="text-blue-500 hover:text-blue-600 focus:outline-none"
                       >
-                        <img
-                          src="/assets/ic_preview_file.png"
-                          alt="descargar"
-                          className="h-5 w-5"
-                        />
+                        <Download className="h-5 w-5" />
                       </button>
                       <button
                         type="button"
@@ -227,11 +220,7 @@ export const ModalPostulantFiles = ({
                         }
                         className="text-red-500 hover:text-red-600 focus:outline-none"
                       >
-                        <img
-                          src="/assets/ic_remove.png"
-                          alt="eliminar"
-                          className="h-5 w-5"
-                        />
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   ))

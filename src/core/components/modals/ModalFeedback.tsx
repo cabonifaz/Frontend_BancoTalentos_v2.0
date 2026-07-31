@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, Star } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
@@ -204,14 +204,13 @@ export const ModalFeedback = ({
                 <div className="flex items-center gap-2 *:cursor-pointer">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <div key={star} onClick={() => field.onChange(star)}>
-                      <img
-                        src={
+                      <Star
+                        aria-label={`Star ${star}`}
+                        className={`star-icon w-6 h-6 ${
                           field.value >= star
-                            ? "/assets/ic_fill_star.svg"
-                            : "/assets/ic_outline_star.svg"
-                        }
-                        alt={`Star ${star}`}
-                        className="star-icon w-6 h-6"
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-gray-300"
+                        }`}
                       />
                     </div>
                   ))}

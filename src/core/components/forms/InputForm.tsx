@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Control, Controller, FieldError } from "react-hook-form";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Props {
     name: string;
@@ -107,9 +108,9 @@ const InputForm = ({
                                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
                                 >
                                     {passwordVisible ? (
-                                        <img src="/assets/see_pass.svg" alt="show pass" />
+                                        <Eye className="w-5 h-5" aria-label="show pass" />
                                     ) : (
-                                        <img src="/assets/not_see_pass.svg" alt="hide pass" />
+                                        <EyeOff className="w-5 h-5" aria-label="hide pass" />
                                     )}
                                 </button>
                             )}
