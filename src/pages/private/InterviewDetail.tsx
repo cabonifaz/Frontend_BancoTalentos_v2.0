@@ -65,8 +65,8 @@ import { normalizeText } from "../../core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
-  deriveLocationOptions,
-  deriveLocationLabelMap,
+  deriveLocationEntries,
+  deriveDireccionEntries,
   deriveUniqueClientNames,
   buildInterviewTypeFields,
   resolveTipoEntrevistaId,
@@ -74,7 +74,10 @@ import {
   DIRECCION_MAX_LENGTH,
 } from "../../core/utilities/interviewType";
 import { ClientInterviewerSelect } from "../../core/components/ui/ClientInterviewerSelect";
-import { InterviewLocationField } from "../../core/components/ui/InterviewLocationField";
+import {
+  InterviewComboField,
+  ComboOption,
+} from "../../core/components/ui/InterviewComboField";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
 import { useFetchClients } from "../../core/hooks/useFetchClients";
 
@@ -92,6 +95,7 @@ interface SelectedRQ {
   cliente: string;
   idCliente?: number;
   ubicacion?: string;
+  direccion?: string;
   codigoRQ: string;
   lstPerfiles: Perfil[];
 }
@@ -319,6 +323,7 @@ export default function InterviewDetailPage() {
   // Tipo de entrevista seleccionado y banderas de comportamiento condicional.
   const tipoValue = watch("tipoEntrevista");
   const ubicacionValue = watch("ubicacion");
+  const direccionValue = watch("direccion");
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
 
@@ -332,14 +337,6 @@ export default function InterviewDetailPage() {
     interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
     TIPO_ENTREVISTA_PRESENCIAL_LABEL;
 
-  // ¿La ubicación actual es una entrada manual (no proviene de la lista)?
-  const [ubicacionCustom, setUbicacionCustom] = useState(false);
-
-  // Evita que el "limpiado de ubicación obsoleta" borre la ubicación guardada
-  // mientras la pantalla se inicializa (antes de conocer las opciones de cliente
-  // y de fijar la bandera custom).
-  const suppressUbicacionClearRef = useRef(false);
-
   // ID_TIPO_ENTREVISTA recibido del backend pendiente de resolver a texto cuando
   // los parámetros (maestro 47) todavía no están cargados.
   const pendingTipoIdRef = useRef<number | null>(null);
@@ -351,7 +348,6 @@ export default function InterviewDetailPage() {
     if (isVirtualType(value)) {
       setValue("ubicacion", "", { shouldValidate: true });
       setValue("direccion", "", { shouldValidate: true });
-      setUbicacionCustom(false);
     } else if (isPresencialType(value)) {
       setValue("enlaceEntrevista", "", { shouldValidate: true });
     }
@@ -392,34 +388,27 @@ export default function InterviewDetailPage() {
   const selectedClienteId =
     selectedRQs.find((r) => r.idCliente)?.idCliente ?? null;
 
-  // Ubicaciones disponibles derivadas de los clientes únicos de los RQ.
-  const locationOptions = useMemo(
-    () => deriveLocationOptions(selectedRQs),
+  // Ubicaciones (enlace Google Maps) de los clientes de los RQ, con el cliente al lado.
+  const ubicacionOptions: ComboOption[] = useMemo(
+    () =>
+      deriveLocationEntries(selectedRQs).map((e) => ({
+        value: e.value,
+        label: "Ubicación",
+        sub: e.cliente || undefined,
+      })),
     [selectedRQs],
   );
 
-  // Etiquetas legibles (url -> "Ubicación (Cliente)") para no mostrar el enlace.
-  const locationLabels = useMemo(
-    () => deriveLocationLabelMap(selectedRQs),
+  // Direcciones (DIRECCION_EXACTA) de los clientes de los RQ, con el cliente al lado.
+  const direccionOptions: ComboOption[] = useMemo(
+    () =>
+      deriveDireccionEntries(selectedRQs).map((e) => ({
+        value: e.value,
+        label: e.value,
+        sub: e.cliente || undefined,
+      })),
     [selectedRQs],
   );
-
-  // Edge case: si cambian los RQ/clientes y la ubicación elegida de la lista ya
-  // no está disponible, se limpia. Las entradas personalizadas se conservan.
-  useEffect(() => {
-    if (!isPresencial) return;
-    // Durante la inicialización de la edición no se limpia: aún no están las
-    // opciones de cliente ni la bandera custom (evita borrar la ubicación guardada).
-    if (suppressUbicacionClearRef.current) return;
-    if (
-      !ubicacionCustom &&
-      ubicacionValue &&
-      !locationOptions.includes(ubicacionValue)
-    ) {
-      setValue("ubicacion", "", { shouldValidate: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationOptions, isPresencial]);
 
   // Resuelve el ID_TIPO_ENTREVISTA a su texto cuando los parámetros del maestro 47
   // cargan después del detalle, y selecciona el tipo correcto.
@@ -516,10 +505,6 @@ export default function InterviewDetailPage() {
       if (formInitializedRef.current) return;
       formInitializedRef.current = true;
 
-      // Suprime el limpiado de ubicación hasta que termine la inicialización
-      // (enriquecimiento de RQ + cálculo de la bandera custom).
-      suppressUbicacionClearRef.current = true;
-
       setTalentName(data.talento);
       setClientName(data.clienteResumen);
 
@@ -577,6 +562,9 @@ export default function InterviewDetailPage() {
                 cliente: rq.cliente,
                 idCliente: reqData?.idCliente,
                 ubicacion: reqData?.ubicacion,
+                // La dirección (DIRECCION_EXACTA) viene del row del listado, no del
+                // detalle; se preserva la ya cargada en el RQ guardado si existe.
+                direccion: (rq as SelectedRQ).direccion,
                 codigoRQ: reqData?.codigoRQ || "",
                 lstPerfiles: (reqData?.lstRqVacantes || []).map((v: any) => ({
                   idPerfil: v.idPerfil,
@@ -587,15 +575,6 @@ export default function InterviewDetailPage() {
               };
             });
             setSelectedRQs(enriched);
-
-            // Determina si la ubicación guardada es personalizada (no está entre
-            // las ubicaciones de los clientes) para renderizar el campo correcto.
-            const savedUbic = (data.ubicacion || "").trim();
-            const opts = deriveLocationOptions(enriched);
-            setUbicacionCustom(!!savedUbic && !opts.includes(savedUbic));
-
-            // Inicialización terminada: re-habilita el limpiado de ubicación.
-            suppressUbicacionClearRef.current = false;
           })
           .catch(() => {
             setSelectedRQs(savedRQs.map((rq: any) => ({
@@ -603,15 +582,9 @@ export default function InterviewDetailPage() {
               codigoRQ: "",
               lstPerfiles: [],
             })));
-            // Sin opciones de cliente: la ubicación guardada es "custom".
-            setUbicacionCustom(!!(data.ubicacion || "").trim());
-            suppressUbicacionClearRef.current = false;
           });
       } else {
         setSelectedRQs([]);
-        // Sin RQ: cualquier ubicación guardada es una entrada manual (custom).
-        setUbicacionCustom(!!(data.ubicacion || "").trim());
-        suppressUbicacionClearRef.current = false;
       }
     }
   }, [detailResult, setValue]);
@@ -721,9 +694,11 @@ export default function InterviewDetailPage() {
           id: req.idRequerimiento,
           label: `${req.codigoRQ} - ${req.titulo}`,
           cliente: req.cliente,
-          // idCliente y ubicacion vienen ya en la fila del listado (SP_REQUERIMIENTO_LST).
+          // idCliente, ubicacion y direccion vienen ya en la fila del listado
+          // (SP_REQUERIMIENTO_LST: UBICACION y DIRECCION_EXACTA).
           idCliente: req.idCliente,
           ubicacion: req.ubicacion,
+          direccion: req.direccion,
           codigoRQ: req.codigoRQ,
           lstPerfiles: req.lstPerfiles || [],
         },
@@ -1222,15 +1197,15 @@ const confirmUpload = async () => {
                             <MapPin className="w-4 h-4 text-[var(--color-blue)]" />
                             Ubicación <span className="text-red-500">*</span>
                           </label>
-                          <InterviewLocationField
-                            options={locationOptions}
-                            optionLabels={locationLabels}
+                          <InterviewComboField
+                            options={ubicacionOptions}
                             value={ubicacionValue || ""}
-                            isCustom={ubicacionCustom}
-                            onChange={(val, custom) => {
-                              setValue("ubicacion", val, { shouldValidate: true });
-                              setUbicacionCustom(custom);
-                            }}
+                            onChange={(val) =>
+                              setValue("ubicacion", val, { shouldValidate: true })
+                            }
+                            placeholder="Seleccionar o pegar un enlace de Google Maps..."
+                            groupLabel="Ubicaciones de clientes"
+                            emptyHint="Los clientes de los RQ no tienen ubicación; pega un enlace de Google Maps."
                             error={errors.ubicacion?.message as string | undefined}
                           />
                         </div>
@@ -1238,18 +1213,18 @@ const confirmUpload = async () => {
                           <label className="input-label font-medium mb-1">
                             Dirección <span className="text-red-500">*</span>
                           </label>
-                          <textarea
-                            {...register("direccion")}
-                            rows={2}
+                          <InterviewComboField
+                            options={direccionOptions}
+                            value={direccionValue || ""}
+                            onChange={(val) =>
+                              setValue("direccion", val, { shouldValidate: true })
+                            }
                             maxLength={DIRECCION_MAX_LENGTH}
-                            placeholder="Ej: Av. Ejemplo 123, piso 4, oficina 402"
-                            className={`input w-full resize-none ${errors.direccion ? "border-red-500" : ""}`}
+                            placeholder="Seleccionar o escribir una dirección..."
+                            groupLabel="Direcciones de clientes"
+                            emptyHint="Los clientes de los RQ no tienen dirección registrada; escríbela manualmente."
+                            error={errors.direccion?.message as string | undefined}
                           />
-                          {errors.direccion && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {errors.direccion.message}
-                            </p>
-                          )}
                         </div>
                       </div>
                     )}

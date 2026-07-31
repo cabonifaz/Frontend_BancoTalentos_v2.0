@@ -6,6 +6,8 @@ export interface RequirementItem {
     cliente: string;
     /** Ubicación del cliente (tabla CLIENTE), expuesta por SP_REQUERIMIENTO_LST. */
     ubicacion?: string;
+    /** Dirección exacta del cliente (DIRECCION_EXACTA), expuesta por SP_REQUERIMIENTO_LST. */
+    direccion?: string;
     titulo: string;
     codigoRQ: string;
     fechaSolicitud: string;

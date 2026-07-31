@@ -58,6 +58,8 @@ export interface RqClientInfo {
   cliente?: string;
   /** Ubicación del cliente (llega en la respuesta del requerimiento). */
   ubicacion?: string;
+  /** Dirección exacta del cliente (DIRECCION_EXACTA); alimenta el combobox de Dirección. */
+  direccion?: string;
 }
 
 /**
@@ -108,6 +110,58 @@ export const deriveLocationOptions = (rqs: RqClientInfo[]): string[] => {
     .map((c) => (c.ubicacion || "").trim())
     .filter(Boolean);
   return Array.from(new Set(locations));
+};
+
+/**
+ * Opción de combobox derivada de un cliente: el `value` que se guarda y el
+ * nombre de `cliente` para mostrarlo al lado (`valor - Cliente`).
+ */
+export interface ClientComboEntry {
+  value: string;
+  cliente: string;
+}
+
+/**
+ * Direcciones físicas disponibles derivadas de los clientes únicos de los RQ
+ * (campo DIRECCION_EXACTA), junto con el cliente al que pertenecen. Se deduplican
+ * por dirección; ante direcciones repetidas se conserva el primer cliente.
+ *
+ * Independiente de {@link deriveLocationEntries}: DIRECCION_EXACTA es texto de
+ * dirección legible, no el enlace de Google Maps de la ubicación.
+ */
+export const deriveDireccionEntries = (
+  rqs: RqClientInfo[],
+): ClientComboEntry[] => {
+  const uniqueClients = deriveUniqueClients(rqs);
+  const seen = new Set<string>();
+  const out: ClientComboEntry[] = [];
+  for (const c of uniqueClients) {
+    const value = (c.direccion || "").trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    out.push({ value, cliente: (c.cliente || "").trim() });
+  }
+  return out;
+};
+
+/**
+ * Ubicaciones (enlace de Google Maps) disponibles derivadas de los clientes
+ * únicos de los RQ, junto con el cliente al que pertenecen. Se deduplican por
+ * valor; ante URLs repetidas se conserva el primer cliente.
+ */
+export const deriveLocationEntries = (
+  rqs: RqClientInfo[],
+): ClientComboEntry[] => {
+  const uniqueClients = deriveUniqueClients(rqs);
+  const seen = new Set<string>();
+  const out: ClientComboEntry[] = [];
+  for (const c of uniqueClients) {
+    const value = (c.ubicacion || "").trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    out.push({ value, cliente: (c.cliente || "").trim() });
+  }
+  return out;
 };
 
 /**

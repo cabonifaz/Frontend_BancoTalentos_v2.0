@@ -1,10 +1,9 @@
-export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-//export const BASE_URL = "http://localhost:8080";
-//export const BASE_URL_FMI = "http://localhost:8081";
+//export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
+//export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
+export const BASE_URL = "http://localhost:8080";
+export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
-export const ARCHIVO_WORD = 7;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
 export const DOCUMENTO_CERT_DIP = 99;
