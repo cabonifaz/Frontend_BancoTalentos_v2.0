@@ -35,15 +35,18 @@ import { normalizeText } from "../../core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
-  deriveLocationOptions,
-  deriveLocationLabelMap,
+  deriveLocationEntries,
+  deriveDireccionEntries,
   deriveUniqueClientNames,
   buildInterviewTypeFields,
   resolveTipoEntrevistaId,
   DIRECCION_MAX_LENGTH,
 } from "../../core/utilities/interviewType";
 import { ClientInterviewerSelect } from "../../core/components/ui/ClientInterviewerSelect";
-import { InterviewLocationField } from "../../core/components/ui/InterviewLocationField";
+import {
+  InterviewComboField,
+  ComboOption,
+} from "../../core/components/ui/InterviewComboField";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { createInterview } from "../../core/services/interviews.service";
 import { Mail, Link as LinkIcon, MapPin, Video } from "lucide-react";
@@ -54,6 +57,7 @@ interface SelectedRQ {
   cliente: string;
   idCliente?: number;
   ubicacion?: string;
+  direccion?: string;
   codigoRQ: string;
   lstPerfiles: Perfil[];
 }
@@ -193,21 +197,32 @@ export default function InterviewCreatePage() {
   // Clientes únicos (deduplicados por idCliente) derivados de los RQ.
   const clientNames = deriveUniqueClientNames(selectedRQs).join(", ");
 
-  // Ubicaciones disponibles derivadas de los clientes únicos de los RQ.
-  const locationOptions = useMemo(
-    () => deriveLocationOptions(selectedRQs),
+  // Ubicaciones (enlace Google Maps) de los clientes de los RQ, con el cliente al lado.
+  const ubicacionOptions: ComboOption[] = useMemo(
+    () =>
+      deriveLocationEntries(selectedRQs).map((e) => ({
+        value: e.value,
+        label: "Ubicación",
+        sub: e.cliente || undefined,
+      })),
     [selectedRQs],
   );
 
-  // Etiquetas legibles (url -> "Ubicación (Cliente)") para no mostrar el enlace.
-  const locationLabels = useMemo(
-    () => deriveLocationLabelMap(selectedRQs),
+  // Direcciones (DIRECCION_EXACTA) de los clientes de los RQ, con el cliente al lado.
+  const direccionOptions: ComboOption[] = useMemo(
+    () =>
+      deriveDireccionEntries(selectedRQs).map((e) => ({
+        value: e.value,
+        label: e.value,
+        sub: e.cliente || undefined,
+      })),
     [selectedRQs],
   );
 
   // Tipo de entrevista seleccionado y banderas de comportamiento condicional.
   const tipoValue = watch("tipoEntrevista");
   const ubicacionValue = watch("ubicacion");
+  const direccionValue = watch("direccion");
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
 
@@ -220,9 +235,6 @@ export default function InterviewCreatePage() {
   const presencialLabel =
     interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
     TIPO_ENTREVISTA_PRESENCIAL_LABEL;
-
-  // ¿La ubicación actual es una entrada manual (no proviene de la lista)?
-  const [ubicacionCustom, setUbicacionCustom] = useState(false);
 
   useEffect(() => {
     register("idsRqs", { value: [] });
@@ -239,7 +251,6 @@ export default function InterviewCreatePage() {
     if (isVirtualType(value)) {
       setValue("ubicacion", "", { shouldValidate: true });
       setValue("direccion", "", { shouldValidate: true });
-      setUbicacionCustom(false);
     } else if (isPresencialType(value)) {
       setValue("enlaceEntrevista", "", { shouldValidate: true });
     }
@@ -254,20 +265,6 @@ export default function InterviewCreatePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [interviewTypes, tipoValue]);
-
-  // Edge case: si cambian los RQ/clientes y la ubicación elegida de la lista ya
-  // no está disponible, se limpia. Las entradas personalizadas se conservan.
-  useEffect(() => {
-    if (!isPresencial) return;
-    if (
-      !ubicacionCustom &&
-      ubicacionValue &&
-      !locationOptions.includes(ubicacionValue)
-    ) {
-      setValue("ubicacion", "", { shouldValidate: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationOptions, isPresencial]);
 
   // Si la etapa exige entrevistadores y no hay ninguno, mostramos una fila vacía
   // para guiar al usuario.
@@ -430,9 +427,11 @@ export default function InterviewCreatePage() {
           id: req.idRequerimiento,
           label: `${req.codigoRQ} - ${req.titulo}`,
           cliente: req.cliente,
-          // idCliente y ubicacion vienen ya en la fila del listado (SP_REQUERIMIENTO_LST).
+          // idCliente, ubicacion y direccion vienen ya en la fila del listado
+          // (SP_REQUERIMIENTO_LST: UBICACION y DIRECCION_EXACTA).
           idCliente: req.idCliente,
           ubicacion: req.ubicacion,
+          direccion: req.direccion,
           codigoRQ: req.codigoRQ,
           lstPerfiles: req.lstPerfiles || [],
         },
@@ -917,15 +916,15 @@ export default function InterviewCreatePage() {
                         <MapPin className="w-4 h-4 text-[var(--color-blue)]" />
                         Ubicación <span className="text-red-500">*</span>
                       </label>
-                      <InterviewLocationField
-                        options={locationOptions}
-                        optionLabels={locationLabels}
+                      <InterviewComboField
+                        options={ubicacionOptions}
                         value={ubicacionValue || ""}
-                        isCustom={ubicacionCustom}
-                        onChange={(val, custom) => {
-                          setValue("ubicacion", val, { shouldValidate: true });
-                          setUbicacionCustom(custom);
-                        }}
+                        onChange={(val) =>
+                          setValue("ubicacion", val, { shouldValidate: true })
+                        }
+                        placeholder="Seleccionar o pegar un enlace de Google Maps..."
+                        groupLabel="Ubicaciones de clientes"
+                        emptyHint="Los clientes de los RQ no tienen ubicación; pega un enlace de Google Maps."
                         error={errors.ubicacion?.message as string | undefined}
                       />
                     </div>
@@ -933,18 +932,18 @@ export default function InterviewCreatePage() {
                       <label className="input-label font-medium mb-1">
                         Dirección <span className="text-red-500">*</span>
                       </label>
-                      <textarea
-                        {...register("direccion")}
-                        rows={2}
+                      <InterviewComboField
+                        options={direccionOptions}
+                        value={direccionValue || ""}
+                        onChange={(val) =>
+                          setValue("direccion", val, { shouldValidate: true })
+                        }
                         maxLength={DIRECCION_MAX_LENGTH}
-                        placeholder="Ej: Calle Andrés Reyes Nº 510, San Isidro Lima"
-                        className={`input w-full resize-none ${errors.direccion ? "border-red-500" : ""}`}
+                        placeholder="Seleccionar o escribir una dirección..."
+                        groupLabel="Direcciones de clientes"
+                        emptyHint="Los clientes de los RQ no tienen dirección registrada; escríbela manualmente."
+                        error={errors.direccion?.message as string | undefined}
                       />
-                      {errors.direccion && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.direccion.message}
-                        </p>
-                      )}
                     </div>
                   </div>
                 )}

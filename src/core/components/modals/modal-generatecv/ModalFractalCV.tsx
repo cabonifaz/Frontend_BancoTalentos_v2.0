@@ -18,16 +18,11 @@ import { useViewTalentFile } from "../../../hooks/talents/useViewTalentFile";
 import { useUploadTalentFileS3 } from "../../../hooks/talents/useUploadTalentFileS3";
 import {
   ARCHIVO_PDF,
-  ARCHIVO_WORD,
   DOCUMENTO_CV_FR_EN,
   DOCUMENTO_CV_FR_ES,
 } from "../../../utilities/constants";
+import { downloadFractalCVDocx } from "../../../utilities/fractalCVDocx";
 import {
-  DOCX_MIME,
-  downloadFractalCVDocx,
-} from "../../../utilities/fractalCVDocx";
-import {
-  confirmTalentUpload,
   generateTalentUploadUrl,
   uploadFileToS3,
 } from "../../../services/apiService";
@@ -202,7 +197,7 @@ export const ModalFractalCV = ({
   };
 
   // === Función para guardar (nuevo archivo) vía URL pre-firmada ===
-  // Un CV recién generado se guarda como PDF; el editado (Word) se sube aparte.
+  // El CV siempre se guarda como PDF (generado o editado y re-subido en PDF).
   const handleSave = async () => {
     if (!generatedPDF || !talent?.idTalento) return;
 
@@ -232,33 +227,28 @@ export const ModalFractalCV = ({
   };
 
   /**
-   * Reemplaza el CV existente en S3 sobrescribiendo su MISMA key vía URL
-   * pre-firmada. Sirve tanto para PDF (regenerado) como para Word (editado): el
-   * tipo lo definen `contentType`/`idTipoArchivo`. La subida depende del código
-   * 200 del PUT; solo se confirma en BD si la ruta cambió (p. ej. al alternar
-   * entre .pdf y .docx), caso en el que el backend limpia el objeto anterior.
+   * Reemplaza el CV existente en S3 sobrescribiendo su MISMA key (in-place) vía
+   * URL pre-firmada. El CV siempre es PDF: tanto el regenerado como el editado
+   * que sube el usuario deben ser PDF. La subida depende únicamente del código
+   * 200 del PUT (misma ruta → no requiere registro adicional en BD).
    */
-  const replaceCvInPlace = async (
-    rawFile: File,
-    contentType: string,
-    idTipoArchivo: number,
-  ) => {
+  const replaceCvInPlace = async (rawFile: File) => {
     if (!talent?.idTalento || !existingFile?.idArchivo) {
       throw new AppError("No hay un CV existente para reemplazar");
     }
     const idTipoDocumento =
       language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
-    // El File debe tener el mismo MIME que se firma en la URL pre-firmada.
+    // El File debe tener el MIME PDF que se firma en la URL pre-firmada.
     const file =
-      rawFile.type === contentType
+      rawFile.type === PDF_MIME
         ? rawFile
-        : new File([rawFile], rawFile.name, { type: contentType });
+        : new File([rawFile], rawFile.name, { type: PDF_MIME });
 
     const { data: presigned } = await generateTalentUploadUrl({
       idTalento: talent.idTalento,
       idTipoDocumento,
       fileName: file.name,
-      contentType,
+      contentType: PDF_MIME,
       idArchivo: existingFile.idArchivo,
     });
     if (presigned.result?.idMensaje !== 2 || !presigned.url) {
@@ -273,22 +263,6 @@ export const ModalFractalCV = ({
         `Error subiendo el archivo a S3 (código ${s3Response.status})`,
       );
     }
-
-    // Reemplazo in-place: normalmente basta el 200. Solo si cambió la ruta se
-    // registra en BD (p. ej. al alternar entre .pdf y .docx).
-    if (presigned.requiresConfirm) {
-      const { data: confirm } = await confirmTalentUpload({
-        idTalento: talent.idTalento,
-        idArchivo: existingFile.idArchivo,
-        idTipoDocumento,
-        idTipoArchivo,
-        nombreArchivo: presigned.fileName,
-        path: presigned.path,
-      });
-      if (confirm.idMensaje !== 2) {
-        throw new AppError(confirm.mensaje || "Error al registrar el archivo");
-      }
-    }
   };
 
   // === Función para actualizar (regenerar sobre el existente) → PDF ===
@@ -302,7 +276,7 @@ export const ModalFractalCV = ({
         "_",
       )}_CV_${language}.pdf`;
       const file = base64ToPdfFile(generatedPDF, fileName);
-      await replaceCvInPlace(file, PDF_MIME, ARCHIVO_PDF);
+      await replaceCvInPlace(file);
 
       notifySuccess("CV actualizado correctamente");
       setGeneratedPDF(null);
@@ -316,7 +290,7 @@ export const ModalFractalCV = ({
     }
   };
 
-  // === Word editable: descargar / re-subir (se guarda como .docx en S3) ===
+  // === Editar CV: se descarga en Word para editar, pero la re-subida es PDF ===
   const editedInputRef = useRef<HTMLInputElement>(null);
   const [isDownloadingWord, setIsDownloadingWord] = useState(false);
   const [isUploadingEdited, setIsUploadingEdited] = useState(false);
@@ -339,8 +313,8 @@ export const ModalFractalCV = ({
     }
   };
 
-  // Sube el .docx editado a S3 sobrescribiendo el CV existente (in-place). Se
-  // guarda tal cual como Word; la subida solo depende del código 200 del PUT.
+  // Sube el PDF editado a S3 sobrescribiendo el CV existente (in-place). Solo se
+  // admite PDF; la subida depende únicamente del código 200 del PUT.
   const handleEditedFileSelected = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -348,8 +322,10 @@ export const ModalFractalCV = ({
     e.target.value = ""; // permite volver a elegir el mismo archivo
     if (!file || !talent?.idTalento) return;
 
-    if (!file.name.toLowerCase().endsWith(".docx")) {
-      notifyError("El archivo debe ser un Word (.docx)");
+    const isPdf =
+      file.type === PDF_MIME || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      notifyError("El archivo debe ser un PDF");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -363,7 +339,7 @@ export const ModalFractalCV = ({
 
     try {
       setIsUploadingEdited(true);
-      await replaceCvInPlace(file, DOCX_MIME, ARCHIVO_WORD);
+      await replaceCvInPlace(file);
       notifySuccess("CV editado subido correctamente");
       onUpdate(talent.idTalento);
     } catch (error) {
@@ -453,8 +429,9 @@ export const ModalFractalCV = ({
         {(existingFile || generatedPDF) && (
           <div className="flex flex-col items-center gap-2 border-t border-gray-100 pt-4">
             <p className="text-xs text-gray-500 text-center max-w-md">
-              ¿Necesitas agregar información extra? Descarga el CV en Word, edítalo y
-              vuelve a subirlo: reemplazará al actual (se guarda como Word).
+              ¿Necesitas agregar información extra? Descarga el CV en Word, edítalo,
+              expórtalo a PDF y vuelve a subirlo: reemplazará al actual (la subida
+              debe ser PDF).
             </p>
             <div className="flex flex-wrap gap-4 items-center justify-center">
               <button
@@ -474,7 +451,7 @@ export const ModalFractalCV = ({
               <input
                 ref={editedInputRef}
                 type="file"
-                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                accept=".pdf,application/pdf"
                 className="hidden"
                 onChange={handleEditedFileSelected}
               />

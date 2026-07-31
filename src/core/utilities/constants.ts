@@ -4,7 +4,6 @@ export const BASE_URL_FMI = "https://autfmibackendpreprod-hadmdsa5hjaghub8.canad
 //export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
-export const ARCHIVO_WORD = 7;
 export const DOCUMENTO_CV = 1;
 export const DOCUMENTO_FOTO_PERFIL = 0;
 export const DOCUMENTO_CERT_DIP = 99;
