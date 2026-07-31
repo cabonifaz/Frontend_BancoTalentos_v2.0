@@ -9,7 +9,10 @@ export interface CreateInterviewType {
   hora: string;
   estado: number;
   etapa: number;
-  enlaceEntrevista: string;
+  idTipoEntrevista: number | null;
+  enlaceEntrevista: string | null;
+  ubicacion: string | null;
+  direccion: string | null;
   entrevistadores: string;
   perfil: string;
 }
@@ -56,7 +59,10 @@ export interface InterviewDetailDTO {
   estado: string;
   idEtapa: number;
   etapa: string;
+  idTipoEntrevista?: number;
   enlaceEntrevista: string;
+  ubicacion?: string;
+  direccion?: string;
   entrevistadores: { fullname: string; email?: string; notificacion: boolean }[];
   grabaciones: { enlace: string; fecha: string }[];
   calificacion: number;
@@ -107,7 +113,10 @@ export interface UpdateInterviewPayload {
   hora: string;
   estado: number;
   etapa: number;
-  enlaceEntrevista: string;
+  idTipoEntrevista: number | null;
+  enlaceEntrevista: string | null;
+  ubicacion: string | null;
+  direccion: string | null;
   entrevistadores: string;
   grabaciones: string;
   calificacion: number;

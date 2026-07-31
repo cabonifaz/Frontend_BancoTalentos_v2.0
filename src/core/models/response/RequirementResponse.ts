@@ -10,6 +10,8 @@ export interface RequirementResponse {
   requerimiento: {
     idCliente: number;
     cliente: string;
+    /** Ubicación del cliente. La agrega el backend por separado; opcional en el front. */
+    ubicacion?: string;
     titulo: string;
     codigoRQ: string;
     fechaSolicitud: string;

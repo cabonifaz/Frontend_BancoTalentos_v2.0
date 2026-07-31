@@ -47,6 +47,8 @@ import {
   Loader2,
   Link as LinkIcon,
   Mail,
+  MapPin,
+  Video,
 } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
@@ -55,9 +57,24 @@ import {
   ETAPA_ENTREVISTA_CLIENTE_LABEL,
   TIPO_ARCHIVO_ENTREVISTA,
   ESTADO_RQ,
+  TIPO_ENTREVISTA,
+  TIPO_ENTREVISTA_VIRTUAL_LABEL,
+  TIPO_ENTREVISTA_PRESENCIAL_LABEL,
 } from "../../core/utilities/constants";
 import { normalizeText } from "../../core/utilities/textUtils";
+import {
+  isVirtualType,
+  isPresencialType,
+  deriveLocationOptions,
+  deriveLocationLabelMap,
+  deriveUniqueClientNames,
+  buildInterviewTypeFields,
+  resolveTipoEntrevistaId,
+  resolveTipoEntrevistaLabel,
+  DIRECCION_MAX_LENGTH,
+} from "../../core/utilities/interviewType";
 import { ClientInterviewerSelect } from "../../core/components/ui/ClientInterviewerSelect";
+import { InterviewLocationField } from "../../core/components/ui/InterviewLocationField";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
 import { useFetchClients } from "../../core/hooks/useFetchClients";
 
@@ -74,6 +91,7 @@ interface SelectedRQ {
   label: string;
   cliente: string;
   idCliente?: number;
+  ubicacion?: string;
   codigoRQ: string;
   lstPerfiles: Perfil[];
 }
@@ -201,6 +219,7 @@ export default function InterviewDetailPage() {
 
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
+  const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
   const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
   const rqStates = paramsByMaestro[ESTADO_RQ] || [];
 
@@ -248,7 +267,10 @@ export default function InterviewDetailPage() {
       etapa: 0,
       idsRqs: [],
       perfil: "",
+      tipoEntrevista: "",
       enlaceEntrevista: "",
+      ubicacion: "",
+      direccion: "",
       entrevistadores: [],
       grabaciones: [{ enlace: "", fecha: "" }],
       calificacion: 0,
@@ -294,6 +316,58 @@ export default function InterviewDetailPage() {
 
   const formValues = watch();
 
+  // Tipo de entrevista seleccionado y banderas de comportamiento condicional.
+  const tipoValue = watch("tipoEntrevista");
+  const ubicacionValue = watch("ubicacion");
+  const isVirtual = isVirtualType(tipoValue);
+  const isPresencial = isPresencialType(tipoValue);
+
+  // Etiquetas reales de las dos posiciones del switch, tomadas del maestro 47
+  // (sin hardcodear el texto). Fallback a las constantes por si el maestro aún
+  // no cargó o no trae ese tipo.
+  const virtualLabel =
+    interviewTypes.find((t) => isVirtualType(t.string1))?.string1 ??
+    TIPO_ENTREVISTA_VIRTUAL_LABEL;
+  const presencialLabel =
+    interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
+    TIPO_ENTREVISTA_PRESENCIAL_LABEL;
+
+  // ¿La ubicación actual es una entrada manual (no proviene de la lista)?
+  const [ubicacionCustom, setUbicacionCustom] = useState(false);
+
+  // Evita que el "limpiado de ubicación obsoleta" borre la ubicación guardada
+  // mientras la pantalla se inicializa (antes de conocer las opciones de cliente
+  // y de fijar la bandera custom).
+  const suppressUbicacionClearRef = useRef(false);
+
+  // ID_TIPO_ENTREVISTA recibido del backend pendiente de resolver a texto cuando
+  // los parámetros (maestro 47) todavía no están cargados.
+  const pendingTipoIdRef = useRef<number | null>(null);
+
+  // Cambio de tipo: limpia los campos del tipo contrario para no dejar valores
+  // obsoletos ni en el formulario ni en el payload.
+  const handleTipoChange = (value: string) => {
+    setValue("tipoEntrevista", value, { shouldValidate: true });
+    if (isVirtualType(value)) {
+      setValue("ubicacion", "", { shouldValidate: true });
+      setValue("direccion", "", { shouldValidate: true });
+      setUbicacionCustom(false);
+    } else if (isPresencialType(value)) {
+      setValue("enlaceEntrevista", "", { shouldValidate: true });
+    }
+  };
+
+  // El tipo se elige con un switch (Virtual/Presencial), que no admite un estado
+  // "sin seleccionar". En modo Nueva Entrevista (sin id) fijamos Virtual por
+  // defecto cuando cargó el maestro 47. En modo edición NO se aplica: el tipo lo
+  // resuelve el detalle del backend.
+  useEffect(() => {
+    if (!isEditing && !tipoValue && interviewTypes.length > 0) {
+      setValue("tipoEntrevista", virtualLabel, { shouldValidate: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, interviewTypes, tipoValue]);
+
   // Si la etapa exige entrevistadores y no hay ninguno, mostramos una fila vacía
   // para guiar al usuario.
   const etapaValue = watch("etapa");
@@ -317,6 +391,48 @@ export default function InterviewDetailPage() {
     clienteStageNum1 != null && Number(etapaValue) === clienteStageNum1;
   const selectedClienteId =
     selectedRQs.find((r) => r.idCliente)?.idCliente ?? null;
+
+  // Ubicaciones disponibles derivadas de los clientes únicos de los RQ.
+  const locationOptions = useMemo(
+    () => deriveLocationOptions(selectedRQs),
+    [selectedRQs],
+  );
+
+  // Etiquetas legibles (url -> "Ubicación (Cliente)") para no mostrar el enlace.
+  const locationLabels = useMemo(
+    () => deriveLocationLabelMap(selectedRQs),
+    [selectedRQs],
+  );
+
+  // Edge case: si cambian los RQ/clientes y la ubicación elegida de la lista ya
+  // no está disponible, se limpia. Las entradas personalizadas se conservan.
+  useEffect(() => {
+    if (!isPresencial) return;
+    // Durante la inicialización de la edición no se limpia: aún no están las
+    // opciones de cliente ni la bandera custom (evita borrar la ubicación guardada).
+    if (suppressUbicacionClearRef.current) return;
+    if (
+      !ubicacionCustom &&
+      ubicacionValue &&
+      !locationOptions.includes(ubicacionValue)
+    ) {
+      setValue("ubicacion", "", { shouldValidate: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationOptions, isPresencial]);
+
+  // Resuelve el ID_TIPO_ENTREVISTA a su texto cuando los parámetros del maestro 47
+  // cargan después del detalle, y selecciona el tipo correcto.
+  useEffect(() => {
+    const pid = pendingTipoIdRef.current;
+    if (pid == null) return;
+    const label = resolveTipoEntrevistaLabel(interviewTypes, pid);
+    if (label) {
+      setValue("tipoEntrevista", label);
+      pendingTipoIdRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interviewTypes]);
 
   const [talentName, setTalentName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -400,6 +516,10 @@ export default function InterviewDetailPage() {
       if (formInitializedRef.current) return;
       formInitializedRef.current = true;
 
+      // Suprime el limpiado de ubicación hasta que termine la inicialización
+      // (enriquecimiento de RQ + cálculo de la bandera custom).
+      suppressUbicacionClearRef.current = true;
+
       setTalentName(data.talento);
       setClientName(data.clienteResumen);
 
@@ -411,7 +531,27 @@ export default function InterviewDetailPage() {
       setValue("etapa", data.idEtapa);
       setValue("idsRqs", savedRQs.map((r: any) => r.id));
       setValue("perfil", data.perfil || "");
+      // Tipo de entrevista: se resuelve desde ID_TIPO_ENTREVISTA (num1) contra el
+      // maestro 47. Si los parámetros aún no cargaron, se deja pendiente para
+      // resolverlo en su efecto. Fallback (datos antiguos sin ID): se infiere por
+      // presencia de enlace (VIRTUAL) o ubicación/dirección (PRESENCIAL).
+      const tipoFromId = resolveTipoEntrevistaLabel(
+        interviewTypes,
+        data.idTipoEntrevista,
+      );
+      const inferredTipo =
+        tipoFromId ||
+        (data.enlaceEntrevista
+          ? TIPO_ENTREVISTA_VIRTUAL_LABEL
+          : data.ubicacion || data.direccion
+            ? TIPO_ENTREVISTA_PRESENCIAL_LABEL
+            : "");
+      pendingTipoIdRef.current =
+        !tipoFromId && data.idTipoEntrevista != null ? data.idTipoEntrevista : null;
+      setValue("tipoEntrevista", inferredTipo);
       setValue("enlaceEntrevista", data.enlaceEntrevista || "");
+      setValue("ubicacion", data.ubicacion || "");
+      setValue("direccion", data.direccion || "");
       setValue("entrevistadores", data.entrevistadores || []);
       setValue("grabaciones", data.grabaciones || [{ enlace: "", fecha: "" }]);
       setValue("calificacion", data.calificacion);
@@ -436,6 +576,7 @@ export default function InterviewDetailPage() {
                 label: rq.label,
                 cliente: rq.cliente,
                 idCliente: reqData?.idCliente,
+                ubicacion: reqData?.ubicacion,
                 codigoRQ: reqData?.codigoRQ || "",
                 lstPerfiles: (reqData?.lstRqVacantes || []).map((v: any) => ({
                   idPerfil: v.idPerfil,
@@ -446,6 +587,15 @@ export default function InterviewDetailPage() {
               };
             });
             setSelectedRQs(enriched);
+
+            // Determina si la ubicación guardada es personalizada (no está entre
+            // las ubicaciones de los clientes) para renderizar el campo correcto.
+            const savedUbic = (data.ubicacion || "").trim();
+            const opts = deriveLocationOptions(enriched);
+            setUbicacionCustom(!!savedUbic && !opts.includes(savedUbic));
+
+            // Inicialización terminada: re-habilita el limpiado de ubicación.
+            suppressUbicacionClearRef.current = false;
           })
           .catch(() => {
             setSelectedRQs(savedRQs.map((rq: any) => ({
@@ -453,9 +603,15 @@ export default function InterviewDetailPage() {
               codigoRQ: "",
               lstPerfiles: [],
             })));
+            // Sin opciones de cliente: la ubicación guardada es "custom".
+            setUbicacionCustom(!!(data.ubicacion || "").trim());
+            suppressUbicacionClearRef.current = false;
           });
       } else {
         setSelectedRQs([]);
+        // Sin RQ: cualquier ubicación guardada es una entrada manual (custom).
+        setUbicacionCustom(!!(data.ubicacion || "").trim());
+        suppressUbicacionClearRef.current = false;
       }
     }
   }, [detailResult, setValue]);
@@ -465,6 +621,8 @@ export default function InterviewDetailPage() {
     if (!id || saveLockRef.current) return;
     saveLockRef.current = true;
 
+    const typeFields = buildInterviewTypeFields(data);
+
     const payload: UpdateInterviewPayload = {
       idEntrevista: id ? parseInt(id, 10) : 0,
       idTalento: data.idTalento,
@@ -472,7 +630,15 @@ export default function InterviewDetailPage() {
       hora: data.hora,
       estado: data.estado,
       etapa: data.etapa,
-      enlaceEntrevista: data.enlaceEntrevista || "",
+      // ID_TIPO_ENTREVISTA (num1 del parámetro 47) + enlaceEntrevista/ubicacion/
+      // direccion con NULL en los campos que no corresponden al tipo seleccionado.
+      idTipoEntrevista: resolveTipoEntrevistaId(
+        interviewTypes,
+        typeFields.tipoEntrevista,
+      ),
+      enlaceEntrevista: typeFields.enlaceEntrevista,
+      ubicacion: typeFields.ubicacion,
+      direccion: typeFields.direccion,
       entrevistadores: JSON.stringify(
         (data.entrevistadores || []).map((e) => ({
           ...e,
@@ -555,6 +721,9 @@ export default function InterviewDetailPage() {
           id: req.idRequerimiento,
           label: `${req.codigoRQ} - ${req.titulo}`,
           cliente: req.cliente,
+          // idCliente y ubicacion vienen ya en la fila del listado (SP_REQUERIMIENTO_LST).
+          idCliente: req.idCliente,
+          ubicacion: req.ubicacion,
           codigoRQ: req.codigoRQ,
           lstPerfiles: req.lstPerfiles || [],
         },
@@ -568,30 +737,34 @@ export default function InterviewDetailPage() {
     );
 
     // Update unique clients in form
-    const uniqueClients = Array.from(
-      new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
-    ).join(", ");
+    const uniqueClients = deriveUniqueClientNames(newRQs).join(", ");
     setClientName(uniqueClients);
 
     if (rqInputRef.current) rqInputRef.current.value = "";
     setShowRQSuggestions(false);
 
-    // Enriquecer con idCliente para cargar los contactos del cliente en la
-    // etapa "Entrevista técnica con cliente".
+    // Enriquecer con idCliente por si el listado no lo trajo. La ubicacion ya
+    // viene del listado; el detalle no la sobrescribe si no la devuelve.
     if (!isRemoving) {
       getRequirementById(req.idRequerimiento)
         .then((res) => {
-          const idCliente = res.data.requerimiento?.idCliente;
-          if (idCliente) {
-            setSelectedRQs((prev) =>
-              prev.map((r) =>
-                r.id === req.idRequerimiento ? { ...r, idCliente } : r,
-              ),
+          const reqData = res.data.requerimiento;
+          setSelectedRQs((prev) => {
+            const next = prev.map((r) =>
+              r.id === req.idRequerimiento
+                ? {
+                    ...r,
+                    idCliente: r.idCliente ?? reqData?.idCliente,
+                    ubicacion: r.ubicacion ?? reqData?.ubicacion,
+                  }
+                : r,
             );
-          }
+            setClientName(deriveUniqueClientNames(next).join(", "));
+            return next;
+          });
         })
         .catch(() => {
-          /* sin idCliente: el selector mostrará el mensaje de ayuda */
+          /* sin idCliente/ubicacion: el selector mostrará el mensaje de ayuda */
         });
     }
   };
@@ -604,9 +777,7 @@ export default function InterviewDetailPage() {
       newRQs.map((r) => r.id),
       { shouldValidate: true },
     );
-    const uniqueClients = Array.from(
-      new Set(newRQs.map((r: SelectedRQ) => r.cliente)),
-    ).join(", ");
+    const uniqueClients = deriveUniqueClientNames(newRQs).join(", ");
     setClientName(uniqueClients);
   };
 
@@ -925,27 +1096,55 @@ const confirmUpload = async () => {
                     </div>
                   </div>
 
-                  {/* Row: Enlace, Fecha, Hora (Usa grid interno para ocupar toda la fila) */}
-                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-6 mt-2">
-                    {/* Enlace de Entrevista */}
-                    <div className="md:col-span-2 flex flex-col gap-1">
+                  {/* Row: Tipo de Entrevista, Fecha, Hora */}
+                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                    {/* Tipo de Entrevista (switch Virtual / Presencial) */}
+                    <div className="flex flex-col gap-1">
                       <label className="input-label font-medium mb-1">
-                        Enlace de la Entrevista *
+                        Tipo de Entrevista <span className="text-red-500">*</span>
                       </label>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
-                          <LinkIcon size={20} />
-                        </div>
+                      <label
+                        className={`flex items-center justify-center gap-4 cursor-pointer select-none h-[46px] px-4 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
+                          errors.tipoEntrevista
+                            ? "border-red-500"
+                            : "border-gray-200"
+                        }`}
+                      >
                         <input
-                          {...register("enlaceEntrevista")}
-                          type="url"
-                          className={`input w-full ${errors.enlaceEntrevista ? "border-red-500" : ""}`}
-                          placeholder="https://zoom.us/j/..."
+                          type="checkbox"
+                          checked={isPresencial}
+                          onChange={(e) =>
+                            handleTipoChange(
+                              e.target.checked ? presencialLabel : virtualLabel,
+                            )
+                          }
+                          className="sr-only peer"
                         />
-                      </div>
-                      {errors.enlaceEntrevista && (
+                        <span
+                          className={`flex items-center gap-1.5 text-sm transition-colors ${
+                            isVirtual
+                              ? "text-[var(--color-blue)] font-semibold"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          <Video className="w-4 h-4" />
+                          Virtual
+                        </span>
+                        <div className="relative w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+                        <span
+                          className={`flex items-center gap-1.5 text-sm transition-colors ${
+                            isPresencial
+                              ? "text-[var(--color-blue)] font-semibold"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          <MapPin className="w-4 h-4" />
+                          Presencial
+                        </span>
+                      </label>
+                      {errors.tipoEntrevista && (
                         <p className="text-red-500 text-xs mt-1">
-                          {errors.enlaceEntrevista.message}
+                          {errors.tipoEntrevista.message}
                         </p>
                       )}
                     </div>
@@ -979,6 +1178,81 @@ const confirmUpload = async () => {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Campos dependientes del tipo de entrevista */}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    {!isVirtual && !isPresencial && (
+                      <p className="text-sm text-gray-400 italic">
+                        Selecciona el tipo de entrevista para completar sus datos.
+                      </p>
+                    )}
+
+                    {/* VIRTUAL → Enlace de la entrevista */}
+                    {isVirtual && (
+                      <div className="flex flex-col gap-1 max-w-xl">
+                        <label className="input-label font-medium mb-1 flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-[var(--color-blue)]" />
+                          Enlace de la Entrevista <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0">
+                            <LinkIcon size={20} />
+                          </div>
+                          <input
+                            {...register("enlaceEntrevista")}
+                            type="url"
+                            className={`input w-full ${errors.enlaceEntrevista ? "border-red-500" : ""}`}
+                            placeholder="https://zoom.us/j/..."
+                          />
+                        </div>
+                        {errors.enlaceEntrevista && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.enlaceEntrevista.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* PRESENCIAL → Ubicación + Dirección */}
+                    {isPresencial && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-1">
+                          <label className="input-label font-medium mb-1 flex items-center gap-1.5">
+                            <MapPin className="w-4 h-4 text-[var(--color-blue)]" />
+                            Ubicación <span className="text-red-500">*</span>
+                          </label>
+                          <InterviewLocationField
+                            options={locationOptions}
+                            optionLabels={locationLabels}
+                            value={ubicacionValue || ""}
+                            isCustom={ubicacionCustom}
+                            onChange={(val, custom) => {
+                              setValue("ubicacion", val, { shouldValidate: true });
+                              setUbicacionCustom(custom);
+                            }}
+                            error={errors.ubicacion?.message as string | undefined}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="input-label font-medium mb-1">
+                            Dirección <span className="text-red-500">*</span>
+                          </label>
+                          <textarea
+                            {...register("direccion")}
+                            rows={2}
+                            maxLength={DIRECCION_MAX_LENGTH}
+                            placeholder="Ej: Av. Ejemplo 123, piso 4, oficina 402"
+                            className={`input w-full resize-none ${errors.direccion ? "border-red-500" : ""}`}
+                          />
+                          {errors.direccion && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.direccion.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Etapa */}

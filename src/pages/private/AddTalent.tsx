@@ -841,6 +841,7 @@ export const AddTalent = () => {
                   habilidadesTecnicas={habilidadesTecnicas}
                   dropdownWithSearch={true}
                   shouldShowEmptyForm={true}
+                  //itemVariant="card"
                 />
                 {/* Soft skills */}
                 <SoftSkillsSection<AddTalentType>
