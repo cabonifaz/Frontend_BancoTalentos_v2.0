@@ -793,7 +793,7 @@ export default function InterviewCreatePage() {
 
               {/* Row: Tipo de Entrevista, Fecha, Hora */}
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Tipo de Entrevista (switch Virtual / Presencial) */}
+                {/* Tipo de Entrevista (switch Virtual / Presencial) rebuild*/}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">
                     Tipo de Entrevista <span className="text-red-500">*</span>
