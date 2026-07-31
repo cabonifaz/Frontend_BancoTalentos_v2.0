@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppError, Talent, TalentResponse } from "../../../models";
 import { MODAL_FRACTAL_CV } from "../../../utilities/modalsIds";
 import { Modal } from "../Modal";
@@ -21,6 +21,13 @@ import {
   DOCUMENTO_CV_FR_EN,
   DOCUMENTO_CV_FR_ES,
 } from "../../../utilities/constants";
+import { downloadFractalCVDocx } from "../../../utilities/fractalCVDocx";
+import {
+  generateTalentUploadUrl,
+  uploadFileToS3,
+} from "../../../services/apiService";
+
+const PDF_MIME = "application/pdf";
 
 // @marker helpers
 const notifySuccess = (message: string) =>
@@ -37,7 +44,7 @@ const base64ToPdfFile = (base64: string, fileName: string): File => {
     byteNumbers[i] = byteCharacters.charCodeAt(i);
   }
   const byteArray = new Uint8Array(byteNumbers);
-  return new File([byteArray], fileName, { type: "application/pdf" });
+  return new File([byteArray], fileName, { type: PDF_MIME });
 };
 
 export interface ModalFractalCVProps {
@@ -60,6 +67,7 @@ export const ModalFractalCV = ({
   );
   const [existingFile, setExistingFile] = useState<any>(null);
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [isUpdatingCv, setIsUpdatingCv] = useState(false);
   const { viewingId, viewFile } = useViewTalentFile();
   const fetchingCV = viewingId !== null;
 
@@ -189,6 +197,7 @@ export const ModalFractalCV = ({
   };
 
   // === Función para guardar (nuevo archivo) vía URL pre-firmada ===
+  // El CV siempre se guarda como PDF (generado o editado y re-subido en PDF).
   const handleSave = async () => {
     if (!generatedPDF || !talent?.idTalento) return;
 
@@ -217,26 +226,57 @@ export const ModalFractalCV = ({
     }
   };
 
-  // === Función para actualizar (archivo existente) vía URL pre-firmada ===
+  /**
+   * Reemplaza el CV existente en S3 sobrescribiendo su MISMA key (in-place) vía
+   * URL pre-firmada. El CV siempre es PDF: tanto el regenerado como el editado
+   * que sube el usuario deben ser PDF. La subida depende únicamente del código
+   * 200 del PUT (misma ruta → no requiere registro adicional en BD).
+   */
+  const replaceCvInPlace = async (rawFile: File) => {
+    if (!talent?.idTalento || !existingFile?.idArchivo) {
+      throw new AppError("No hay un CV existente para reemplazar");
+    }
+    const idTipoDocumento =
+      language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
+    // El File debe tener el MIME PDF que se firma en la URL pre-firmada.
+    const file =
+      rawFile.type === PDF_MIME
+        ? rawFile
+        : new File([rawFile], rawFile.name, { type: PDF_MIME });
+
+    const { data: presigned } = await generateTalentUploadUrl({
+      idTalento: talent.idTalento,
+      idTipoDocumento,
+      fileName: file.name,
+      contentType: PDF_MIME,
+      idArchivo: existingFile.idArchivo,
+    });
+    if (presigned.result?.idMensaje !== 2 || !presigned.url) {
+      throw new AppError(
+        presigned.result?.mensaje || "No se pudo generar la URL de subida",
+      );
+    }
+
+    const s3Response = await uploadFileToS3(presigned.url, file);
+    if (!s3Response.ok) {
+      throw new AppError(
+        `Error subiendo el archivo a S3 (código ${s3Response.status})`,
+      );
+    }
+  };
+
+  // === Función para actualizar (regenerar sobre el existente) → PDF ===
   const handleUpdate = async () => {
     if (!generatedPDF || !talent?.idTalento || !existingFile) return;
 
     try {
-      const idTipoDocumento =
-        language === "ES" ? DOCUMENTO_CV_FR_ES : DOCUMENTO_CV_FR_EN;
+      setIsUpdatingCv(true);
       const fileName = `${getFullname().replace(
         /\s+/g,
         "_",
       )}_CV_${language}.pdf`;
       const file = base64ToPdfFile(generatedPDF, fileName);
-
-      await uploadFile({
-        idTalento: talent.idTalento,
-        idTipoDocumento,
-        idTipoArchivo: ARCHIVO_PDF,
-        file,
-        idArchivo: existingFile.idArchivo,
-      });
+      await replaceCvInPlace(file);
 
       notifySuccess("CV actualizado correctamente");
       setGeneratedPDF(null);
@@ -245,6 +285,68 @@ export const ModalFractalCV = ({
     } catch (error) {
       if (error instanceof AppError) notifyError(error.message);
       else notifyError("Error al actualizar el CV.");
+    } finally {
+      setIsUpdatingCv(false);
+    }
+  };
+
+  // === Editar CV: se descarga en Word para editar, pero la re-subida es PDF ===
+  const editedInputRef = useRef<HTMLInputElement>(null);
+  const [isDownloadingWord, setIsDownloadingWord] = useState(false);
+  const [isUploadingEdited, setIsUploadingEdited] = useState(false);
+
+  // Descarga el CV en Word (.docx) para editarlo. No se guarda: es efímero.
+  const handleDownloadForEdit = async () => {
+    if (!talentForCV) return;
+    try {
+      setIsDownloadingWord(true);
+      await downloadFractalCVDocx(
+        talentForCV,
+        getFullname(),
+        talentForCV.experiencias || [],
+        language,
+      );
+    } catch {
+      notifyError("No se pudo generar el Word para editar.");
+    } finally {
+      setIsDownloadingWord(false);
+    }
+  };
+
+  // Sube el PDF editado a S3 sobrescribiendo el CV existente (in-place). Solo se
+  // admite PDF; la subida depende únicamente del código 200 del PUT.
+  const handleEditedFileSelected = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite volver a elegir el mismo archivo
+    if (!file || !talent?.idTalento) return;
+
+    const isPdf =
+      file.type === PDF_MIME || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      notifyError("El archivo debe ser un PDF");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      notifyError("El archivo supera el tamaño máximo permitido (10 MB)");
+      return;
+    }
+    if (!existingFile?.idArchivo) {
+      notifyError("Primero genera y guarda el CV para poder reemplazarlo");
+      return;
+    }
+
+    try {
+      setIsUploadingEdited(true);
+      await replaceCvInPlace(file);
+      notifySuccess("CV editado subido correctamente");
+      onUpdate(talent.idTalento);
+    } catch (error) {
+      if (error instanceof AppError) notifyError(error.message);
+      else notifyError("Error al subir el CV editado.");
+    } finally {
+      setIsUploadingEdited(false);
     }
   };
 
@@ -258,7 +360,10 @@ export const ModalFractalCV = ({
     converting ||
     isTranslating ||
     isSavingFile ||
-    fetchingCV;
+    isUpdatingCv ||
+    fetchingCV ||
+    isDownloadingWord ||
+    isUploadingEdited;
 
   return (
     <Modal
@@ -318,6 +423,41 @@ export const ModalFractalCV = ({
             </button>
           )}
         </div>
+
+        {/* Word editable: solo disponible si el CV ya existe en S3 o se acaba de
+            generar (no tiene sentido editar un CV que aún no se ha generado). */}
+        {(existingFile || generatedPDF) && (
+          <div className="flex flex-col items-center gap-2 border-t border-gray-100 pt-4">
+            <p className="text-xs text-gray-500 text-center max-w-md">
+              ¿Necesitas agregar información extra? Descarga el CV en Word, edítalo,
+              expórtalo a PDF y vuelve a subirlo: reemplazará al actual (la subida
+              debe ser PDF).
+            </p>
+            <div className="flex flex-wrap gap-4 items-center justify-center">
+              <button
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={handleDownloadForEdit}
+                disabled={isLoading || !talentForCV}
+              >
+                Descargar para editar
+              </button>
+              <button
+                className="px-4 py-2 bg-slate-600 text-white rounded-lg shadow hover:bg-slate-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                onClick={() => editedInputRef.current?.click()}
+                disabled={isLoading || !existingFile?.idArchivo}
+              >
+                Subir CV editado
+              </button>
+              <input
+                ref={editedInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                onChange={handleEditedFileSelected}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {showPreview && (
