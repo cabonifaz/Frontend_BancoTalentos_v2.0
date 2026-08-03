@@ -56,8 +56,10 @@ import {
   ETAPA_ENTREVISTA_RS_LABEL,
   ETAPA_ENTREVISTA_CLIENTE_LABEL,
   TIPO_ARCHIVO_ENTREVISTA,
+  TIPO_ARCHIVO_ENTREVISTA_ICS,
   ESTADO_RQ,
   TIPO_ENTREVISTA,
+  DURACION_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
 } from "../../core/utilities/constants";
@@ -80,6 +82,7 @@ import {
 } from "../../core/components/ui/InterviewComboField";
 import { ModalRQDetails } from "../../core/components/modals/RQdetails/ModalRQDetails";
 import { useFetchClients } from "../../core/hooks/useFetchClients";
+import { useUploadInterviewIcs } from "../../core/hooks/interviews/useUploadInterviewIcs";
 
 const RATING_LABELS: Record<number, string> = {
   1: "Muy Malo",
@@ -224,7 +227,13 @@ export default function InterviewDetailPage() {
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
   const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
+  // Duraciones desde el maestro 48 (NUM2 = minutos, string1 = etiqueta).
+  const durationOptions = paramsByMaestro[DURACION_ENTREVISTA] || [];
   const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
+  // El ICS es generado por el sistema: se excluye de la subida manual.
+  const uploadableFileTypes = interviewFileTypes.filter(
+    (t) => t.num1 !== TIPO_ARCHIVO_ENTREVISTA_ICS,
+  );
   const rqStates = paramsByMaestro[ESTADO_RQ] || [];
 
   const { clientes: clients } = useFetchClients();
@@ -426,6 +435,17 @@ export default function InterviewDetailPage() {
   const [talentName, setTalentName] = useState("");
   const [clientName, setClientName] = useState("");
 
+  const { isUploadingIcs, uploadInterviewIcs } = useUploadInterviewIcs();
+  // Duración en minutos (maestro 48) para regenerar el ICS al editar. No se persiste;
+  // el usuario la vuelve a seleccionar si la necesita distinta.
+  const [durationMinutes, setDurationMinutes] = useState<number>(0);
+
+  useEffect(() => {
+    if (durationMinutes === 0 && durationOptions.length > 0) {
+      setDurationMinutes(durationOptions[0].num2);
+    }
+  }, [durationOptions, durationMinutes]);
+
   const {
     loading: loadingReqs,
     data: reqsData,
@@ -594,6 +614,10 @@ export default function InterviewDetailPage() {
     if (!id || saveLockRef.current) return;
     saveLockRef.current = true;
 
+    // Fecha/hora previas: el correo de actualización solo se envía si cambian.
+    const prevFecha = detailResult?.data?.fecha;
+    const prevHora = detailResult?.data?.hora;
+
     const typeFields = buildInterviewTypeFields(data);
 
     const payload: UpdateInterviewPayload = {
@@ -643,6 +667,43 @@ export default function InterviewDetailPage() {
             variant: "success",
           },
         );
+
+        // Regenera el ICS con los datos actualizados y reemplaza el activo previo.
+        // El correo de actualización solo se envía si cambió fecha u hora.
+        const dateTimeChanged = data.fecha !== prevFecha || data.hora !== prevHora;
+        const etapaLabel =
+          interviewStages.find((s) => s.num1 === Number(data.etapa))?.string1 || "";
+        // El regreso al listado lo dispara la actualización de la DATA, NO la subida
+        // del ICS: el ICS se regenera en segundo plano (sin await) y, si falla, solo
+        // avisa con un snackbar. El fallo del ICS nunca bloquea la actualización.
+        uploadInterviewIcs(
+          {
+            id: Number(id),
+            talento: talentName.trim(),
+            perfil: data.perfil,
+            etapa: etapaLabel,
+            clienteResumen: clientName,
+            fecha: data.fecha,
+            hora: data.hora,
+            durationMinutes,
+            isPresencial: isPresencialType(typeFields.tipoEntrevista),
+            direccion: typeFields.direccion || undefined,
+            ubicacion: typeFields.ubicacion || undefined,
+            enlaceEntrevista: typeFields.enlaceEntrevista || undefined,
+            requerimientos: selectedRQs.map((r) => r.label),
+          },
+          dateTimeChanged,
+          "Actualización de Entrevista",
+        ).then((icsOk) => {
+          if (!icsOk) {
+            enqueueSnackbar(
+              "La entrevista se actualizó, pero no se pudo generar la invitación de calendario (ICS).",
+              { variant: "warning" },
+            );
+          }
+        });
+
+        navigate("/dashboard/entrevistas");
       } else if (res.result) {
         enqueueSnackbar(
           res.result.mensaje || "Error al actualizar la entrevista",
@@ -773,8 +834,8 @@ export default function InterviewDetailPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPendingFile(file);
-    if (interviewFileTypes.length > 0) {
-      setSelectedCategory(interviewFileTypes[0].num1);
+    if (uploadableFileTypes.length > 0) {
+      setSelectedCategory(uploadableFileTypes[0].num1);
     }
     setIsUploadModalOpen(true);
     e.target.value = "";
@@ -786,8 +847,8 @@ const handleFileDrop = (e: React.DragEvent<HTMLButtonElement>) => {
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     setPendingFile(file);
-    if (interviewFileTypes.length > 0) {
-      setSelectedCategory(interviewFileTypes[0].num1);
+    if (uploadableFileTypes.length > 0) {
+      setSelectedCategory(uploadableFileTypes[0].num1);
     }
     setIsUploadModalOpen(true);
   };
@@ -896,6 +957,7 @@ const confirmUpload = async () => {
         loadingReqs ||
         loadingParams ||
         loadingSave ||
+        isUploadingIcs ||
         loadingUpload ||
         loadingDeleteFile) && <Loading opacity="opacity-50" />}
       <div>
@@ -932,12 +994,12 @@ const confirmUpload = async () => {
               </button>
               <button
                 type="submit"
-                disabled={loadingSave}
-                aria-busy={loadingSave}
+                disabled={loadingSave || isUploadingIcs}
+                aria-busy={loadingSave || isUploadingIcs}
                 className="btn btn-blue px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 <Check size={16} />
-                {loadingSave ? "Guardando..." : "Guardar Cambios"}
+                {loadingSave || isUploadingIcs ? "Guardando..." : "Guardar Cambios"}
               </button>
             </div>
           </div>
@@ -1071,15 +1133,15 @@ const confirmUpload = async () => {
                     </div>
                   </div>
 
-                  {/* Row: Tipo de Entrevista, Fecha, Hora */}
-                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                  {/* Row: Tipo de Entrevista, Fecha, Hora, Duración */}
+                  <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
                     {/* Tipo de Entrevista (switch Virtual / Presencial) */}
                     <div className="flex flex-col gap-1">
                       <label className="input-label font-medium mb-1">
                         Tipo de Entrevista <span className="text-red-500">*</span>
                       </label>
                       <label
-                        className={`flex items-center justify-center gap-4 cursor-pointer select-none h-[46px] px-4 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
+                        className={`flex items-center justify-center gap-2 cursor-pointer select-none h-[46px] px-2 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
                           errors.tipoEntrevista
                             ? "border-red-500"
                             : "border-gray-200"
@@ -1096,24 +1158,24 @@ const confirmUpload = async () => {
                           className="sr-only peer"
                         />
                         <span
-                          className={`flex items-center gap-1.5 text-sm transition-colors ${
+                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                             isVirtual
                               ? "text-[var(--color-blue)] font-semibold"
                               : "text-gray-400"
                           }`}
                         >
-                          <Video className="w-4 h-4" />
+                          <Video className="w-4 h-4 shrink-0" />
                           Virtual
                         </span>
-                        <div className="relative w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+                        <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
                         <span
-                          className={`flex items-center gap-1.5 text-sm transition-colors ${
+                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                             isPresencial
                               ? "text-[var(--color-blue)] font-semibold"
                               : "text-gray-400"
                           }`}
                         >
-                          <MapPin className="w-4 h-4" />
+                          <MapPin className="w-4 h-4 shrink-0" />
                           Presencial
                         </span>
                       </label>
@@ -1152,6 +1214,22 @@ const confirmUpload = async () => {
                           {errors.hora.message}
                         </p>
                       )}
+                    </div>
+
+                    {/* Duración (solo para la invitación de calendario) */}
+                    <div className="flex flex-col gap-1">
+                      <label className="input-label block mb-1">Duración</label>
+                      <select
+                        value={durationMinutes}
+                        onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                        className="dropdown"
+                      >
+                        {durationOptions.map((d) => (
+                          <option key={d.idParametro} value={d.num2}>
+                            {d.string1}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -1758,13 +1836,16 @@ const confirmUpload = async () => {
                     </div>
                     <p className="text-xs text-gray-400">{f.date}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(f.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded"
-                  >
-                    <X size={14} />
-                  </button>
+                  {/* El ICS es generado por el sistema: no se puede eliminar. */}
+                  {f.idFileType !== TIPO_ARCHIVO_ENTREVISTA_ICS && (
+                    <button
+                      type="button"
+                      onClick={() => removeFile(f.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1830,7 +1911,7 @@ const confirmUpload = async () => {
                       Tipo de Archivo
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      {interviewFileTypes.map((cat) => (
+                      {uploadableFileTypes.map((cat) => (
                         <button
                           key={cat.num1}
                           type="button"

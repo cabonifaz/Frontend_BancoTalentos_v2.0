@@ -21,7 +21,8 @@ export const createInterview = async (
   data: CreateInterviewType,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
+  // Devuelve el id de la entrevista creada (data) para poder generar/subir el ICS.
+  return axiosInstanceFMI.post<OperationResult<number>>(
     "fmi/interviews/create",
     data,
     config,
@@ -215,6 +216,13 @@ export interface ConfirmUploadPayload {
   idFileType: number;
   fileName: string;
   path: string;
+  /**
+   * Solo para el ICS (archivo generado por el sistema): si es true, el backend
+   * envía el correo de entrevista adjuntando el ICS recién registrado.
+   */
+  notify?: boolean;
+  /** Asunto/tipo de notificación ("Nueva Entrevista" | "Actualización de Entrevista"). */
+  notificationType?: string;
 }
 
 export const confirmUploadFile = async (
