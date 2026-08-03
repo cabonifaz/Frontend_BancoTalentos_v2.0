@@ -28,6 +28,7 @@ import {
   ETAPA_ENTREVISTA_RS_LABEL,
   ETAPA_ENTREVISTA_CLIENTE_LABEL,
   TIPO_ENTREVISTA,
+  DURACION_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
 } from "../../core/utilities/constants";
@@ -49,6 +50,7 @@ import {
 } from "../../core/components/ui/InterviewComboField";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { createInterview } from "../../core/services/interviews.service";
+import { useUploadInterviewIcs } from "../../core/hooks/interviews/useUploadInterviewIcs";
 import { Mail, Link as LinkIcon, MapPin, Video } from "lucide-react";
 
 interface SelectedRQ {
@@ -102,6 +104,8 @@ export default function InterviewCreatePage() {
   const interviewStates = paramsByMaestro[ESTADO_ENTREVISTA] || [];
   const interviewStages = paramsByMaestro[ETAPA_ENTREVISTA] || [];
   const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
+  // Duraciones desde el maestro 48 (NUM2 = minutos, string1 = etiqueta).
+  const durationOptions = paramsByMaestro[DURACION_ENTREVISTA] || [];
 
   // num1 de la etapa "Entrevista con el equipo de R&S" (entrevistadores opcionales).
   // En el resto de etapas se exige al menos un entrevistador.
@@ -155,6 +159,17 @@ export default function InterviewCreatePage() {
    * Create interview
    */
   const { loading, execute } = useAsyncService(createInterview);
+  const { uploadInterviewIcs } = useUploadInterviewIcs();
+
+  // Duración en minutos (maestro 48) para calcular DTEND del ICS. No se persiste.
+  const [durationMinutes, setDurationMinutes] = useState<number>(0);
+
+  // Al cargar el maestro 48, selecciona la primera duración disponible por defecto.
+  useEffect(() => {
+    if (durationMinutes === 0 && durationOptions.length > 0) {
+      setDurationMinutes(durationOptions[0].num2);
+    }
+  }, [durationOptions, durationMinutes]);
 
   const methods = useForm<CreateInterviewType>({
     resolver: interviewResolver,
@@ -362,15 +377,53 @@ export default function InterviewCreatePage() {
     try {
       const { result } = await execute(payload);
 
-      if (result?.idTipoMensaje === 2) {
-        enqueueSnackbar(result.mensaje || "Entrevista creada con éxito", {
+      if (result?.baseResponse?.idTipoMensaje === 2) {
+        enqueueSnackbar(result.baseResponse.mensaje || "Entrevista creada con éxito", {
           variant: "success",
         });
+
+        // El regreso al listado lo dispara la creación de la DATA, NO la subida del
+        // ICS: el ICS se sube en segundo plano (sin await) y, si falla, solo avisa
+        // con un snackbar. El fallo del ICS nunca revierte ni bloquea la creación.
+        const newId = result.data;
+        if (newId) {
+          const etapaLabel =
+            interviewStages.find((s) => s.num1 === Number(data.etapa))?.string1 ||
+            "";
+          uploadInterviewIcs(
+            {
+              id: newId,
+              talento: talentSearchValue.trim(),
+              perfil: data.perfil,
+              etapa: etapaLabel,
+              clienteResumen: clientNames,
+              fecha: data.fecha,
+              hora: data.hora,
+              durationMinutes,
+              isPresencial: isPresencialType(typeFields.tipoEntrevista),
+              direccion: typeFields.direccion || undefined,
+              ubicacion: typeFields.ubicacion || undefined,
+              enlaceEntrevista: typeFields.enlaceEntrevista || undefined,
+              requerimientos: selectedRQs.map((r) => r.label),
+            },
+            true,
+            "Nueva Entrevista",
+          ).then((icsOk) => {
+            if (!icsOk) {
+              enqueueSnackbar(
+                "La entrevista se creó, pero no se pudo generar la invitación de calendario (ICS).",
+                { variant: "warning" },
+              );
+            }
+          });
+        }
+
         goBack();
       } else {
-        enqueueSnackbar(result?.mensaje || "No se pudo crear la entrevista", {
-          variant: "error",
-        });
+        enqueueSnackbar(
+          result?.baseResponse?.mensaje || "No se pudo crear la entrevista",
+          { variant: "error" },
+        );
       }
     } finally {
       submissionLockRef.current = false;
@@ -790,15 +843,15 @@ export default function InterviewCreatePage() {
                 </div>
               </div>
 
-              {/* Row: Tipo de Entrevista, Fecha, Hora */}
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Row: Tipo de Entrevista, Fecha, Hora, Duración */}
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Tipo de Entrevista (switch Virtual / Presencial) rebuild*/}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">
                     Tipo de Entrevista <span className="text-red-500">*</span>
                   </label>
                   <label
-                    className={`flex items-center justify-center gap-4 cursor-pointer select-none h-[46px] px-4 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
+                    className={`flex items-center justify-center gap-2 cursor-pointer select-none h-[46px] px-2 rounded-lg border bg-white transition-colors hover:border-gray-300 ${
                       errors.tipoEntrevista
                         ? "border-red-500"
                         : "border-gray-200"
@@ -815,24 +868,24 @@ export default function InterviewCreatePage() {
                       className="sr-only peer"
                     />
                     <span
-                      className={`flex items-center gap-1.5 text-sm transition-colors ${
+                      className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                         isVirtual
                           ? "text-[var(--color-blue)] font-semibold"
                           : "text-gray-400"
                       }`}
                     >
-                      <Video className="w-4 h-4" />
+                      <Video className="w-4 h-4 shrink-0" />
                       Virtual
                     </span>
-                    <div className="relative w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
+                    <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5" />
                     <span
-                      className={`flex items-center gap-1.5 text-sm transition-colors ${
+                      className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                         isPresencial
                           ? "text-[var(--color-blue)] font-semibold"
                           : "text-gray-400"
                       }`}
                     >
-                      <MapPin className="w-4 h-4" />
+                      <MapPin className="w-4 h-4 shrink-0" />
                       Presencial
                     </span>
                   </label>
@@ -871,6 +924,22 @@ export default function InterviewCreatePage() {
                       {errors.hora.message}
                     </p>
                   )}
+                </div>
+
+                {/* Duración (solo para la invitación de calendario) */}
+                <div className="flex flex-col gap-1">
+                  <label className="input-label font-medium mb-1">Duración</label>
+                  <select
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    className="dropdown"
+                  >
+                    {durationOptions.map((d) => (
+                      <option key={d.idParametro} value={d.num2}>
+                        {d.string1}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
