@@ -69,18 +69,16 @@ export class Utils {
   };
 
   /**
-   * Devuelve los IDs de rol (numéricos) del usuario a partir del JWT.
-   * En el token, `id_roles` contiene los IDs numéricos (p. ej. [1]) mientras que
-   * `roles` contiene los nombres (p. ej. ["ADMIN"]).
+   * Devuelve las rutas frontend permitidas para el usuario a partir del JWT.
+   * El claim `routes` proviene de la base de datos (PARAMETROS, ID_MAESTRO=49) y
+   * es la única fuente de autorización de rutas.
    */
-  static getUserRoles = (token?: string): number[] => {
+  static getUserRoutes = (token?: string): string[] => {
     if (!token) return [];
     const decoded = this.decodeJwt(token);
-    const raw = decoded?.id_roles;
+    const raw = decoded?.routes;
     if (!Array.isArray(raw)) return [];
-    return raw
-      .map((r: unknown) => Number(r))
-      .filter((n: number) => !Number.isNaN(n));
+    return raw.filter((r: unknown): r is string => typeof r === "string");
   };
 
   static decodeJwt = (token: string): any => {

@@ -1,30 +1,32 @@
 import { Home, FileText, Angry, Users, Link2, User } from "lucide-react";
 import { NavModule } from "../models/interfaces/NavModule";
 
-/** Roles con acceso al Banco de Talentos hoy. Editar aquí para abrir/cerrar módulos. */
-const DEFAULT_ROLES = [1, 4];
-
+/**
+ * Catálogo de módulos del Banco de Talentos. El acceso NO se decide aquí:
+ * las rutas permitidas provienen de la base de datos (PARAMETROS, ID_MAESTRO=49)
+ * y viajan en el token. `path` es la clave que cruza con esas rutas.
+ */
 export const NAV_MODULES: NavModule[] = [
-  { key: "inicio",         icon: Home,     label: "Inicio",         path: "/dashboard/talentos",                    roles: DEFAULT_ROLES },
-  { key: "requerimientos", icon: FileText, label: "Requerimientos", path: "/dashboard/requerimientos",              roles: DEFAULT_ROLES },
-  { key: "lista-negra",    icon: Angry,    label: "Lista Negra",    path: "/dashboard/lista-negra",                 roles: DEFAULT_ROLES },
-  { key: "entrevistas",    icon: Users,    label: "Entrevistas",    path: "/dashboard/entrevistas",                 roles: DEFAULT_ROLES },
-  { key: "generar-enlace", icon: Link2,    label: "Generar enlace", path: "/dashboard/generarEnlaceRequerimiento",  roles: DEFAULT_ROLES },
-  { key: "mi-cuenta",      icon: User,     label: "Mi cuenta",      path: "/dashboard/mi-cuenta",                   roles: DEFAULT_ROLES },
+  { key: "inicio",         icon: Home,     label: "Inicio",         path: "/dashboard/talentos" },
+  { key: "requerimientos", icon: FileText, label: "Requerimientos", path: "/dashboard/requerimientos" },
+  { key: "lista-negra",    icon: Angry,    label: "Lista Negra",    path: "/dashboard/lista-negra" },
+  { key: "entrevistas",    icon: Users,    label: "Entrevistas",    path: "/dashboard/entrevistas" },
+  { key: "generar-enlace", icon: Link2,    label: "Generar enlace", path: "/dashboard/generarEnlaceRequerimiento" },
+  { key: "mi-cuenta",      icon: User,     label: "Mi cuenta",      path: "/dashboard/mi-cuenta" },
 ];
 
-/** ¿Alguno de los roles del usuario está en la lista de roles permitidos? */
-export const hasRoleAccess = (userRoles: number[], allowed: number[]): boolean =>
-  userRoles.some((r) => allowed.includes(r));
+/**
+ * Una ruta se considera permitida si coincide exactamente con una ruta autorizada
+ * o si es una ruta hija de ella (prefijo por segmento). Así `/dashboard/entrevistas`
+ * habilita `/dashboard/entrevistas/2036`, `/nueva`, `/editar/2036`, etc.
+ */
+export const isRouteAllowed = (pathname: string, allowedRoutes: string[]): boolean =>
+  allowedRoutes.some((r) => pathname === r || pathname.startsWith(`${r}/`));
 
-/** Módulos que el usuario puede ver, según sus roles. */
-export const getAllowedModules = (userRoles: number[]): NavModule[] =>
-  NAV_MODULES.filter((m) => hasRoleAccess(userRoles, m.roles));
+/** Módulos visibles: los del catálogo cuya ruta está autorizada. */
+export const getAllowedModules = (allowedRoutes: string[]): NavModule[] =>
+  NAV_MODULES.filter((m) => allowedRoutes.includes(m.path));
 
-/** Primera ruta accesible para el usuario (destino de redirección), o null si ninguna. */
-export const getFirstAllowedPath = (userRoles: number[]): string | null =>
-  getAllowedModules(userRoles)[0]?.path ?? null;
-
-/** Roles autorizados para un módulo dado por su clave. Usado al proteger rutas. */
-export const rolesFor = (key: string): number[] =>
-  NAV_MODULES.find((m) => m.key === key)?.roles ?? [];
+/** Primera ruta accesible del usuario (destino de redirección), o null si ninguna. */
+export const getFirstAllowedPath = (allowedRoutes: string[]): string | null =>
+  getAllowedModules(allowedRoutes)[0]?.path ?? null;

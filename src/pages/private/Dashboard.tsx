@@ -145,9 +145,8 @@ export const Dashboard = ({ children }: Props) => {
 
   const fullName    = Utils.decodeJwt(token).fullname;
   const firstLetter = fullName.charAt(0);
-  const roles       = Utils.getUserRoles(token);
   const rol         = Utils.decodeJwt(token).roles?.[0] ?? "";
-  const visibleNav  = getAllowedModules(roles);
+  const visibleNav  = getAllowedModules(Utils.getUserRoutes(token));
 
   if (redirect) return <Navigate to={"/login"} replace />;
 

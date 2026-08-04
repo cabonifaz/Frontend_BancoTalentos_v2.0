@@ -5,5 +5,4 @@ export interface NavModule {
   icon: LucideIcon;
   label: string;
   path: string;
-  roles: number[];
 }

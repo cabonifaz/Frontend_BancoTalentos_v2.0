@@ -6,13 +6,13 @@ import { getFirstAllowedPath } from "../../core/config/navigation";
 
 /**
  * Pantalla mostrada cuando un usuario autenticado no tiene ningún módulo permitido
- * (o es redirigido aquí por el RoleGuard). Se renderiza standalone, sin la sidebar
+ * (o es redirigido aquí por el RouteGuard). Se renderiza standalone, sin la sidebar
  * del Dashboard, porque el usuario no tiene acceso a la aplicación.
  */
 export const NoAuthorized = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token") || undefined;
-  const fallback = getFirstAllowedPath(Utils.getUserRoles(token));
+  const fallback = getFirstAllowedPath(Utils.getUserRoutes(token));
 
   const logout = () => {
     Utils.removeToken();

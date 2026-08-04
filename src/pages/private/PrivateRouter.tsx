@@ -2,8 +2,9 @@ import { lazy } from "react";
 
 import { Navigate, Route } from "react-router-dom";
 import { RoutesWithNotFound } from "../../core/components";
-import { RoleGuard } from "../../guard/RoleGuard";
-import { rolesFor } from "../../core/config/navigation";
+import { RouteGuard } from "../../guard/RouteGuard";
+import { getFirstAllowedPath } from "../../core/config/navigation";
+import { Utils } from "../../core/utilities/utils";
 
 const Talents = lazy(() =>
   import("./Talents").then((m) => ({ default: m.Talents })),
@@ -35,48 +36,32 @@ const NoAuthorized = lazy(() =>
 );
 
 export const PrivateRouter = () => {
+  const routes = Utils.getUserRoutes(localStorage.getItem("token") || undefined);
+  const home = getFirstAllowedPath(routes) ?? "/dashboard/no-autorizado";
+
   return (
     <RoutesWithNotFound>
-      <Route path="/" element={<Navigate to={"/talentos"} />} />
+      <Route path="/" element={<Navigate to={home} replace />} />
 
-      {/* Pantalla de acceso denegado: solo requiere sesión, no un rol concreto */}
+      {/* Pantalla de acceso denegado: solo requiere sesión, no una ruta autorizada */}
       <Route path="/no-autorizado" element={<NoAuthorized />} />
 
-      {/* Inicio / gestión de talentos */}
-      <Route element={<RoleGuard allow={rolesFor("inicio")} />}>
+      {/* Rutas protegidas: RouteGuard valida la ruta actual (y sus hijas) contra las
+          rutas permitidas del token. Agregar un módulo no requiere tocar este archivo. */}
+      <Route element={<RouteGuard />}>
         <Route path="/talentos" element={<Talents />} />
         <Route path="/nuevo-talento" element={<AddTalent />} />
         <Route path="/formDatos" element={<PantallaDatos />} />
-      </Route>
-
-      {/* Requerimientos (incluye asignación de talento) */}
-      <Route element={<RoleGuard allow={rolesFor("requerimientos")} />}>
         <Route path="/requerimientos" element={<Requirements />} />
         <Route path="/tableAsignarTalento" element={<TalentTable />} />
-      </Route>
-
-      {/* Lista Negra */}
-      <Route element={<RoleGuard allow={rolesFor("lista-negra")} />}>
         <Route path="/lista-negra" element={<Blacklist />} />
-      </Route>
-
-      {/* Entrevistas */}
-      <Route element={<RoleGuard allow={rolesFor("entrevistas")} />}>
         <Route path="/entrevistas" element={<Interviews />} />
         <Route path="/entrevistas/nueva" element={<InterviewCreate />} />
         <Route path="/entrevistas/:id" element={<InterviewDetail />} />
-      </Route>
-
-      {/* Generar enlace de requerimiento */}
-      <Route element={<RoleGuard allow={rolesFor("generar-enlace")} />}>
         <Route
           path="/generarEnlaceRequerimiento"
           element={<PantallaGenerarEnlaceRequerimiento />}
         />
-      </Route>
-
-      {/* Mi cuenta */}
-      <Route element={<RoleGuard allow={rolesFor("mi-cuenta")} />}>
         <Route path="/mi-cuenta" element={<UserContact />} />
       </Route>
     </RoutesWithNotFound>
