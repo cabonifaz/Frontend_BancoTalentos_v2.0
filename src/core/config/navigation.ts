@@ -1,4 +1,4 @@
-import { Home, FileText, Angry, Users, Link2, User } from "lucide-react";
+import { Home, FileText, Angry, Users, Link2, User, Settings } from "lucide-react";
 import { NavModule } from "../models/interfaces/NavModule";
 
 /**
@@ -13,6 +13,7 @@ export const NAV_MODULES: NavModule[] = [
   { key: "entrevistas",    icon: Users,    label: "Entrevistas",    path: "/dashboard/entrevistas" },
   { key: "generar-enlace", icon: Link2,    label: "Generar enlace", path: "/dashboard/generarEnlaceRequerimiento" },
   { key: "mi-cuenta",      icon: User,     label: "Mi cuenta",      path: "/dashboard/mi-cuenta" },
+  { key: "administration", icon: Settings, label: "Administración", path: "/dashboard/administracion" },
 ];
 
 /**
