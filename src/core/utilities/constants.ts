@@ -69,8 +69,14 @@ export const TIPO_ARCHIVO = "17";
 export const ESTADO_ENTREVISTA = "43";
 export const ETAPA_ENTREVISTA = "44";
 export const TIPO_ARCHIVO_ENTREVISTA = "45";
+// ID_TIPO_ARCHIVO del ICS (invitación de calendario) dentro del maestro 45.
+// El ICS es generado por el sistema: se excluye de la subida manual.
+export const TIPO_ARCHIVO_ENTREVISTA_ICS = 4;
 export const MAESTRO_TIPO_ARCHIVO_POSTULANTE = "46";
 export const TIPO_ENTREVISTA = "47";
+// Duración de entrevista (maestro 48): NUM2 = minutos, string1 = etiqueta.
+// Solo se usa en el frontend para calcular el DTEND del ICS (no se persiste).
+export const DURACION_ENTREVISTA = "48";
 
 // Tipos de entrevista (valores en string1 del maestro 47). Se comparan de forma
 // normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
@@ -94,7 +100,7 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46,47";
+export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46,47,48";
 
 // PROCEDENCIA DEL TALENTO — se maneja como texto (string), no como ID.
 // El valor seleccionado es exactamente el texto de la opción.
