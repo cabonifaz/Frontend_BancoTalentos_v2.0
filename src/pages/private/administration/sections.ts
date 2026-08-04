@@ -1,7 +1,7 @@
 import { LucideIcon, SlidersHorizontal, Building2, Users, UserCog } from "lucide-react";
 import { ComponentType } from "react";
 import { ParametersManager } from "./parameters/ParametersManager";
-import { ClientsPlaceholder } from "./placeholders/ClientsPlaceholder";
+import { ClientsManager } from "./clients/ClientsManager";
 import { UsersPlaceholder } from "./placeholders/UsersPlaceholder";
 import { ManagersPlaceholder } from "./placeholders/ManagersPlaceholder";
 
@@ -20,7 +20,7 @@ export interface AdminSection {
  */
 export const ADMIN_SECTIONS: AdminSection[] = [
   { key: "parameters", label: "Parámetros", icon: SlidersHorizontal, Component: ParametersManager },
-  { key: "clients",    label: "Clientes",   icon: Building2,         Component: ClientsPlaceholder },
+  { key: "clients",    label: "Clientes",   icon: Building2,         Component: ClientsManager },
   { key: "users",      label: "Usuarios",   icon: Users,             Component: UsersPlaceholder },
   { key: "managers",   label: "Gestores",   icon: UserCog,           Component: ManagersPlaceholder },
 ];

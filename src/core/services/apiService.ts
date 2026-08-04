@@ -524,3 +524,37 @@ export const deleteParam = (
 ): Promise<AxiosResponse<models.BaseResponse>> => {
   return axiosInstance.delete(`/bdt/param-admin/delete?idParametro=${idParametro}`);
 };
+
+// manejo de clientes (SUPERADMIN)
+
+export const getClientsAdmin = (
+  params: models.ClientAdminListParams
+): Promise<AxiosResponse<models.ClientAdminListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/client-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const createClient = (
+  data: models.ClientUpsertParams
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+  return axiosInstance.post("/bdt/client-admin/create", data);
+};
+
+export const updateClient = (
+  data: models.ClientUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/client-admin/update", data);
+};
+
+export const deleteClient = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/client-admin/delete?idCliente=${idCliente}`);
+};
+
+export const reactivateClient = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/client-admin/reactivate?idCliente=${idCliente}`);
+};
