@@ -488,3 +488,39 @@ export const getTalentBlacklistStatus = (
 ): Promise<AxiosResponse<models.BlacklistStatusResponse>> => {
   return axiosInstance.get(`/bdt/blacklist/status?idTalento=${idTalento}`);
 };
+
+// manejo de parámetros (SUPERADMIN)
+
+/** Modo 1: lista de maestros paginada por maestro. */
+export const getParamMasters = (
+  params: models.ParamMasterListParams
+): Promise<AxiosResponse<models.ParamMasterListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/param-admin/masters${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+/** Modo 2: todos los parámetros de un maestro (sin paginar). */
+export const getParamsByMaster = (
+  idMaestro: number
+): Promise<AxiosResponse<models.ParamItemListResponse>> => {
+  return axiosInstance.get(`/bdt/param-admin/list?idMaestro=${idMaestro}`);
+};
+
+export const createParam = (
+  data: models.ParamUpsertParams
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+  return axiosInstance.post("/bdt/param-admin/create", data);
+};
+
+export const updateParam = (
+  data: models.ParamUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/param-admin/update", data);
+};
+
+export const deleteParam = (
+  idParametro: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/param-admin/delete?idParametro=${idParametro}`);
+};

@@ -20,6 +20,8 @@ export * from "./interfaces/TalentFilePresigned";
 export * from "./interfaces/RqFilePresigned";
 export * from "./interfaces/PostulantFilePresigned";
 export * from "./interfaces/Blacklist";
+export * from "./interfaces/ParamAdmin";
+export * from "./response/ParamAdminResponse";
 export * from "./params/AddTalentParams";
 export * from "./response/LoginResponse";
 export * from "./response/BaseResponse";
