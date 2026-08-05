@@ -26,6 +26,8 @@ export * from "./interfaces/ClientAdmin";
 export * from "./response/ClientAdminResponse";
 export * from "./interfaces/UserAdmin";
 export * from "./response/UserAdminResponse";
+export * from "./interfaces/ClientGestor";
+export * from "./response/ClientGestorResponse";
 export * from "./params/AddTalentParams";
 export * from "./response/LoginResponse";
 export * from "./response/BaseResponse";

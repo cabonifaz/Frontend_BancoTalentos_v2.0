@@ -593,3 +593,37 @@ export const generateUserSignatureUploadUrl = (
 ): Promise<AxiosResponse<models.UserSignatureUrlResponse>> => {
   return axiosInstance.post("/bdt/user-admin/signature/upload-url", data);
 };
+
+// manejo de gestores por cliente (SUPERADMIN)
+
+export const getClientGestores = (
+  idCliente: number
+): Promise<AxiosResponse<models.ClientGestorListResponse>> => {
+  return axiosInstance.get(`/bdt/client-admin/gestores?idCliente=${idCliente}`);
+};
+
+export const assignClientGestor = (
+  data: models.AssignGestorParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/client-admin/gestor", data);
+};
+
+export const changeClientGestor = (
+  data: models.ChangeGestorParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/client-admin/gestor", data);
+};
+
+export const removeClientGestor = (
+  idClienteGestor: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(
+    `/bdt/client-admin/gestor?idClienteGestor=${idClienteGestor}`
+  );
+};
+
+export const swapClientGestores = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/client-admin/gestores/swap?idCliente=${idCliente}`);
+};
