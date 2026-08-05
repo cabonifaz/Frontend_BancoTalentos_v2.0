@@ -558,3 +558,38 @@ export const reactivateClient = (
 ): Promise<AxiosResponse<models.BaseResponse>> => {
   return axiosInstance.put(`/bdt/client-admin/reactivate?idCliente=${idCliente}`);
 };
+
+// manejo de usuarios (SUPERADMIN)
+
+export const getUsersAdmin = (
+  params: models.UserAdminListParams
+): Promise<AxiosResponse<models.UserAdminListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/user-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const updateUserAdmin = (
+  data: models.UserUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/user-admin/update", data);
+};
+
+export const deleteUserAdmin = (
+  idUsuario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/user-admin/delete?idUsuario=${idUsuario}`);
+};
+
+export const reactivateUserAdmin = (
+  idUsuario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/user-admin/reactivate?idUsuario=${idUsuario}`);
+};
+
+/** Pide la URL PUT pre-firmada para subir la firma del usuario a S3. */
+export const generateUserSignatureUploadUrl = (
+  data: models.UserSignatureUrlParams
+): Promise<AxiosResponse<models.UserSignatureUrlResponse>> => {
+  return axiosInstance.post("/bdt/user-admin/signature/upload-url", data);
+};
