@@ -17,7 +17,7 @@ export const TabRQData = ({
 }: TabProps) => {
   const {
     register,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setError,
     clearErrors,
     watch,
@@ -179,12 +179,12 @@ export const TabRQData = ({
         <div className="flex justify-end space-x-4 mt-4">
           <button
             type="submit"
-            disabled={!isEditing}
+            disabled={!isEditing || isSubmitting}
             className={`btn ${
-              isEditing ? "btn-primary" : "btn-disabled"
+              isEditing && !isSubmitting ? "btn-primary" : "btn-disabled"
             }`}
           >
-            Actualizar
+            {isSubmitting ? "Actualizando…" : "Actualizar"}
           </button>
         </div>
       </div>

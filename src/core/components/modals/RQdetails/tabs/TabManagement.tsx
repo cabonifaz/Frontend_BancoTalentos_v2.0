@@ -29,7 +29,7 @@ export const TabManagment = ({
   currencyOptions,
 }: TabProps) => {
   const {
-    formState: { errors },
+    formState: { errors, isSubmitting },
     control,
     clearErrors,
     setValue,
@@ -344,12 +344,12 @@ export const TabManagment = ({
         <div className="flex justify-end mt-4">
           <button
             type="submit"
-            disabled={!isEditing}
+            disabled={!isEditing || isSubmitting}
             className={`btn text-sm ${
-              isEditing ? "btn-primary" : "btn-disabled"
+              isEditing && !isSubmitting ? "btn-primary" : "btn-disabled"
             }`}
           >
-            Actualizar
+            {isSubmitting ? "Actualizando…" : "Actualizar"}
           </button>
         </div>
       </div>
