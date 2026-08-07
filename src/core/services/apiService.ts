@@ -627,3 +627,31 @@ export const swapClientGestores = (
 ): Promise<AxiosResponse<models.BaseResponse>> => {
   return axiosInstance.put(`/bdt/client-admin/gestores/swap?idCliente=${idCliente}`);
 };
+
+// manejo de tarifario (SUPERADMIN)
+
+export const getTariffs = (
+  params: models.TariffListParams
+): Promise<AxiosResponse<models.TariffListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/tariff-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const createTariff = (
+  data: models.TariffUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/tariff-admin/create", data);
+};
+
+export const updateTariff = (
+  data: models.TariffUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/tariff-admin/update", data);
+};
+
+export const deleteTariff = (
+  idTarifario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/tariff-admin/delete?idTarifario=${idTarifario}`);
+};

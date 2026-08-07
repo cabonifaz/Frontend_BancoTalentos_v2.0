@@ -17,12 +17,35 @@ export const NAV_MODULES: NavModule[] = [
 ];
 
 /**
+ * Sub-pantallas que pertenecen a un módulo pero cuya URL NO cuelga de la ruta del
+ * módulo (por eso el prefijo no las cubre). Se navegan desde dentro del módulo, no
+ * son entradas del sidebar ni tienen registro propio en PARAMETROS (maestro 49).
+ * El acceso se hereda: si el usuario puede entrar a alguno de los módulos dueños,
+ * puede entrar a la sub-pantalla.
+ */
+const AUX_ROUTE_OWNERS: { prefix: string; owners: string[] }[] = [
+  { prefix: "/dashboard/nuevo-talento", owners: ["/dashboard/talentos"] },
+  { prefix: "/dashboard/formDatos", owners: ["/dashboard/talentos", "/dashboard/requerimientos"] },
+  { prefix: "/dashboard/tableAsignarTalento", owners: ["/dashboard/requerimientos"] },
+];
+
+const matches = (pathname: string, route: string): boolean =>
+  pathname === route || pathname.startsWith(`${route}/`);
+
+/**
  * Una ruta se considera permitida si coincide exactamente con una ruta autorizada
  * o si es una ruta hija de ella (prefijo por segmento). Así `/dashboard/entrevistas`
- * habilita `/dashboard/entrevistas/2036`, `/nueva`, `/editar/2036`, etc.
+ * habilita `/dashboard/entrevistas/2036`, `/nueva`, `/editar/2036`, etc. Las
+ * sub-pantallas de {@link AUX_ROUTE_OWNERS} heredan el acceso de su módulo dueño.
  */
-export const isRouteAllowed = (pathname: string, allowedRoutes: string[]): boolean =>
-  allowedRoutes.some((r) => pathname === r || pathname.startsWith(`${r}/`));
+export const isRouteAllowed = (pathname: string, allowedRoutes: string[]): boolean => {
+  if (allowedRoutes.some((r) => matches(pathname, r))) return true;
+
+  const aux = AUX_ROUTE_OWNERS.find((a) => matches(pathname, a.prefix));
+  return aux
+    ? aux.owners.some((owner) => allowedRoutes.some((r) => matches(owner, r)))
+    : false;
+};
 
 /** Módulos visibles: los del catálogo cuya ruta está autorizada. */
 export const getAllowedModules = (allowedRoutes: string[]): NavModule[] =>

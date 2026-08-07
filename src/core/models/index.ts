@@ -28,6 +28,8 @@ export * from "./interfaces/UserAdmin";
 export * from "./response/UserAdminResponse";
 export * from "./interfaces/ClientGestor";
 export * from "./response/ClientGestorResponse";
+export * from "./interfaces/Tariff";
+export * from "./response/TariffResponse";
 export * from "./params/AddTalentParams";
 export * from "./response/LoginResponse";
 export * from "./response/BaseResponse";
