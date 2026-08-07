@@ -1,0 +1,41 @@
+// Modelos del módulo Manejo de Usuarios (SUPERADMIN). Tablas USUARIOS / USUARIO_ROL.
+
+export interface UserAdmin {
+  idUsuario: number;
+  idEmpresa: number;
+  nombres: string;
+  apellidos: string;
+  usuario: string;
+  email: string | null;
+  cargo: string | null;
+  telefono: string | null;
+  firma: string | null;
+  idEstadoRegistro: number;
+  idRol: number | null;
+  rol: string | null;
+}
+
+export interface UserAdminListParams {
+  filtro?: string;
+  /** null/omitido = activos e inactivos; 1 = activos; 0 = inactivos. */
+  idEstado?: number;
+  pagina?: number;
+}
+
+/** Edición de usuario. No incluye USUARIO ni CLAVE. `firma` = ruta S3 nueva o null (conserva). */
+export interface UserUpsertParams {
+  idUsuario: number;
+  nombres: string;
+  apellidos: string;
+  email?: string | null;
+  cargo?: string | null;
+  telefono?: string | null;
+  firma?: string | null;
+  idTipoRol: number;
+}
+
+export interface UserSignatureUrlParams {
+  idUsuario: number;
+  fileName: string;
+  contentType: string;
+}

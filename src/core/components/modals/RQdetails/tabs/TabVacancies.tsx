@@ -62,7 +62,7 @@ export const TabVacancies = ({
   // @marker form handlers
   const {
     register,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
     getValues,
     clearErrors,
@@ -555,14 +555,14 @@ export const TabVacancies = ({
         <div className="mt-2 self-end">
           <button
             type="submit"
-            disabled={!isEditing}
+            disabled={!isEditing || isSubmitting}
             className={`focus:outline-none text-sm min-w-24 h-8 rounded-lg py-1 px-2 mx-1 ${
-              isEditing
+              isEditing && !isSubmitting
                 ? "btn-primary cursor-pointer"
                 : "btn-disabled"
             }`}
           >
-            Actualizar
+            {isSubmitting ? "Actualizando…" : "Actualizar"}
           </button>
         </div>
       </div>

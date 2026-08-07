@@ -64,6 +64,7 @@ export const OBJETO_CONTRATO = "37";
 export const FRASES_IA_MAESTRO = "40";
 export const HABILIDADES_TECNICAS = "19";
 export const GRADO_ESTUDIO = "38";
+export const TIPO_TARIFA = "33";
 export const TIPO_ARCHIVOS_RQ = "41";
 export const TIPO_ARCHIVO = "17";
 export const ESTADO_ENTREVISTA = "43";
@@ -100,7 +101,12 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "2,3,5,7,8,12,13,15,16,17,19,20,21,22,23,24,28,31,32,34,36,37,38,40,41,43,44,45,46,47,48";
+export const ALL_PARAMS_IDS = "1,2,3,5,7,8,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48";
+
+// Catálogo de roles = PARAMETROS maestro 1 (num1 = ID_TIPO_ROL, string1 = nombre).
+export const MAESTRO_ROLES = 1;
+// El rol SUPERADMIN nunca es asignable desde el módulo de usuarios.
+export const ROL_SUPERADMIN = 5;
 
 // PROCEDENCIA DEL TALENTO — se maneja como texto (string), no como ID.
 // El valor seleccionado es exactamente el texto de la opción.

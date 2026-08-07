@@ -488,3 +488,170 @@ export const getTalentBlacklistStatus = (
 ): Promise<AxiosResponse<models.BlacklistStatusResponse>> => {
   return axiosInstance.get(`/bdt/blacklist/status?idTalento=${idTalento}`);
 };
+
+// manejo de parámetros (SUPERADMIN)
+
+/** Modo 1: lista de maestros paginada por maestro. */
+export const getParamMasters = (
+  params: models.ParamMasterListParams
+): Promise<AxiosResponse<models.ParamMasterListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/param-admin/masters${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+/** Modo 2: todos los parámetros de un maestro (sin paginar). */
+export const getParamsByMaster = (
+  idMaestro: number
+): Promise<AxiosResponse<models.ParamItemListResponse>> => {
+  return axiosInstance.get(`/bdt/param-admin/list?idMaestro=${idMaestro}`);
+};
+
+export const createParam = (
+  data: models.ParamUpsertParams
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+  return axiosInstance.post("/bdt/param-admin/create", data);
+};
+
+export const updateParam = (
+  data: models.ParamUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/param-admin/update", data);
+};
+
+export const deleteParam = (
+  idParametro: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/param-admin/delete?idParametro=${idParametro}`);
+};
+
+// manejo de clientes (SUPERADMIN)
+
+export const getClientsAdmin = (
+  params: models.ClientAdminListParams
+): Promise<AxiosResponse<models.ClientAdminListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/client-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const createClient = (
+  data: models.ClientUpsertParams
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+  return axiosInstance.post("/bdt/client-admin/create", data);
+};
+
+export const updateClient = (
+  data: models.ClientUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/client-admin/update", data);
+};
+
+export const deleteClient = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/client-admin/delete?idCliente=${idCliente}`);
+};
+
+export const reactivateClient = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/client-admin/reactivate?idCliente=${idCliente}`);
+};
+
+// manejo de usuarios (SUPERADMIN)
+
+export const getUsersAdmin = (
+  params: models.UserAdminListParams
+): Promise<AxiosResponse<models.UserAdminListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/user-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const updateUserAdmin = (
+  data: models.UserUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/user-admin/update", data);
+};
+
+export const deleteUserAdmin = (
+  idUsuario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/user-admin/delete?idUsuario=${idUsuario}`);
+};
+
+export const reactivateUserAdmin = (
+  idUsuario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/user-admin/reactivate?idUsuario=${idUsuario}`);
+};
+
+/** Pide la URL PUT pre-firmada para subir la firma del usuario a S3. */
+export const generateUserSignatureUploadUrl = (
+  data: models.UserSignatureUrlParams
+): Promise<AxiosResponse<models.UserSignatureUrlResponse>> => {
+  return axiosInstance.post("/bdt/user-admin/signature/upload-url", data);
+};
+
+// manejo de gestores por cliente (SUPERADMIN)
+
+export const getClientGestores = (
+  idCliente: number
+): Promise<AxiosResponse<models.ClientGestorListResponse>> => {
+  return axiosInstance.get(`/bdt/client-admin/gestores?idCliente=${idCliente}`);
+};
+
+export const assignClientGestor = (
+  data: models.AssignGestorParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/client-admin/gestor", data);
+};
+
+export const changeClientGestor = (
+  data: models.ChangeGestorParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/client-admin/gestor", data);
+};
+
+export const removeClientGestor = (
+  idClienteGestor: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(
+    `/bdt/client-admin/gestor?idClienteGestor=${idClienteGestor}`
+  );
+};
+
+export const swapClientGestores = (
+  idCliente: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put(`/bdt/client-admin/gestores/swap?idCliente=${idCliente}`);
+};
+
+// manejo de tarifario (SUPERADMIN)
+
+export const getTariffs = (
+  params: models.TariffListParams
+): Promise<AxiosResponse<models.TariffListResponse>> => {
+  const queryString = Utils.buildQueryString(params);
+  const url = `/bdt/tariff-admin/list${queryString ? `?${queryString}` : ""}`;
+  return axiosInstance.get(url);
+};
+
+export const createTariff = (
+  data: models.TariffUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.post("/bdt/tariff-admin/create", data);
+};
+
+export const updateTariff = (
+  data: models.TariffUpsertParams
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.put("/bdt/tariff-admin/update", data);
+};
+
+export const deleteTariff = (
+  idTarifario: number
+): Promise<AxiosResponse<models.BaseResponse>> => {
+  return axiosInstance.delete(`/bdt/tariff-admin/delete?idTarifario=${idTarifario}`);
+};
