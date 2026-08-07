@@ -377,8 +377,14 @@ export const ModalRQCreate = ({
               />
               {/* Botones de acción */}
               <div className="flex shrink-0 justify-end space-x-4 mt-4 me-1">
-                <button type="submit" className="btn btn-primary">
-                  Agregar RQ
+                <button
+                  type="submit"
+                  disabled={methods.formState.isSubmitting}
+                  className={`btn ${
+                    methods.formState.isSubmitting ? "btn-disabled" : "btn-primary"
+                  }`}
+                >
+                  {methods.formState.isSubmitting ? "Guardando…" : "Agregar RQ"}
                 </button>
               </div>
             </form>

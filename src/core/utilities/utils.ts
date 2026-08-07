@@ -68,6 +68,19 @@ export class Utils {
     localStorage.removeItem("token");
   };
 
+  /**
+   * Devuelve las rutas frontend permitidas para el usuario a partir del JWT.
+   * El claim `routes` proviene de la base de datos (PARAMETROS, ID_MAESTRO=49) y
+   * es la única fuente de autorización de rutas.
+   */
+  static getUserRoutes = (token?: string): string[] => {
+    if (!token) return [];
+    const decoded = this.decodeJwt(token);
+    const raw = decoded?.routes;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((r: unknown): r is string => typeof r === "string");
+  };
+
   static decodeJwt = (token: string): any => {
     try {
       const base64Url = token.split(".")[1];

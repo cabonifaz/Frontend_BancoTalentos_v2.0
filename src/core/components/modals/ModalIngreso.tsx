@@ -244,7 +244,7 @@ export const ModalIngreso = ({
                     <DropdownForm
                       name="idArea"
                       control={control}
-                      label="Área"
+                      label="Equipo"
                       error={errors.idArea}
                       defaultValue={defaultUnit}
                       options={

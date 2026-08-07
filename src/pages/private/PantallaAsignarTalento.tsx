@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { CircleAlert } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { axiosInstanceFMI } from "../../core/services/axiosService";
@@ -291,12 +291,22 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
   const [idPerfil, setIdPerfil] = useState<number>(0);
   const [perfil, setPerfil] = useState<string>("");
 
-  useEffect(() => {
-    if (lstRqVacantes.length === 1) {
-      setIdPerfil(lstRqVacantes[0].idPerfil);
-      setPerfil(lstRqVacantes[0].perfilProfesional);
-    }
+  // Perfiles únicos: un RQ no debería repetir perfil, pero se deduplica por robustez
+  // (evita opciones duplicadas y colisión de keys en el combo).
+  const vacantesUnicas = useMemo(() => {
+    const porPerfil = new Map<number, ReqVacante>();
+    lstRqVacantes.forEach((v) => {
+      if (!porPerfil.has(v.idPerfil)) porPerfil.set(v.idPerfil, v);
+    });
+    return Array.from(porPerfil.values());
   }, [lstRqVacantes]);
+
+  useEffect(() => {
+    if (vacantesUnicas.length === 1) {
+      setIdPerfil(vacantesUnicas[0].idPerfil);
+      setPerfil(vacantesUnicas[0].perfilProfesional);
+    }
+  }, [vacantesUnicas]);
 
   const handleClearSearch = () => {
     setSearchTerm("");
@@ -357,9 +367,9 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
               defaultValue={idPerfil}
             >
               <option value={0}>Seleccione un perfil</option>
-              {lstRqVacantes.map((vacante) => (
+              {vacantesUnicas.map((vacante) => (
                 <option
-                  key={vacante.idPerfil}
+                  key={vacante.idRequerimientoVacante}
                   value={vacante.idPerfil}
                 >
                   {vacante.perfilProfesional}
@@ -660,8 +670,9 @@ const TalentTable: React.FC = () => {
                 tieneEquipo: talent.tieneEquipo,
                 idPerfil: talent.idPerfil,
                 perfil: talent.perfil,
-                // comfirmed from api
-                isFromAPI: talent.confirmado ? true : false,
+                ingreso: talent.ingreso ?? 0,
+                // "Bloqueado" solo si ya fue ingresado (contrato), no por estar marcado.
+                isFromAPI: talent.ingreso === 1 ? true : false,
                 ubicacion: talent?.ubicacion || "",
                 idModalidadContrato: talent?.idModalidadContrato || 0,
                 fchInicioContrato: talent?.fchInicioContrato || "",
@@ -670,7 +681,14 @@ const TalentTable: React.FC = () => {
               })
             );
 
-          setLocalTalents(formattedTalents);
+          // Deduplicar por idTalento: el SEL puede devolver la misma fila si el
+          // talento tiene más de un CV activo.
+          const dedupById = Array.from(
+            new Map(
+              formattedTalents.map((t: AsignarTalentoType) => [t.idTalento, t])
+            ).values()
+          ) as AsignarTalentoType[];
+          setLocalTalents(dedupById);
         }
       }
     } catch (error) {
@@ -754,8 +772,9 @@ const TalentTable: React.FC = () => {
           situacion: talentDetails.situacion || "LIBRE",
           idSituacion: talentDetails.idSituacion || 1,
           confirmado: talentDetails.confirmado || false,
-          // comfirmed from api
-          isFromAPI: talentDetails.confirmado ? true : false,
+          // "Bloqueado" solo si ya fue ingresado (contrato creado), no por estar marcado.
+          isFromAPI: talentDetails.ingreso ? true : false,
+          ingreso: talentDetails.ingreso || 0,
           tooltip: talentDetails.tooltip || "",
           idPerfil: idPerfil,
           perfil: perfil,
@@ -775,6 +794,7 @@ const TalentTable: React.FC = () => {
       await handleFinalize({
         talents: nextTalents,
         flagCorreo: false,
+        finalizar: false,
       });
     } catch (error) {
       console.error("Error fetching talent details:", error);
@@ -882,18 +902,14 @@ const TalentTable: React.FC = () => {
       return;
     }
 
-    setLocalTalents((prev) =>
-      prev.map((talent) =>
-        talent.idTalento === talento.idTalento
-          ? {
-              ...talent,
-              confirmado: confirm,
-              isFromAPI: false,
-              ingreso: 0,
-            }
-          : talent
-      )
+    const nextTalents = localTalents.map((talent) =>
+      talent.idTalento === talento.idTalento
+        ? { ...talent, confirmado: confirm, isFromAPI: false, ingreso: 0 }
+        : talent
     );
+    setLocalTalents(nextTalents);
+    // Persistir el desmarcado de inmediato (sin ingresar).
+    handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
     showToast(
       `Confirmación cancelada. Vacantes restantes: ${
         remainingVacancies + 1
@@ -913,7 +929,7 @@ const TalentTable: React.FC = () => {
         : talent
     );
     setLocalTalents(nextTalents);
-    await handleFinalize({ talents: nextTalents, flagCorreo: false });
+    await handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
   };
 
   // Actualizar talento
@@ -961,15 +977,24 @@ const TalentTable: React.FC = () => {
   const handleFinalize = async ({
     talents,
     flagCorreo,
+    finalizar = false,
   }: {
     talents?: AsignarTalentoType[];
     flagCorreo: boolean;
+    /** true = "Finalizar" (ejecuta el ingreso). false = auto-guardado (solo persiste la marca). */
+    finalizar?: boolean;
   }) => {
     try {
       setIsLoading(true);
       const talentsToUse = talents || localTalents;
 
-      const talentos = talentsToUse.map((talent) => ({
+      // Deduplicar por idTalento antes de enviar: el MERGE del SP no admite el
+      // mismo talento repetido en el lote.
+      const talentosDedup = Array.from(
+        new Map(talentsToUse.map((t) => [t.idTalento, t])).values()
+      );
+
+      const talentos = talentosDedup.map((talent) => ({
         idTalento: talent.idTalento,
         nombres: talent.nombres,
         apellidos:
@@ -979,12 +1004,15 @@ const TalentTable: React.FC = () => {
         dni: talent.dni,
         celular: talent.celular || "",
         email: talent.email,
-        idEstado: !talent.confirmado
-          ? talent.idEstado ||
-            (talent.estado === "DATOS COMPLETOS"
-              ? ESTADO_DATOS_COMPLETOS
-              : ESTADO_OBSERVADO)
-          : ESTADO_CONFIRMADO,
+        // El estado pasa a CONFIRMADO solo al FINALIZAR. En auto-guardado la marca
+        // vive en el flag `confirmado`, conservando el estado de datos (2/1).
+        idEstado:
+          talent.confirmado && finalizar
+            ? ESTADO_CONFIRMADO
+            : talent.idEstado ||
+              (talent.estado === "DATOS COMPLETOS"
+                ? ESTADO_DATOS_COMPLETOS
+                : ESTADO_OBSERVADO),
         idSituacion:
           talent.idSituacion ||
           (talent.situacion === "LIBRE" ? 1 : 2),
@@ -1026,6 +1054,7 @@ const TalentTable: React.FC = () => {
       const payload = {
         idRequerimiento,
         flagCorreo: flagCorreo,
+        finalizar: finalizar,
         lstTalentos: talentos,
       };
 
@@ -1085,11 +1114,12 @@ const TalentTable: React.FC = () => {
       setShowModalSolicitudEquipo(true);
       return;
     } else {
-      setLocalTalents((prevTalents) =>
-        prevTalents.map((t) =>
-          t.idTalento === talento.idTalento ? talento : t
-        )
+      const nextTalents = localTalents.map((t) =>
+        t.idTalento === talento.idTalento ? talento : t
       );
+      setLocalTalents(nextTalents);
+      // Persistir la MARCA (sin ingresar): finalizar = false.
+      handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
 
       showToast(
         `Talento confirmado. Vacantes restantes: ${
@@ -1103,11 +1133,12 @@ const TalentTable: React.FC = () => {
   const handleOnConfirmModalSolicitudEquipo = (
     talento: AsignarTalentoType
   ) => {
-    setLocalTalents((prevTalents) =>
-      prevTalents.map((t) =>
-        t.idTalento === talento.idTalento ? talento : t
-      )
+    const nextTalents = localTalents.map((t) =>
+      t.idTalento === talento.idTalento ? talento : t
     );
+    setLocalTalents(nextTalents);
+    // Persistir la MARCA (sin ingresar): finalizar = false.
+    handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
 
     showToast(
       `Talento confirmado. Vacantes restantes: ${
@@ -1264,7 +1295,7 @@ const TalentTable: React.FC = () => {
         <ConfirmationModal
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
-          onConfirm={() => handleFinalize({ flagCorreo: true })}
+          onConfirm={() => handleFinalize({ flagCorreo: true, finalizar: true })}
           message="¿Está seguro que desea finalizar y guardar los talentos confirmados?"
         />
 
