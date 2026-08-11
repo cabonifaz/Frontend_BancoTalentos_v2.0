@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { CircleAlert } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { axiosInstanceFMI } from "../../core/services/axiosService";
@@ -565,6 +565,13 @@ const TalentTable: React.FC = () => {
   const [localTalents, setLocalTalents] = useState<
     AsignarTalentoType[]
   >([]);
+  // Los datos de la solicitud de equipo solo viven en memoria hasta "Finalizar"
+  // (la solicitud se crea recién ahí, atada al contrato). Como cada auto-guardado
+  // recarga y borra `solicitudEquipo` del talento, se conservan aquí por idTalento
+  // para reenviarlos al finalizar y no mandar FECHA_SOLICITUD nula.
+  const equipoByTalento = useRef<
+    Record<number, AsignarTalentoType["solicitudEquipo"]>
+  >({});
   const [searchResults, setSearchResults] = useState<
     AsignarTalentoType[]
   >([]);
@@ -1090,7 +1097,10 @@ const TalentTable: React.FC = () => {
         montoSemestral: talent.montoSemestral || 0,
         // isFromApi: talent?.isFromAPI,
 
-        solicitudEquipo: talent?.solicitudEquipo || null,
+        solicitudEquipo:
+          talent?.solicitudEquipo ||
+          equipoByTalento.current[talent.idTalento] ||
+          null,
         idEstadoRegistro: talent?.idEstadoRegistro,
       }));
 
@@ -1180,6 +1190,11 @@ const TalentTable: React.FC = () => {
   const handleOnConfirmModalSolicitudEquipo = async (
     talento: AsignarTalentoType
   ) => {
+    // Conservar la solicitud de equipo para reenviarla en el Finalizar (sobrevive
+    // a las recargas que borran `solicitudEquipo` del talento).
+    if (talento.solicitudEquipo) {
+      equipoByTalento.current[talento.idTalento] = talento.solicitudEquipo;
+    }
     const nextTalents = localTalents.map((t) =>
       t.idTalento === talento.idTalento ? talento : t
     );
