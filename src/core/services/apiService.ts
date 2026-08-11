@@ -500,11 +500,12 @@ export const getParamMasters = (
   return axiosInstance.get(url);
 };
 
-/** Modo 2: todos los parámetros de un maestro (sin paginar). */
+/** Modo 2: parámetros de un maestro, paginados. `pagina` omitido = todo. */
 export const getParamsByMaster = (
-  idMaestro: number
+  params: models.ParamItemListParams
 ): Promise<AxiosResponse<models.ParamItemListResponse>> => {
-  return axiosInstance.get(`/bdt/param-admin/list?idMaestro=${idMaestro}`);
+  const queryString = Utils.buildQueryString(params);
+  return axiosInstance.get(`/bdt/param-admin/list?${queryString}`);
 };
 
 export const createParam = (
@@ -567,6 +568,12 @@ export const getUsersAdmin = (
   const queryString = Utils.buildQueryString(params);
   const url = `/bdt/user-admin/list${queryString ? `?${queryString}` : ""}`;
   return axiosInstance.get(url);
+};
+
+export const createUserAdmin = (
+  data: models.UserCreateParams
+): Promise<AxiosResponse<models.InsertUpdateResponse>> => {
+  return axiosInstance.post("/bdt/user-admin/create", data);
 };
 
 export const updateUserAdmin = (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { CircleAlert } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { axiosInstanceFMI } from "../../core/services/axiosService";
@@ -6,6 +6,7 @@ import BackButton from "../../core/components/ui/BackButton";
 import Toast from "../../core/components/ui/Toast";
 import { Dashboard } from "./Dashboard";
 import {
+  ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
   ESTADO_CONFIRMADO,
   ESTADO_DATOS_COMPLETOS,
@@ -564,6 +565,13 @@ const TalentTable: React.FC = () => {
   const [localTalents, setLocalTalents] = useState<
     AsignarTalentoType[]
   >([]);
+  // Los datos de la solicitud de equipo solo viven en memoria hasta "Finalizar"
+  // (la solicitud se crea recién ahí, atada al contrato). Como cada auto-guardado
+  // recarga y borra `solicitudEquipo` del talento, se conservan aquí por idTalento
+  // para reenviarlos al finalizar y no mandar FECHA_SOLICITUD nula.
+  const equipoByTalento = useRef<
+    Record<number, AsignarTalentoType["solicitudEquipo"]>
+  >({});
   const [searchResults, setSearchResults] = useState<
     AsignarTalentoType[]
   >([]);
@@ -618,6 +626,45 @@ const TalentTable: React.FC = () => {
       );
     }
   }, [localTalents, requerimiento, calculateRemainingVacancies]);
+
+  // Cobertura por perfil: cuántas vacantes pide cada perfil vs cuántos talentos
+  // confirmados (y no removidos) tiene. Base para habilitar "Finalizar" y para
+  // evitar sobre-asignar un perfil.
+  const coverageByPerfil = useMemo(() => {
+    const map = new Map<
+      number,
+      { required: number; confirmed: number; perfil: string }
+    >();
+    (requerimiento?.lstRqVacantes || []).forEach((v) => {
+      const prev = map.get(v.idPerfil);
+      map.set(v.idPerfil, {
+        required: (prev?.required || 0) + v.cantidad,
+        confirmed: prev?.confirmed || 0,
+        perfil: v.perfilProfesional,
+      });
+    });
+    localTalents.forEach((t) => {
+      if (t.confirmado && t.idEstadoRegistro !== 0 && t.idPerfil) {
+        const entry = map.get(t.idPerfil);
+        if (entry) entry.confirmed += 1;
+      }
+    });
+    return map;
+  }, [requerimiento, localTalents]);
+
+  const perfilesFaltantes = useMemo(
+    () =>
+      Array.from(coverageByPerfil.values())
+        .filter((e) => e.confirmed < e.required)
+        .map((e) => `${e.required - e.confirmed} ${e.perfil}`),
+    [coverageByPerfil]
+  );
+
+  // Completo = todos los perfiles con al menos sus vacantes cubiertas.
+  const isFullyCovered = useMemo(() => {
+    const entries = Array.from(coverageByPerfil.values());
+    return entries.length > 0 && entries.every((e) => e.confirmed >= e.required);
+  }, [coverageByPerfil]);
 
   // Mostrar y ocultar Toast
   const showToast = (
@@ -887,16 +934,18 @@ const TalentTable: React.FC = () => {
     talento: AsignarTalentoType,
     confirm: boolean
   ) => {
-    // Si intenta confirmar pero no hay vacantes disponibles
-    if (confirm && remainingVacancies <= 0) {
-      showToast(
-        "No hay vacantes disponibles. Ya ha cubierto todas las vacantes.",
-        "error"
-      );
-      return false;
-    }
-
     if (confirm) {
+      // No permitir confirmar si el perfil de este talento ya está cubierto.
+      const entry = talento.idPerfil
+        ? coverageByPerfil.get(talento.idPerfil)
+        : undefined;
+      if (entry && entry.confirmed >= entry.required) {
+        showToast(
+          `Ya se cubrieron todas las vacantes del perfil ${entry.perfil}.`,
+          "error"
+        );
+        return false;
+      }
       setCurrentTalento(talento);
       setShowModalIngreso(true);
       return;
@@ -956,15 +1005,16 @@ const TalentTable: React.FC = () => {
     });
   };
 
-  // Verificar confirmación
+  // Verificar confirmación: solo se puede finalizar cuando TODAS las vacantes
+  // (por perfil) están cubiertas por talentos confirmados.
   const handleConfirmOpen = () => {
-    const acceptedTalents = localTalents.filter(
-      (talent) => talent.idEstado === 2
-    );
-
-    if (acceptedTalents.length === 0) {
+    if (!isFullyCovered) {
       showToast(
-        "Debe seleccionar al menos un talento con estado DATOS COMPLETOS para finalizar.",
+        perfilesFaltantes.length > 0
+          ? `Aún faltan vacantes por cubrir: ${perfilesFaltantes.join(
+              ", "
+            )}. Debe cubrirlas todas para finalizar.`
+          : "Debe cubrir todas las vacantes del requerimiento para finalizar.",
         "error"
       );
       return;
@@ -1047,7 +1097,10 @@ const TalentTable: React.FC = () => {
         montoSemestral: talent.montoSemestral || 0,
         // isFromApi: talent?.isFromAPI,
 
-        solicitudEquipo: talent?.solicitudEquipo || null,
+        solicitudEquipo:
+          talent?.solicitudEquipo ||
+          equipoByTalento.current[talent.idTalento] ||
+          null,
         idEstadoRegistro: talent?.idEstadoRegistro,
       }));
 
@@ -1084,8 +1137,11 @@ const TalentTable: React.FC = () => {
   // Navegación
   const goBack = () => navigate("/dashboard/requerimientos");
 
-  // Validaciones
-  const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
+  // Validaciones: una vez ASIGNADO (o ATENDIDO) la pantalla queda de solo lectura,
+  // incluido "Finalizar", aunque se vuelva por el botón atrás del navegador.
+  const buttonsDisabled =
+    requerimiento?.idEstado === ESTADO_ASIGNADO ||
+    requerimiento?.idEstado === ESTADO_ATENDIDO;
 
   const handleModalIngresoClose = () => {
     setShowModalIngreso(false);
@@ -1106,7 +1162,7 @@ const TalentTable: React.FC = () => {
     setShowModalIngreso(false);
   };
 
-  const handleOnConfirmModalIngreso = (
+  const handleOnConfirmModalIngreso = async (
     talento: AsignarTalentoType
   ) => {
     if (talento?.tieneEquipo === 0) {
@@ -1118,8 +1174,9 @@ const TalentTable: React.FC = () => {
         t.idTalento === talento.idTalento ? talento : t
       );
       setLocalTalents(nextTalents);
-      // Persistir la MARCA (sin ingresar): finalizar = false.
-      handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
+      // Persistir la MARCA (sin ingresar): finalizar = false. Se espera a que
+      // termine para que la fila RT quede persistida antes de un posible "Finalizar".
+      await handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
 
       showToast(
         `Talento confirmado. Vacantes restantes: ${
@@ -1130,15 +1187,21 @@ const TalentTable: React.FC = () => {
     }
   };
 
-  const handleOnConfirmModalSolicitudEquipo = (
+  const handleOnConfirmModalSolicitudEquipo = async (
     talento: AsignarTalentoType
   ) => {
+    // Conservar la solicitud de equipo para reenviarla en el Finalizar (sobrevive
+    // a las recargas que borran `solicitudEquipo` del talento).
+    if (talento.solicitudEquipo) {
+      equipoByTalento.current[talento.idTalento] = talento.solicitudEquipo;
+    }
     const nextTalents = localTalents.map((t) =>
       t.idTalento === talento.idTalento ? talento : t
     );
     setLocalTalents(nextTalents);
-    // Persistir la MARCA (sin ingresar): finalizar = false.
-    handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
+    // Persistir la MARCA (sin ingresar): finalizar = false. Se espera para que la
+    // fila RT quede persistida antes de un posible "Finalizar".
+    await handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
 
     showToast(
       `Talento confirmado. Vacantes restantes: ${

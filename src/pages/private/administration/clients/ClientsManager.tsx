@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ExternalLink,
   Pencil,
@@ -11,6 +11,7 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { useApi } from "../../../../core/hooks/useApi";
 import { Loading } from "../../../../core/components/ui/Loading";
+import { Pagination } from "../../../../core/components";
 import {
   deleteClient,
   getClientsAdmin,
@@ -38,10 +39,16 @@ const cell = (v: unknown) =>
 /** null = todos, 1 = activos, 0 = inactivos. */
 type EstadoFilter = "" | "1" | "0";
 
+// Debe coincidir con el tamaño de página configurado en BD (PARAMETROS maestro 11).
+const ITEMS_PER_PAGE = 5;
+
 export const ClientsManager = () => {
   const [filtro, setFiltro] = useState("");
+  const [appliedFiltro, setAppliedFiltro] = useState("");
   const [estado, setEstado] = useState<EstadoFilter>("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<ClientAdmin[]>([]);
+  const [total, setTotal] = useState(0);
 
   const [modal, setModal] = useState<{
     mode: "create" | "edit";
@@ -54,7 +61,10 @@ export const ClientsManager = () => {
     ClientAdminListParams
   >(getClientsAdmin, {
     onError: (e) => handleError(e, enqueueSnackbar),
-    onSuccess: (r) => setClients(r.data.registros ?? []),
+    onSuccess: (r) => {
+      setClients(r.data.registros ?? []);
+      setTotal(r.data.total ?? 0);
+    },
   });
 
   const { loading: deleting, fetch: doDelete } = useApi<BaseResponse, number>(
@@ -67,33 +77,48 @@ export const ClientsManager = () => {
     number
   >(reactivateClient, { onError: (e) => handleError(e, enqueueSnackbar) });
 
+  const load = useCallback(
+    () =>
+      fetchList({
+        filtro: appliedFiltro.trim() || undefined,
+        idEstado: estado === "" ? undefined : Number(estado),
+        pagina: currentPage,
+      }),
+    [fetchList, appliedFiltro, estado, currentPage],
+  );
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const reactivate = async (client: ClientAdmin) => {
     const response = await doReactivate(client.idCliente);
     handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
     if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) load();
   };
 
-  const load = () =>
-    fetchList({
-      filtro: filtro.trim() || undefined,
-      idEstado: estado === "" ? undefined : Number(estado),
-    });
-
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const confirmDelete = async () => {
     if (!toDelete) return;
     const response = await doDelete(toDelete.idCliente);
     handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
     setToDelete(null);
-    if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) load();
+    if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) {
+      // Si la página queda vacía tras la baja, retrocede una.
+      if (clients.length === 1 && currentPage > 1) setCurrentPage((p) => p - 1);
+      else load();
+    }
   };
 
   const loading = loadingList || deleting || reactivating;
   const canSearch = filtro.trim() !== "";
+  const search = () => {
+    setCurrentPage(1);
+    setAppliedFiltro(filtro);
+  };
+  const changeEstado = (value: EstadoFilter) => {
+    setCurrentPage(1);
+    setEstado(value);
+  };
 
   return (
     <div className="relative h-full flex flex-col p-6">
@@ -124,13 +149,13 @@ export const ClientsManager = () => {
             placeholder="Buscar por RUC o razón social…"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && canSearch && load()}
+            onKeyDown={(e) => e.key === "Enter" && canSearch && search()}
           />
         </div>
         <select
           className="input"
           value={estado}
-          onChange={(e) => setEstado(e.target.value as EstadoFilter)}
+          onChange={(e) => changeEstado(e.target.value as EstadoFilter)}
         >
           <option value="">Todos</option>
           <option value="1">Activos</option>
@@ -138,7 +163,7 @@ export const ClientsManager = () => {
         </select>
         <button
           type="button"
-          onClick={load}
+          onClick={search}
           disabled={!canSearch}
           className={`btn ${canSearch ? "btn-primary" : "btn-disabled"}`}
         >
@@ -247,6 +272,17 @@ export const ClientsManager = () => {
           </tbody>
         </table>
       </div>
+
+      {total > ITEMS_PER_PAGE && (
+        <div className="mt-3">
+          <Pagination
+            totalItems={total}
+            itemsPerPage={ITEMS_PER_PAGE}
+            currentPage={currentPage}
+            onPaginate={setCurrentPage}
+          />
+        </div>
+      )}
 
       {modal && (
         <ClientFormModal

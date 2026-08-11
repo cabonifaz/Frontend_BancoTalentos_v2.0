@@ -34,6 +34,18 @@ export interface UserUpsertParams {
   idTipoRol: number;
 }
 
+/** Alta de usuario. La clave viaja en texto plano; el SP la cifra (SHA2_256). Sin firma. */
+export interface UserCreateParams {
+  nombres: string;
+  apellidos: string;
+  usuario: string;
+  clave: string;
+  email: string;
+  telefono: string;
+  cargo?: string | null;
+  idTipoRol: number;
+}
+
 export interface UserSignatureUrlParams {
   idUsuario: number;
   fileName: string;
