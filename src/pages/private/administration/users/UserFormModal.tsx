@@ -5,6 +5,7 @@ import { useApi } from "../../../../core/hooks/useApi";
 import { useParams } from "../../../../core/context/ParamsContext";
 import { MAESTRO_ROLES, ROL_SUPERADMIN } from "../../../../core/utilities/constants";
 import {
+  createUserAdmin,
   generateUserSignatureUploadUrl,
   updateUserAdmin,
   uploadFileToS3,
@@ -15,20 +16,26 @@ import {
 } from "../../../../core/utilities/errorHandler";
 import {
   BaseResponse,
+  InsertUpdateResponse,
   UserAdmin,
+  UserCreateParams,
   UserUpsertParams,
 } from "../../../../core/models";
 
 interface Props {
-  initial: UserAdmin;
+  /** null/omitido = alta; con valor = edición. */
+  initial?: UserAdmin | null;
   onClose: () => void;
   onSaved: () => void;
 }
+
+const CLAVE_MIN = 12;
 
 const str = (v: unknown): string => (v === null || v === undefined ? "" : String(v));
 const textOrNull = (v: string): string | null => (v.trim() === "" ? null : v.trim());
 
 export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
+  const isCreate = !initial;
   const { paramsByMaestro } = useParams();
 
   // Catálogo de roles (maestro 1) SIN el rol SUPERADMIN (nunca asignable).
@@ -41,30 +48,39 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
   );
 
   const [form, setForm] = useState({
-    nombres: str(initial.nombres),
-    apellidos: str(initial.apellidos),
-    email: str(initial.email),
-    cargo: str(initial.cargo),
-    telefono: str(initial.telefono),
-    idTipoRol: initial.idRol ? String(initial.idRol) : "",
+    nombres: str(initial?.nombres),
+    apellidos: str(initial?.apellidos),
+    usuario: str(initial?.usuario),
+    clave: "",
+    email: str(initial?.email),
+    cargo: str(initial?.cargo),
+    telefono: str(initial?.telefono),
+    idTipoRol: initial?.idRol ? String(initial.idRol) : "",
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Firma: se sube directo a S3 (URL pre-firmada). Solo se envía `path` si el PUT dio 200.
+  // Firma (solo edición): se sube directo a S3. El path solo viaja si el PUT dio 200.
   const [firmaPath, setFirmaPath] = useState<string | null>(null);
   const [uploadingFirma, setUploadingFirma] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { loading: saving, fetch: doUpdate } = useApi<
+  const { loading: creating, fetch: doCreate } = useApi<
+    InsertUpdateResponse,
+    UserCreateParams
+  >(createUserAdmin, { onError: (e) => handleError(e, enqueueSnackbar) });
+
+  const { loading: updating, fetch: doUpdate } = useApi<
     BaseResponse,
     UserUpsertParams
   >(updateUserAdmin, { onError: (e) => handleError(e, enqueueSnackbar) });
+
+  const saving = creating || updating;
 
   const set = (key: keyof typeof form) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const onFirmaSelected = async (file: File | null) => {
-    if (!file) return;
+    if (!file || !initial) return;
     setUploadingFirma(true);
     try {
       const { data } = await generateUserSignatureUploadUrl({
@@ -93,31 +109,72 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
     }
   };
 
-  const onSubmit = async () => {
+  const validate = (): boolean => {
     if (form.nombres.trim() === "" || form.apellidos.trim() === "") {
       setError("Nombres y apellidos son obligatorios.");
-      return;
+      return false;
     }
     if (form.idTipoRol === "") {
       setError("El rol es obligatorio.");
-      return;
+      return false;
+    }
+    if (isCreate) {
+      if (form.usuario.trim() === "") {
+        setError("El nombre de usuario es obligatorio.");
+        return false;
+      }
+      if (form.clave.length < CLAVE_MIN) {
+        setError(`La contraseña debe tener al menos ${CLAVE_MIN} caracteres.`);
+        return false;
+      }
+      if (form.email.trim() === "" || !form.email.includes("@")) {
+        setError("El email es obligatorio y debe ser válido.");
+        return false;
+      }
+      if (form.telefono.trim() === "") {
+        setError("El teléfono es obligatorio.");
+        return false;
+      }
     }
     setError(null);
+    return true;
+  };
 
-    const payload: UserUpsertParams = {
-      idUsuario: initial.idUsuario,
-      nombres: form.nombres.trim(),
-      apellidos: form.apellidos.trim(),
-      email: textOrNull(form.email),
-      cargo: textOrNull(form.cargo),
-      telefono: textOrNull(form.telefono),
-      firma: firmaPath, // null = conserva la firma actual
-      idTipoRol: Number(form.idTipoRol),
-    };
+  const onSubmit = async () => {
+    if (!validate()) return;
 
-    const response = await doUpdate(payload);
-    handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
-    if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) {
+    let ok = false;
+    if (isCreate) {
+      const payload: UserCreateParams = {
+        nombres: form.nombres.trim(),
+        apellidos: form.apellidos.trim(),
+        usuario: form.usuario.trim(),
+        clave: form.clave,
+        email: form.email.trim(),
+        telefono: form.telefono.trim(),
+        cargo: textOrNull(form.cargo),
+        idTipoRol: Number(form.idTipoRol),
+      };
+      const response = await doCreate(payload);
+      handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
+      ok = (response.data.result?.idMensaje ?? response.data.idMensaje) === 2;
+    } else {
+      const payload: UserUpsertParams = {
+        idUsuario: initial!.idUsuario,
+        nombres: form.nombres.trim(),
+        apellidos: form.apellidos.trim(),
+        email: textOrNull(form.email),
+        cargo: textOrNull(form.cargo),
+        telefono: textOrNull(form.telefono),
+        firma: firmaPath, // null = conserva la firma actual
+        idTipoRol: Number(form.idTipoRol),
+      };
+      const response = await doUpdate(payload);
+      handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
+      ok = (response.data.result?.idMensaje ?? response.data.idMensaje) === 2;
+    }
+
+    if (ok) {
       onSaved();
       onClose();
     }
@@ -130,7 +187,7 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
       <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 rounded-t-xl flex-shrink-0">
           <h2 className="font-semibold text-gray-800">
-            Editar usuario · @{initial.usuario}
+            {isCreate ? "Nuevo usuario" : `Editar usuario · @${initial!.usuario}`}
           </h2>
           <button
             type="button"
@@ -150,13 +207,33 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
             <Field label="Apellidos *">
               <input className="input w-full" value={form.apellidos} onChange={(e) => set("apellidos")(e.target.value)} />
             </Field>
-            <Field label="Email">
+
+            {isCreate && (
+              <>
+                <Field label="Usuario *">
+                  <input
+                    className="input w-full"
+                    value={form.usuario}
+                    onChange={(e) => set("usuario")(e.target.value.trim())}
+                    autoComplete="off"
+                  />
+                </Field>
+                <Field label={`Contraseña * (mín. ${CLAVE_MIN})`}>
+                  <input
+                    type="password"
+                    className="input w-full"
+                    value={form.clave}
+                    onChange={(e) => set("clave")(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                </Field>
+              </>
+            )}
+
+            <Field label={isCreate ? "Email *" : "Email"}>
               <input type="email" className="input w-full" value={form.email} onChange={(e) => set("email")(e.target.value)} />
             </Field>
-            <Field label="Cargo">
-              <input className="input w-full" value={form.cargo} onChange={(e) => set("cargo")(e.target.value)} />
-            </Field>
-            <Field label="Teléfono">
+            <Field label={isCreate ? "Teléfono *" : "Teléfono"}>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -165,6 +242,9 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
                 value={form.telefono}
                 onChange={(e) => set("telefono")(e.target.value.replace(/\D/g, "").slice(0, 9))}
               />
+            </Field>
+            <Field label="Cargo">
+              <input className="input w-full" value={form.cargo} onChange={(e) => set("cargo")(e.target.value)} />
             </Field>
             <Field label="Rol *">
               <select
@@ -182,37 +262,39 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
             </Field>
           </div>
 
-          {/* Firma */}
-          <div className="mt-5">
-            <span className="input-label">Firma</span>
-            <div className="mt-1 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingFirma}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
-              >
-                <UploadCloud size={16} />
-                {uploadingFirma ? "Subiendo…" : "Subir firma"}
-              </button>
-              {firmaPath ? (
-                <span className="inline-flex items-center gap-1 text-sm text-emerald-600">
-                  <Check size={15} /> Firma lista
-                </span>
-              ) : initial.firma ? (
-                <span className="text-sm text-gray-400">Tiene una firma cargada</span>
-              ) : (
-                <span className="text-sm text-gray-300">Sin firma</span>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => onFirmaSelected(e.target.files?.[0] ?? null)}
-              />
+          {/* Firma: solo en edición (el alta no tiene ID todavía para la ruta S3). */}
+          {!isCreate && (
+            <div className="mt-5">
+              <span className="input-label">Firma</span>
+              <div className="mt-1 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingFirma}
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  <UploadCloud size={16} />
+                  {uploadingFirma ? "Subiendo…" : "Subir firma"}
+                </button>
+                {firmaPath ? (
+                  <span className="inline-flex items-center gap-1 text-sm text-emerald-600">
+                    <Check size={15} /> Firma lista
+                  </span>
+                ) : initial!.firma ? (
+                  <span className="text-sm text-gray-400">Tiene una firma cargada</span>
+                ) : (
+                  <span className="text-sm text-gray-300">Sin firma</span>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onFirmaSelected(e.target.files?.[0] ?? null)}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         </div>
@@ -231,7 +313,7 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
             disabled={saving || uploadingFirma}
             className={`btn ${saving || uploadingFirma ? "btn-disabled" : "btn-primary"}`}
           >
-            {saving ? "Guardando…" : "Guardar"}
+            {saving ? "Guardando…" : isCreate ? "Crear" : "Guardar"}
           </button>
         </div>
       </div>

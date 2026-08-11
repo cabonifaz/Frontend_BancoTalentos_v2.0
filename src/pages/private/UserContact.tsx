@@ -40,9 +40,12 @@ const ReadonlyField = ({
   label: string;
   value?: string;
 }) => (
-  <div className="flex flex-col gap-1">
+  <div className="flex flex-col gap-1 min-w-0">
     <span className="input-label">{label}</span>
-    <p className="input bg-gray-50 text-gray-600 cursor-default min-h-[48px] flex items-center">
+    <p
+      className="input bg-gray-50 text-gray-600 cursor-default min-h-[48px] flex items-center break-all min-w-0"
+      title={value || undefined}
+    >
       {value || <span className="text-gray-300">—</span>}
     </p>
   </div>

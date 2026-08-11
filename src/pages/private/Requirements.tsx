@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { Dashboard } from "./Dashboard";
 import { useNavigate } from "react-router-dom";
 import {
+  ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
   ESTADO_RQ,
 } from "../../core/utilities/constants";
@@ -45,6 +46,10 @@ interface SearchProps {
   estado: number | null;
   fechaSolicitud: string | null;
 }
+
+/** El RQ está "cerrado" para asignación una vez asignado o atendido. */
+const isAsignacionBloqueada = (req: RequirementItem): boolean =>
+  req.idEstado === ESTADO_ASIGNADO || req.idEstado === ESTADO_ATENDIDO;
 
 export const Requirements = () => {
   const navigate = useNavigate();
@@ -470,21 +475,36 @@ export const Requirements = () => {
                           </div>
                         </td>
                         <td className="table-cell">
-                          <button
-                            onClick={() =>
-                              handleAsignarClick(req.idRequerimiento)
-                            }
-                            disabled={
-                              req.idEstado === ESTADO_ATENDIDO
-                            }
-                            className={`btn btn-actions ${
-                              req.idEstado === ESTADO_ATENDIDO
-                                ? "btn-disabled"
-                                : "btn-blue"
-                            }`}
-                          >
-                            Asignar
-                          </button>
+                          {(() => {
+                            const bloqueado = isAsignacionBloqueada(req);
+                            return (
+                              <div className="relative inline-block group">
+                                <button
+                                  onClick={() =>
+                                    handleAsignarClick(
+                                      req.idRequerimiento
+                                    )
+                                  }
+                                  disabled={bloqueado}
+                                  className={`btn btn-actions ${
+                                    bloqueado
+                                      ? "btn-disabled"
+                                      : "btn-blue"
+                                  }`}
+                                >
+                                  Asignar
+                                </button>
+                                {bloqueado && (
+                                  <div className="absolute invisible group-hover:visible z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                    {req.idEstado === ESTADO_ATENDIDO
+                                      ? "Requerimiento atendido"
+                                      : "Requerimiento asignado — talentos completos"}
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#484848]"></div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                           <button
                             onClick={() => openDetallesRQModal(req)}
                             className="btn btn-actions btn-primary"

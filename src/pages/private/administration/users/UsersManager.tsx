@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { Pencil, RefreshCw, RotateCcw, Search, UserX } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Pencil, Plus, RefreshCw, RotateCcw, Search, UserX } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { useApi } from "../../../../core/hooks/useApi";
 import { Loading } from "../../../../core/components/ui/Loading";
+import { Pagination } from "../../../../core/components";
 import {
   deleteUserAdmin,
   getUsersAdmin,
@@ -30,12 +31,19 @@ const cell = (v: unknown) =>
 
 type EstadoFilter = "" | "1" | "0";
 
+// Debe coincidir con el tamaño de página configurado en BD (PARAMETROS maestro 11).
+const ITEMS_PER_PAGE = 5;
+
 export const UsersManager = () => {
   const [filtro, setFiltro] = useState("");
+  const [appliedFiltro, setAppliedFiltro] = useState("");
   const [estado, setEstado] = useState<EstadoFilter>("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [users, setUsers] = useState<UserAdmin[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const [editing, setEditing] = useState<UserAdmin | null>(null);
+  // initial null = alta; con valor = edición.
+  const [modal, setModal] = useState<{ initial: UserAdmin | null } | null>(null);
   const [toDeactivate, setToDeactivate] = useState<UserAdmin | null>(null);
 
   // Usuario logueado: no puede editarse ni desactivarse a sí mismo.
@@ -46,7 +54,10 @@ export const UsersManager = () => {
     UserAdminListParams
   >(getUsersAdmin, {
     onError: (e) => handleError(e, enqueueSnackbar),
-    onSuccess: (r) => setUsers(r.data.registros ?? []),
+    onSuccess: (r) => {
+      setUsers(r.data.registros ?? []);
+      setTotal(r.data.total ?? 0);
+    },
   });
 
   const { loading: deactivating, fetch: doDeactivate } = useApi<BaseResponse, number>(
@@ -59,23 +70,31 @@ export const UsersManager = () => {
     { onError: (e) => handleError(e, enqueueSnackbar) },
   );
 
-  const load = () =>
-    fetchList({
-      filtro: filtro.trim() || undefined,
-      idEstado: estado === "" ? undefined : Number(estado),
-    });
+  const load = useCallback(
+    () =>
+      fetchList({
+        filtro: appliedFiltro.trim() || undefined,
+        idEstado: estado === "" ? undefined : Number(estado),
+        pagina: currentPage,
+      }),
+    [fetchList, appliedFiltro, estado, currentPage],
+  );
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [load]);
 
   const confirmDeactivate = async () => {
     if (!toDeactivate) return;
     const response = await doDeactivate(toDeactivate.idUsuario);
     handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
     setToDeactivate(null);
-    if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) load();
+    if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) {
+      // Al filtrar "Activos", si la página queda vacía tras desactivar, retrocede una.
+      if (estado === "1" && users.length === 1 && currentPage > 1)
+        setCurrentPage((p) => p - 1);
+      else load();
+    }
   };
 
   const reactivate = async (user: UserAdmin) => {
@@ -86,16 +105,33 @@ export const UsersManager = () => {
 
   const loading = loadingList || deactivating || reactivating;
   const canSearch = filtro.trim() !== "";
+  const search = () => {
+    setCurrentPage(1);
+    setAppliedFiltro(filtro);
+  };
+  const changeEstado = (value: EstadoFilter) => {
+    setCurrentPage(1);
+    setEstado(value);
+  };
 
   return (
     <div className="relative h-full flex flex-col p-6">
       {loading && <Loading opacity="opacity-60" />}
 
-      <header className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-800">Usuarios</h2>
-        <p className="text-sm text-gray-500">
-          Administra los usuarios: datos, rol, estado y firma.
-        </p>
+      <header className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">Usuarios</h2>
+          <p className="text-sm text-gray-500">
+            Administra los usuarios: datos, rol, estado y firma.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setModal({ initial: null })}
+          className="btn btn-primary flex items-center gap-2 flex-shrink-0"
+        >
+          <Plus size={16} /> Nuevo usuario
+        </button>
       </header>
 
       <div className="flex items-center gap-2 mb-4">
@@ -106,13 +142,13 @@ export const UsersManager = () => {
             placeholder="Buscar por usuario, nombre o email…"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && canSearch && load()}
+            onKeyDown={(e) => e.key === "Enter" && canSearch && search()}
           />
         </div>
         <select
           className="input"
           value={estado}
-          onChange={(e) => setEstado(e.target.value as EstadoFilter)}
+          onChange={(e) => changeEstado(e.target.value as EstadoFilter)}
         >
           <option value="">Todos</option>
           <option value="1">Activos</option>
@@ -120,7 +156,7 @@ export const UsersManager = () => {
         </select>
         <button
           type="button"
-          onClick={load}
+          onClick={search}
           disabled={!canSearch}
           className={`btn ${canSearch ? "btn-primary" : "btn-disabled"}`}
         >
@@ -179,7 +215,7 @@ export const UsersManager = () => {
                   <div className="flex items-center justify-end gap-1">
                     <button
                       type="button"
-                      onClick={() => setEditing(u)}
+                      onClick={() => setModal({ initial: u })}
                       disabled={u.idUsuario === currentUserId}
                       className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       title={
@@ -229,10 +265,21 @@ export const UsersManager = () => {
         </table>
       </div>
 
-      {editing && (
+      {total > ITEMS_PER_PAGE && (
+        <div className="mt-3">
+          <Pagination
+            totalItems={total}
+            itemsPerPage={ITEMS_PER_PAGE}
+            currentPage={currentPage}
+            onPaginate={setCurrentPage}
+          />
+        </div>
+      )}
+
+      {modal && (
         <UserFormModal
-          initial={editing}
-          onClose={() => setEditing(null)}
+          initial={modal.initial}
+          onClose={() => setModal(null)}
           onSaved={load}
         />
       )}
