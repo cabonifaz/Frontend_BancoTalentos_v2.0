@@ -137,7 +137,9 @@ export const ModalIngreso = ({
           unitValues.find((unit) => data.idArea === unit.num1)
             ?.string1 || "",
         tieneEquipo: data.tieneEquipo ? 1 : 0,
-        ingreso: 1,
+        // Confirmar NO es ingresar: el INGRESO real lo marca el backend al crear el
+        // contrato (Finalizar). Mandar ingreso=1 aqui hacia que "Finalizar" lo saltara.
+        ingreso: 0,
         confirmado: true,
         isFromAPI: false,
         idMoneda: data.tipoMoneda || 1,

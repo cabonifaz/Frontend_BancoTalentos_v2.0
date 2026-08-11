@@ -36,6 +36,12 @@ export interface ParamMasterListParams {
   pagina?: number;
 }
 
+/** Modo 2: parámetros de un maestro, paginados. `pagina` omitido = todo. */
+export interface ParamItemListParams {
+  idMaestro: number;
+  pagina?: number;
+}
+
 /** Alta/edición de un parámetro. En el alta `idParametro` va sin definir. */
 export interface ParamUpsertParams {
   idParametro?: number;

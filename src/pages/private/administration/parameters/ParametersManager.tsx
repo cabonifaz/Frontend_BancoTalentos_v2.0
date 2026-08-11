@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { useApi } from "../../../../core/hooks/useApi";
 import { Loading } from "../../../../core/components/ui/Loading";
+import { Pagination } from "../../../../core/components";
 import {
   deleteParam,
   getParamMasters,
@@ -15,6 +16,7 @@ import {
 import {
   BaseResponse,
   ParamItem,
+  ParamItemListParams,
   ParamItemListResponse,
   ParamMaster,
   ParamMasterListParams,
@@ -23,6 +25,9 @@ import {
 import { ParamFormModal } from "./ParamFormModal";
 
 type View = "masters" | "detail";
+
+// Debe coincidir con el tamaño de página configurado en BD (PARAMETROS maestro 11).
+const ITEMS_PER_PAGE = 5;
 
 const cell = (v: unknown) =>
   v === null || v === undefined || v === "" ? (
@@ -38,6 +43,10 @@ export const ParametersManager = () => {
 
   const [masters, setMasters] = useState<ParamMaster[]>([]);
   const [items, setItems] = useState<ParamItem[]>([]);
+
+  // Paginación del detalle (parámetros del maestro seleccionado).
+  const [detailPage, setDetailPage] = useState(1);
+  const [detailTotal, setDetailTotal] = useState(0);
 
   const [modal, setModal] = useState<{
     mode: "create" | "edit";
@@ -55,10 +64,13 @@ export const ParametersManager = () => {
 
   const { loading: loadingItems, fetch: fetchItems } = useApi<
     ParamItemListResponse,
-    number
+    ParamItemListParams
   >(getParamsByMaster, {
     onError: (e) => handleError(e, enqueueSnackbar),
-    onSuccess: (r) => setItems(r.data.registros ?? []),
+    onSuccess: (r) => {
+      setItems(r.data.registros ?? []);
+      setDetailTotal(r.data.total ?? 0);
+    },
   });
 
   const { loading: deleting, fetch: doDelete } = useApi<BaseResponse, number>(
@@ -74,26 +86,34 @@ export const ParametersManager = () => {
   const canSearch = filtro.trim() !== "";
   const searchMasters = () => fetchMasters({ filtro: filtro.trim() || undefined });
 
+  // Carga la página actual del detalle. Se dispara al abrir un maestro y al paginar.
+  const loadItems = useCallback(() => {
+    if (selected) fetchItems({ idMaestro: selected.idMaestro, pagina: detailPage });
+  }, [fetchItems, selected, detailPage]);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+
   const openMaster = (master: ParamMaster) => {
     setSelected(master);
+    setDetailPage(1);
     setView("detail");
-    fetchItems(master.idMaestro);
+    // La carga la dispara el efecto de loadItems al cambiar el maestro/página.
   };
 
   const backToMasters = () => {
     setView("masters");
     setSelected(null);
     setItems([]);
+    setDetailPage(1);
+    setDetailTotal(0);
     fetchMasters({ filtro: filtro.trim() || undefined });
-  };
-
-  const refreshDetail = () => {
-    if (selected) fetchItems(selected.idMaestro);
   };
 
   /** Tras guardar, refresca la vista activa: detalle o lista de maestros. */
   const handleSaved = () => {
-    if (view === "detail" && selected) fetchItems(selected.idMaestro);
+    if (view === "detail" && selected) loadItems();
     else fetchMasters({ filtro: filtro.trim() || undefined });
   };
 
@@ -103,7 +123,9 @@ export const ParametersManager = () => {
     handleResponse({ response, showSuccessMessage: true, enqueueSnackbar });
     setToDelete(null);
     if ((response.data.result?.idMensaje ?? response.data.idMensaje) === 2) {
-      refreshDetail();
+      // Si la página queda vacía tras la baja, retrocede una.
+      if (items.length === 1 && detailPage > 1) setDetailPage((p) => p - 1);
+      else loadItems();
     }
   };
 
@@ -317,6 +339,17 @@ export const ParametersManager = () => {
               </tbody>
             </table>
           </div>
+
+          {detailTotal > ITEMS_PER_PAGE && (
+            <div className="mt-3">
+              <Pagination
+                totalItems={detailTotal}
+                itemsPerPage={ITEMS_PER_PAGE}
+                currentPage={detailPage}
+                onPaginate={setDetailPage}
+              />
+            </div>
+          )}
         </>
       )}
 
