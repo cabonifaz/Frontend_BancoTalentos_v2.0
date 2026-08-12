@@ -565,13 +565,11 @@ const TalentTable: React.FC = () => {
   const [localTalents, setLocalTalents] = useState<
     AsignarTalentoType[]
   >([]);
-  // Los datos de la solicitud de equipo solo viven en memoria hasta "Finalizar"
-  // (la solicitud se crea recién ahí, atada al contrato). Como cada auto-guardado
-  // recarga y borra `solicitudEquipo` del talento, se conservan aquí por idTalento
-  // para reenviarlos al finalizar y no mandar FECHA_SOLICITUD nula.
-  const equipoByTalento = useRef<
-    Record<number, AsignarTalentoType["solicitudEquipo"]>
-  >({});
+  // Los datos del formulario de ingreso (cargo, horario, motivo, montos, proyecto,
+  // objeto, solicitud de equipo...) solo viven en memoria: cada auto-guardado recarga
+  // y los borra del talento. Se conserva aquí el talento confirmado por idTalento para
+  // reenviarlo en "Finalizar" y no crear el HISTORIAL (ni el PDF) incompleto.
+  const confirmedByTalento = useRef<Record<number, AsignarTalentoType>>({});
   const [searchResults, setSearchResults] = useState<
     AsignarTalentoType[]
   >([]);
@@ -1044,65 +1042,69 @@ const TalentTable: React.FC = () => {
         new Map(talentsToUse.map((t) => [t.idTalento, t])).values()
       );
 
-      const talentos = talentosDedup.map((talent) => ({
-        idTalento: talent.idTalento,
-        nombres: talent.nombres,
-        apellidos:
-          talent.apellidos ||
-          talent.apellidoPaterno + " " + talent.apellidoMaterno ||
-          "",
-        dni: talent.dni,
-        celular: talent.celular || "",
-        email: talent.email,
-        // El estado pasa a CONFIRMADO solo al FINALIZAR. En auto-guardado la marca
-        // vive en el flag `confirmado`, conservando el estado de datos (2/1).
-        idEstado:
-          talent.confirmado && finalizar
-            ? ESTADO_CONFIRMADO
-            : talent.idEstado ||
-              (talent.estado === "DATOS COMPLETOS"
-                ? ESTADO_DATOS_COMPLETOS
-                : ESTADO_OBSERVADO),
-        idSituacion:
-          talent.idSituacion ||
-          (talent.situacion === "LIBRE" ? 1 : 2),
-        idPerfil: talent.idPerfil || 0,
-        confirmado: talent.confirmado || false,
+      const talentos = talentosDedup.map((talent) => {
+        // Datos del formulario de ingreso: se recuperan del ref porque las recargas
+        // los borran del talento. El estado de control (confirmado/estado/perfil) lo
+        // manda el talento actual; los detalles de ingreso, el ref.
+        const saved = confirmedByTalento.current[talent.idTalento] || {};
+        return {
+          idTalento: talent.idTalento,
+          nombres: talent.nombres,
+          apellidos:
+            talent.apellidos ||
+            talent.apellidoPaterno + " " + talent.apellidoMaterno ||
+            "",
+          dni: talent.dni,
+          celular: talent.celular || "",
+          email: talent.email,
+          // El estado pasa a CONFIRMADO solo al FINALIZAR. En auto-guardado la marca
+          // vive en el flag `confirmado`, conservando el estado de datos (2/1).
+          idEstado:
+            talent.confirmado && finalizar
+              ? ESTADO_CONFIRMADO
+              : talent.idEstado ||
+                (talent.estado === "DATOS COMPLETOS"
+                  ? ESTADO_DATOS_COMPLETOS
+                  : ESTADO_OBSERVADO),
+          idSituacion:
+            talent.idSituacion ||
+            (talent.situacion === "LIBRE" ? 1 : 2),
+          idPerfil: talent.idPerfil || 0,
+          confirmado: talent.confirmado || false,
 
-        ingreso: talent.ingreso || 0,
-        idCliente: requerimiento?.idCliente || 0,
-        cliente: requerimiento?.cliente || "",
-        idArea: talent.idArea || 0,
-        area: talent.area || "",
-        cargo: talent.cargo || "",
-        fchInicioContrato: talent.fchInicioContrato || "",
-        fchTerminoContrato: talent.fchTerminoContrato || "",
-        proyectoServicio: talent.proyectoServicio || "",
-        objetoContrato: talent.objetoContrato || "",
-        // remuneracion: talent.remuneracion || 0,
-        idModalidadContrato: talent.idModalidadContrato || 0,
-        horario: talent.horario || "",
-        tieneEquipo: talent.tieneEquipo || 0,
-        // idTiempoContrato: talent.idTiempoContrato || 0,
-        // tiempoContrato: talent.tiempoContrato || 0,
-        ubicacion: talent.ubicacion || "",
-        idMotivo: talent.idMotivo || 0,
-        idMoneda: talent.idMoneda || 1,
-        declararSunat: talent.declararSunat || 0,
-        sedeDeclarar: talent.sedeDeclarar || "",
-        montoBase: talent.montoBase || 0,
-        montoMovilidad: talent.montoMovilidad || 0,
-        montoMensual: talent.montoMensual || 0,
-        montoTrimestral: talent.montoTrimestral || 0,
-        montoSemestral: talent.montoSemestral || 0,
-        // isFromApi: talent?.isFromAPI,
+          ingreso: talent.ingreso || 0,
+          idCliente: requerimiento?.idCliente || 0,
+          cliente: requerimiento?.cliente || "",
+          idArea: talent.idArea || saved.idArea || 0,
+          area: talent.area || saved.area || "",
+          cargo: talent.cargo || saved.cargo || "",
+          fchInicioContrato:
+            talent.fchInicioContrato || saved.fchInicioContrato || "",
+          fchTerminoContrato:
+            talent.fchTerminoContrato || saved.fchTerminoContrato || "",
+          proyectoServicio:
+            talent.proyectoServicio || saved.proyectoServicio || "",
+          objetoContrato: talent.objetoContrato || saved.objetoContrato || "",
+          idModalidadContrato:
+            talent.idModalidadContrato || saved.idModalidadContrato || 0,
+          horario: talent.horario || saved.horario || "",
+          tieneEquipo: talent.tieneEquipo || 0,
+          ubicacion: talent.ubicacion || saved.ubicacion || "",
+          idMotivo: talent.idMotivo || saved.idMotivo || 0,
+          idMoneda: talent.idMoneda || saved.idMoneda || 1,
+          declararSunat: talent.declararSunat || saved.declararSunat || 0,
+          sedeDeclarar: talent.sedeDeclarar || saved.sedeDeclarar || "",
+          montoBase: talent.montoBase || saved.montoBase || 0,
+          montoMovilidad: talent.montoMovilidad || saved.montoMovilidad || 0,
+          montoMensual: talent.montoMensual || saved.montoMensual || 0,
+          montoTrimestral: talent.montoTrimestral || saved.montoTrimestral || 0,
+          montoSemestral: talent.montoSemestral || saved.montoSemestral || 0,
 
-        solicitudEquipo:
-          talent?.solicitudEquipo ||
-          equipoByTalento.current[talent.idTalento] ||
-          null,
-        idEstadoRegistro: talent?.idEstadoRegistro,
-      }));
+          solicitudEquipo:
+            talent?.solicitudEquipo || saved.solicitudEquipo || null,
+          idEstadoRegistro: talent?.idEstadoRegistro,
+        };
+      });
 
       const payload = {
         idRequerimiento,
@@ -1165,6 +1167,8 @@ const TalentTable: React.FC = () => {
   const handleOnConfirmModalIngreso = async (
     talento: AsignarTalentoType
   ) => {
+    // Conservar los datos del formulario de ingreso para reenviarlos en el Finalizar.
+    confirmedByTalento.current[talento.idTalento] = talento;
     if (talento?.tieneEquipo === 0) {
       setCurrentTalento(talento);
       setShowModalSolicitudEquipo(true);
@@ -1190,11 +1194,8 @@ const TalentTable: React.FC = () => {
   const handleOnConfirmModalSolicitudEquipo = async (
     talento: AsignarTalentoType
   ) => {
-    // Conservar la solicitud de equipo para reenviarla en el Finalizar (sobrevive
-    // a las recargas que borran `solicitudEquipo` del talento).
-    if (talento.solicitudEquipo) {
-      equipoByTalento.current[talento.idTalento] = talento.solicitudEquipo;
-    }
+    // Conservar el talento (datos de ingreso + solicitud de equipo) para el Finalizar.
+    confirmedByTalento.current[talento.idTalento] = talento;
     const nextTalents = localTalents.map((t) =>
       t.idTalento === talento.idTalento ? talento : t
     );
