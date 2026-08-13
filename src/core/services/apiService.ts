@@ -135,13 +135,33 @@ export const generateTalentUploadUrl = (
   return axiosInstance.post("/bdt/talent/file/upload-url", data);
 };
 
-/** 2) Sube el archivo directamente a S3 usando la URL pre-firmada. */
-export const uploadFileToS3 = (url: string, file: File): Promise<Response> => {
-  return fetch(url, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    body: file,
-  });
+/**
+ * 2) Sube el archivo directamente a S3 usando la URL pre-firmada.
+ *
+ * Se envuelve el `fetch` con un `AbortController` + timeout para garantizar que
+ * la promesa SIEMPRE se resuelva o rechace. Sin esto, si el PUT/preflight se
+ * estanca (CORS mal configurado en prod, CDN/WAF intermedio, red colgada), el
+ * `fetch` nunca termina, el `finally` de quien llama nunca corre y el overlay de
+ * carga (fixed inset-0) queda pegado dejando la página "congelada". Con el abort,
+ * el estancamiento se convierte en un error normal que cada modal captura.
+ */
+export const uploadFileToS3 = async (
+  url: string,
+  file: File,
+  timeoutMs = 60000,
+): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 };
 
 /** 3) Confirma en el backend para registrar el archivo en BD. */

@@ -10,6 +10,12 @@ interface Props {
   cancellationLabel?: string;
   confirmationLabel?: string;
   width?: "small";
+  /**
+   * Mientras es `true`, deshabilita confirmar / cancelar / cerrar. Evita disparar
+   * varias operaciones (p. ej. subidas) en paralelo o cerrar el modal a mitad de
+   * una acción en curso, dejando estado colgado.
+   */
+  busy?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
   children: ReactNode;
@@ -22,6 +28,7 @@ export const Modal = ({
   cancellationLabel = "Cancelar",
   confirmationLabel = "Aceptar",
   width,
+  busy = false,
   onConfirm,
   onClose,
   children,
@@ -42,6 +49,7 @@ export const Modal = ({
   }
 
   const onModalClose = (id: string) => {
+    if (busy) return;
     onClose?.();
     closeModal(id);
   };
@@ -55,8 +63,9 @@ export const Modal = ({
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-base text-[#52525B]">{title}</h2>
           <button
-            className="flex items-center hover:bg-gray-100 rounded-full"
+            className="flex items-center hover:bg-gray-100 rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
             onClick={onModalClose.bind(null, id)}
+            disabled={busy}
           >
             <X className="w-6 h-6" />
           </button>
@@ -68,7 +77,8 @@ export const Modal = ({
           <button
             type="button"
             onClick={onModalClose.bind(null, id)}
-            className="flex items-center w-1/2 font-semibold btn btn-outline-gray"
+            disabled={busy}
+            className="flex items-center w-1/2 font-semibold btn btn-outline-gray disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <X className="w-4 h-4" />
             <p className="mx-auto">{cancellationLabel}</p>
@@ -76,7 +86,8 @@ export const Modal = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="flex items-center w-1/2 font-semibold btn btn-primary"
+            disabled={busy}
+            className="flex items-center w-1/2 font-semibold btn btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check className="w-5 h-5" />
             <p className="mx-auto">{confirmationLabel}</p>

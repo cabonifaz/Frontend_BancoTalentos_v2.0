@@ -7,7 +7,13 @@ import {
   generateTalentUploadUrl,
   uploadFileToS3,
 } from "../../services/apiService";
-import { ARCHIVO_PDF, DOCUMENTO_CERT_DIP } from "../../utilities/constants";
+import {
+    ARCHIVO_IMAGEN,
+    ARCHIVO_PDF,
+    DOCUMENTO_CERT_DIP,
+    TALENT_ALLOWED_EXTENSIONS,
+    TALENT_IMAGE_EXTENSIONS,
+} from "../../utilities/constants";
 import { handleError } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
 import { validateFile } from "../../utilities/validation";
@@ -35,11 +41,18 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
         const cert = certRef.current?.files?.[0];
         if (!cert || !idTalento) return;
 
-        const validation = validateFile(cert, ['pdf']);
+        const validation = validateFile(cert, TALENT_ALLOWED_EXTENSIONS);
         if (!validation.isValid) {
             setError(validation.message || "Error de validación.");
             return;
         }
+
+        // ID_TIPO_ARCHIVO según el tipo real del archivo (imagen vs documento),
+        // ya que ahora se admite más que PDF.
+        const ext = cert.name.split(".").pop()?.toLowerCase() || "";
+        const idTipoArchivo = TALENT_IMAGE_EXTENSIONS.includes(ext)
+            ? ARCHIVO_IMAGEN
+            : ARCHIVO_PDF;
 
         setLoading(true);
         try {
@@ -70,7 +83,7 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
             const { data: confirm } = await confirmTalentUpload({
                 idTalento,
                 idTipoDocumento: DOCUMENTO_CERT_DIP,
-                idTipoArchivo: ARCHIVO_PDF,
+                idTipoArchivo,
                 nombreArchivo: presigned.fileName,
                 path: presigned.path,
             });
@@ -94,22 +107,24 @@ export const ModalUploadCert = ({ idTalento, onUpdate }: Props) => {
     }
 
     return (
-        <Modal id="modalUploadCert" title="Sube un archivo del talento" confirmationLabel="Subir" onConfirm={handleOnConfirm}>
+        <Modal id="modalUploadCert" title="Sube un archivo del talento" confirmationLabel="Subir" onConfirm={handleOnConfirm} busy={loading}>
             {loading && (<Loading opacity="opacity-60" />)}
             <div className="pt-2">
                 <div className="relative h-32 rounded-lg border-2 border-dashed border-gray-200 flex justify-center items-center transition-colors hover:border-[#0b85c3] hover:bg-[#f5fbff]">
                     <div className="absolute flex flex-col items-center pointer-events-none">
                         <Upload className="mb-2 w-8 h-8 text-[#0b85c3]" />
                         <span className="block text-[#0b85c3] font-normal">
-                            {fileName || "Arrastra o selecciona un certificado o diploma"}
+                            {fileName || "Arrastra o selecciona un archivo del talento"}
                         </span>
-                        <span className="text-sm text-[#71717A]">{fileName ? "" : "Formato PDF"}</span>
+                        <span className="text-sm text-[#71717A]">
+                            {fileName ? "" : TALENT_ALLOWED_EXTENSIONS.join(", ").toUpperCase()}
+                        </span>
                     </div>
                     <input
                         type="file"
                         name="cert"
                         ref={certRef}
-                        accept=".pdf"
+                        accept={TALENT_ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(",")}
                         onChange={handleFileChange}
                         className="h-full w-full opacity-0 cursor-pointer"
                     />
