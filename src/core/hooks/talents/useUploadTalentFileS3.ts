@@ -11,16 +11,9 @@ interface UploadArgs {
   idTipoDocumento: number;
   idTipoArchivo: number;
   file: File;
-  /** Si se envía, el confirm reemplaza el archivo existente (update) en vez de crear. */
   idArchivo?: number;
 }
 
-/**
- * Subida de un archivo de talento directamente a S3 vía URL pre-firmada
- * (generar URL PUT → subir a S3 → confirmar en BD). Reutiliza el mismo flujo
- * que `ModalUploadResume`/`ModalUploadCert`. Si se pasa `idArchivo`, el confirm
- * actualiza el registro existente; si no, crea uno nuevo.
- */
 export const useUploadTalentFileS3 = () => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,7 +46,11 @@ export const useUploadTalentFileS3 = () => {
         throw new AppError("Error subiendo el archivo a S3");
       }
 
-      // 3. Confirmar en BD. Con idArchivo se reemplaza el existente.
+      if (presigned.requiresConfirm === false) {
+        return { idMensaje: 2, mensaje: "Archivo subido correctamente" };
+      }
+
+      // Con idArchivo se reemplaza el existente.
       const { data: confirm } = await confirmTalentUpload({
         idTalento,
         ...(idArchivo ? { idArchivo } : {}),
