@@ -1156,12 +1156,17 @@ const TalentTable: React.FC = () => {
   const handleModalSolicitudEquipoCancel = (
     talento: AsignarTalentoType
   ) => {
-    setLocalTalents((prevTalents) =>
-      prevTalents.map((t) =>
-        t.idTalento === talento.idTalento ? talento : t
-      )
+    // El usuario canceló la solicitud de equipo: el talento queda SIN confirmar.
+    // Limpiar el ref para que no reinyecte datos de un talento cancelado en el Finalizar.
+    delete confirmedByTalento.current[talento.idTalento];
+    const nextTalents = localTalents.map((t) =>
+      t.idTalento === talento.idTalento ? talento : t
     );
-    setShowModalIngreso(false);
+    setLocalTalents(nextTalents);
+    setShowModalSolicitudEquipo(false);
+    // Persistir el des-confirmado de inmediato (sin ingresar), igual que el resto
+    // de cancelaciones, para que la fila RT no quede marcada como confirmada.
+    handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
   };
 
   const handleOnConfirmModalIngreso = async (

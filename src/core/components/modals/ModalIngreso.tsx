@@ -133,9 +133,13 @@ export const ModalIngreso = ({
             : sedeSunatList.find(
                 (sede) => sede.idSede === data.idSedeDeclarar,
               )?.nombre,
+        // El nombre del área se resuelve por lookup en los params. Si estos aún no
+        // cargaron o el idArea no matchea, se conserva el área previa del talento
+        // para no mandar "" (que dejaría AREA/PUESTO vacíos en el PDF de equipo).
         area:
-          unitValues.find((unit) => data.idArea === unit.num1)
-            ?.string1 || "",
+          unitValues.find((unit) => data.idArea === unit.num1)?.string1 ||
+          currentTalent?.area ||
+          "",
         tieneEquipo: data.tieneEquipo ? 1 : 0,
         // Confirmar NO es ingresar: el INGRESO real lo marca el backend al crear el
         // contrato (Finalizar). Mandar ingreso=1 aqui hacia que "Finalizar" lo saltara.

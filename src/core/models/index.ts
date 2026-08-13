@@ -20,6 +20,7 @@ export * from "./interfaces/TalentFilePresigned";
 export * from "./interfaces/RqFilePresigned";
 export * from "./interfaces/PostulantFilePresigned";
 export * from "./interfaces/Blacklist";
+export * from "./interfaces/EmployeeUndo";
 export * from "./interfaces/ParamAdmin";
 export * from "./response/ParamAdminResponse";
 export * from "./interfaces/ClientAdmin";
