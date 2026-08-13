@@ -25,6 +25,14 @@ export const POSTULANT_ALLOWED_EXTENSIONS: string[] = [
 ];
 export const POSTULANT_MAX_FILE_SIZE_MB = 10;
 
+// Archivos de un talento: mismos tipos permitidos que el postulante, EXCEPTO zip.
+// Se deriva de POSTULANT_ALLOWED_EXTENSIONS para mantenerlas en sincronía.
+export const TALENT_ALLOWED_EXTENSIONS: string[] =
+  POSTULANT_ALLOWED_EXTENSIONS.filter((ext) => ext !== "zip");
+// Extensiones que se clasifican como imagen (ID_TIPO_ARCHIVO = ARCHIVO_IMAGEN);
+// el resto se registra como documento (ARCHIVO_PDF).
+export const TALENT_IMAGE_EXTENSIONS: string[] = ["png", "jpg", "jpeg", "webp"];
+
 // RQ STATE
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;

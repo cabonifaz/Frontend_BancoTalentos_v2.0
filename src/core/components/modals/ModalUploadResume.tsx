@@ -67,7 +67,14 @@ export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => 
                 return;
             }
 
-            // 3. Confirmar en el backend. Al enviar idArchivo se reemplaza el CV existente.
+            if (presigned.requiresConfirm === false) {
+                enqueueSnackbar("CV actualizado con éxito", { variant: "success" });
+                closeModal("modalUploadResume");
+                onUpdate(idTalento);
+                return;
+            }
+
+            // Al enviar idArchivo se reemplaza el CV existente.
             const { data: confirm } = await confirmTalentUpload({
                 idTalento,
                 idArchivo,
@@ -96,7 +103,7 @@ export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => 
     }
 
     return (
-        <Modal id="modalUploadResume" title="Editar Curriculum Vitae" confirmationLabel="Subir" onConfirm={handleOnConfirm}>
+        <Modal id="modalUploadResume" title="Editar Curriculum Vitae" confirmationLabel="Subir" onConfirm={handleOnConfirm} busy={loading}>
             {loading && (<Loading opacity="opacity-60" />)}
             <div>
                 <h3 className="text-[#71717A] text-sm mt-6">Sube tu nuevo Curriculum Vitae.</h3>
