@@ -1,10 +1,11 @@
-import { LucideIcon, SlidersHorizontal, Building2, Users, UserCog, Coins } from "lucide-react";
+import { LucideIcon, SlidersHorizontal, Building2, Users, UserCog, Coins, Undo2 } from "lucide-react";
 import { ComponentType } from "react";
 import { ParametersManager } from "./parameters/ParametersManager";
 import { ClientsManager } from "./clients/ClientsManager";
 import { UsersManager } from "./users/UsersManager";
 import { ManagersManager } from "./managers/ManagersManager";
 import { TariffsManager } from "./tariffs/TariffsManager";
+import { UndoMovementsManager } from "./undo/UndoMovementsManager";
 
 export interface AdminSection {
   key: string;
@@ -25,4 +26,5 @@ export const ADMIN_SECTIONS: AdminSection[] = [
   { key: "users",      label: "Usuarios",   icon: Users,             Component: UsersManager },
   { key: "managers",   label: "Gestores",   icon: UserCog,           Component: ManagersManager },
   { key: "tariffs",    label: "Tarifario",  icon: Coins,             Component: TariffsManager },
+  { key: "undo",       label: "Deshacer",   icon: Undo2,             Component: UndoMovementsManager },
 ];

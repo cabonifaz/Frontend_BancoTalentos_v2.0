@@ -390,6 +390,69 @@ export const removePostulantFile = (
   );
 };
 
+// ─── Deshacer movimientos (SUPERADMIN) — API de FMI /fmi/employee/* ──────────
+// El SUPERADMIN de BDT reutiliza los endpoints de FMI. El token BDT viaja como
+// Bearer (axiosInstanceFMI) y FMI valida las funcionalidades 1 (listar) y 2048
+// (deshacer) sobre el rol; el detalle no exige funcionalidad.
+
+/** Listado paginado / por búsqueda de empleados (SP_TALENTO_EMPLEADO_SEL). */
+export const listEmployeesFMI = (
+  page: number,
+  search?: string
+): Promise<AxiosResponse<models.EmployeesListResponse>> => {
+  const query = search
+    ? `busqueda=${encodeURIComponent(search)}`
+    : `nPag=${page}`;
+  return axiosInstanceFMI.get(`/fmi/employee/list?${query}`);
+};
+
+/** Historial completo del empleado (movimientos, equipos, ceses). */
+export const getEmployeeDetailFMI = (
+  talentId: number
+): Promise<AxiosResponse<models.EmployeeUndoDetailResponse>> => {
+  return axiosInstanceFMI.get(`/fmi/employee/detail?talentId=${talentId}`);
+};
+
+/** Deshacer el último ingreso (da de baja el contrato y reabre el cupo del RQ). */
+export const undoIngresoFMI = (
+  idHistorial: number,
+  idTalento: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.put(
+    `/fmi/employee/ingreso/undo?idHistorial=${idHistorial}&idTalento=${idTalento}`
+  );
+};
+
+/** Deshacer el último movimiento del historial. */
+export const undoMovimientoFMI = (
+  idHistorial: number,
+  idTalento: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.put(
+    `/fmi/employee/movimiento/undo?idHistorial=${idHistorial}&idTalento=${idTalento}`
+  );
+};
+
+/** Deshacer el último cese (reactiva el contrato del talento). */
+export const undoCeseFMI = (
+  idHistorial: number,
+  idTalento: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.put(
+    `/fmi/employee/cese/undo?idHistorial=${idHistorial}&idTalento=${idTalento}`
+  );
+};
+
+/** Deshacer (baja lógica) la última solicitud de equipo. */
+export const deleteEquipmentRequestFMI = (
+  idSolicitud: number,
+  idTalento: number
+): Promise<AxiosResponse<models.BaseResponseFMI>> => {
+  return axiosInstanceFMI.delete(
+    `/fmi/employee/solicitud/equipo?idSolicitud=${idSolicitud}&idTalento=${idTalento}`
+  );
+};
+
 // Talento FMI
 export const saveTalentFMI = (
   data: models.SaveTalentFMIParams
