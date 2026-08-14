@@ -81,6 +81,22 @@ export class Utils {
     return raw.filter((r: unknown): r is string => typeof r === "string");
   };
 
+  /** Nombre completo del usuario a partir del claim `fullname` del JWT. */
+  static getUserFullname = (token?: string): string => {
+    if (!token) return "";
+    const decoded = this.decodeJwt(token);
+    return typeof decoded?.fullname === "string" ? decoded.fullname.trim() : "";
+  };
+
+  /** IDs de rol del usuario a partir del claim `id_roles` del JWT. */
+  static getUserRoleIds = (token?: string): number[] => {
+    if (!token) return [];
+    const decoded = this.decodeJwt(token);
+    const raw = decoded?.id_roles;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((r: unknown): r is number => typeof r === "number");
+  };
+
   static decodeJwt = (token: string): any => {
     try {
       const base64Url = token.split(".")[1];

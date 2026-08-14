@@ -22,7 +22,8 @@ export interface UserAdminListParams {
   pagina?: number;
 }
 
-/** Edición de usuario. No incluye USUARIO ni CLAVE. `firma` = ruta S3 nueva o null (conserva). */
+/** Edición de usuario. No incluye USUARIO. `firma` = ruta S3 nueva o null (conserva).
+ *  `clave` opcional: texto plano (el SP la cifra SHA2_256); null/omitida = no cambia. */
 export interface UserUpsertParams {
   idUsuario: number;
   nombres: string;
@@ -31,6 +32,7 @@ export interface UserUpsertParams {
   cargo?: string | null;
   telefono?: string | null;
   firma?: string | null;
+  clave?: string | null;
   idTipoRol: number;
 }
 
