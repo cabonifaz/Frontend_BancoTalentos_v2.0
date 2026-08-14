@@ -34,6 +34,7 @@ const UserContact = lazy(() =>
 const AdministrationPage = lazy(
   () => import("./administration/AdministrationPage"),
 );
+const SeleccionPage = lazy(() => import("./seleccion/SeleccionPage"));
 const NoAuthorized = lazy(() =>
   import("./NoAuthorized").then((m) => ({ default: m.NoAuthorized })),
 );
@@ -66,6 +67,7 @@ export const PrivateRouter = () => {
           element={<PantallaGenerarEnlaceRequerimiento />}
         />
         <Route path="/mi-cuenta" element={<UserContact />} />
+        <Route path="/seleccion" element={<SeleccionPage />} />
         <Route path="/administracion" element={<AdministrationPage />} />
       </Route>
     </RoutesWithNotFound>
