@@ -135,6 +135,10 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
         setError("El teléfono es obligatorio.");
         return false;
       }
+    } else if (form.clave !== "" && form.clave.length < CLAVE_MIN) {
+      // En edición la clave es opcional; si se ingresa, respeta el mínimo.
+      setError(`La contraseña debe tener al menos ${CLAVE_MIN} caracteres.`);
+      return false;
     }
     setError(null);
     return true;
@@ -167,6 +171,7 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
         cargo: textOrNull(form.cargo),
         telefono: textOrNull(form.telefono),
         firma: firmaPath, // null = conserva la firma actual
+        clave: textOrNull(form.clave), // null = no cambia la contraseña
         idTipoRol: Number(form.idTipoRol),
       };
       const response = await doUpdate(payload);
@@ -228,6 +233,19 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
                   />
                 </Field>
               </>
+            )}
+
+            {!isCreate && (
+              <Field label={`Nueva contraseña (opcional, mín. ${CLAVE_MIN})`}>
+                <input
+                  type="password"
+                  className="input w-full"
+                  value={form.clave}
+                  onChange={(e) => set("clave")(e.target.value)}
+                  placeholder="Dejar en blanco para no cambiarla"
+                  autoComplete="new-password"
+                />
+              </Field>
             )}
 
             <Field label={isCreate ? "Email *" : "Email"}>
