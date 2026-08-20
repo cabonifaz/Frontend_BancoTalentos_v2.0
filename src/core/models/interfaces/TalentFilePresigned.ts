@@ -37,6 +37,28 @@ export interface TalentConfirmUploadRequest {
   path: string;
 }
 
+/**
+ * Presign de la foto de perfil.
+ *
+ * Va por su propio endpoint (`/bdt/talent/photo/upload-url`) porque la foto no es
+ * una fila de TALENTO_ARCHIVOS sino la columna `TALENTO.RUTA_IMAGEN`: no tiene
+ * `idArchivo` ni `idTipoDocumento` que resolver, y no se confirma con
+ * confirm-upload — la ruta viaja después en el update del talento.
+ */
+export interface TalentPhotoUploadUrlRequest {
+  idTalento: number;
+  fileName: string;
+  /** Sólo `image/png` o `image/jpeg`: la URL se firma con este content-type. */
+  contentType: string;
+}
+
+export interface TalentPhotoUrlResponse {
+  result: BaseResponse;
+  url: string;
+  path: string;
+  fileName: string;
+}
+
 export interface TalentDownloadUrlRequest {
   idFile: number;
   /**

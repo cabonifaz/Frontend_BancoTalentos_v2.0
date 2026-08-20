@@ -210,6 +210,17 @@ export class Utils {
     return parts.slice(0, -1).join(".");
   };
 
+  /** Extensión sin punto ("foto.PNG" -> "png"). Cadena vacía si no tiene. */
+  static getFileExtension = (fileName: fileNameType): string => {
+    if (!fileName) return "";
+
+    const parts = fileName.split(".");
+
+    if (parts.length === 1) return "";
+
+    return parts[parts.length - 1].toLowerCase();
+  };
+
   static formatDateForMonthInput = (date: string | undefined) => {
     if (!date || date === undefined) return "";
 

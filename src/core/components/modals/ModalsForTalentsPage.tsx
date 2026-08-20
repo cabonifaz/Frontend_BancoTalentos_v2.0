@@ -156,6 +156,7 @@ export const ModalsForTalentsPage = ({
         <ModalEditPhoto
           idTalento={talent?.idTalento}
           updateTalentList={updateTalentList}
+          onUpdate={handleUpdate}
         />
 
         <ModalUploadResume

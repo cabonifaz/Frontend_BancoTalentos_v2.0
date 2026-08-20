@@ -171,6 +171,18 @@ export const confirmTalentUpload = (
   return axiosInstance.post("/bdt/talent/file/confirm-upload", data);
 };
 
+/**
+ * URL PUT pre-firmada para la foto de perfil del talento.
+ *
+ * No hay confirm-upload: tras el PUT, la ruta devuelta se manda como
+ * `fotoArchivo.rutaArchivo` en `updateTalentProfilePhoto`.
+ */
+export const generateTalentPhotoUploadUrl = (
+  data: models.TalentPhotoUploadUrlRequest
+): Promise<AxiosResponse<models.TalentPhotoUrlResponse>> => {
+  return axiosInstance.post("/bdt/talent/photo/upload-url", data);
+};
+
 /** Genera una URL GET pre-firmada para descargar el archivo desde S3. */
 export const generateTalentDownloadUrl = (
   data: models.TalentDownloadUrlRequest
