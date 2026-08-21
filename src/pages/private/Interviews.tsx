@@ -1,11 +1,22 @@
 import { useEffect, useState } from "react";
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarRange,
+  Eye,
+  FilterX,
+  Plus,
+  Search,
+  Zap,
+} from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { DateFilter, FilterDropDown, Loading } from "../../core/components";
+import {
+  DateFilter,
+  FilterDropDown,
+  Loading,
+  Pagination,
+} from "../../core/components";
 import { useAsyncService } from "../../core/hooks/useAsyncService";
 import { listInterviews } from "../../core/services/interviews.service";
-import { Zap } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
@@ -20,7 +31,7 @@ const BADGE_CLASSES: Record<number, string> = {
   1: "bg-green-100 text-green-700", // Registrado
   2: "bg-blue-100 text-blue-700", // En Proceso
   3: "bg-gray-100 text-gray-600", // Finalizado
-  4: "bg-red-100 text-red-500", // Cancelado
+  4: "bg-red-100 text-red-600", // Cancelado — mismo rojo que Perdido/Cancelado en RQ
 };
 
 function EstadoBadge({
@@ -33,7 +44,7 @@ function EstadoBadge({
   const badgeClass = BADGE_CLASSES[idEstado] || "bg-gray-100 text-gray-700";
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${badgeClass}`}
+      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${badgeClass}`}
     >
       {estado}
     </span>
@@ -72,14 +83,18 @@ export default function InterviewsPage() {
     isNaN(initialPage) ? 1 : initialPage,
   );
 
-  const nextPage = () => setCurrentPage((prev) => prev + 1);
-  const prevPage = () => setCurrentPage((prev) => prev - 1);
-
   const { execute, loading, result } = useAsyncService(listInterviews);
 
   const response = result?.data;
   const interviews = response?.items || [];
   const totalPages = response?.totalPages ?? TOTAL_PAGES;
+  const totalElements = response?.totalElements ?? 0;
+
+  const hasActiveFilters =
+    buscar.trim() !== "" ||
+    selectedEstado.length > 0 ||
+    selectedStage.length > 0 ||
+    selectedDate !== null;
 
   const fetchInterviews = (page = 1) => {
     // Obtenemos el ID del estado, asegurándonos de que sea un número válido o null
@@ -119,6 +134,27 @@ export default function InterviewsPage() {
     }
   };
 
+  const handleClearFilters = () => {
+    setBuscar("");
+    setSelectedEstado([]);
+    setSelectedStage([]);
+    setSelectedDate(null);
+    setOpenDropdown(null);
+    // Los filtros ya están limpios en el estado; se recarga desde la página 1.
+    if (currentPage === 1) {
+      execute({
+        npag: 1,
+        busqueda: null,
+        idCliente: null,
+        idEstado: null,
+        idEtapa: null,
+        fecha: null,
+      });
+    } else {
+      setCurrentPage(1);
+    }
+  };
+
   const isToday = (fechaEntrevista: string) => {
     const [fecha] = fechaEntrevista.split(" "); // 01/06/2026
     const [dia, mes, anio] = fecha.split("/").map(Number);
@@ -135,43 +171,67 @@ export default function InterviewsPage() {
   return (
     <Dashboard>
       {loading && <Loading opacity="opacity-50" />}
-      <div className="flex h-full flex-col overflow-x-hidden">
+      <div className="flex h-full flex-col overflow-x-hidden gap-4">
         {/* Page header */}
-        <div className="flex shrink-0 justify-between items-center mb-2">
-          <h2 className="text-2xl font-semibold">Entrevistas</h2>
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-2xl font-semibold">Entrevistas</h2>
+            {totalElements > 0 && (
+              <span className="text-sm text-gray-500">
+                {totalElements} registro{totalElements === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
           <button
             type="button"
-            className="btn btn-primary p-3 h-12 flex items-center gap-2"
+            className="btn btn-primary mx-0 flex h-10 items-center gap-2"
             onClick={() => navigate("/dashboard/entrevistas/nueva")}
           >
-            <span className="text-lg leading-none">+</span>
+            <Plus size={18} strokeWidth={2} />
             Nueva Entrevista
           </button>
         </div>
 
         {/* Filters panel */}
-        <div className="shrink-0 bg-white p-6 rounded-lg shadow-md mb-4">
+        <div className="shrink-0 rounded-lg border border-gray-100 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
-              <div className="flex-1">
+            {/* Búsqueda + acción principal, alineadas por la base */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1 min-w-0">
                 <label
                   htmlFor="buscar-entrevista"
-                  className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1"
+                  className="mb-2 block text-sm font-medium text-gray-700"
                 >
                   Búsqueda por talento
                 </label>
-                <input
-                  type="text"
-                  id="buscar-entrevista"
-                  value={buscar}
-                  onChange={(e) => setBuscar(e.target.value)}
-                  placeholder="Ej: Juan Perez"
-                  className="input w-full"
-                />
+                <div className="relative">
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    id="buscar-entrevista"
+                    value={buscar}
+                    onChange={(e) => setBuscar(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    placeholder="Ej: Juan Perez"
+                    className="input h-10 w-full py-0 pl-10"
+                  />
+                </div>
               </div>
+              <button
+                type="button"
+                className="btn btn-primary mx-0 flex h-10 shrink-0 items-center justify-center gap-2 sm:w-32"
+                onClick={handleSearch}
+              >
+                <Search size={18} strokeWidth={2} />
+                Buscar
+              </button>
             </div>
 
-            <div className="flex gap-4 flex-wrap items-center">
+            {/* Filtros secundarios */}
+            <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
               <FilterDropDown
                 name="estado"
                 label="Estado"
@@ -206,28 +266,42 @@ export default function InterviewsPage() {
               />
               <DateFilter label="Fecha" onDateSelected={setSelectedDate} />
 
-              <button
-                type="button"
-                className="btn btn-primary p-3 h-10"
-                onClick={handleSearch}
-              >
-                Buscar
-              </button>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="ml-auto flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                >
+                  <FilterX size={16} strokeWidth={2} />
+                  Limpiar filtros
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="table-container min-h-0 flex-1 shadow-lg rounded-xl border border-gray-100 overflow-hidden">
+        <div className="table-container min-h-0 flex-1 rounded-xl border border-gray-100 shadow-sm">
           <div className="table-wrapper h-full overflow-auto">
-            <table className="table">
+            <table className="table table-fixed min-w-[980px]">
+              <colgroup>
+                <col className="w-20" />
+                <col className="w-[18%]" />
+                <col className="w-[30%]" />
+                <col className="w-[12%]" />
+                <col className="w-[15%]" />
+                <col className="w-[17%]" />
+                <col className="w-24" />
+              </colgroup>
               <thead>
-                <tr className="table-header uppercase">
-                  <th className="table-header-cell">ID</th>
+                {/* La cabecera se fija en los th (no en el thead): con
+                    border-collapse es lo único que sostiene el sticky. */}
+                <tr className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50">
+                  <th className="table-header-cell text-center">ID</th>
                   <th className="table-header-cell">Talento</th>
-                  <th className="table-header-cell">Requerimientos</th>
-                  <th className="table-header-cell">Clientes</th>
-                  <th className="table-header-cell">Fecha Entrevista</th>
+                  <th className="table-header-cell">Requerimiento</th>
+                  <th className="table-header-cell text-center">Cliente</th>
+                  <th className="table-header-cell text-center">Fecha Entrevista</th>
                   <th className="table-header-cell">Etapa / Estado</th>
                   <th className="table-header-cell text-center">Acciones</th>
                 </tr>
@@ -235,52 +309,70 @@ export default function InterviewsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {interviews.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="table-empty">
-                      No hay entrevistas disponibles.
+                    <td colSpan={7} className="table-empty">
+                      <div className="flex flex-col items-center gap-2 py-10 text-gray-400">
+                        <CalendarRange size={32} strokeWidth={1.5} />
+                        <p className="text-sm">
+                          No hay entrevistas disponibles.
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   interviews.map((item) => (
-                    <tr key={item.id} className="table-row">
-                      <td className="table-cell text-gray-500">{item.id}</td>
-                      <td className="table-cell">
+                    <tr key={item.id} className="table-row align-top">
+                      <td className="table-cell text-center text-gray-500 tabular-nums">
+                        {item.id}
+                      </td>
+                      <td className="table-cell truncate" title={item.talento}>
                         <span className="font-medium text-gray-900">
                           {item.talento}
                         </span>
                       </td>
-                      <td className="table-cell max-w-[300px] truncate" title={item.tituloRq}>
+                      <td className="table-cell truncate" title={item.tituloRq}>
                         {item.tituloRq}
                       </td>
-                      <td className="table-cell">{item.cliente}</td>
+                      <td className="table-cell truncate text-center" title={item.cliente}>
+                        {item.cliente}
+                      </td>
                       <td className="table-cell">
-                        <div className="flex items-center gap-2">
-                          <span>{item.fechaEntrevista}</span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="tabular-nums">
+                            {item.fechaEntrevista}
+                          </span>
 
                           {isToday(item.fechaEntrevista) && (
-                            <Zap
-                              size={18}
-                              className="text-amber-500 animate-bounce fill-amber-400"
-                            />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                              <Zap size={12} className="fill-amber-500 text-amber-500" />
+                              Hoy
+                            </span>
                           )}
                         </div>
                       </td>
                       <td className="table-cell">
-                        <span className="font-bold block">{item.etapa}</span>
-                        <EstadoBadge
-                          idEstado={item.idEstado}
-                          estado={item.estado}
-                        />
+                        <div className="flex flex-col items-start gap-1.5">
+                          <span
+                            className="block max-w-full truncate font-semibold text-gray-800"
+                            title={item.etapa}
+                          >
+                            {item.etapa}
+                          </span>
+                          <EstadoBadge
+                            idEstado={item.idEstado}
+                            estado={item.estado}
+                          />
+                        </div>
                       </td>
                       <td className="table-cell text-center">
                         <button
                           type="button"
-                          className="p-2 text-gray-400 hover:text-[var(--color-primary)] transition-colors"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-[var(--color-primary)]"
                           onClick={() =>
                             navigate(`/dashboard/entrevistas/${item.id}`)
                           }
                           title="Ver detalle"
                         >
-                          <Eye size={20} />
+                          <Eye size={18} />
                         </button>
                       </td>
                     </tr>
@@ -292,44 +384,15 @@ export default function InterviewsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex shrink-0 justify-center items-center gap-6 mt-4">
-          <button
-            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
-              currentPage === 1
-                ? "text-gray-300 cursor-not-allowed border border-gray-100 bg-gray-50"
-                : "text-gray-600 border border-gray-200 bg-white hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:shadow-md active:scale-95 shadow-sm"
-            }`}
-            onClick={prevPage}
-            disabled={currentPage === 1}
-            title="Página Anterior"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Página</span>
-            <span className="flex items-center justify-center h-9 w-9 rounded-lg bg-[var(--color-primary-10)] text-[var(--color-primary)] text-sm font-bold shadow-sm border border-[var(--color-primary-20)]">
-              {currentPage}
-            </span>
-            <span className="text-sm font-medium">de</span>
-            <span className="text-sm font-bold text-gray-700">
-              {totalPages}
-            </span>
+        {totalPages > 1 && (
+          <div className="shrink-0">
+            <Pagination
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPaginate={setCurrentPage}
+            />
           </div>
-
-          <button
-            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
-              currentPage >= totalPages
-                ? "text-gray-300 cursor-not-allowed border border-gray-100 bg-gray-50"
-                : "text-[var(--color-primary)] border border-[var(--color-primary-20)] bg-white hover:bg-[var(--color-primary)] hover:text-white hover:shadow-md active:scale-95 shadow-sm"
-            }`}
-            onClick={nextPage}
-            disabled={currentPage >= totalPages}
-            title="Página Siguiente"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+        )}
       </div>
     </Dashboard>
   );

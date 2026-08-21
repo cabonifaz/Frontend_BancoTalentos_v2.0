@@ -1,6 +1,6 @@
-//export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
+export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
 export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-export const BASE_URL = "http://localhost:8080";
+//export const BASE_URL = "http://localhost:8080";
 //export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
@@ -33,10 +33,15 @@ export const TALENT_ALLOWED_EXTENSIONS: string[] =
 // el resto se registra como documento (ARCHIVO_PDF).
 export const TALENT_IMAGE_EXTENSIONS: string[] = ["png", "jpg", "jpeg", "webp"];
 
-// RQ STATE
+// RQ STATE (maestro 24; mismos ids que RQStateMaster del backend FMI)
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;
 export const ESTADO_ATENDIDO = 3;
+export const ESTADO_EN_SELECCION = 4;
+export const ESTADO_EN_PRODUCCION = 5;
+export const ESTADO_PERDIDO = 6;
+export const ESTADO_TERMINADO = 7;
+export const ESTADO_CANCELADO = 8;
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
