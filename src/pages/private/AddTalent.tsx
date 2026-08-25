@@ -42,6 +42,7 @@ import {
   DOCUMENTO_FOTO_PERFIL,
   FRASES_IA_MAESTRO,
   PROCEDENCIA_OPTIONS,
+  TIPO_MODALIDAD,
 } from "../../core/utilities/constants";
 import { validateFile } from "../../core/utilities/validation";
 import { SalaryExpectSection } from "../../core/components/ui/SalaryExpectSection";
@@ -67,6 +68,9 @@ export const AddTalent = () => {
   const paises = paramsByMaestro[12] || [];
   const ciudades = paramsByMaestro[13] || [];
   const monedas = paramsByMaestro[2] || [];
+  // Maestro 3: modalidad de facturación del talento (planilla, locación de
+  // servicios, prácticas). Es el mismo catálogo que usa el Modal de Ingreso.
+  const modalidadesFacturacion = paramsByMaestro[TIPO_MODALIDAD] || [];
   const habilidadesTecnicas = paramsByMaestro[19] || [];
   const habilidadesBlandas = paramsByMaestro[20] || [];
   const idiomas = paramsByMaestro[15] || [];
@@ -830,6 +834,10 @@ export const AddTalent = () => {
                   coins={monedas.map((moneda) => ({
                     idCoin: moneda.num1,
                     stringVal: moneda.string1,
+                  }))}
+                  modalidades={modalidadesFacturacion.map((modalidad) => ({
+                    idModalidad: modalidad.num1,
+                    stringVal: modalidad.string1,
                   }))}
                   control={control}
                   errors={errors}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppError } from "../../models";
 import {
   confirmTalentUpload,
+  describeS3Error,
   generateTalentUploadUrl,
   uploadFileToS3,
 } from "../../services/apiService";
@@ -40,10 +41,14 @@ export const useUploadTalentFileS3 = () => {
         );
       }
 
-      // 2. Subir el archivo directamente a S3.
-      const s3Response = await uploadFileToS3(presigned.url, file);
+      // 2. Subir el archivo directamente a S3 con el content-type FIRMADO.
+      const s3Response = await uploadFileToS3(
+        presigned.url,
+        file,
+        presigned.contentType,
+      );
       if (!s3Response.ok) {
-        throw new AppError("Error subiendo el archivo a S3");
+        throw new AppError(await describeS3Error(s3Response));
       }
 
       if (presigned.requiresConfirm === false) {

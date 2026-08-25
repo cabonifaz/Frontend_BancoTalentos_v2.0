@@ -2,14 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react";
 
 interface Props {
-    totalItems: number;
-    itemsPerPage: number;
+    totalItems?: number;
+    itemsPerPage?: number;
+    /**
+     * Total de páginas ya calculado por el backend. Tiene prioridad sobre
+     * totalItems/itemsPerPage, para los listados que devuelven el total de
+     * páginas pero no el tamaño de página (entrevistas, requerimientos).
+     */
+    totalPages?: number;
     currentPage: number;
     onPaginate: (page: number) => void;
 }
 
-export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }: Props) => {
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
+export const Pagination = ({ totalItems, itemsPerPage, totalPages: totalPagesProp, currentPage, onPaginate }: Props) => {
+    const totalPages = totalPagesProp ?? Math.ceil((totalItems ?? 0) / (itemsPerPage || 1));
     const [pageRange, setPageRange] = useState([1, 2, 3, 4]);
 
     const handlePageChange = (page: number) => {
@@ -89,7 +95,9 @@ export const Pagination = ({ totalItems, itemsPerPage, currentPage, onPaginate }
 
             {pageRange.map(
                 (page) =>
-                    page <= totalPages && (
+                    // El >= 1 evita que "Última" pinte páginas 0 o negativas
+                    // cuando hay menos de 4 páginas en total.
+                    page >= 1 && page <= totalPages && (
                         <button
                             key={page}
                             onClick={() => handlePageChange(page)}

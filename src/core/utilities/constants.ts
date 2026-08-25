@@ -31,10 +31,15 @@ export const TALENT_ALLOWED_EXTENSIONS: string[] =
 // el resto se registra como documento (ARCHIVO_PDF).
 export const TALENT_IMAGE_EXTENSIONS: string[] = ["png", "jpg", "jpeg", "webp"];
 
-// RQ STATE
+// RQ STATE (maestro 24; mismos ids que RQStateMaster del backend FMI)
 export const ESTADO_REGISTRADO = 1;
 export const ESTADO_ASIGNADO = 2;
 export const ESTADO_ATENDIDO = 3;
+export const ESTADO_EN_SELECCION = 4;
+export const ESTADO_EN_PRODUCCION = 5;
+export const ESTADO_PERDIDO = 6;
+export const ESTADO_TERMINADO = 7;
+export const ESTADO_CANCELADO = 8;
 
 // RQ TALENT STATE
 export const ESTADO_OBSERVADO = 1;
@@ -107,7 +112,7 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "1,2,3,5,7,8,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48";
+export const ALL_PARAMS_IDS = "1,2,3,5,7,8,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54";
 
 // Catálogo de roles = PARAMETROS maestro 1 (num1 = ID_TIPO_ROL, string1 = nombre).
 export const MAESTRO_ROLES = 1;

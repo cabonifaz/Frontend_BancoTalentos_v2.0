@@ -3,12 +3,15 @@ import { AddTalentType } from "../../models/schemas/AddTalentSchema";
 
 interface SalaryExpecProps {
   coins: { idCoin: number; stringVal: string }[];
+  /** Maestro 3: cómo se le factura al talento. `num1` es lo que se guarda. */
+  modalidades: { idModalidad: number; stringVal: string }[];
   control: Control<AddTalentType>;
   errors: FieldErrors<AddTalentType>;
 }
 
 export const SalaryExpectSection = ({
   coins,
+  modalidades,
   control,
   errors,
 }: SalaryExpecProps) => {
@@ -24,6 +27,45 @@ export const SalaryExpectSection = ({
       <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
         Expectativas salariales
       </h3>
+
+      {/* Va antes de los importes porque los condiciona: es lo que decide si a
+          lo que pide el talento hay que sumarle cargas patronales. */}
+      <div className="mb-4">
+        <label
+          htmlFor="idModalidadFacturacion"
+          className="text-[#3f3f46] text-sm block mb-1"
+        >
+          Modalidad de facturación<span className="text-red-500">*</span>
+        </label>
+        <Controller
+          name="idModalidadFacturacion"
+          control={control}
+          render={({ field }) => (
+            <select
+              {...field}
+              id="idModalidadFacturacion"
+              value={field.value ?? 0}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
+            >
+              <option value={0}>Seleccione una modalidad</option>
+              {modalidades.map((modalidad) => (
+                <option
+                  key={modalidad.idModalidad}
+                  value={modalidad.idModalidad}
+                >
+                  {modalidad.stringVal}
+                </option>
+              ))}
+            </select>
+          )}
+        />
+        {errors.idModalidadFacturacion && (
+          <p className="text-red-400 text-sm">
+            {errors.idModalidadFacturacion.message}
+          </p>
+        )}
+      </div>
 
       <div className="border rounded-lg divide-y">
         {/* --- RxH --- */}
