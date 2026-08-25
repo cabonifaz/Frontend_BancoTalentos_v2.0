@@ -26,6 +26,11 @@ export interface TalentPresignedUrlResponse {
    * el 200 del PUT es suficiente.
    */
   requiresConfirm?: boolean;
+  /**
+   * Content-type con el que el backend firmó la URL. Es el que hay que mandar en
+   * la cabecera `Content-Type` del PUT: cualquier otro valor invalida la firma.
+   */
+  contentType?: string;
 }
 
 export interface TalentConfirmUploadRequest {
@@ -48,7 +53,12 @@ export interface TalentConfirmUploadRequest {
 export interface TalentPhotoUploadUrlRequest {
   idTalento: number;
   fileName: string;
-  /** Sólo `image/png` o `image/jpeg`: la URL se firma con este content-type. */
+  /**
+   * Informativo. El backend ya NO firma con este valor: resuelve el content-type
+   * desde la extensión y lo devuelve en la respuesta, porque el navegador deja
+   * `File.type` vacío en extensiones que el sistema operativo no reconoce y esa
+   * discrepancia invalidaba la firma.
+   */
   contentType: string;
 }
 
@@ -57,6 +67,8 @@ export interface TalentPhotoUrlResponse {
   url: string;
   path: string;
   fileName: string;
+  /** Content-type firmado; debe ir tal cual en la cabecera del PUT. */
+  contentType?: string;
 }
 
 export interface TalentDownloadUrlRequest {

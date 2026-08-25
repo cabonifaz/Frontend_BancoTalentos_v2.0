@@ -6,6 +6,7 @@ import { useParams } from "../../../../core/context/ParamsContext";
 import { MAESTRO_ROLES, ROL_SUPERADMIN } from "../../../../core/utilities/constants";
 import {
   createUserAdmin,
+  describeS3Error,
   generateUserSignatureUploadUrl,
   updateUserAdmin,
   uploadFileToS3,
@@ -94,13 +95,20 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
         });
         return;
       }
-      const s3Response = await uploadFileToS3(data.url, file);
+      // El content-type tiene que ser el que el backend firmó, no `file.type`:
+      // eran distintos cuando el navegador no reconocía la extensión y S3
+      // rechazaba el PUT con SignatureDoesNotMatch.
+      const s3Response = await uploadFileToS3(
+        data.url,
+        file,
+        data.contentType ?? undefined,
+      );
       // El éxito lo determina SOLO el status HTTP devuelto por S3.
       if (s3Response.ok) {
         setFirmaPath(data.path);
         enqueueSnackbar("Firma cargada", { variant: "success" });
       } else {
-        enqueueSnackbar("Error al subir la firma a S3", { variant: "error" });
+        enqueueSnackbar(await describeS3Error(s3Response), { variant: "error" });
       }
     } catch {
       enqueueSnackbar("Error al subir la firma", { variant: "error" });

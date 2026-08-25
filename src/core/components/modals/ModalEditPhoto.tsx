@@ -4,6 +4,7 @@ import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
 import { Talent } from "../../models";
 import {
+    describeS3Error,
     generateTalentPhotoUploadUrl,
     updateTalentProfilePhoto,
     uploadFileToS3,
@@ -73,9 +74,13 @@ export const ModalEditPhoto = ({ idTalento, updateTalentList, onUpdate }: Props)
             }
 
             // 2. Subir a S3. El 200 de este PUT es lo que confirma la subida.
-            const s3Response = await uploadFileToS3(presigned.url, photo);
+            const s3Response = await uploadFileToS3(
+                presigned.url,
+                photo,
+                presigned.contentType,
+            );
             if (!s3Response.ok) {
-                enqueueSnackbar("Error subiendo la foto a S3", { variant: "error" });
+                enqueueSnackbar(await describeS3Error(s3Response), { variant: "error" });
                 return;
             }
 

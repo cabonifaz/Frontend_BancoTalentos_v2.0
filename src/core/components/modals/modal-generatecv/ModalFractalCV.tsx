@@ -23,6 +23,7 @@ import {
 } from "../../../utilities/constants";
 import { downloadFractalCVDocx } from "../../../utilities/fractalCVDocx";
 import {
+  describeS3Error,
   generateTalentUploadUrl,
   uploadFileToS3,
 } from "../../../services/apiService";
@@ -257,11 +258,13 @@ export const ModalFractalCV = ({
       );
     }
 
-    const s3Response = await uploadFileToS3(presigned.url, file);
+    const s3Response = await uploadFileToS3(
+      presigned.url,
+      file,
+      presigned.contentType,
+    );
     if (!s3Response.ok) {
-      throw new AppError(
-        `Error subiendo el archivo a S3 (código ${s3Response.status})`,
-      );
+      throw new AppError(await describeS3Error(s3Response));
     }
   };
 

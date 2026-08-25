@@ -54,6 +54,12 @@
   @apply bg-[var(--color-orange)] hover:bg-[var(--color-orange-hover)] text-white;
 }
 
+/* Mismo amarillo de marca que btn-orange, pero con texto oscuro: en blanco el
+   contraste sobre #FAAB34 es ~1.9:1 y el texto no se lee. */
+.btn-yellow {
+  @apply bg-[var(--color-orange)] hover:bg-[var(--color-orange-hover)] text-gray-900;
+}
+
 .btn-red {
   @apply bg-[var(--color-red)] hover:bg-[var(--color-red-hover)] text-white;
 }

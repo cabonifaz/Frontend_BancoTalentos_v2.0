@@ -173,6 +173,7 @@ export const ModalsForTalentsPage = ({
           idTalento={talent?.idTalento}
           idMonedaPlan={talent?.idMonedaPlan}
           idMonedaRxh={talent?.idMonedaRxh}
+          idModalidadFacturacion={talent?.idModalidadFacturacion}
           initPlan={talent?.montoInicialPlanilla}
           endPlan={talent?.montoFinalPlanilla}
           initRxH={talent?.montoInicialRxH}

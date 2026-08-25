@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Eye,
   FilterX,
+  Calculator,
   Plus,
   Search,
   TriangleAlert,
@@ -36,6 +37,7 @@ import {
 } from "../../core/services/apiService";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
+import { ModalCalculadoraRiesgo } from "../../core/components/modals/ModalCalculadoraRiesgo";
 import { Dashboard } from "./Dashboard";
 import { useNavigate } from "react-router-dom";
 import {
@@ -109,6 +111,8 @@ export const Requirements = () => {
   const hasFetchedClients = useRef(false);
   const hasFetchedReqs = useRef(false);
 
+  // Calculadora de riesgo libre: no depende de ningun RQ de la lista.
+  const [calculadoraAbierta, setCalculadoraAbierta] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<number | null>(
     null
   );
@@ -402,14 +406,25 @@ export const Requirements = () => {
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              className="btn btn-blue mx-0 flex h-10 items-center gap-2"
-              onClick={() => openModal(MODAL_CREATE_RQ)}
-            >
-              <Plus size={18} strokeWidth={2} />
-              Nuevo RQ
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-yellow mx-0 flex h-10 items-center gap-2"
+                onClick={() => setCalculadoraAbierta(true)}
+                title="Simular un escenario sin talento ni RQ: se escribe todo a mano"
+              >
+                <Calculator size={18} strokeWidth={2} />
+                Calculadora
+              </button>
+              <button
+                type="button"
+                className="btn btn-blue mx-0 flex h-10 items-center gap-2"
+                onClick={() => openModal(MODAL_CREATE_RQ)}
+              >
+                <Plus size={18} strokeWidth={2} />
+                Nuevo RQ
+              </button>
+            </div>
           </div>
           {/* filters */}
           <div className="shrink-0 rounded-lg border border-gray-100 bg-white p-5 shadow-sm">
@@ -701,6 +716,10 @@ export const Requirements = () => {
           )}
         </div>
       </Dashboard>
+
+      {calculadoraAbierta && (
+        <ModalCalculadoraRiesgo onClose={() => setCalculadoraAbierta(false)} />
+      )}
     </>
   );
 };

@@ -57,6 +57,8 @@ import {
 import { CustomFilterDropDown } from "../../core/components/ui/CustomFilterDropDown";
 import { SearchableSelect } from "../../core/components/ui/SearchableSelect";
 import { useParams } from "../../core/context/ParamsContext";
+import { TIPO_MODALIDAD } from "../../core/utilities/constants";
+import { nombreModalidad } from "../../core/utilities/riesgoTalento";
 import { useFavouritesContext } from "../../core/context/FavouritesContext";
 import {
   MODAL_FRACTAL_CV,
@@ -107,6 +109,12 @@ export const Talents = () => {
   const skillOptions = paramsByMaestro[19] || [];
   const englishLevels = paramsByMaestro[16] || [];
   const academicGrades = paramsByMaestro[38] || [];
+  // Maestro 3: como se le factura al talento. Se resuelve a su nombre para la
+  // ficha; se edita en el modal de banda salarial, que es donde se registra.
+  const modalidadFacturacionTalento = nombreModalidad(
+    talent?.idModalidadFacturacion,
+    paramsByMaestro[TIPO_MODALIDAD] || [],
+  );
 
   const { favourites: favouritesData, fetchFavourites } =
     useFavouritesContext();
@@ -818,6 +826,19 @@ export const Talents = () => {
                                   {talent.montoFinalPlanilla.toFixed(
                                     2,
                                   )}
+                                </p>
+                                {/* Sin este dato el cálculo de riesgo no puede
+                                    saber si aplicar cargas patronales, así que
+                                    su ausencia se muestra, no se esconde. */}
+                                <p
+                                  className={
+                                    modalidadFacturacionTalento
+                                      ? ""
+                                      : "text-amber-600"
+                                  }
+                                >
+                                  {modalidadFacturacionTalento ||
+                                    "Modalidad sin definir"}
                                 </p>
                               </div>
                               <button
