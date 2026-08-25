@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarCheck, UserRound } from "lucide-react";
 import {
   Bar,
@@ -19,13 +19,21 @@ import {
 } from "../../../../core/services/seleccion.service";
 import { Utils } from "../../../../core/utilities/utils";
 import { FiltersBar } from "../components/FiltersBar";
+import { CHROME, SERIES, colorizeSlices } from "../components/chartTheme";
+import { DonutChart } from "../components/DonutChart";
 import { UserPicker } from "../components/UserPicker";
 import { periodLabel } from "../components/dateRange";
-import { ChartCard, KpiCard, SectionState } from "../components/ui";
+import type { ChartView } from "../components/ui";
+import {
+  ChartCard,
+  ChartViewToggle,
+  KpiCard,
+  SectionState,
+} from "../components/ui";
 import { useSelectionSection } from "../useSelectionSection";
 
-const TEAL = "#009688";
-const INDIGO = "#5C6BC0";
+const TEAL = SERIES[0];
+const INDIGO = SERIES[1];
 const ROL_ADMIN = 1;
 const ROL_GESTOR = 4;
 
@@ -49,9 +57,9 @@ const LineSerie = ({
 }) => (
   <ResponsiveContainer width="100%" height="100%">
     <LineChart data={data} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#eef2f2" />
-      <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: "#6b7280" }} />
-      <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#6b7280" }} />
+      <CartesianGrid stroke={CHROME.grid} />
+      <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
+      <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
       <Tooltip />
       <Line
         type="monotone"
@@ -81,6 +89,7 @@ export const EntrevistasSection = () => {
   );
 
   const [selectedUser, setSelectedUser] = useState<SelectionUser | null>(null);
+  const [userView, setUserView] = useState<ChartView>("barras");
 
   // Re-consulta al cambiar el usuario elegido (el picker no usa el botón Aplicar).
   const firstUsucre = useRef(true);
@@ -101,6 +110,9 @@ export const EntrevistasSection = () => {
   const serie = toChart(data.serie);
   const usuarios = data.porUsuario;
   const barHeight = Math.max(280, usuarios.length * 34);
+
+  // El SP ya entrega top 5 + fila 'Otros': aquí sólo se reparten los colores.
+  const userSlices = useMemo(() => colorizeSlices(usuarios), [usuarios]);
 
   // Detalle por usuario (punto 3): Admin lo ve al elegir uno; el resto ve el suyo.
   const showUserDetail = isAdmin ? !!selectedUser : true;
@@ -156,29 +168,51 @@ export const EntrevistasSection = () => {
           {showBreakdown && (
             <ChartCard
               title="Entrevistas por usuario de selección"
-              subtitle="Top 5 + resto acumulado"
+              subtitle={
+                userView === "torta"
+                  ? "Reparto del total del periodo — top 5 + resto acumulado"
+                  : "Top 5 + resto acumulado"
+              }
               className="xl:col-span-2"
+              actions={
+                <ChartViewToggle value={userView} onChange={setUserView} />
+              }
+              height={userView === "torta" ? 360 : 320}
             >
-              <div className="h-full overflow-y-auto">
-                <ResponsiveContainer width="100%" height={barHeight}>
-                  <BarChart
-                    data={usuarios}
-                    layout="vertical"
-                    margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef2f2" horizontal={false} />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: "#6b7280" }} />
-                    <YAxis
-                      type="category"
-                      dataKey="label"
-                      width={150}
-                      tick={{ fontSize: 12, fill: "#374151" }}
-                    />
-                    <Tooltip />
-                    <Bar dataKey="cantidad" name="Entrevistas" fill={TEAL} radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {userView === "torta" ? (
+                <DonutChart
+                  slices={userSlices}
+                  totalLabel="entrevistas"
+                  unitLabel="Entrevistas"
+                />
+              ) : (
+                <div className="h-full overflow-y-auto">
+                  <ResponsiveContainer width="100%" height={barHeight}>
+                    <BarChart
+                      data={usuarios}
+                      layout="vertical"
+                      margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
+                    >
+                      <CartesianGrid stroke={CHROME.grid} horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
+                      <YAxis
+                        type="category"
+                        dataKey="label"
+                        width={150}
+                        tick={{ fontSize: 12, fill: CHROME.inkSecondary }}
+                      />
+                      <Tooltip />
+                      <Bar
+                        dataKey="cantidad"
+                        name="Entrevistas"
+                        fill={TEAL}
+                        maxBarSize={24}
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </ChartCard>
           )}
         </div>

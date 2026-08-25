@@ -301,6 +301,12 @@ export const AddTalentSchema = z.object({
   .optional()
   .default([]),
 
+  // Maestro 3 (NUM1). Decide si al talento se le calculan cargas patronales:
+  // sin este dato el modal de riesgo no puede saber cuánto cuesta de verdad.
+  idModalidadFacturacion: z.coerce
+    .number()
+    .min(1, "Seleccione la modalidad de facturación"),
+
   salaryExpectations: z
     .object({
       rxh: salaryExpectationSchema.optional(),

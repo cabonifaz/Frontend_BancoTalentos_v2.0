@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CircleAlert, CircleCheck, TriangleAlert } from "lucide-react";
+import {
+  CircleAlert,
+  CircleCheck,
+  CircleDashed,
+  ClipboardList,
+  Eye,
+  FilterX,
+  Calculator,
+  Plus,
+  Search,
+  TriangleAlert,
+  UserPlus,
+} from "lucide-react";
 import {
   ReqListParams,
   RequerimientosResponse,
@@ -11,6 +23,7 @@ import {
   DateFilter,
   FilterDropDown,
   Loading,
+  Pagination,
 } from "../../core/components";
 import { useApi } from "../../core/hooks/useApi";
 import {
@@ -24,12 +37,19 @@ import {
 } from "../../core/services/apiService";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
+import { ModalCalculadoraRiesgo } from "../../core/components/modals/ModalCalculadoraRiesgo";
 import { Dashboard } from "./Dashboard";
 import { useNavigate } from "react-router-dom";
 import {
   ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
+  ESTADO_CANCELADO,
+  ESTADO_EN_PRODUCCION,
+  ESTADO_EN_SELECCION,
+  ESTADO_PERDIDO,
+  ESTADO_REGISTRADO,
   ESTADO_RQ,
+  ESTADO_TERMINADO,
 } from "../../core/utilities/constants";
 import { useModal } from "../../core/context/ModalContext";
 import {
@@ -51,12 +71,48 @@ interface SearchProps {
 const isAsignacionBloqueada = (req: RequirementItem): boolean =>
   req.idEstado === ESTADO_ASIGNADO || req.idEstado === ESTADO_ATENDIDO;
 
+/**
+ * Mismo lenguaje visual que el badge de estado de Entrevistas.
+ *
+ * Los ocho estados del maestro 24 agrupados por lo que significan:
+ * azul = el RQ avanza y está cerrado en su ciclo, morado = está en curso,
+ * rojo = terminó mal, verde = recién entra, gris = ya no pide acción.
+ */
+const ESTADO_BADGE: Record<number, string> = {
+  [ESTADO_REGISTRADO]: "bg-green-100 text-green-700",
+  [ESTADO_ASIGNADO]: "bg-blue-100 text-blue-700",
+  [ESTADO_TERMINADO]: "bg-blue-100 text-blue-700",
+  [ESTADO_EN_SELECCION]: "bg-purple-100 text-purple-700",
+  [ESTADO_EN_PRODUCCION]: "bg-purple-100 text-purple-700",
+  [ESTADO_PERDIDO]: "bg-red-100 text-red-600",
+  [ESTADO_CANCELADO]: "bg-red-100 text-red-600",
+  [ESTADO_ATENDIDO]: "bg-gray-100 text-gray-600",
+};
+
+const EstadoBadge = ({
+  idEstado,
+  estado,
+}: {
+  idEstado: number;
+  estado: string;
+}) => (
+  <span
+    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${
+      ESTADO_BADGE[idEstado] || "bg-gray-100 text-gray-700"
+    }`}
+  >
+    {estado}
+  </span>
+);
+
 export const Requirements = () => {
   const navigate = useNavigate();
   const RequerimientoRef = useRef<HTMLInputElement>(null);
   const hasFetchedClients = useRef(false);
   const hasFetchedReqs = useRef(false);
 
+  // Calculadora de riesgo libre: no depende de ningun RQ de la lista.
+  const [calculadoraAbierta, setCalculadoraAbierta] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<number | null>(
     null
   );
@@ -72,6 +128,7 @@ export const Requirements = () => {
   const [selectedRQ, setSelectedRQ] =
     useState<RequirementItem | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [hasSearchText, setHasSearchText] = useState(false);
 
   const { paramsByMaestro, loading: loadingParams } = useParams();
 
@@ -265,20 +322,45 @@ export const Requirements = () => {
     }
   };
 
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      const newPage = currentPage - 1;
-      setCurrentPage(newPage);
-      executeSearch({ nPag: newPage });
-    }
+  /**
+   * Texto del tooltip de la columna Alerta. Sin alerta no hay vencimiento que
+   * mostrar, así que se dice explícitamente en vez de dejar la celda muda.
+   */
+  const getAlertLabel = (req: RequirementItem) =>
+    req?.idAlerta !== null && req.idAlerta > 0
+      ? `Vence: ${req.fechaVencimiento}`
+      : "Sin alerta de vencimiento";
+
+  const handlePaginate = (page: number) => {
+    setCurrentPage(page);
+    executeSearch({ nPag: page });
   };
 
-  const handleNextPage = () => {
-    if (currentPage < (ReqsResponse?.totalPaginas || 0)) {
-      const newPage = currentPage + 1;
-      setCurrentPage(newPage);
-      executeSearch({ nPag: newPage });
-    }
+  // El input de búsqueda es no controlado (ref), así que un ref no dispara
+  // re-render: se acompaña de este flag para que "Limpiar filtros" aparezca
+  // y desaparezca al escribir.
+  const hasActiveFilters =
+    hasSearchText ||
+    selectedCliente !== null ||
+    selectedEstado !== null ||
+    selectedDate !== null;
+
+  const handleClearFilters = () => {
+    if (RequerimientoRef.current) RequerimientoRef.current.value = "";
+    setHasSearchText(false);
+    setSelectedCliente(null);
+    setSelectedEstado(null);
+    setSelectedDate(null);
+    setOpenDropdown(null);
+    setCurrentPage(1);
+    // Los overrides van explícitos: el estado de React todavía no se ha aplicado
+    // cuando executeSearch lee sus dependencias.
+    executeSearch({
+      nPag: 1,
+      estado: null,
+      fechaSolicitud: null,
+      idCliente: null,
+    });
   };
 
   const shouldShowPagination =
@@ -313,47 +395,78 @@ export const Requirements = () => {
       )}
 
       <Dashboard>
-        <div className="flex h-full flex-col overflow-x-hidden">
-          <div className="flex shrink-0 justify-between items-center mb-2">
-            <h2 className="text-2xl font-semibold flex gap-2">
-              Requerimientos
-            </h2>
-            <button
-              type="button"
-              className="btn btn-blue p-3 h-12"
-              onClick={() => openModal(MODAL_CREATE_RQ)}
-            >
-              Nuevo RQ
-            </button>
+        <div className="flex h-full flex-col overflow-x-hidden gap-4">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-2xl font-semibold">Requerimientos</h2>
+              {(ReqsResponse?.totalElementos || 0) > 0 && (
+                <span className="text-sm text-gray-500">
+                  {ReqsResponse?.totalElementos} registro
+                  {ReqsResponse?.totalElementos === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="btn btn-yellow mx-0 flex h-10 items-center gap-2"
+                onClick={() => setCalculadoraAbierta(true)}
+                title="Simular un escenario sin talento ni RQ: se escribe todo a mano"
+              >
+                <Calculator size={18} strokeWidth={2} />
+                Calculadora
+              </button>
+              <button
+                type="button"
+                className="btn btn-blue mx-0 flex h-10 items-center gap-2"
+                onClick={() => openModal(MODAL_CREATE_RQ)}
+              >
+                <Plus size={18} strokeWidth={2} />
+                Nuevo RQ
+              </button>
+            </div>
           </div>
           {/* filters */}
-          <div className="shrink-0 bg-white p-6 rounded-lg shadow-md mb-4">
+          <div className="shrink-0 rounded-lg border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2 lg:flex-row lg:gap-4">
-                <div className="flex-1 ">
+              {/* Búsqueda + acción principal, alineadas por la base */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1 min-w-0">
                   <label
                     htmlFor="requerimiento"
-                    className="block text-sm font-medium text-gray-700"
+                    className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     Búsqueda por título o código de requerimiento
                   </label>
-                  <input
-                    type="text"
-                    name="requerimiento"
-                    id="requerimiento"
-                    ref={RequerimientoRef}
-                    className="input w-full"
-                  />
+                  <div className="relative">
+                    <Search
+                      size={18}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    />
+                    <input
+                      type="text"
+                      name="requerimiento"
+                      id="requerimiento"
+                      ref={RequerimientoRef}
+                      onChange={(e) =>
+                        setHasSearchText(e.target.value.trim() !== "")
+                      }
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      placeholder="Ej: Analista de datos / RQ-0123"
+                      className="input h-10 w-full py-0 pl-10"
+                    />
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="btn btn-primary lg:self-end p-3 h-12"
+                  className="btn btn-primary mx-0 flex h-10 shrink-0 items-center justify-center gap-2 sm:w-32"
                 >
+                  <Search size={18} strokeWidth={2} />
                   Buscar
                 </button>
               </div>
-              <div className="flex gap-4 flex-wrap">
+              <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4">
                 <FilterDropDown
                   name="cliente"
                   label="Cliente"
@@ -392,39 +505,68 @@ export const Requirements = () => {
                   label="Fecha"
                   onDateSelected={handleDateSelected}
                 />
+
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={handleClearFilters}
+                    className="ml-auto flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700"
+                  >
+                    <FilterX size={16} strokeWidth={2} />
+                    Limpiar filtros
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
           {/* Table */}
-          <div className="table-container min-h-0 flex-1">
+          <div className="table-container min-h-0 flex-1 rounded-xl border border-gray-100 shadow-sm">
             <div className="table-wrapper h-full overflow-auto">
-              <table className="table">
+              <table className="table table-fixed min-w-[1220px]">
+                <colgroup>
+                  <col className="w-16" />
+                  <col className="w-[16%]" />
+                  <col className="w-[27%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-32" />
+                  <col className="w-20" />
+                  <col className="w-44" />
+                </colgroup>
                 <thead>
-                  <tr className="table-header">
-                    <th className="table-header-cell">ID</th>
-                    <th className="table-header-cell">Cliente</th>
+                  {/* La cabecera se fija en los th (no en el thead): con
+                      border-collapse es lo único que sostiene el sticky. */}
+                  <tr className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50">
+                    <th className="table-header-cell text-center">ID</th>
+                    <th className="table-header-cell text-center">Cliente</th>
                     <th className="table-header-cell">Título</th>
-                    <th className="table-header-cell">
+                    <th className="table-header-cell text-center">
                       Requerimiento
                     </th>
-                    <th className="table-header-cell">
+                    <th className="table-header-cell text-center">
                       Fecha Solicitud
                     </th>
-                    <th className="table-header-cell">Estado</th>
-                    <th className="table-header-cell">
+                    <th className="table-header-cell text-center">Estado</th>
+                    <th className="table-header-cell text-center">
                       Confirmados / Vacantes
                     </th>
-                    <th className="table-header-cell">Acciones</th>
-                    <th className="table-header-cell"></th>
+                    <th className="table-header-cell text-center">Alerta</th>
+                    <th className="table-header-cell text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {(ReqsResponse?.requerimientos || []).length <=
                   0 ? (
                     <tr>
-                      <td colSpan={8} className="table-empty">
-                        No hay requerimientos disponibles.
+                      <td colSpan={9} className="table-empty">
+                        <div className="flex flex-col items-center gap-2 py-10 text-gray-400">
+                          <ClipboardList size={32} strokeWidth={1.5} />
+                          <p className="text-sm">
+                            No hay requerimientos disponibles.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -433,22 +575,38 @@ export const Requirements = () => {
                         key={req.idRequerimiento}
                         className="table-row"
                       >
-                        <td className="table-cell">
+                        <td className="table-cell text-center text-gray-500 tabular-nums">
                           {req.idRequerimiento}
                         </td>
-                        <td className="table-cell">{req.cliente}</td>
-                        <td className="table-cell">
-                          {req.titulo
-                            ? req.titulo.length > 50
-                              ? `${req.titulo.slice(0, 50)}...`
-                              : req.titulo
-                            : ""}
+                        <td
+                          className="table-cell truncate text-center"
+                          title={req.cliente}
+                        >
+                          {req.cliente}
                         </td>
-                        <td className="table-cell">{req.codigoRQ}</td>
-                        <td className="table-cell">
+                        <td
+                          className="table-cell truncate"
+                          title={req.titulo || ""}
+                        >
+                          <span className="font-medium text-gray-900">
+                            {req.titulo || ""}
+                          </span>
+                        </td>
+                        <td
+                          className="table-cell truncate text-center"
+                          title={req.codigoRQ}
+                        >
+                          {req.codigoRQ}
+                        </td>
+                        <td className="table-cell text-center tabular-nums">
                           {req.fechaSolicitud}
                         </td>
-                        <td className="table-cell">{req.estado}</td>
+                        <td className="table-cell text-center">
+                          <EstadoBadge
+                            idEstado={req.idEstado}
+                            estado={req.estado}
+                          />
+                        </td>
                         <td className="table-cell text-center">
                           <div className="min-w-full flex justify-center">
                             <div className="w-fit relative group">
@@ -474,55 +632,69 @@ export const Requirements = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="table-cell">
-                          {(() => {
-                            const bloqueado = isAsignacionBloqueada(req);
-                            return (
-                              <div className="relative inline-block group">
-                                <button
-                                  onClick={() =>
-                                    handleAsignarClick(
-                                      req.idRequerimiento
-                                    )
-                                  }
-                                  disabled={bloqueado}
-                                  className={`btn btn-actions ${
-                                    bloqueado
-                                      ? "btn-disabled"
-                                      : "btn-blue"
-                                  }`}
-                                >
-                                  Asignar
-                                </button>
-                                {bloqueado && (
-                                  <div className="absolute invisible group-hover:visible z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                    {req.idEstado === ESTADO_ATENDIDO
-                                      ? "Requerimiento atendido"
-                                      : "Requerimiento asignado — talentos completos"}
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#484848]"></div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                          <button
-                            onClick={() => openDetallesRQModal(req)}
-                            className="btn btn-actions btn-primary"
-                          >
-                            Detalles
-                          </button>
+                        <td className="table-cell text-center">
+                          <div className="relative inline-block group">
+                            {req?.idAlerta !== null && req?.idAlerta > 0 ? (
+                              getAlertIcon(req.idAlerta)
+                            ) : (
+                              // Estado neutro: la columna siempre dice algo, así
+                              // que un RQ sin alerta se lee como "revisado y sin
+                              // vencimiento", no como un dato que falta.
+                              <CircleDashed
+                                className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                color="#a1a1aa"
+                              />
+                            )}
+                            <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                              {getAlertLabel(req)}
+                              <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                            </div>
+                          </div>
                         </td>
                         <td className="table-cell">
-                          {req?.idAlerta !== null &&
-                            req?.idAlerta > 0 && (
-                              <div className="relative inline-block group">
-                                {getAlertIcon(req.idAlerta)}
-                                <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                  Vence: {req.fechaVencimiento}
-                                  <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848]"></div>
+                          {/* mx-0 anula el margen que trae .btn: aquí separa el gap */}
+                          <div className="flex items-center justify-center gap-2">
+                            {(() => {
+                              const bloqueado = isAsignacionBloqueada(req);
+                              return (
+                                <div className="relative group">
+                                  <button
+                                    onClick={() =>
+                                      handleAsignarClick(
+                                        req.idRequerimiento
+                                      )
+                                    }
+                                    disabled={bloqueado}
+                                    title="Asignar talento"
+                                    className={`btn btn-actions mx-0 flex h-8 items-center gap-1.5 px-2.5 ${
+                                      bloqueado
+                                        ? "btn-disabled"
+                                        : "btn-blue"
+                                    }`}
+                                  >
+                                    <UserPlus size={14} strokeWidth={2} />
+                                    Asignar
+                                  </button>
+                                  {bloqueado && (
+                                    <div className="absolute invisible group-hover:visible z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
+                                      {req.idEstado === ESTADO_ATENDIDO
+                                        ? "Requerimiento atendido"
+                                        : "Requerimiento asignado — talentos completos"}
+                                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#484848]"></div>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
+                            <button
+                              onClick={() => openDetallesRQModal(req)}
+                              title="Ver detalles"
+                              className="btn btn-actions btn-primary mx-0 flex h-8 items-center gap-1.5 px-2.5"
+                            >
+                              <Eye size={14} strokeWidth={2} />
+                              Detalles
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -532,48 +704,22 @@ export const Requirements = () => {
             </div>
           </div>
 
-          {/* Pagination */}
-          {(ReqsResponse?.totalElementos || 0) > 0 && (
-            <div className="flex shrink-0 flex-col items-center gap-2 mt-4">
-              {shouldShowPagination && (
-                <div className="flex justify-center items-center gap-4">
-                  {/* Botón Anterior */}
-                  <button
-                    className={`btn ${
-                      currentPage === 1 ? "btn-disabled" : "btn-blue"
-                    }`}
-                    onClick={handlePreviousPage}
-                    disabled={currentPage === 1}
-                  >
-                    Anterior
-                  </button>
-
-                  {/* Información de página actual */}
-                  <span className="text-sm">
-                    Página {currentPage} de{" "}
-                    {ReqsResponse?.totalPaginas || 0}
-                  </span>
-
-                  {/* Botón Siguiente */}
-                  <button
-                    className={`btn ${
-                      currentPage >= (ReqsResponse?.totalPaginas || 0)
-                        ? "btn-disabled"
-                        : "btn-blue"
-                    }`}
-                    onClick={handleNextPage}
-                    disabled={
-                      currentPage >= (ReqsResponse?.totalPaginas || 0)
-                    }
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              )}
+          {/* Pagination — mismo componente que Lista Negra */}
+          {shouldShowPagination && (
+            <div className="shrink-0">
+              <Pagination
+                totalPages={ReqsResponse?.totalPaginas || 0}
+                currentPage={currentPage}
+                onPaginate={handlePaginate}
+              />
             </div>
           )}
         </div>
       </Dashboard>
+
+      {calculadoraAbierta && (
+        <ModalCalculadoraRiesgo onClose={() => setCalculadoraAbierta(false)} />
+      )}
     </>
   );
 };

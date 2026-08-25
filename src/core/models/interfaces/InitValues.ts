@@ -67,6 +67,7 @@ export const initialFormValues: AddTalentType = {
   habilidadesTecnicas: [initialTechnicalSkill],
   habilidadesBlandas: [],
   idiomas: [],
+  idModalidadFacturacion: 0,
   salaryExpectations: {
     rxh: {
       coin: undefined,

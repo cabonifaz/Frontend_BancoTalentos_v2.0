@@ -12,6 +12,7 @@ import { enqueueSnackbar } from "notistack";
 import { updateTalentSalary } from "../../services/apiService";
 import { handleError, handleResponse } from "../../utilities/errorHandler";
 import { Loading } from "../ui/Loading";
+import { TIPO_MODALIDAD } from "../../utilities/constants";
 
 // --- Helpers ---
 const toNumberOrUndef = (val: string | number): number | undefined => {
@@ -56,6 +57,10 @@ const salaryBlock = z
 const salarySchema = z.object({
   rxh: salaryBlock,
   planilla: salaryBlock,
+  // Maestro 3 (NUM1). Opcional aqui, a diferencia de Nuevo Talento: este modal
+  // edita talentos ya cargados, y muchos vienen sin el dato. Exigirlo
+  // bloquearia guardar un simple ajuste de importes.
+  idModalidadFacturacion: z.number().int().optional(),
 });
 
 // --- Tipos ---
@@ -69,6 +74,7 @@ interface Props {
   endRxH?: number;
   idMonedaPlan?: number;
   idMonedaRxh?: number;
+  idModalidadFacturacion?: number;
   updateTalentList?: (idTalento: number, fields: Partial<Talent>) => void;
 }
 
@@ -80,6 +86,7 @@ export const ModalSalary = ({
   endRxH,
   idMonedaPlan,
   idMonedaRxh,
+  idModalidadFacturacion,
   updateTalentList,
 }: Props) => {
   const { paramsByMaestro } = useParams();
@@ -103,6 +110,7 @@ export const ModalSalary = ({
         min: initPlan,
         max: endPlan,
       },
+      idModalidadFacturacion: idModalidadFacturacion || undefined,
     },
     mode: "onChange",
   });
@@ -113,6 +121,7 @@ export const ModalSalary = ({
       reset({
         rxh: { coin: idMonedaRxh, min: initRxH, max: endRxH },
         planilla: { coin: idMonedaPlan, min: initPlan, max: endPlan },
+        idModalidadFacturacion: idModalidadFacturacion || undefined,
       });
     }
   }, [
@@ -124,6 +133,7 @@ export const ModalSalary = ({
     endRxH,
     idMonedaPlan,
     idMonedaRxh,
+    idModalidadFacturacion,
   ]);
 
   const { loading, fetch: updateData } = useApi<
@@ -141,6 +151,8 @@ export const ModalSalary = ({
   });
 
   const monedas = paramsByMaestro[2] || [];
+  // Maestro 3, el mismo catalogo que usa Nuevo Talento y el Modal de Ingreso.
+  const modalidadesFacturacion = paramsByMaestro[TIPO_MODALIDAD] || [];
 
   const onSubmit = (data: SalaryFormData) => {
     if (!idTalento) return;
@@ -151,7 +163,11 @@ export const ModalSalary = ({
       montoFinalPlanilla: data.planilla.max ?? 0,
       montoInicialRxH: data.rxh.min ?? 0,
       montoFinalRxH: data.rxh.max ?? 0,
-      idModalidadFacturacion: 0,
+      // Antes iba un 0 literal, y como el SP escribe la columna sin mirar, cada
+      // guardado de importes borraba la modalidad del talento. Ahora va la del
+      // formulario y, si no se elige ninguna, la que ya tenia.
+      idModalidadFacturacion:
+        data.idModalidadFacturacion || idModalidadFacturacion || 0,
       // Enviamos la información de la monedas por modalidad
       idMonedaPlan: data.planilla.coin ?? 0,
       idMonedaRxh: data.rxh.coin ?? 0,
@@ -166,6 +182,8 @@ export const ModalSalary = ({
             montoFinalRxH: data.rxh.max ?? 0,
             idMonedaPlan: data.planilla.coin ?? 0,
             idMonedaRxh: data.rxh.coin ?? 0,
+            idModalidadFacturacion:
+              data.idModalidadFacturacion || idModalidadFacturacion || 0,
           });
         }
       }
@@ -191,6 +209,51 @@ export const ModalSalary = ({
         <h3 className="text-[#71717A] text-sm my-3">
           Agrega el rango de tus expectativas salariales.
         </h3>
+
+        {/* Va antes de los importes porque los condiciona: es lo que decide si
+            a lo que pide el talento hay que sumarle cargas patronales. */}
+        <div className="mb-4">
+          <label
+            htmlFor="modalidadFacturacionSalary"
+            className="text-[#3f3f46] text-sm block mb-1"
+          >
+            Modalidad de facturación
+          </label>
+          <Controller
+            name="idModalidadFacturacion"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                id="modalidadFacturacionSalary"
+                value={field.value ?? ""}
+                onChange={(e) =>
+                  field.onChange(
+                    e.target.value === ""
+                      ? undefined
+                      : Number(e.target.value)
+                  )
+                }
+                className="text-[#3f3f46] p-2 w-full border border-gray-300 rounded-lg focus:outline-none cursor-pointer text-sm"
+              >
+                <option value="">Sin definir</option>
+                {modalidadesFacturacion.map((modalidad) => (
+                  <option
+                    key={modalidad.idParametro}
+                    value={modalidad.num1}
+                  >
+                    {modalidad.string1}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+          {errors.idModalidadFacturacion && (
+            <span className="text-red-500 text-xs mt-1 block">
+              {errors.idModalidadFacturacion.message}
+            </span>
+          )}
+        </div>
 
         {/* --- Tabla de expectativas salariales --- */}
         <div className="border rounded-lg divide-y">

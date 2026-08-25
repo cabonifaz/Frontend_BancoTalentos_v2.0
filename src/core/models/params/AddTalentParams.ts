@@ -61,6 +61,11 @@ export interface AddTalentParams {
     extensionArchivo: string;
     idTipoArchivo: number;
     idTipoDocumento: number;
+    /**
+     * Ruta (key) S3 de la foto ya subida con URL pre-firmada. Cuando se envía,
+     * `stringB64` va vacío y el backend sólo registra la ruta, sin subir nada.
+     */
+    rutaArchivo?: string;
   };
 
   // Salary Expec Plan

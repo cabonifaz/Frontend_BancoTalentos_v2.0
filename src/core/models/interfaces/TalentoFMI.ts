@@ -57,6 +57,19 @@ export interface AsignarTalentoType {
 
   solicitudEquipo?: SolicitudEquipo;
 
+  // ─── Pretensión salarial (modal "Calcular Riesgo") ──────────────────────────────
+  // Los cuatro montos crudos. `montoBase` de arriba no sirve para esto: el SP lo
+  // arma con un CASE que se queda con el piso de una sola modalidad y pierde el
+  // rango, que es justo lo que se compara contra la tarifa del perfil.
+  montoInicialPlanilla?: number;
+  montoFinalPlanilla?: number;
+  montoInicialRxH?: number;
+  montoFinalRxH?: number;
+  /** PARAMETROS maestro 2 (1 = Nuevos Soles). */
+  idMonedaPlan?: number;
+  idMonedaRxh?: number;
+  idModalidadFacturacion?: number;
+
   // ID_ESTADO_REGISTRO para soft deletes
   idEstadoRegistro?: number;
 }

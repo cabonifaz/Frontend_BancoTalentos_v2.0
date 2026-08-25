@@ -12,6 +12,8 @@ import {
 } from "../../../../core/services/seleccion.service";
 import { SectionProps } from "../sections";
 import { KpiCard, SectionState } from "../components/ui";
+import { Meter } from "../components/Meter";
+import { SERIES } from "../components/chartTheme";
 import { useSelectionSection } from "../useSelectionSection";
 
 const EMPTY: SelectionSummary = { totalEntrevistas: 0, totalIngresos: 0 };
@@ -42,7 +44,17 @@ export const ResumenSection = ({ onNavigate }: SectionProps) => {
             label="Ingresos concretados"
             value={data.totalIngresos}
             icon={UserPlus}
-            accent="#5C6BC0"
+            accent={SERIES[1]}
+          />
+          {/* Una razón contra su total es un medidor, no una torta de dos
+              porciones: con dos sectores hay que comparar ángulos para leer un
+              número que ya está escrito al lado. */}
+          <Meter
+            label="Tasa de conversión"
+            value={data.totalIngresos}
+            total={data.totalEntrevistas}
+            valueLabel="ingresos"
+            totalLabel="entrevistas"
           />
         </div>
       </SectionState>

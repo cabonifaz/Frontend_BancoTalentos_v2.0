@@ -4,6 +4,7 @@ import { Modal } from "./Modal";
 import { enqueueSnackbar } from "notistack";
 import {
     confirmTalentUpload,
+    describeS3Error,
     generateTalentUploadUrl,
     uploadFileToS3,
 } from "../../services/apiService";
@@ -60,10 +61,14 @@ export const ModalUploadResume = ({ idTalento, idArchivo, onUpdate }: Props) => 
                 return;
             }
 
-            // 2. Subir el archivo directamente a S3
-            const s3Response = await uploadFileToS3(presigned.url, cv);
+            // 2. Subir el archivo directamente a S3 con el content-type FIRMADO.
+            const s3Response = await uploadFileToS3(
+                presigned.url,
+                cv,
+                presigned.contentType,
+            );
             if (!s3Response.ok) {
-                enqueueSnackbar("Error subiendo el archivo a S3", { variant: "error" });
+                enqueueSnackbar(await describeS3Error(s3Response), { variant: "error" });
                 return;
             }
 
