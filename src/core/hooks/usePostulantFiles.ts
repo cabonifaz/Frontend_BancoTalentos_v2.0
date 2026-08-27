@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import {
   confirmPostulantUpload,
+  describeS3Error,
   generatePostulantDownloadUrl,
   generatePostulantUploadUrl,
   listPostulantFiles,
@@ -82,7 +83,7 @@ export const usePostulantFiles = (idRequerimiento: number) => {
       const s3Response = await uploadFileToS3(presigned.url, file);
       if (!s3Response.ok) {
         enqueueSnackbar({
-          message: "Error subiendo el archivo a S3",
+          message: await describeS3Error(s3Response),
           variant: "error",
         });
         return;
