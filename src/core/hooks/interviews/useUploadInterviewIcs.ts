@@ -42,7 +42,10 @@ export const useUploadInterviewIcs = () => {
       const urlData = presigned.data?.data;
       if (!urlData?.url) return false;
 
-      const s3 = await uploadFileToS3(urlData.url, file);
+      // El PUT manda el MISMO content-type con el que se pidio la firma: si se
+      // dejara `file.type` y el navegador lo resolviera distinto, S3 responderia
+      // SignatureDoesNotMatch.
+      const s3 = await uploadFileToS3(urlData.url, file, MIME_ICS);
       if (!s3.ok) return false;
 
       const { data: confirm } = await confirmUploadFile({

@@ -201,15 +201,16 @@ export const generateUploadUrl = async (
   );
 };
 
-export const uploadFileToS3 = async (url:string,file:File) => {
-  return await fetch(url,{
-    method:"PUT",
-    headers:{
-      "Content-Type": file.type
-    },
-    body:file
-  });
-};
+/**
+ * Subida directa a S3 con la URL pre-firmada.
+ *
+ * Reexporta la implementacion canonica de `apiService.ts` en vez de duplicarla:
+ * habia dos `uploadFileToS3` en el frontend y esta copia era la debil (fetch a
+ * pelo con `file.type`, sin timeout ni traduccion del error de S3). Con el
+ * reexport, entrevistas, talentos, requerimientos y firma de usuario suben por
+ * el mismo codigo.
+ */
+export { uploadFileToS3, describeS3Error } from "./apiService";
 
 export interface ConfirmUploadPayload {
   idInterview: number;
