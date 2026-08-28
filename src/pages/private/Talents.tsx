@@ -622,7 +622,7 @@ export const Talents = () => {
           <div className="flex mt-4 min-h-0 flex-1 gap-4">
             {/* Talents list */}
             <div className="flex flex-col w-full md:w-[340px] xl:w-[370px] flex-shrink-0 min-h-0">
-              <div className="*:mb-2 flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
+              <div className="*:mb-1 flex-1 min-h-0 overflow-y-auto overflow-x-hidden border rounded-lg md:border-none">
                 {loadingTalents
                   ? Array.from({ length: 5 }).map((_, index) => (
                       <SkeletonCard key={index} />

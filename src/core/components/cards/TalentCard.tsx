@@ -8,58 +8,45 @@ interface Props {
 }
 
 export const TalentCard = ({ talent, selectTalent }: Props) => {
-  const getInitials = (talent: Talent) => {
-    const firstName = talent.nombres?.trim().split(" ")[0] || "";
-    const lastName = talent.apellidoPaterno?.trim() || "";
-    return `${firstName.charAt(0)}${lastName.charAt(
-      0
-    )}`.toUpperCase();
-  };
-
   return (
     <div
       onClick={() => selectTalent(talent)}
-      className="flex items-center justify-around md:justify-start p-2 hover:bg-[#f4f4f5] rounded-xl cursor-pointer relative"
+      className="flex items-center px-3 py-2 hover:bg-[#f4f4f5] rounded-lg cursor-pointer relative"
     >
-      <div className="mx-2 lg:ms-4 lg:me-8 w-1/4 md:w-fit">
-        <div className="w-20 h-20 md:w-24 md:h-24 xl:w-28 xl:h-28 rounded-full border border-gray-300 flex items-center justify-center bg-gray-50 text-[#3f3f46] font-medium text-lg md:text-xl xl:text-2xl select-none shadow-sm">
-          {getInitials(talent)}
-        </div>
-      </div>
-      <div className="w-3/4 min-w-0">
-        <p className="text-base">{`ID: ${talent.idTalento} - ${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
-        <p className="text-sm text-[#71717A]">{talent.puesto}</p>
-        <div className="flex gap-2 my-2">
-          {Utils.getStars(talent.estrellas)}
-        </div>
-        <p className="text-sm text-[#71717A] flex my-1 lg:h-5 min-w-0">
-          <MapPin className="h-5 w-5 shrink-0" />
-          <span className="truncate">{`${talent.pais}, ${talent.ciudad}`}</span>
+      <div className="w-full min-w-0 pe-6">
+        <p className="text-sm leading-tight truncate">{`ID: ${talent.idTalento} - ${talent.nombres} ${talent.apellidoPaterno} ${talent.apellidoMaterno}`}</p>
+        <p className="text-xs leading-tight text-[#71717A] truncate">
+          {talent.puesto}
         </p>
-        <div className="text-sm text-[#71717A]">
-          <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">
-            <p>
-              {`RxH ${
-                Utils.formatCoinByNum1(talent.idMonedaRxh).string3
-              } `}
-              {talent.montoInicialRxH.toFixed(2)} -{" "}
-              {talent.montoInicialRxH.toFixed(2)}
-            </p>
+        <div className="flex items-center gap-2 mt-0.5 min-w-0">
+          <div className="flex shrink-0 [&_svg]:h-3.5 [&_svg]:w-3.5">
+            {Utils.getStars(talent.estrellas)}
           </div>
-          <div className="flex flex-row md:flex-col xl:flex-row gap-2 md:gap-0 xl:gap-2 flex-wrap">
-            <p>
-              {`Planilla ${
-                Utils.formatCoinByNum1(talent.idMonedaPlan).string3
-              } `}
-              {talent.montoInicialPlanilla.toFixed(2)} -{" "}
-              {talent.montoFinalPlanilla.toFixed(2)}
-            </p>
-          </div>
+          <p className="text-xs leading-tight text-[#71717A] flex items-center min-w-0">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{`${talent.pais}, ${talent.ciudad}`}</span>
+          </p>
+        </div>
+        <div className="text-xs leading-tight text-[#71717A] flex flex-wrap gap-x-3">
+          <p>
+            {`RxH ${
+              Utils.formatCoinByNum1(talent.idMonedaRxh).string3
+            } `}
+            {talent.montoInicialRxH.toFixed(2)} -{" "}
+            {talent.montoInicialRxH.toFixed(2)}
+          </p>
+          <p>
+            {`Planilla ${
+              Utils.formatCoinByNum1(talent.idMonedaPlan).string3
+            } `}
+            {talent.montoInicialPlanilla.toFixed(2)} -{" "}
+            {talent.montoFinalPlanilla.toFixed(2)}
+          </p>
         </div>
       </div>
       {talent.esFavorito === 1 && (
-        <div className="absolute right-4 top-2">
-          <Heart className="h-5 w-5" color="#e9399a" fill="#e9399a" />
+        <div className="absolute right-3 top-2">
+          <Heart className="h-4 w-4" color="#e9399a" fill="#e9399a" />
         </div>
       )}
     </div>
