@@ -134,12 +134,13 @@ export const TechSkillsModal = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-y-auto relative">
+      <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-hidden relative flex flex-col">
         {isCreating && <Loading opacity="opacity-60" />}
         <div
-          style={{ display: modalMode === "add" ? "none" : "block" }}
+          className="flex-col flex-1 min-h-0"
+          style={{ display: modalMode === "add" ? "none" : "flex" }}
         >
-          <h2 className="text-lg font-bold mb-4">
+          <h2 className="text-lg font-bold mb-4 shrink-0">
             Agregar habilidades técnicas
           </h2>
 
@@ -151,9 +152,9 @@ export const TechSkillsModal = ({
             <X className="w-6 h-6" />
           </button>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Sección de búsqueda */}
-            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50">
+            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-gray-50 shrink-0">
               <Autocomplete
                 options={availableSkills}
                 onSelect={handleAddSkill}
@@ -164,7 +165,7 @@ export const TechSkillsModal = ({
             </div>
 
             {/* Lista de habilidades mejorada */}
-            <div className="min-h-[200px] overflow-y-scroll relative pb-20">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 Habilidades seleccionadas ({skills.length})
               </h3>
@@ -280,7 +281,7 @@ export const TechSkillsModal = ({
             </div>
           </div>
 
-          <div className="absolute bottom-4 left-0 right-0 flex items-center justify-between px-4">
+          <div className="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2">
               <p className="text-sm text-gray-500">
                 ¿No encuentras una habilidad?
@@ -313,7 +314,7 @@ export const TechSkillsModal = ({
         </div>
 
         {modalMode === "add" && (
-          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-8 flex flex-col h-[450px]">
+          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-8 flex flex-col h-[450px] shrink-0">
             {/* Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-800">
