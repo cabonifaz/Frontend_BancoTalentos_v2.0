@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Copy, MessageCircle } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { Modal } from "./Modal";
 import { useApi } from "../../hooks/useApi";
@@ -90,6 +90,16 @@ export const ModalContact = ({
     setPhoneValue(e.target.value);
   };
 
+  // Código de país mostrado junto al input (mismo valor que renderiza codeRef)
+  const phoneCode = phone ? phone.split(" ")[0] : "+00";
+  // wa.me exige solo dígitos: sin "+", espacios ni guiones
+  const whatsappNumber = `${phoneCode}${phoneValue}`.replace(/\D/g, "");
+  const canOpenWhatsapp =
+    !errors.phone &&
+    phoneValue.trim() !== "" &&
+    phoneCode !== "+00" &&
+    whatsappNumber.length >= 8;
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard
       .writeText(text)
@@ -144,21 +154,23 @@ export const ModalContact = ({
           <label htmlFor="email" className="input-label">
             Correo Electrónico
           </label>
-          <div className="flex">
+          <div className="flex items-stretch">
             <input
               type="text"
               name="email"
               value={emailValue}
               onChange={handleEmailChange}
-              className="w-[93%] input"
+              className="flex-1 min-w-0 input"
             />
             <button
               type="button"
               onClick={() => copyToClipboard(emailValue)}
-              className="w-12 h-12 p-3 ms-4 bg-[#4F46E5] rounded-lg"
+              className="w-12 ms-4 shrink-0 flex items-center justify-center bg-[#4F46E5] rounded-lg"
             >
               <Copy className="w-6 h-6 text-white" />
             </button>
+            {/* Hueco que reserva la columna del botón de WhatsApp de la fila de celular */}
+            <div className="w-12 ms-2 shrink-0" aria-hidden="true" />
           </div>
           {errors.email && (
             <p className="text-red-500 text-sm mt-2">{errors.email}</p>
@@ -168,20 +180,20 @@ export const ModalContact = ({
           <label htmlFor="phone" className="input-label">
             Número de Celular
           </label>
-          <div className="flex">
-            <div className="flex w-[93%]">
+          <div className="flex items-stretch">
+            <div className="flex flex-1 min-w-0">
               <p
                 ref={codeRef}
                 className="rounded-l-lg border-l border-t border-b px-3 border-gray-300 bg-gray-100 flex items-center"
               >
-                {phone ? phone.split(" ")[0] : "+00"}
+                {phoneCode}
               </p>
               <input
                 type="text"
                 name="phone"
                 value={phoneValue}
                 onChange={handlePhoneChange}
-                className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]"
+                className="p-3 border-gray-300 border rounded-r-lg flex-1 min-w-0 focus:outline-none focus:border-[#4F46E5]"
               />
             </div>
             <button
@@ -191,10 +203,32 @@ export const ModalContact = ({
                   `${codeRef.current?.textContent || "+00"} ${phoneValue}`,
                 )
               }
-              className="w-12 h-12 ms-4 p-3 bg-[#4F46E5] rounded-lg justify-self-end"
+              className="w-12 ms-4 shrink-0 flex items-center justify-center bg-[#4F46E5] rounded-lg"
             >
               <Copy className="w-6 h-6 text-white" />
             </button>
+            {canOpenWhatsapp ? (
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Enviar mensaje por WhatsApp"
+                aria-label="Enviar mensaje por WhatsApp"
+                className="w-12 ms-2 shrink-0 flex items-center justify-center bg-[#25D366] hover:bg-[#1da851] rounded-lg"
+              >
+                <MessageCircle className="w-6 h-6 text-white" />
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                title="Ingresa un número de celular válido con código de país"
+                aria-label="Enviar mensaje por WhatsApp"
+                className="w-12 ms-2 shrink-0 flex items-center justify-center bg-gray-300 rounded-lg cursor-not-allowed"
+              >
+                <MessageCircle className="w-6 h-6 text-white" />
+              </button>
+            )}
           </div>
           {errors.phone && (
             <p className="text-red-500 text-sm mt-2">{errors.phone}</p>
