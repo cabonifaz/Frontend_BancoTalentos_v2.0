@@ -51,15 +51,15 @@ export const Autocomplete = ({
         disabled={disabled}
         onChange={handleChange}
         placeholder={placeholder ?? "Buscar habilidad..."}
-        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300 dark:border-slate-700"
       />
       {query.length > 0 && (
-        <ul className="absolute bg-white border rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-md z-[43]">
+        <ul className="absolute bg-white border rounded-lg mt-1 w-full max-h-40 overflow-y-auto shadow-md z-[43] dark:bg-slate-800 dark:border-slate-700">
           {filtered.length > 0 ? (
             filtered.map((opt) => (
               <li
                 key={opt.id}
-                className="px-3 py-2 cursor-pointer hover:bg-blue-100"
+                className="px-3 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-500/15"
                 onClick={() => {
                   onSelect(opt);
                   setQuery("");
@@ -69,7 +69,7 @@ export const Autocomplete = ({
               </li>
             ))
           ) : (
-            <li className="px-3 py-2 text-gray-500">
+            <li className="px-3 py-2 text-gray-500 dark:text-slate-400">
               No se encontraron resultados
             </li>
           )}

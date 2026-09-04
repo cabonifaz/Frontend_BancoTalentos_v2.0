@@ -1,0 +1,40 @@
+import { Pencil } from "lucide-react";
+import { Education } from "../../../models/interfaces/Education";
+import { Utils } from "../../../utilities/utils";
+
+interface Props {
+  data: Education;
+  onEdit: () => void;
+}
+
+export const EducationCard = ({ data, onEdit }: Props) => {
+  return (
+    <div className="flex items-center justify-between rounded-md my-1 px-2 sm:px-12 py-4 bg-[#f4f4f5] w-full dark:bg-slate-700">
+      <div className="flex gap-2 sm:gap-12 items-center">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-[#27272A] text-base dark:text-slate-100">{data.nombreInstitucion}</h2>
+          <p className="text-[#71717A] text-sm flex flex-col dark:text-slate-400">
+            <span>
+              {Utils.formatDegree(data.grado)} - {data.carrera}
+            </span>
+
+            <span>
+              {`${data?.tipoFechaEducaciones === 2 ? Utils.formatDateForMonthInput(data?.fechaInicio) : Utils.formatDateForYearInput(data?.fechaInicio)} - ${data?.flActualidad ? "Actualidad" : data?.tipoFechaEducaciones === 2 ? Utils.formatDateForMonthInput(data.fechaFin) : Utils.formatDateForYearInput(data.fechaFin)}`}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12 dark:hover:bg-slate-700"
+        >
+          <Pencil className="w-6 h-6 opacity-40 hover:opacity-100" />
+        </button>
+      </div>
+    </div>
+  );
+};

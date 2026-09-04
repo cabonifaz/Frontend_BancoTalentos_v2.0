@@ -55,7 +55,7 @@ const CheckboxForm = ({ name, control, label, value, defaultChecked, error, grou
                     );
                 }}
             />
-            {error && <p className="mt-1 text-xs text-red-600">{error.message}</p>}
+            {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error.message}</p>}
         </div>
     );
 };

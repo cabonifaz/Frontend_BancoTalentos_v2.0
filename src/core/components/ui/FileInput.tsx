@@ -29,7 +29,7 @@ export const FileInput = <F extends FieldValues>({
   return (
     <div className="rounded-lg overflow-hidden my-4">
       <div className="w-full">
-        <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200">
+        <div className="relative h-32 rounded-lg bg-gray-100 flex justify-center items-center hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-700">
           <div className="absolute flex flex-col items-center">
             {value ? (
               <FileCheck className="mb-3 w-8 h-8 text-[#0b85c3]" />

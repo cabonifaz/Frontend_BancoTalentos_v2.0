@@ -1,4 +1,5 @@
-import { fmtNumber, fmtPercent, METER_TRACK, SERIES } from "./chartTheme";
+import { fmtNumber, fmtPercent, SERIES } from "./chartTheme";
+import { useChartChrome } from "./useChartChrome";
 
 /**
  * Medidor de una razón contra su total.
@@ -27,21 +28,22 @@ export const Meter = ({
   valueLabel: string;
   totalLabel: string;
 }) => {
+  const chrome = useChartChrome();
   const ratio = total > 0 ? value / total : NaN;
   const pct = Number.isFinite(ratio) ? Math.min(Math.max(ratio, 0), 1) : 0;
 
   return (
-    <div className="min-w-[280px] flex-1 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="min-w-[280px] flex-1 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-2xl font-semibold text-gray-900">
+        <p className="text-sm text-gray-500 dark:text-slate-400">{label}</p>
+        <p className="text-2xl font-semibold text-gray-900 dark:text-slate-50">
           {fmtPercent(ratio)}
         </p>
       </div>
 
       <div
         className="mt-3 h-2 w-full overflow-hidden rounded-full"
-        style={{ backgroundColor: METER_TRACK }}
+        style={{ backgroundColor: chrome.meterTrack }}
         role="meter"
         aria-valuenow={Number.isFinite(ratio) ? Math.round(pct * 100) : undefined}
         aria-valuemin={0}
@@ -54,7 +56,7 @@ export const Meter = ({
         />
       </div>
 
-      <p className="mt-2 text-xs text-gray-500">
+      <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">
         {fmtNumber(value)} {valueLabel} sobre {fmtNumber(total)} {totalLabel}
       </p>
     </div>

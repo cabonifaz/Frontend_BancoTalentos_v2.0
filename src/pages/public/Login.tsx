@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { useApi } from "../../core/hooks/useApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { loginApp } from "../../core/services/apiService";
+import { loginApp } from "../../core/services/auth.service";
 import { Loading, InputForm } from "../../core/components";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
 import {
@@ -88,7 +88,7 @@ export const Login = () => {
           </button>
         </form>
       </section>
-      <section className="flex-1 flex-col items-center justify-center bg-[#F4F4F5] relative hidden lg:flex">
+      <section className="flex-1 flex-col items-center justify-center bg-[#F4F4F5] relative hidden lg:flex dark:bg-slate-700">
         <img src="assets/map.png" alt="Map" />
         <img src="assets/people.png" alt="Login" className="absolute" />
       </section>

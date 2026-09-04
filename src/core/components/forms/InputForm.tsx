@@ -105,7 +105,7 @@ const InputForm = ({
                                 <button
                                     type="button"
                                     onClick={togglePasswordVisibility}
-                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500"
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-slate-400"
                                 >
                                     {passwordVisible ? (
                                         <Eye className="w-5 h-5" aria-label="show pass" />

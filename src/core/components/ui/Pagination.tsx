@@ -14,6 +14,37 @@ interface Props {
     onPaginate: (page: number) => void;
 }
 
+/**
+ * Flechas de salto (primera/anterior/siguiente/última). Botón fantasma: sin caja
+ * propia, el fondo solo aparece al pasar por encima.
+ */
+const ARROW_CLASS =
+    "h-[34px] w-[34px] rounded-lg inline-flex items-center justify-center transition-colors " +
+    "text-gray-500 dark:text-slate-400 " +
+    "enabled:hover:bg-gray-100 dark:enabled:hover:bg-slate-700 " +
+    "enabled:hover:text-gray-700 dark:enabled:hover:text-slate-200 " +
+    "disabled:opacity-30 disabled:cursor-not-allowed " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]";
+
+/**
+ * Número de página. Es texto, no una caja: la página actual se marca con un
+ * subrayado de 2px, la misma gramática que `.tab-active` en App.css.
+ */
+const PAGE_CLASS =
+    "h-[34px] min-w-[32px] px-2.5 inline-flex items-center justify-center " +
+    "text-sm tabular-nums border-b-2 transition-colors " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:rounded-sm";
+
+const PAGE_CURRENT_CLASS =
+    "font-semibold cursor-default " +
+    "text-[var(--color-blue)] border-[var(--color-blue)] " +
+    "dark:text-[var(--color-blue-soft)] dark:border-[var(--color-blue-soft)]";
+
+const PAGE_IDLE_CLASS =
+    "font-medium border-transparent " +
+    "text-gray-500 hover:text-gray-700 " +
+    "dark:text-slate-400 dark:hover:text-slate-200";
+
 export const Pagination = ({ totalItems, itemsPerPage, totalPages: totalPagesProp, currentPage, onPaginate }: Props) => {
     const totalPages = totalPagesProp ?? Math.ceil((totalItems ?? 0) / (itemsPerPage || 1));
     const [pageRange, setPageRange] = useState([1, 2, 3, 4]);
@@ -75,53 +106,73 @@ export const Pagination = ({ totalItems, itemsPerPage, totalPages: totalPagesPro
         }
     };
 
+    const isFirstPage = currentPage <= 1;
+    const isLastPage = currentPage >= totalPages;
+
     return (
-        <div className="flex items-center justify-center *:py-2 *:px-4 *:border">
+        <nav className="flex items-center justify-center gap-2" aria-label="Paginación">
             <button
                 type="button"
                 onClick={handleFirst}
-                disabled={currentPage === 1}
-                className={currentPage === 1 ? '' : "hover:bg-slate-50"}>
-                <ChevronsLeft className="h-6 w-6" />
+                disabled={isFirstPage}
+                title="Primera página"
+                aria-label="Primera página"
+                className={ARROW_CLASS}>
+                <ChevronsLeft className="h-4 w-4" strokeWidth={2} />
             </button>
 
             <button
                 type="button"
                 onClick={handlePrevious}
-                disabled={currentPage === 1}
-                className={currentPage === 1 ? '' : "hover:bg-slate-50"}>
-                <ChevronLeft className="h-6 w-6" />
+                disabled={isFirstPage}
+                title="Página anterior"
+                aria-label="Página anterior"
+                className={ARROW_CLASS}>
+                <ChevronLeft className="h-4 w-4" strokeWidth={2} />
             </button>
 
-            {pageRange.map(
-                (page) =>
-                    // El >= 1 evita que "Última" pinte páginas 0 o negativas
-                    // cuando hay menos de 4 páginas en total.
-                    page >= 1 && page <= totalPages && (
-                        <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={page === currentPage ? "border-2 border-[#4f46e5] bg-[#b8b6e483] cursor-default" : "hover:bg-slate-50"}>
-                            {page}
-                        </button>
-                    )
-            )}
+            {/* Los números se apoyan en una regla de 1px: es lo que hace que el
+                subrayado de la página actual se lea como una pestaña activa. */}
+            <div className="flex flex-col">
+                <div className="flex items-end gap-0.5">
+                    {pageRange.map(
+                        (page) =>
+                            // El >= 1 evita que "Última" pinte páginas 0 o negativas
+                            // cuando hay menos de 4 páginas en total.
+                            page >= 1 && page <= totalPages && (
+                                <button
+                                    key={page}
+                                    type="button"
+                                    onClick={() => handlePageChange(page)}
+                                    aria-current={page === currentPage ? "page" : undefined}
+                                    className={`${PAGE_CLASS} ${page === currentPage ? PAGE_CURRENT_CLASS : PAGE_IDLE_CLASS}`}>
+                                    {page}
+                                </button>
+                            )
+                    )}
+                </div>
+                <span className="-mt-px h-px bg-gray-200 dark:bg-slate-700" aria-hidden="true" />
+            </div>
 
             <button
                 type="button"
                 onClick={handleNext}
-                disabled={currentPage === totalPages}
-                className={currentPage === totalPages ? '' : "hover:bg-slate-50"}>
-                <ChevronRight className="h-6 w-6" />
+                disabled={isLastPage}
+                title="Página siguiente"
+                aria-label="Página siguiente"
+                className={ARROW_CLASS}>
+                <ChevronRight className="h-4 w-4" strokeWidth={2} />
             </button>
 
             <button
                 type="button"
                 onClick={handleLast}
-                disabled={currentPage === totalPages}
-                className={currentPage === totalPages ? '' : "hover:bg-slate-50"}>
-                <ChevronsRight className="h-6 w-6" />
+                disabled={isLastPage}
+                title="Última página"
+                aria-label="Última página"
+                className={ARROW_CLASS}>
+                <ChevronsRight className="h-4 w-4" strokeWidth={2} />
             </button>
-        </div>
+        </nav>
     );
 }

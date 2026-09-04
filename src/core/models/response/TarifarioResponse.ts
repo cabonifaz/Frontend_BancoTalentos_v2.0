@@ -1,4 +1,4 @@
-import { Tarifa } from "../../models/interfaces/Tarifa";
+import { Tarifa } from "../interfaces/Tarifa";
 
 export interface TarifarioResponse {
   idTipoMensaje: number;

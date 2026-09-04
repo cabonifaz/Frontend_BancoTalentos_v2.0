@@ -19,7 +19,8 @@ import {
 } from "../../../../core/services/seleccion.service";
 import { Utils } from "../../../../core/utilities/utils";
 import { FiltersBar } from "../components/FiltersBar";
-import { CHROME, SERIES, colorizeSlices } from "../components/chartTheme";
+import { SERIES, colorizeSlices } from "../components/chartTheme";
+import { useChartChrome } from "../components/useChartChrome";
 import { DonutChart } from "../components/DonutChart";
 import { UserPicker } from "../components/UserPicker";
 import { periodLabel } from "../components/dateRange";
@@ -54,12 +55,15 @@ const LineSerie = ({
 }: {
   data: { periodo: string; cantidad: number }[];
   color: string;
-}) => (
+}) => {
+  const chrome = useChartChrome();
+
+  return (
   <ResponsiveContainer width="100%" height="100%">
     <LineChart data={data} margin={{ top: 8, right: 16, left: -8, bottom: 0 }}>
-      <CartesianGrid stroke={CHROME.grid} />
-      <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
-      <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
+      <CartesianGrid stroke={chrome.grid} />
+      <XAxis dataKey="periodo" tick={{ fontSize: 12, fill: chrome.inkMuted }} />
+      <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: chrome.inkMuted }} />
       <Tooltip />
       <Line
         type="monotone"
@@ -71,9 +75,11 @@ const LineSerie = ({
       />
     </LineChart>
   </ResponsiveContainer>
-);
+  );
+};
 
 export const EntrevistasSection = () => {
+  const chrome = useChartChrome();
   const token = localStorage.getItem("token") || undefined;
   const roleIds = Utils.getUserRoleIds(token);
   const isAdmin = roleIds.includes(ROL_ADMIN);
@@ -193,13 +199,13 @@ export const EntrevistasSection = () => {
                       layout="vertical"
                       margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
                     >
-                      <CartesianGrid stroke={CHROME.grid} horizontal={false} />
-                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: CHROME.inkMuted }} />
+                      <CartesianGrid stroke={chrome.grid} horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: chrome.inkMuted }} />
                       <YAxis
                         type="category"
                         dataKey="label"
                         width={150}
-                        tick={{ fontSize: 12, fill: CHROME.inkSecondary }}
+                        tick={{ fontSize: 12, fill: chrome.inkSecondary }}
                       />
                       <Tooltip />
                       <Bar
