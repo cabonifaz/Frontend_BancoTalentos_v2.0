@@ -8,9 +8,10 @@ import {
 import { Utils } from "../../core/utilities/utils";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { LogOut, X } from "lucide-react";
+import { LogOut, Moon, Sun, X } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
 import { getAllowedModules } from "../../core/config/navigation";
+import { useTheme } from "../../core/context/ThemeContext";
 
 interface Props {
   children: ReactNode;
@@ -30,6 +31,10 @@ export const Dashboard = ({ children }: Props) => {
   const token                          = localStorage.getItem("token");
   const navigate                       = useNavigate();
   const location                       = useLocation();
+  const { isDark, toggleTheme }        = useTheme();
+
+  const themeLabel = isDark ? "Modo claro" : "Modo oscuro";
+  const ThemeIcon  = isDark ? Sun : Moon;
 
   const logout = () => {
     Utils.removeToken();
@@ -154,17 +159,17 @@ export const Dashboard = ({ children }: Props) => {
     <DashboardContext.Provider value={{ openSidebar, userInfo: { fullName, firstLetter, rol } }}>
 
       {/* ─── Collapsed navigation rail (always visible) ──────────────────── */}
-      <aside ref={railRef} className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none" onMouseEnter={handleRailMouseEnter}>
+      <aside ref={railRef} className="fixed top-0 left-0 h-full w-16 bg-white border-r border-gray-200 z-40 flex flex-col select-none dark:bg-slate-800 dark:border-slate-700" onMouseEnter={handleRailMouseEnter}>
 
         {/* User avatar — triggers the expanded sidebar */}
-        <div className="flex flex-col items-center pt-5 pb-3 border-b border-gray-200">
+        <div className="flex flex-col items-center pt-5 pb-3 border-b border-gray-200 dark:border-slate-700">
           <button
             type="button"
             onClick={openSidebar}
             title="Perfil y menú"
-            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors dark:hover:bg-slate-700"
           >
-            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-sm font-semibold h-9 w-9 text-gray-700">
+            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-sm font-semibold h-9 w-9 text-gray-700 dark:bg-slate-700 dark:text-slate-200">
               {firstLetter}
             </span>
           </button>
@@ -178,20 +183,29 @@ export const Dashboard = ({ children }: Props) => {
               type="button"
               onClick={() => navigate(path)}
               title={label}
-              className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-800"
+              className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-800 dark:hover:bg-slate-700 dark:text-slate-400 dark:hover:text-slate-100"
             >
               <Icon size={21} strokeWidth={1.75} />
             </button>
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="flex flex-col items-center pb-4 border-t border-gray-200 pt-2">
+        {/* Tema y logout */}
+        <div className="flex flex-col items-center pb-4 border-t border-gray-200 dark:border-slate-700 pt-2 gap-0.5">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={themeLabel}
+            aria-label={themeLabel}
+            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-100"
+          >
+            <ThemeIcon size={21} strokeWidth={1.75} />
+          </button>
           <button
             type="button"
             onClick={logout}
             title="Cerrar sesión"
-            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
+            className="flex items-center justify-center w-11 h-11 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-red-500 hover:text-red-600 dark:hover:text-red-400"
           >
             <LogOut size={21} strokeWidth={1.75} />
           </button>
@@ -211,26 +225,26 @@ export const Dashboard = ({ children }: Props) => {
       {/* ─── Expanded sidebar (slides over the rail from the left) ────────── */}
       <div
         ref={sidebarRef}
-        className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out dark:bg-slate-800 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         onMouseLeave={handleSidebarMouseLeave}
       >
         {/* User info header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b bg-gray-50 flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-xl font-medium h-11 w-11 flex-shrink-0 text-gray-700">
+            <span className="rounded-full flex items-center justify-center bg-zinc-200 text-xl font-medium h-11 w-11 flex-shrink-0 text-gray-700 dark:bg-slate-700 dark:text-slate-200">
               {firstLetter}
             </span>
             <div className="min-w-0">
-              <p className="font-semibold text-sm truncate text-gray-800">{fullName}</p>
-              <p className="text-xs text-gray-500">{rol}</p>
+              <p className="font-semibold text-sm truncate text-gray-800 dark:text-slate-100">{fullName}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{rol}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={closeSidebar}
-            className="p-1.5 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0 ml-2"
+            className="p-1.5 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0 ml-2 dark:hover:bg-slate-700"
             aria-label="Cerrar menú"
           >
             <X size={18} />
@@ -244,16 +258,16 @@ export const Dashboard = ({ children }: Props) => {
               key={path}
               type="button"
               onClick={() => handleNav(path)}
-              className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors"
+              className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 text-left text-sm text-gray-700 transition-colors dark:hover:bg-slate-700 dark:text-slate-200"
             >
-              <Icon size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500" />
+              <Icon size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500 dark:text-slate-400" />
               {label}
             </button>
           ))}
         </nav>
 
         {/* Branding and logout pinned at the bottom */}
-        <div className="px-3 pb-4 flex-shrink-0 border-t pt-3">
+        <div className="px-3 pb-4 flex-shrink-0 border-t pt-3 dark:border-slate-700">
           <div className="flex justify-center pb-3">
             <img
               src="/assets/fractal-logo-BDT.png"
@@ -264,8 +278,29 @@ export const Dashboard = ({ children }: Props) => {
           </div>
           <button
             type="button"
+            onClick={toggleTheme}
+            aria-pressed={isDark}
+            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-left text-sm text-gray-700 dark:text-slate-200 transition-colors"
+          >
+            <ThemeIcon size={18} strokeWidth={1.75} className="flex-shrink-0 text-gray-500 dark:text-slate-400" />
+            <span className="flex-1">{themeLabel}</span>
+            {/* Interruptor: refleja el estado sin necesidad de leer el texto */}
+            <span
+              className={`relative h-5 w-9 flex-shrink-0 rounded-full transition-colors ${
+                isDark ? "bg-[var(--color-blue)]" : "bg-gray-300 dark:bg-slate-600"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all dark:bg-slate-800 ${
+                  isDark ? "left-[1.125rem]" : "left-0.5"
+                }`}
+              />
+            </span>
+          </button>
+          <button
+            type="button"
             onClick={logout}
-            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-red-50 text-left text-sm text-red-600 transition-colors"
+            className="flex p-3 gap-3 items-center w-full rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 text-left text-sm text-red-600 dark:text-red-400 transition-colors"
           >
             <LogOut size={18} strokeWidth={1.75} className="flex-shrink-0" />
             Cerrar sesión
@@ -273,14 +308,14 @@ export const Dashboard = ({ children }: Props) => {
         </div>
       </div>
 
-      <div className="h-screen pl-16">
+      <div className="h-screen pl-16 bg-gray-50 dark:bg-slate-900">
         <div className="h-full p-6">{children}</div>
       </div>
 
       {/* ─── Fractal branding — rendered after page content so DOM order never ─── */}
       {/* ─── buries it beneath later-painted positioned elements               ─── */}
       <div
-        className="pointer-events-none fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 select-none opacity-100"
+        className="pointer-events-none fixed bottom-4 right-4 z-[42] bg-white rounded-2xl shadow-md border border-gray-100 px-3 py-2 select-none opacity-100 dark:bg-slate-800 dark:border-slate-700"
         aria-hidden="true"
       >
         <img

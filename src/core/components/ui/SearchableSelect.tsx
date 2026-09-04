@@ -80,21 +80,21 @@ export const SearchableSelect = ({
         type="button"
         onClick={handleToggle}
         disabled={disabled}
-        className={`w-full h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] text-left bg-white flex items-center justify-between ${
+        className={`w-full h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] text-left bg-white flex items-center justify-between dark:border-slate-600 dark:bg-slate-800 ${
           disabled
-            ? "bg-gray-100 cursor-not-allowed"
+            ? "bg-gray-100 cursor-not-allowed dark:bg-slate-700"
             : "cursor-pointer"
         } ${className}`}
       >
         <span
           className={
-            selectedOption ? "text-gray-900" : "text-gray-500"
+            selectedOption ? "text-gray-900 dark:text-slate-50" : "text-gray-500 dark:text-slate-400"
           }
         >
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <svg
-          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+          className={`w-5 h-5 text-gray-400 transition-transform duration-200 dark:text-slate-500 ${
             isOpen ? "transform rotate-180" : ""
           }`}
           fill="none"
@@ -112,9 +112,9 @@ export const SearchableSelect = ({
 
       {isOpen && (
         <OutsideClickHandler onOutsideClick={() => setIsOpen(false)}>
-          <div className="absolute z-[50] w-full min-w-[300px] mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-hidden">
+          <div className="absolute z-[50] w-full min-w-[300px] mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-hidden dark:bg-slate-800 dark:border-slate-600">
             {/* Search input */}
-            <div className="p-3 border-b border-gray-200">
+            <div className="p-3 border-b border-gray-200 dark:border-slate-700">
               <input
                 ref={inputRef}
                 type="text"
@@ -122,7 +122,7 @@ export const SearchableSelect = ({
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onKeyDown={handleKeyDown}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
@@ -134,17 +134,17 @@ export const SearchableSelect = ({
                   <div
                     key={option.value}
                     onClick={() => handleOptionClick(option.value)}
-                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-slate-700 ${
                       option.value === value
-                        ? "bg-blue-50 text-blue-700 font-medium"
-                        : "text-gray-900"
+                        ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
+                        : "text-gray-900 dark:text-slate-50"
                     }`}
                   >
                     {option.label}
                   </div>
                 ))
               ) : (
-                <div className="px-4 py-3 text-gray-500 text-center">
+                <div className="px-4 py-3 text-gray-500 text-center dark:text-slate-400">
                   No se encontraron opciones
                 </div>
               )}

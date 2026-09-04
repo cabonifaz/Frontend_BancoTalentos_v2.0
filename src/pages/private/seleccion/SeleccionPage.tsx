@@ -15,7 +15,7 @@ export const SeleccionPage = () => {
   return (
     <Dashboard>
       <div className="h-full flex flex-col">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-6">Selección</h1>
+        <h1 className="text-2xl font-semibold text-gray-800 mb-6 dark:text-slate-100">Selección</h1>
 
         <div className="flex-1 min-h-0 flex gap-6">
           <SeleccionSidebar activeKey={activeKey} onSelect={setActiveKey} />

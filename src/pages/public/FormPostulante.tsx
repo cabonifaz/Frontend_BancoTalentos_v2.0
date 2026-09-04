@@ -26,10 +26,8 @@ import {
   AddPostulanteType,
   initialFormValuesPostulante,
 } from "../../core/models";
-import {
-  addPostulanteService,
-  addTalent,
-} from "../../core/services/apiService";
+import { addPostulanteService } from "../../core/services/postulante.service";
+import { addTalent } from "../../core/services/talents.service";
 import {
   ARCHIVO_PDF,
   DOCUMENTO_CV,
@@ -43,9 +41,9 @@ import {
 } from "../../core/utilities/errorHandler";
 import { Utils } from "../../core/utilities/utils";
 import { validateFile } from "../../core/utilities/validation";
-import { SalaryExpectSectionExter } from "../../core/components/ui/SalaryExpecSectExter";
-import { useFetchCVData } from "../../core/hooks/useFetchCVData";
-import { useCompleteExtForm } from "../../core/hooks/useCompleteExtForm";
+import { SalaryExpectSectionExter } from "../../core/components/postulante/SalaryExpecSectExter";
+import { useFetchCVData } from "../../core/hooks/talentos/useFetchCVData";
+import { useCompleteExtForm } from "../../core/hooks/postulante/useCompleteExtForm";
 import { useModal } from "../../core/context/ModalContext";
 import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
@@ -349,7 +347,7 @@ export const FormPostulante = () => {
           canCloseMessage={canCloseMessage}
         />
       )}
-      <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center">
+      <div className="relative min-h-screen p-4 bg-gray-50 overflow-hidden flex items-center justify-center dark:bg-slate-800">
         {/* Background geometric elements */}
         <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#FAAB34]/10"></div>
         <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#0B85C3]/10 rounded-lg rotate-12"></div>
@@ -358,19 +356,19 @@ export const FormPostulante = () => {
         <div className="relative max-w-3xl w-full mx-auto">
           {/* Form container with integrated bottom border */}
           <div className="relative pb-2">
-            <div className="border border-gray-200 border-b-0 rounded-t-lg shadow-sm p-8 bg-white relative z-10">
+            <div className="border border-gray-200 border-b-0 rounded-t-lg shadow-sm p-8 bg-white relative z-10 dark:border-slate-700 dark:bg-slate-800">
               <div className="flex justify-center">
                 <img
                   src="/assets/fractal-logo-BDT.png"
                   alt="fractal logo"
                 />
               </div>
-              <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
+              <h2 className="text-3xl font-bold text-center mb-2 text-gray-800 dark:text-slate-100">
                 Registro de Postulante
                 <span className="block mx-auto mt-2 w-24 h-1 bg-[#0B85C3] rounded-full"></span>
               </h2>
 
-              <p className="text-center text-gray-600 mb-8">
+              <p className="text-center text-gray-600 mb-8 dark:text-slate-300">
                 Complete sus datos personales para postular
               </p>
 
@@ -379,7 +377,7 @@ export const FormPostulante = () => {
                   {/* files */}
                   <div>
                     <div className="flex items-center justify-between">
-                      <h3 className="text-[#3f3f46] text-lg">
+                      <h3 className="text-[#3f3f46] text-lg dark:text-slate-200">
                         Curriculum Vitae
                       </h3>
                       <button
@@ -421,7 +419,7 @@ export const FormPostulante = () => {
                       </p>
                     )}
 
-                    <h3 className="text-[#3f3f46] text-lg">
+                    <h3 className="text-[#3f3f46] text-lg dark:text-slate-200">
                       Foto de perfil
                     </h3>
                     <FileInput<AddPostulanteType>
@@ -443,13 +441,13 @@ export const FormPostulante = () => {
                   </div>
                   {/* Data */}
                   <div className="*:mb-4">
-                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
+                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold dark:text-slate-200">
                       Datos
                     </h3>
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="dni"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Doc. Identidad
                         <span className="text-red-400">*</span>
@@ -470,7 +468,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="name"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Nombres<span className="text-red-400">*</span>
                       </label>
@@ -490,7 +488,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="lastname-f"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Apellido paterno
                         <span className="text-red-400">*</span>
@@ -511,7 +509,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="lastname-s"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Apellido materno
                       </label>
@@ -531,7 +529,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="countrycode"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Número de Celular
                         <span className="text-red-400">*</span>
@@ -542,7 +540,7 @@ export const FormPostulante = () => {
                         {...register("codigoPais", {
                           valueAsNumber: true,
                         })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
+                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
                       >
                         <option value={0}>Seleccione un país</option>
                         {paises.map((pais: any) => (
@@ -562,7 +560,7 @@ export const FormPostulante = () => {
                       <div className="flex">
                         <p
                           ref={countryCode}
-                          className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24"
+                          className="rounded-l-lg border-l border-t border-b p-3 border-gray-300 bg-gray-100 flex items-center w-24 dark:border-slate-600 dark:bg-slate-700"
                         >
                           {watchCountryPhone
                             ? `${
@@ -578,7 +576,7 @@ export const FormPostulante = () => {
                           id="phone"
                           type="tel"
                           autoComplete="tel-national"
-                          className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5]"
+                          className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
                         />
                       </div>
                       {errors.telefono && (
@@ -590,7 +588,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="email"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Correo electrónico
                         <span className="text-red-400">*</span>
@@ -612,18 +610,18 @@ export const FormPostulante = () => {
                       <div className="flex justify-between items-center px-1">
                         <label
                           htmlFor="description"
-                          className="text-[#636d7c] text-sm"
+                          className="text-[#636d7c] text-sm dark:text-slate-400"
                         >
                           Presentación
                         </label>
                         {/* CONTADOR DE CARACTERES */}
                         <span
-                          className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500"}`}
+                          className={`text-xs font-semibold ${(watch("descripcion")?.length ?? 0) > 5000 ? "text-red-500" : "text-gray-500 dark:text-slate-400"}`}
                         >
                           {watch("descripcion")?.length || 0} / 5000
                         </span>
                       </div>
-                      <div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1">
+                      <div className="px-1 pb-1 text-xs text-blue-600 flex items-center gap-1 dark:text-blue-400">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-4 w-4"
@@ -710,7 +708,7 @@ export const FormPostulante = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <label className="text-[#636d7c] text-sm px-1">
+                      <label className="text-[#636d7c] text-sm px-1 dark:text-slate-400">
                         Disponibilidad{" "}
                         <span className="text-red-400">*</span>
                       </label>
@@ -739,13 +737,13 @@ export const FormPostulante = () => {
                   </div>
                   {/* Location */}
                   <div className="*:mb-4">
-                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
+                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold dark:text-slate-200">
                       Locación
                     </h3>
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="country"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         País<span className="text-red-400">*</span>
                       </label>
@@ -755,7 +753,7 @@ export const FormPostulante = () => {
                         {...register("idPais", {
                           valueAsNumber: true,
                         })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer"
+                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-200"
                       >
                         <option value={0}>Seleccione un país</option>
                         {paises.map((pais: any) => (
@@ -776,7 +774,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col gap-2">
                       <label
                         htmlFor="city"
-                        className="text-[#636d7c] text-sm px-1"
+                        className="text-[#636d7c] text-sm px-1 dark:text-slate-400"
                       >
                         Ciudad<span className="text-red-400">*</span>
                       </label>
@@ -786,7 +784,7 @@ export const FormPostulante = () => {
                         {...register("idCiudad", {
                           valueAsNumber: true,
                         })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer"
+                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
                       >
                         <option value={0}>
                           Seleccione una ciudad
@@ -849,13 +847,13 @@ export const FormPostulante = () => {
                   />
                   {/* Social media */}
                   <div className="*:mb-4">
-                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold">
+                    <h3 className="text-[#3f3f46] text-lg my-5 font-semibold dark:text-slate-200">
                       Medios sociales
                     </h3>
                     <div className="flex flex-col my-2">
                       <label
                         htmlFor="linkedin"
-                        className="text-[#71717A] text-sm px-1"
+                        className="text-[#71717A] text-sm px-1 dark:text-slate-400"
                       >
                         LinkedIn
                       </label>
@@ -863,7 +861,7 @@ export const FormPostulante = () => {
                         {...register("linkedin")}
                         id="linkedin"
                         type="text"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
                       />
                       {errors.linkedin && (
                         <p className="text-red-400 text-sm">
@@ -874,7 +872,7 @@ export const FormPostulante = () => {
                     <div className="flex flex-col my-2">
                       <label
                         htmlFor="github"
-                        className="text-[#71717A] text-sm px-1"
+                        className="text-[#71717A] text-sm px-1 dark:text-slate-400"
                       >
                         Github
                       </label>
@@ -882,7 +880,7 @@ export const FormPostulante = () => {
                         {...register("github")}
                         id="github"
                         type="text"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5]"
+                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
                       />
                       {errors.github && (
                         <p className="text-red-400 text-sm">
@@ -909,7 +907,7 @@ export const FormPostulante = () => {
                               checked={field.value === true}
                               onChange={() => field.onChange(true)}
                             />
-                            <span className="ml-2 text-gray-700">
+                            <span className="ml-2 text-gray-700 dark:text-slate-200">
                               Sí
                             </span>
                           </label>
@@ -920,13 +918,13 @@ export const FormPostulante = () => {
                               checked={field.value === false}
                               onChange={() => field.onChange(false)}
                             />
-                            <span className="ml-2 text-gray-700">
+                            <span className="ml-2 text-gray-700 dark:text-slate-200">
                               No
                             </span>
                           </label>
                         </div>
                         {errors.tieneEquipo && (
-                          <p className="text-sm text-red-600 mt-2">
+                          <p className="text-sm text-red-600 mt-2 dark:text-red-400">
                             {errors.tieneEquipo.message}
                           </p>
                         )}

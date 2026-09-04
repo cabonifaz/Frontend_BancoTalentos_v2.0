@@ -90,7 +90,7 @@ const DropdownForm = ({
                   }
                 }}
                 disabled={disabled}
-                className="input w-full h-12 disabled:text-gray-400"
+                className="input w-full h-12 disabled:text-gray-400 dark:disabled:text-slate-500"
               >
                 <option value="">
                   {allowEmptyMessage || "Elige una opción"}

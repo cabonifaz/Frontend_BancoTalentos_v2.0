@@ -210,7 +210,7 @@ export const generateUploadUrl = async (
  * reexport, entrevistas, talentos, requerimientos y firma de usuario suben por
  * el mismo codigo.
  */
-export { uploadFileToS3, describeS3Error } from "./apiService";
+export { uploadFileToS3, describeS3Error } from "./s3.service";
 
 export interface ConfirmUploadPayload {
   idInterview: number;

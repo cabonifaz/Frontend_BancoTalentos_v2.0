@@ -21,13 +21,13 @@ export const NoAuthorized = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6 dark:bg-slate-800">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 max-w-md w-full p-8 text-center flex flex-col items-center gap-4 dark:bg-slate-800 dark:border-slate-700">
+        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center dark:bg-red-500/10">
           <ShieldX className="w-7 h-7 text-red-500" strokeWidth={1.75} />
         </div>
-        <h1 className="text-xl font-semibold text-gray-800">No autorizado</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-slate-100">No autorizado</h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400">
           Tu rol no tiene acceso a esta sección del Banco de Talentos. Si crees
           que es un error, contacta al administrador.
         </p>
@@ -44,7 +44,7 @@ export const NoAuthorized = () => {
           <button
             type="button"
             onClick={logout}
-            className="flex items-center justify-center gap-2 w-full rounded-lg py-2 px-4 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center justify-center gap-2 w-full rounded-lg py-2 px-4 text-sm text-red-600 hover:bg-red-50 transition-colors dark:text-red-400 dark:hover:bg-red-500/10"
           >
             <LogOut size={18} strokeWidth={1.75} />
             Cerrar sesión

@@ -143,7 +143,7 @@ export const FilterDropDown = <T extends BaseOption>({
       {isOpen && (
         <OutsideClickHandler onOutsideClick={onToggle}>
           <div
-            className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-[43] absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col`}
+            className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-[43] absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col dark:bg-slate-800`}
           >
             {searchable && (
               <div className="mb-2">
@@ -152,20 +152,20 @@ export const FilterDropDown = <T extends BaseOption>({
                   placeholder="Buscar opciones..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
             )}
             <div
-              className={`border border-gray-300 rounded-lg mb-2 p-2 ${
+              className={`border border-gray-300 rounded-lg mb-2 p-2 dark:border-slate-600 ${
                 optionsType === "checkbox" ? "block" : "hidden"
               }`}
             >
-              <ul className="list-none text-[#312e81] flex gap-1 flex-wrap min-h-8">
+              <ul className="list-none text-[#312e81] flex gap-1 flex-wrap min-h-8 dark:text-indigo-300">
                 {selectedValues.map((value, index) => (
                   <li
-                    className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full"
+                    className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full dark:bg-indigo-500/10"
                     key={index}
                   >
                     <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">
@@ -206,7 +206,7 @@ export const FilterDropDown = <T extends BaseOption>({
                     inputPosition === "left"
                       ? "gap-2"
                       : "justify-between flex-row-reverse"
-                  } flex items-center hover:bg-[#f2f4f7] rounded-lg px-2 cursor-pointer`}
+                  } flex items-center hover:bg-[#f2f4f7] rounded-lg px-2 cursor-pointer dark:hover:bg-slate-700`}
                 >
                   <input
                     name={name}

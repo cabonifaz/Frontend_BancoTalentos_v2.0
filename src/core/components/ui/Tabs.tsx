@@ -40,14 +40,14 @@ export const Tabs = ({
     <div className="flex h-full min-h-0 flex-col">
       {/* Pestañas */}
       <div className="relative">
-        <div className="flex border-b border-gray-200 overflow-x-auto">
+        <div className="flex border-b border-gray-200 overflow-x-auto dark:border-slate-700">
           {tabs.map((tab, index) => (
             <div key={index}>
               <button
                 type="button"
                 onClick={() => handleTabChange(index)}
                 className={`tab ${activeTab === index ? "tab-active" : "tab-inactive"}
-                                    ${tab.hasError && showErrors ? "text-red-600" : ""}`}
+                                    ${tab.hasError && showErrors ? "text-red-600 dark:text-red-400" : ""}`}
               >
                 {tab.label}
               </button>
@@ -73,8 +73,8 @@ export const Tabs = ({
           </div>
         ))}
         {isDataLoading && (
-          <div className="absolute inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div className="absolute inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50 dark:bg-slate-700">
+            <div className="bg-white p-4 rounded-lg shadow-sm dark:bg-slate-800">
               <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           </div>

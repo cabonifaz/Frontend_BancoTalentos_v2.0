@@ -61,11 +61,11 @@ export const ModalWorkingAI = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-2xl shadow-lg p-6 max-w-2xl w-full text-center">
+      <div className="bg-white rounded-2xl shadow-lg p-6 max-w-2xl w-full text-center dark:bg-slate-800">
         {/* Título */}
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         {/* Subtítulo */}
-        <p className="text-gray-600 mb-4">{subtitle}</p>
+        <p className="text-gray-600 mb-4 dark:text-slate-300">{subtitle}</p>
 
         {/* Animación */}
         <div className="w-64 h-64 mx-auto">
@@ -81,15 +81,15 @@ export const ModalWorkingAI = ({
         {/* Mensaje dinámico */}
         {canCloseMessage ? (
           <div className="my-4">
-            <p className="text-gray-800 font-semibold">
+            <p className="text-gray-800 font-semibold dark:text-slate-100">
               {canCloseMessage}
             </p>
-            <p className="text-gray-500 text-sm mt-2 italic">
+            <p className="text-gray-500 text-sm mt-2 italic dark:text-slate-400">
               {randomDescription}
             </p>
           </div>
         ) : (
-          <p className="text-gray-600 my-4 font-medium">
+          <p className="text-gray-600 my-4 font-medium dark:text-slate-300">
             {randomDescription}
           </p>
         )}

@@ -11,7 +11,7 @@ export const SeleccionContent = ({ activeKey, onNavigate }: Props) => {
   const { Component } = section;
 
   return (
-    <section className="flex-1 min-w-0 h-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
+    <section className="flex-1 min-w-0 h-full bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto dark:bg-slate-800 dark:border-slate-700">
       <Component onNavigate={onNavigate} />
     </section>
   );

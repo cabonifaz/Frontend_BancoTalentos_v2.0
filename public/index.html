@@ -12,6 +12,20 @@
   <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
   <title>Banco De Talentos</title>
+  <script>
+    // Pinta el tema ANTES del primer render: si esperamos a React, el usuario
+    // ve un fogonazo blanco al entrar en modo oscuro.
+    (function () {
+      try {
+        var t = localStorage.getItem('bdt-theme');
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.classList.toggle('dark', t === 'dark');
+        document.documentElement.style.colorScheme = t;
+      } catch (e) { /* sin localStorage se queda en claro */ }
+    })();
+  </script>
 </head>
 
 <body>
