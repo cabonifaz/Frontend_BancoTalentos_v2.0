@@ -32,6 +32,50 @@
 
     /* Blanco */
     --color-white: #ffffff;
+
+    /* Superficies (semánticas): las consume el modo oscuro sin tocar el claro */
+    --surface-base: #f9fafb;
+    /* fondo de página */
+    --surface-raised: #ffffff;
+    /* tarjetas, modales, sidebar */
+    --surface-hover: #f3f4f6;
+    --surface-border: #e5e7eb;
+    --text-strong: #1f2937;
+    --text-muted: #6b7280;
+
+    /* Scroll */
+    --scroll-track: #f5f5f5;
+}
+
+/*
+ * Modo oscuro. La clase `dark` la pone ThemeContext sobre <html> (y el script
+ * anti-parpadeo de index.html antes del primer render). Aquí solo se redefinen
+ * los tokens: los componentes no necesitan saber en qué tema están.
+ */
+.dark {
+    --color-gray-border: #475569;
+    --color-gray-text: #94a3b8;
+    --color-dark-bg: #0f172a;
+    --color-tab-inactive: #94a3b8;
+    --color-tab-hover: #e2e8f0;
+
+    --surface-base: #0f172a;
+    --surface-raised: #1e293b;
+    --surface-hover: #334155;
+    --surface-border: #334155;
+    --text-strong: #f1f5f9;
+    --text-muted: #94a3b8;
+
+    --scroll-track: #1e293b;
+}
+
+/*
+ * Fondo y color base de la app. Sin esto el <body> se queda blanco por debajo
+ * de las pantallas que no pintan fondo propio.
+ */
+body {
+    background-color: var(--surface-base);
+    color: var(--text-strong);
 }
 
 /* Estilos para el scroll */
@@ -44,7 +88,7 @@
 
 /* Pista del scrollbar */
 ::-webkit-scrollbar-track {
-    background: #f5f5f5;
+    background: var(--scroll-track);
     border-radius: 6px;
 }
 
@@ -52,7 +96,7 @@
 ::-webkit-scrollbar-thumb {
     background-color: var(--color-blue-soft);
     border-radius: 6px;
-    border: 2px solid #f5f5f5;
+    border: 2px solid var(--scroll-track);
     /* efecto de padding */
 }
 
@@ -69,14 +113,14 @@
 }
 
 .custom-scroll::-webkit-scrollbar-track {
-    background: #f5f5f5;
+    background: var(--scroll-track);
     border-radius: 6px;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
     background-color: var(--color-blue-soft);
     border-radius: 6px;
-    border: 2px solid #f5f5f5;
+    border: 2px solid var(--scroll-track);
 }
 
 .custom-scroll::-webkit-scrollbar-thumb:hover {

@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { useApi } from "../hooks/useApi";
-import { getUserFavourites, addTalentToFav, createNewFavList, removeTalentFromFav } from "../services/apiService";
+import { getUserFavourites, addTalentToFav, createNewFavList, removeTalentFromFav } from "../services/talents.service";
 import { handleError, handleResponse } from "../utilities/errorHandler";
 import { useSnackbar } from "notistack";
 import { BaseResponse, Favourite, FavouritesResponse } from "../models";

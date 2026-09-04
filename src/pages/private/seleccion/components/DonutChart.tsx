@@ -1,5 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { CHROME, fmtNumber, fmtShare, Slice } from "./chartTheme";
+import { fmtNumber, fmtShare, Slice } from "./chartTheme";
+import { useChartChrome } from "./useChartChrome";
 
 /**
  * Torta (dona) de composición: cuánto aporta cada parte al total.
@@ -30,17 +31,17 @@ const DonutTooltip = ({
   if (!slice) return null;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-lg">
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-lg dark:border-slate-700 dark:bg-slate-800">
       <div className="flex items-center gap-2">
         <span
           className="h-2.5 w-2.5 flex-shrink-0 rounded-sm"
           style={{ backgroundColor: slice.color }}
           aria-hidden="true"
         />
-        <span className="text-sm font-medium text-gray-800">{slice.label}</span>
+        <span className="text-sm font-medium text-gray-800 dark:text-slate-100">{slice.label}</span>
       </div>
-      <p className="mt-1 text-sm text-gray-600">
-        <span className="font-semibold text-gray-900">
+      <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
+        <span className="font-semibold text-gray-900 dark:text-slate-50">
           {fmtNumber(slice.cantidad)}
         </span>{" "}
         · {fmtShare(slice.cantidad, total)} del total
@@ -60,6 +61,7 @@ export const DonutChart = ({
   /** Cabecera de la columna de valores en la leyenda. */
   unitLabel: string;
 }) => {
+  const chrome = useChartChrome();
   const total = slices.reduce((acc, s) => acc + s.cantidad, 0);
 
   return (
@@ -78,7 +80,7 @@ export const DonutChart = ({
               endAngle={-270}
               /* El trazo del color de superficie ES la separación de 2px entre
                  sectores. No es un borde: no añade tinta con peso de dato. */
-              stroke={CHROME.surface}
+              stroke={chrome.surface}
               strokeWidth={2}
               isAnimationActive={false}
             >
@@ -92,10 +94,10 @@ export const DonutChart = ({
 
         {/* Total al centro. Cifras proporcionales: es un número suelto grande. */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-semibold text-gray-900">
+          <span className="text-3xl font-semibold text-gray-900 dark:text-slate-50">
             {fmtNumber(total)}
           </span>
-          <span className="text-xs text-gray-500">{totalLabel}</span>
+          <span className="text-xs text-gray-500 dark:text-slate-400">{totalLabel}</span>
         </div>
       </div>
 
@@ -106,7 +108,7 @@ export const DonutChart = ({
             Composición por segmento: {unitLabel} y porcentaje del total
           </caption>
           <thead>
-            <tr className="text-xs uppercase tracking-wide text-gray-400">
+            <tr className="text-xs uppercase tracking-wide text-gray-400 dark:text-slate-500">
               <th scope="col" className="pb-1 text-left font-medium">
                 Segmento
               </th>
@@ -120,10 +122,10 @@ export const DonutChart = ({
           </thead>
           <tbody>
             {slices.map((s) => (
-              <tr key={s.key} className="border-t border-gray-100">
+              <tr key={s.key} className="border-t border-gray-100 dark:border-slate-700">
                 <th
                   scope="row"
-                  className="py-1.5 pr-2 text-left font-normal text-gray-700"
+                  className="py-1.5 pr-2 text-left font-normal text-gray-700 dark:text-slate-200"
                 >
                   <span className="flex items-center gap-2">
                     <span
@@ -136,10 +138,10 @@ export const DonutChart = ({
                     </span>
                   </span>
                 </th>
-                <td className="py-1.5 text-right tabular-nums text-gray-900">
+                <td className="py-1.5 text-right tabular-nums text-gray-900 dark:text-slate-50">
                   {fmtNumber(s.cantidad)}
                 </td>
-                <td className="py-1.5 pl-2 text-right tabular-nums text-gray-500">
+                <td className="py-1.5 pl-2 text-right tabular-nums text-gray-500 dark:text-slate-400">
                   {fmtShare(s.cantidad, total)}
                 </td>
               </tr>

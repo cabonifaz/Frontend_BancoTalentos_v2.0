@@ -30,7 +30,7 @@ export const ResumenSection = ({ onNavigate }: SectionProps) => {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
-        <p className="text-sm text-gray-500">Últimos 30 días</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400">Últimos 30 días</p>
       </div>
 
       <SectionState loading={loading} empty={false}>
@@ -60,7 +60,7 @@ export const ResumenSection = ({ onNavigate }: SectionProps) => {
       </SectionState>
 
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-gray-700">
+        <h3 className="mb-3 text-sm font-semibold text-gray-700 dark:text-slate-200">
           Secciones detalladas
         </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -69,20 +69,20 @@ export const ResumenSection = ({ onNavigate }: SectionProps) => {
               key={key}
               type="button"
               onClick={() => onNavigate?.(key)}
-              className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-colors hover:border-[#009688]/40 hover:bg-[#009688]/5"
+              className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 text-left shadow-sm transition-colors hover:border-[#009688]/40 hover:bg-[#009688]/5 dark:border-slate-700 dark:bg-slate-800"
             >
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-[#009688]/10 text-[#009688]">
                 <Icon size={22} strokeWidth={1.75} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="flex items-center justify-between font-medium text-gray-800">
+                <p className="flex items-center justify-between font-medium text-gray-800 dark:text-slate-100">
                   {label}
                   <ChevronRight
                     size={18}
-                    className="text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#009688]"
+                    className="text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-[#009688] dark:text-slate-600"
                   />
                 </p>
-                <p className="mt-1 text-sm text-gray-500">{desc}</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">{desc}</p>
               </div>
             </button>
           ))}

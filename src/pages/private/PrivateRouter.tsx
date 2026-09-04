@@ -7,32 +7,32 @@ import { getFirstAllowedPath } from "../../core/config/navigation";
 import { Utils } from "../../core/utilities/utils";
 
 const Talents = lazy(() =>
-  import("./Talents").then((m) => ({ default: m.Talents })),
+  import("./talentos/Talents").then((m) => ({ default: m.Talents })),
 );
 const AddTalent = lazy(() =>
-  import("./AddTalent").then((m) => ({ default: m.AddTalent })),
+  import("./talentos/AddTalent").then((m) => ({ default: m.AddTalent })),
 );
 const Requirements = lazy(() =>
-  import("./Requirements").then((m) => ({ default: m.Requirements })),
+  import("./requerimientos/Requirements").then((m) => ({ default: m.Requirements })),
 );
 const Blacklist = lazy(() =>
-  import("./Blacklist").then((m) => ({ default: m.Blacklist })),
+  import("./lista-negra/Blacklist").then((m) => ({ default: m.Blacklist })),
 );
-const TalentTable = lazy(() => import("./PantallaAsignarTalento"));
-const PantallaDatos = lazy(() => import("./PantallaDatos"));
+const TalentTable = lazy(() => import("./requerimientos/PantallaAsignarTalento"));
+const PantallaDatos = lazy(() => import("./talentos/PantallaDatos"));
 const PantallaGenerarEnlaceRequerimiento = lazy(
-  () => import("./PantallaGenerarEnlaceRequerimiento"),
+  () => import("./requerimientos/PantallaGenerarEnlaceRequerimiento"),
 );
 
-const Interviews = lazy(() => import("./Interviews"));
-const InterviewDetail = lazy(() => import("./InterviewDetail"));
-const InterviewCreate = lazy(() => import("./InterviewCreate"));
+const Interviews = lazy(() => import("./entrevistas/Interviews"));
+const InterviewDetail = lazy(() => import("./entrevistas/InterviewDetail"));
+const InterviewCreate = lazy(() => import("./entrevistas/InterviewCreate"));
 
 const UserContact = lazy(() =>
-  import("./UserContact").then((m) => ({ default: m.UserContact })),
+  import("./mi-cuenta/UserContact").then((m) => ({ default: m.UserContact })),
 );
 const AdministrationPage = lazy(
-  () => import("./administration/AdministrationPage"),
+  () => import("./administracion/AdministrationPage"),
 );
 const SeleccionPage = lazy(() => import("./seleccion/SeleccionPage"));
 const NoAuthorized = lazy(() =>

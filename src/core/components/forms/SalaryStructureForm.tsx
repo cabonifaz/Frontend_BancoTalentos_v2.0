@@ -93,13 +93,13 @@ const SalaryStructureForm = ({
 
       <div className="w-full md:flex-1 md:basis-9/12">
         <div className="overflow-x-auto">
-          <table className="table-cell border-collapse border border-gray-300 rounded-lg w-full">
+          <table className="table-cell border-collapse border border-gray-300 rounded-lg w-full dark:border-slate-600">
             <thead>
               <tr>
                 {inputs.map((input) => (
                   <th
                     key={`thead-${input.name}`}
-                    className="p-2 border border-gray-300 text-left"
+                    className="p-2 border border-gray-300 text-left dark:border-slate-600"
                   >
                     <div className="flex items-center gap-2">
                       <input
@@ -119,7 +119,7 @@ const SalaryStructureForm = ({
                       />
                       <label
                         htmlFor={`checkbox-${input.name}`}
-                        className={`text-xs font-semibold ${!enabledFields.includes(input.name) ? "text-gray-400" : "cursor-pointer"}`}
+                        className={`text-xs font-semibold ${!enabledFields.includes(input.name) ? "text-gray-400 dark:text-slate-500" : "cursor-pointer"}`}
                       >
                         {input.label}
                         {input.required && (
@@ -137,7 +137,7 @@ const SalaryStructureForm = ({
                 {inputs.map((input) => (
                   <td
                     key={`tbody-${input.name}`}
-                    className="p-2 border border-gray-300"
+                    className="p-2 border border-gray-300 dark:border-slate-600"
                   >
                     <Controller
                       name={input.name}
@@ -160,7 +160,7 @@ const SalaryStructureForm = ({
                           inputMode={
                             input.type === "number" ? "decimal" : undefined
                           }
-                          className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 disabled:text-gray-400 disabled:bg-gray-100"
+                          className="w-full outline-none px-2 ring-1 ring-slate-400 rounded-lg h-10 disabled:text-gray-400 disabled:bg-gray-100 dark:disabled:text-slate-500 dark:disabled:bg-slate-700"
                         />
                       )}
                     />

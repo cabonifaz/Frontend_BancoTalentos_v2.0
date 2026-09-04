@@ -57,17 +57,17 @@ export const UserPicker = ({ value, onChange }: Props) => {
 
   return (
     <div ref={boxRef} className="relative flex flex-col gap-1">
-      <span className="text-xs font-medium text-gray-500">Usuario de selección</span>
+      <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Usuario de selección</span>
 
       {value ? (
-        <div className="flex h-9 items-center gap-2 rounded-lg border border-[#009688]/40 bg-[#009688]/5 px-3 text-sm text-gray-700">
+        <div className="flex h-9 items-center gap-2 rounded-lg border border-[#009688]/40 bg-[#009688]/5 px-3 text-sm text-gray-700 dark:text-slate-200">
           <span className="max-w-[180px] truncate">
             {value.nombre || `@${value.usuario}`}
           </span>
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="rounded-full p-0.5 text-gray-400 hover:bg-gray-200"
+            className="rounded-full p-0.5 text-gray-400 hover:bg-gray-200 dark:text-slate-500 dark:hover:bg-slate-700"
             aria-label="Quitar filtro de usuario"
           >
             <X size={14} />
@@ -75,7 +75,7 @@ export const UserPicker = ({ value, onChange }: Props) => {
         </div>
       ) : (
         <div className="relative">
-          <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
           <input
             value={term}
             onFocus={() => setOpen(true)}
@@ -84,20 +84,20 @@ export const UserPicker = ({ value, onChange }: Props) => {
               setOpen(true);
             }}
             placeholder="Buscar usuario…"
-            className="h-9 w-[240px] rounded-lg border border-gray-300 pl-8 pr-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688]"
+            className="h-9 w-[240px] rounded-lg border border-gray-300 pl-8 pr-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688] dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       )}
 
       {open && !value && (
-        <div className="absolute top-full z-20 mt-1 w-[280px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+        <div className="absolute top-full z-20 mt-1 w-[280px] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
           <div className="max-h-56 overflow-auto">
             {loading ? (
-              <div className="flex items-center justify-center gap-2 py-5 text-sm text-gray-400">
+              <div className="flex items-center justify-center gap-2 py-5 text-sm text-gray-400 dark:text-slate-500">
                 <Loader2 size={15} className="animate-spin" /> Buscando…
               </div>
             ) : users.length === 0 ? (
-              <div className="py-5 text-center text-sm text-gray-400">
+              <div className="py-5 text-center text-sm text-gray-400 dark:text-slate-500">
                 Sin resultados.
               </div>
             ) : (
@@ -112,10 +112,10 @@ export const UserPicker = ({ value, onChange }: Props) => {
                   }}
                   className="flex w-full flex-col items-start px-3 py-2 text-left transition-colors hover:bg-[#009688]/10"
                 >
-                  <span className="text-sm font-medium text-gray-800">
+                  <span className="text-sm font-medium text-gray-800 dark:text-slate-100">
                     {u.nombre || `@${u.usuario}`}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-slate-500">
                     @{u.usuario}
                     {u.email ? ` · ${u.email}` : ""}
                   </span>

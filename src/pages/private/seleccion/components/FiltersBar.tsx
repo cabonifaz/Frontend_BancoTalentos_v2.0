@@ -22,7 +22,7 @@ interface Props {
 }
 
 const inputCls =
-  "h-9 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688]";
+  "h-9 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688] dark:border-slate-600 dark:text-slate-200";
 
 /** Barra de filtros de una sección: rango de fechas + cliente opcional + aplicar. */
 export const FiltersBar = ({
@@ -42,10 +42,10 @@ export const FiltersBar = ({
   return (
     <form
       onSubmit={submit}
-      className="flex flex-wrap items-end justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4"
+      className="flex flex-wrap items-end justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/60"
     >
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-gray-500">Desde</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Desde</span>
         <input
           type="date"
           className={inputCls}
@@ -56,7 +56,7 @@ export const FiltersBar = ({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-gray-500">Hasta</span>
+        <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Hasta</span>
         <input
           type="date"
           className={inputCls}
@@ -68,7 +68,7 @@ export const FiltersBar = ({
 
       {showClient && (
         <label className="flex flex-col gap-1 min-w-[220px]">
-          <span className="text-xs font-medium text-gray-500">Cliente</span>
+          <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Cliente</span>
           <select
             className={inputCls}
             value={value.idCliente ?? ""}

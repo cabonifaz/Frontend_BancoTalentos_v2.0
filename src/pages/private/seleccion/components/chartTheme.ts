@@ -2,7 +2,7 @@
  * Tokens de visualización del módulo Selección.
  *
  * La paleta categórica está VALIDADA (no elegida a ojo) contra la superficie real
- * de las tarjetas (#ffffff) con los seis chequeos de color: banda de luminosidad,
+ * de las tarjetas en tema claro (#ffffff) con los seis chequeos de color: banda de luminosidad,
  * piso de croma, separación bajo daltonismo (protan/deutan/tritan), piso de visión
  * normal y contraste. Resultado en ese orden exacto:
  *
@@ -35,8 +35,25 @@ export const SERIES = [
 export const OTHER_COLOR = "#525252";
 export const OTHER_LABEL = "Otros";
 
-/** Cromo del gráfico: rejilla, ejes y tinta. El texto nunca lleva color de serie. */
-export const CHROME = {
+/**
+ * Cromo del grafico: rejilla, ejes y tinta. El texto nunca lleva color de serie.
+ *
+ * El cromo SI cambia con el tema (una rejilla #e1e0d9 sobre #1e293b es una reja
+ * blanca); la paleta categorica SERIES no se toca, porque su validacion es
+ * contra una superficie concreta y reordenar o retocar hues rompe la separacion
+ * bajo daltonismo. Ver la nota de arriba antes de cambiar SERIES.
+ */
+export interface ChartChrome {
+  /** Superficie sobre la que se pinta: es el separador entre sectores de la dona. */
+  surface: string;
+  grid: string;
+  axis: string;
+  inkPrimary: string;
+  inkSecondary: string;
+  inkMuted: string;
+}
+
+const CHROME_LIGHT: ChartChrome = {
   surface: "#ffffff",
   grid: "#e1e0d9",
   axis: "#c3c2b7",
@@ -45,8 +62,32 @@ export const CHROME = {
   inkMuted: "#71717a",
 } as const;
 
-/** Pista del medidor: paso claro del mismo hue del relleno (teal sobre teal). */
-export const METER_TRACK = "#cce9e6";
+const CHROME_DARK: ChartChrome = {
+  surface: "#1e293b", // slate-800: la superficie real de las tarjetas en oscuro
+  grid: "#334155",
+  axis: "#475569",
+  inkPrimary: "#f1f5f9",
+  inkSecondary: "#cbd5e1",
+  inkMuted: "#94a3b8",
+} as const;
+
+export const getChrome = (isDark: boolean): ChartChrome =>
+  isDark ? CHROME_DARK : CHROME_LIGHT;
+
+/**
+ * Cromo en modo claro. Se mantiene exportado para los usos que no dependen del
+ * tema; lo que se pinta en pantalla usa `useChartChrome()`.
+ */
+export const CHROME = CHROME_LIGHT;
+
+/** Pista del medidor: paso del mismo hue del relleno (teal sobre teal). */
+const METER_TRACK_LIGHT = "#cce9e6";
+const METER_TRACK_DARK = "#0f3d38";
+
+export const getMeterTrack = (isDark: boolean) =>
+  isDark ? METER_TRACK_DARK : METER_TRACK_LIGHT;
+
+export const METER_TRACK = METER_TRACK_LIGHT;
 
 const NUMBER = new Intl.NumberFormat("es-PE");
 const PERCENT = new Intl.NumberFormat("es-PE", {

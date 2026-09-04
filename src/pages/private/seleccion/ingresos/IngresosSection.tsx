@@ -15,7 +15,8 @@ import {
   LabelCount,
 } from "../../../../core/services/seleccion.service";
 import { FiltersBar } from "../components/FiltersBar";
-import { CHROME, SERIES, topNWithOther } from "../components/chartTheme";
+import { SERIES, topNWithOther } from "../components/chartTheme";
+import { useChartChrome } from "../components/useChartChrome";
 import { DonutChart } from "../components/DonutChart";
 import type { ChartView } from "../components/ui";
 import {
@@ -29,6 +30,7 @@ import { useSelectionSection } from "../useSelectionSection";
 const INDIGO = SERIES[1];
 
 export const IngresosSection = () => {
+  const chrome = useChartChrome();
   const { clientes } = useFetchClients();
   const { filters, setFilters, data, loading, apply } = useSelectionSection<
     LabelCount[]
@@ -93,17 +95,17 @@ export const IngresosSection = () => {
                   layout="vertical"
                   margin={{ top: 4, right: 24, left: 8, bottom: 4 }}
                 >
-                  <CartesianGrid stroke={CHROME.grid} horizontal={false} />
+                  <CartesianGrid stroke={chrome.grid} horizontal={false} />
                   <XAxis
                     type="number"
                     allowDecimals={false}
-                    tick={{ fontSize: 12, fill: CHROME.inkMuted }}
+                    tick={{ fontSize: 12, fill: chrome.inkMuted }}
                   />
                   <YAxis
                     type="category"
                     dataKey="cliente"
                     width={200}
-                    tick={{ fontSize: 12, fill: CHROME.inkSecondary }}
+                    tick={{ fontSize: 12, fill: chrome.inkSecondary }}
                   />
                   <Tooltip />
                   <Bar

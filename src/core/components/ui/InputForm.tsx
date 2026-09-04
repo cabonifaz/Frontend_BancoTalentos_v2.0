@@ -54,7 +54,7 @@ export const InputForm = ({
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500 hover:text-gray-700"
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             {passwordVisible ? (
               <Eye className="w-full h-full" aria-label="Mostrar contraseña" />

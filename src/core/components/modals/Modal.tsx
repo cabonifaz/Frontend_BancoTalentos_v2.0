@@ -55,15 +55,15 @@ export const Modal = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-[#00000048] w-full h-screen flex flex-col items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-[#00000048] dark:bg-black/70 w-full h-screen flex flex-col items-center justify-center z-[60]">
       <div
-        className={`bg-white rounded-lg p-6 flex flex-col ${divWidth}`}
+        className={`bg-white rounded-lg p-6 flex flex-col dark:bg-slate-800 ${divWidth}`}
         onClick={handleContentClick}
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-base text-[#52525B]">{title}</h2>
+          <h2 className="font-semibold text-base text-[#52525B] dark:text-slate-300">{title}</h2>
           <button
-            className="flex items-center hover:bg-gray-100 rounded-full disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center hover:bg-gray-100 rounded-full disabled:opacity-40 disabled:cursor-not-allowed dark:hover:bg-slate-700"
             onClick={onModalClose.bind(null, id)}
             disabled={busy}
           >
