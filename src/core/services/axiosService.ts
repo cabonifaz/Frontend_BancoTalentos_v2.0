@@ -3,8 +3,8 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { Utils } from "../utilities/utils";
-import { BASE_URL, BASE_URL_FMI } from "../utilities/constants";
+import { Utils } from "@/core/utilities/utils";
+import { BASE_URL, BASE_URL_FMI } from "@/core/utilities/constants";
 
 let axiosInstance: AxiosInstance; // BDT
 let axiosInstanceNoToken: AxiosInstance; // BDT

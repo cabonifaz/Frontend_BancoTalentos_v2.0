@@ -1,13 +1,17 @@
 import { X } from "lucide-react";
-import { ReqContacto } from "../../../models/interfaces/ReqContacto";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
   AddRQContactSchemaType,
   AddRQContactSchema,
-} from "../../../models/schemas/AddRQContactSchema";
-import { usePostHook } from "../../../hooks/usePostHook";
+} from "@/core/models/schemas/AddRQContactSchema";
+import { usePostHook } from "@/core/hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
 
 interface Props {
   onClose: () => void;
@@ -20,6 +24,10 @@ interface Props {
   idRQ?: number;
 }
 
+/**
+ * Versión anterior de ModalRQContactV2. Sin consumidores (ver ESTRUCTURA.md);
+ * se migró igualmente para que no quede ningún overlay hecho a mano.
+ */
 export const ModalRQContact = ({
   contact,
   onClose,
@@ -33,6 +41,7 @@ export const ModalRQContact = ({
   const { postData, postloading } = usePostHook();
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -112,208 +121,108 @@ export const ModalRQContact = ({
     }
   };
 
+  const fields: {
+    id: string;
+    name: Exclude<keyof AddRQContactSchemaType, "asignado">;
+    label: string;
+    required?: boolean;
+  }[] = [
+    { id: "c-name", name: "nombres", label: "Nombres", required: true },
+    { id: "c-lastname-1", name: "apellidoPaterno", label: "Apellido paterno", required: true },
+    { id: "c-lastname-2", name: "apellidoMaterno", label: "Apellido materno" },
+    { id: "c-telefono", name: "telefono", label: "Celular", required: true },
+    { id: "c-telefono-2", name: "telefono2", label: "Celular 2" },
+    { id: "c-correo", name: "correo", label: "Correo", required: true },
+    { id: "c-correo-2", name: "correo2", label: "Correo 2" },
+    { id: "c-cargo", name: "cargo", label: "Cargo", required: true },
+  ];
+
   return (
-    <>
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60]">
-        <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 relative w-full md:w-[90%] lg:w-[500px] min-h-[570px] dark:bg-slate-800">
-          {postloading && (
-            <div className="absolute rounded-lg inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50 dark:bg-slate-700">
-              <div className="bg-white p-4 rounded-lg shadow-sm dark:bg-slate-800">
-                <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="block w-full max-w-none md:w-[90%] lg:w-[500px] min-h-[570px] p-2 sm:p-4"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        {postloading && (
+          <div className="absolute rounded-lg inset-0 bg-slate-100 bg-opacity-50 flex items-center justify-center z-50 dark:bg-slate-700">
+            <div className="bg-white p-4 rounded-lg shadow-sm dark:bg-slate-800">
+              <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </div>
+        )}
+        <DialogTitle className="text-lg font-bold mb-2">
+          {modalMode === "add" ? "Nuevo Contacto" : "Editar Contacto"}
+        </DialogTitle>
+        <button
+          type="button"
+          aria-label="Cerrar"
+          onClick={onClose}
+          className="absolute top-4 right-4 focus:outline-none"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <form className="space-y-4" onSubmit={handleSubmit(submitData)}>
+          {fields.map((f) => (
+            <div key={f.id} className="flex items-center gap-2">
+              <label htmlFor={f.id} className="input-label w-1/3">
+                {f.label}
+                {f.required ? (
+                  <span className="text-orange-500">*</span>
+                ) : (
+                  f.name.endsWith("2") && <span className="text-xs"> (opcional)</span>
+                )}
+              </label>
+              <div className="flex flex-col w-2/3">
+                <Input
+                  type="text"
+                  id={f.id}
+                  aria-invalid={!!errors[f.name]}
+                  {...register(f.name)}
+                />
+                {errors[f.name] && (
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors[f.name]?.message}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {RQState === "existing" && (
+            <div className="flex items-center gap-2">
+              <label htmlFor="c-asignado" className="input-label w-1/3">
+                Asignado<span className="text-orange-500">*</span>
+              </label>
+              <div className="flex flex-col w-2/3">
+                <Controller
+                  name="asignado"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="c-asignado"
+                      ref={field.ref}
+                      checked={!!field.value}
+                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                      onBlur={field.onBlur}
+                    />
+                  )}
+                />
+                {errors.asignado && (
+                  <span className="text-red-500 text-xs mt-1">
+                    {errors.asignado.message}
+                  </span>
+                )}
               </div>
             </div>
           )}
-          <h2 className="text-lg font-bold mb-2">
-            {modalMode === "add" ? "Nuevo Contacto" : "Editar Contacto"}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute top-4 right-4 focus:outline-none"
-          >
-            <X className="w-6 h-6" />
-          </button>
 
-          <form className="space-y-4" onSubmit={handleSubmit(submitData)}>
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-name" className="input-label w-1/3">
-                Nombres<span className="text-orange-500">*</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-name"
-                  className="input"
-                  {...register("nombres")}
-                />
-                {errors.nombres && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.nombres.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-lastname-1" className="input-label w-1/3">
-                Apellido paterno<span className="text-orange-500">*</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-lastname-1"
-                  className="input"
-                  {...register("apellidoPaterno")}
-                />
-                {errors.apellidoPaterno && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.apellidoPaterno.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-lastname-2" className="input-label w-1/3">
-                Apellido materno
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-lastname-2"
-                  className="input"
-                  {...register("apellidoMaterno")}
-                />
-                {errors.apellidoMaterno && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.apellidoMaterno.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-telefono" className="input-label w-1/3">
-                Celular<span className="text-orange-500">*</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-telefono"
-                  className="input"
-                  {...register("telefono")}
-                />
-                {errors.telefono && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.telefono.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-telefono-2" className="input-label w-1/3">
-                Celular 2 <span className="text-xs">(opcional)</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-telefono-2"
-                  className="input"
-                  {...register("telefono2")}
-                />
-                {errors.telefono2 && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.telefono2.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-correo" className="input-label w-1/3">
-                Correo<span className="text-orange-500">*</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-correo"
-                  className="input"
-                  {...register("correo")}
-                />
-                {errors.correo && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.correo.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-correo-2" className="input-label w-1/3">
-                Correo 2 <span className="text-xs">(opcional)</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-correo-2"
-                  className="input"
-                  {...register("correo2")}
-                />
-                {errors.correo2 && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.correo2.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="c-cargo" className="input-label w-1/3">
-                Cargo<span className="text-orange-500">*</span>
-              </label>
-              <div className="flex flex-col w-2/3">
-                <input
-                  type="text"
-                  id="c-cargo"
-                  className="input"
-                  {...register("cargo")}
-                />
-                {errors.cargo && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.cargo.message}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {RQState === "existing" && (
-              <div className="flex items-center gap-2">
-                <label htmlFor="c-asignado" className="input-label w-1/3">
-                  Asignado<span className="text-orange-500">*</span>
-                </label>
-                <div className="flex flex-col w-2/3">
-                  <input
-                    type="checkbox"
-                    id="c-asignado"
-                    className="input-checkbox"
-                    {...register("asignado")}
-                  />
-                  {errors.asignado && (
-                    <span className="text-red-500 text-xs mt-1">
-                      {errors.asignado.message}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <button type="submit" className="btn btn-blue w-full">
-              {modalMode === "add" ? "Agregar Contacto" : "Actualizar Contacto"}
-            </button>
-          </form>
-        </div>
-      </div>
-    </>
+          <Button variant="blue" type="submit" className="mx-1 w-full">
+            {modalMode === "add" ? "Agregar Contacto" : "Actualizar Contacto"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };

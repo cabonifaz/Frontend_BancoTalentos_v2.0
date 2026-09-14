@@ -8,20 +8,32 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Dashboard } from "../Dashboard";
+import { Dashboard } from "@/pages/private/Dashboard";
 import {
   DateFilter,
   FilterDropDown,
   Loading,
   Pagination,
-} from "../../../core/components";
-import { useAsyncService } from "../../../core/hooks/useAsyncService";
-import { listInterviews } from "../../../core/services/interviews.service";
+} from "@/core/components";
+import { useAsyncService } from "@/core/hooks/useAsyncService";
+import { listInterviews } from "@/core/services/interviews.service";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
-} from "../../../core/utilities/constants";
-import { useParams } from "../../../core/context/ParamsContext";
+} from "@/core/utilities/constants";
+import { useParams } from "@/core/context/ParamsContext";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Badge } from "@/core/components/ui/shadcn/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { Hint } from "@/core/components/ui/Hint";
 
 const TOTAL_PAGES = 10;
 
@@ -42,12 +54,15 @@ function EstadoBadge({
   estado: string;
 }) {
   const badgeClass = BADGE_CLASSES[idEstado] || "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200";
+  // variant "outline" porque es la única sin fondo ni hover propios: los
+  // colores los pone el estado.
   return (
-    <span
-      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${badgeClass}`}
+    <Badge
+      variant="outline"
+      className={`border-transparent px-2.5 py-0.5 font-semibold whitespace-nowrap ${badgeClass}`}
     >
       {estado}
-    </span>
+    </Badge>
   );
 }
 
@@ -182,14 +197,13 @@ export default function InterviewsPage() {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            className="btn btn-primary mx-0 flex h-10 items-center gap-2"
+          <Button
+            className="h-10"
             onClick={() => navigate("/dashboard/entrevistas/nueva")}
           >
             <Plus size={18} strokeWidth={2} />
             Nueva Entrevista
-          </button>
+          </Button>
         </div>
 
         {/* Filters panel */}
@@ -209,25 +223,24 @@ export default function InterviewsPage() {
                     size={18}
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
                   />
-                  <input
+                  <Input
                     type="text"
                     id="buscar-entrevista"
                     value={buscar}
                     onChange={(e) => setBuscar(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Ej: Juan Perez"
-                    className="input h-10 w-full py-0 pl-10"
+                    className="h-10 py-0 pl-10"
                   />
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-primary mx-0 flex h-10 shrink-0 items-center justify-center gap-2 sm:w-32"
+              <Button
+                className="h-10 shrink-0 sm:w-32"
                 onClick={handleSearch}
               >
                 <Search size={18} strokeWidth={2} />
                 Buscar
-              </button>
+              </Button>
             </div>
 
             {/* Filtros secundarios */}
@@ -283,7 +296,7 @@ export default function InterviewsPage() {
         {/* Table */}
         <div className="table-container min-h-0 flex-1 rounded-xl border border-gray-100 shadow-sm dark:border-slate-700">
           <div className="table-wrapper h-full overflow-auto">
-            <table className="table table-fixed min-w-[980px]">
+            <Table className="table table-fixed min-w-[980px]">
               <colgroup>
                 <col className="w-20" />
                 <col className="w-[18%]" />
@@ -293,93 +306,109 @@ export default function InterviewsPage() {
                 <col className="w-[17%]" />
                 <col className="w-24" />
               </colgroup>
-              <thead>
+              <TableHeader>
                 {/* La cabecera se fija en los th (no en el thead): con
                     border-collapse es lo único que sostiene el sticky. */}
-                <tr className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50 dark:[&>th]:bg-slate-900">
-                  <th className="table-header-cell text-center">ID</th>
-                  <th className="table-header-cell">Talento</th>
-                  <th className="table-header-cell">Requerimiento</th>
-                  <th className="table-header-cell text-center">Cliente</th>
-                  <th className="table-header-cell text-center">Fecha Entrevista</th>
-                  <th className="table-header-cell">Etapa / Estado</th>
-                  <th className="table-header-cell text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
+                <TableRow className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50 dark:[&>th]:bg-slate-900">
+                  <TableHead className="table-header-cell text-center">ID</TableHead>
+                  <TableHead className="table-header-cell">Talento</TableHead>
+                  <TableHead className="table-header-cell">Requerimiento</TableHead>
+                  <TableHead className="table-header-cell text-center">Cliente</TableHead>
+                  <TableHead className="table-header-cell text-center">Fecha Entrevista</TableHead>
+                  <TableHead className="table-header-cell">Etapa / Estado</TableHead>
+                  <TableHead className="table-header-cell text-center">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
                 {interviews.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="table-empty">
+                  <TableRow>
+                    <TableCell colSpan={7} className="table-empty">
                       <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-slate-500">
                         <CalendarRange size={32} strokeWidth={1.5} />
                         <p className="text-sm">
                           No hay entrevistas disponibles.
                         </p>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   interviews.map((item) => (
-                    <tr key={item.id} className="table-row align-top">
-                      <td className="table-cell text-center text-gray-500 tabular-nums dark:text-slate-400">
+                    // align-middle: Etapa/Estado ocupa dos líneas y el resto
+                    // de celdas se quedaban arriba; así todo va centrado.
+                    <TableRow key={item.id} className="table-row align-middle">
+                      <TableCell className="table-cell text-center text-gray-500 tabular-nums dark:text-slate-400">
                         {item.id}
-                      </td>
-                      <td className="table-cell truncate" title={item.talento}>
-                        <span className="font-medium text-gray-900 dark:text-slate-50">
-                          {item.talento}
-                        </span>
-                      </td>
-                      <td className="table-cell truncate" title={item.tituloRq}>
-                        {item.tituloRq}
-                      </td>
-                      <td className="table-cell truncate text-center" title={item.cliente}>
-                        {item.cliente}
-                      </td>
-                      <td className="table-cell">
+                      </TableCell>
+                      {/* El texto truncado se completa con un Tooltip en vez
+                          del title nativo. El Hint va dentro de la celda (no
+                          sobre el <td>) y es un bloque truncado. */}
+                      <TableCell className="table-cell">
+                        <Hint label={item.talento}>
+                          <span className="block truncate font-medium text-gray-900 dark:text-slate-50">
+                            {item.talento}
+                          </span>
+                        </Hint>
+                      </TableCell>
+                      <TableCell className="table-cell">
+                        <Hint label={item.tituloRq}>
+                          <span className="block truncate">{item.tituloRq}</span>
+                        </Hint>
+                      </TableCell>
+                      <TableCell className="table-cell text-center">
+                        <Hint label={item.cliente}>
+                          <span className="block truncate">{item.cliente}</span>
+                        </Hint>
+                      </TableCell>
+                      <TableCell className="table-cell">
                         <div className="flex flex-col items-center gap-1">
                           <span className="tabular-nums">
                             {item.fechaEntrevista}
                           </span>
 
                           {isToday(item.fechaEntrevista) && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-transparent bg-amber-100 py-0.5 font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                            >
                               <Zap size={12} className="fill-amber-500 text-amber-500" />
                               Hoy
-                            </span>
+                            </Badge>
                           )}
                         </div>
-                      </td>
-                      <td className="table-cell">
+                      </TableCell>
+                      <TableCell className="table-cell">
                         <div className="flex flex-col items-start gap-1.5">
-                          <span
-                            className="block max-w-full truncate font-semibold text-gray-800 dark:text-slate-100"
-                            title={item.etapa}
-                          >
-                            {item.etapa}
-                          </span>
+                          <Hint label={item.etapa}>
+                            <span className="block max-w-full truncate font-semibold text-gray-800 dark:text-slate-100">
+                              {item.etapa}
+                            </span>
+                          </Hint>
                           <EstadoBadge
                             idEstado={item.idEstado}
                             estado={item.estado}
                           />
                         </div>
-                      </td>
-                      <td className="table-cell text-center">
-                        <button
-                          type="button"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-[var(--color-primary)] dark:text-slate-500 dark:hover:bg-slate-700"
-                          onClick={() =>
-                            navigate(`/dashboard/entrevistas/${item.id}`)
-                          }
-                          title="Ver detalle"
-                        >
-                          <Eye size={18} />
-                        </button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="table-cell text-center">
+                        <Hint label="Ver detalle">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Ver detalle"
+                            className="text-gray-400 hover:bg-gray-100 hover:text-[var(--color-primary)] dark:text-slate-500 dark:hover:bg-slate-700"
+                            onClick={() =>
+                              navigate(`/dashboard/entrevistas/${item.id}`)
+                            }
+                          >
+                            <Eye size={18} />
+                          </Button>
+                        </Hint>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 

@@ -16,8 +16,8 @@ import {
   VerticalPositionRelativeFrom,
 } from "docx";
 import { saveAs } from "file-saver";
-import { Experience } from "../models";
-import { TalentForFractalCV } from "../models/interfaces/TalentDataForFractal";
+import { Experience } from "@/core/models";
+import { TalentForFractalCV } from "@/core/models/interfaces/TalentDataForFractal";
 import {
   formatDateByLang,
   formatDateByLangOnlyYear,
@@ -51,7 +51,11 @@ const t = (language: "ES" | "EN", es: string, en: string) =>
 /** Carga el banner Fractal desde /public. Devuelve null si falla. */
 const loadHeaderImage = async (): Promise<Uint8Array | null> => {
   try {
-    const base = process.env.PUBLIC_URL || "";
+    // CRA resolvía PUBLIC_URL a "" (no hay `homepage` en package.json); Vite
+    // resuelve BASE_URL a "/". Se quita la barra final para que la URL siga
+    // siendo "/assets/header-fr.png" y no "//assets/…", que el navegador
+    // interpretaría como protocol-relative y buscaría en otro host.
+    const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     const resp = await fetch(`${base}/assets/header-fr.png`);
     if (!resp.ok) return null;
     return new Uint8Array(await resp.arrayBuffer());

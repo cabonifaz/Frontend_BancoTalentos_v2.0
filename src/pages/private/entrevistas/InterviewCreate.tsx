@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Dashboard } from "../Dashboard";
-import { getRequirements, getRequirementById } from "../../../core/services/requirements.service";
-import { getTalents } from "../../../core/services/talents.service";
-import { useApi } from "../../../core/hooks/useApi";
+import { Dashboard } from "@/pages/private/Dashboard";
+import { getRequirements, getRequirementById } from "@/core/services/requirements.service";
+import { getTalents } from "@/core/services/talents.service";
+import { useApi } from "@/core/hooks/useApi";
 import {
   RequirementItem,
   ReqListParams,
@@ -11,18 +11,18 @@ import {
   Talent,
   TalentParams,
   TalentsResponse,
-} from "../../../core/models";
-import type { Perfil } from "../../../core/models/interfaces/Perfil";
+} from "@/core/models";
+import type { Perfil } from "@/core/models/interfaces/Perfil";
 import { useSnackbar } from "notistack";
-import { handleError } from "../../../core/utilities/errorHandler";
-import { useForm, useFieldArray, Resolver } from "react-hook-form";
+import { handleError } from "@/core/utilities/errorHandler";
+import { useForm, Controller, useFieldArray, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   createCreateInterviewSchema,
   CreateInterviewType,
-} from "../../../core/models/schemas/CreateInterviewSchema";
-import { useParams } from "../../../core/context/ParamsContext";
-import { Loading } from "../../../core/components";
+} from "@/core/models/schemas/CreateInterviewSchema";
+import { useParams } from "@/core/context/ParamsContext";
+import { Loading } from "@/core/components";
 import {
   ESTADO_ENTREVISTA,
   ETAPA_ENTREVISTA,
@@ -32,8 +32,8 @@ import {
   DURACION_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
-} from "../../../core/utilities/constants";
-import { normalizeText } from "../../../core/utilities/textUtils";
+} from "@/core/utilities/constants";
+import { normalizeText } from "@/core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
@@ -43,16 +43,22 @@ import {
   buildInterviewTypeFields,
   resolveTipoEntrevistaId,
   DIRECCION_MAX_LENGTH,
-} from "../../../core/utilities/interviewType";
-import { ClientInterviewerSelect } from "../../../core/components/entrevistas/ClientInterviewerSelect";
+} from "@/core/utilities/interviewType";
+import { ClientInterviewerSelect } from "@/core/components/entrevistas/ClientInterviewerSelect";
 import {
   InterviewComboField,
   ComboOption,
-} from "../../../core/components/entrevistas/InterviewComboField";
-import { useAsyncService } from "../../../core/hooks/useAsyncService";
-import { createInterview } from "../../../core/services/interviews.service";
-import { useUploadInterviewIcs } from "../../../core/hooks/entrevistas/useUploadInterviewIcs";
+} from "@/core/components/entrevistas/InterviewComboField";
+import { useAsyncService } from "@/core/hooks/useAsyncService";
+import { createInterview } from "@/core/services/interviews.service";
+import { useUploadInterviewIcs } from "@/core/hooks/entrevistas/useUploadInterviewIcs";
 import { Mail, Link as LinkIcon, MapPin, Video } from "lucide-react";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { DatePicker } from "@/core/components/ui/DatePicker";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface SelectedRQ {
   id: number;
@@ -600,18 +606,18 @@ export default function InterviewCreatePage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0 pt-6">
-              <button
-                type="button"
+              <Button
+                variant="outline"
                 onClick={goBack}
-                className="btn btn-outline-gray px-5 py-2 text-sm"
+                className="mx-1 px-5 py-2 text-sm"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={loading}
                 aria-busy={loading}
-                className="btn btn-primary px-5 py-2 text-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="mx-1 px-5 py-2 text-sm disabled:opacity-70"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -628,7 +634,7 @@ export default function InterviewCreatePage() {
                   />
                 </svg>
                 {loading ? "Creando..." : "Crear Entrevista"}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -657,10 +663,11 @@ export default function InterviewCreatePage() {
               <div className="flex flex-col gap-1 relative">
                 <label className="input-label font-medium">Talento</label>
                 <div className="relative">
-                  <input
+                  <Input
                     type="text"
+                    aria-label="Talento"
                     value={talentSearchValue}
-                    className={`input w-full ${errors.idTalento ? "border-red-500" : ""}`}
+                    className={errors.idTalento ? "border-red-500" : ""}
                     onChange={(e) => handleTalentChange(e.target.value)}
                     onFocus={() =>
                       talentSearchValue.length > 2 && setShowSuggestions(true)
@@ -717,10 +724,10 @@ export default function InterviewCreatePage() {
                   Requerimientos (RQ)
                 </label>
                 <div className="relative">
-                  <input
+                  <Input
                     ref={rqInputRef}
                     type="text"
-                    className="input w-full"
+                    aria-label="Buscar requerimientos"
                     onChange={(e) => handleRQSearch(e.target.value)}
                     onFocus={() => {
                       const val = rqInputRef.current?.value || "";
@@ -754,6 +761,7 @@ export default function InterviewCreatePage() {
                         {rq.label}
                         <button
                           type="button"
+                          aria-label={`Quitar ${rq.label}`}
                           onClick={() => removeRQ(rq.id)}
                           className="hover:text-red-500"
                         >
@@ -858,16 +866,6 @@ export default function InterviewCreatePage() {
                         : "border-gray-200 dark:border-slate-700"
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isPresencial}
-                      onChange={(e) =>
-                        handleTipoChange(
-                          e.target.checked ? presencialLabel : virtualLabel,
-                        )
-                      }
-                      className="sr-only peer"
-                    />
                     <span
                       className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                         isVirtual
@@ -878,7 +876,17 @@ export default function InterviewCreatePage() {
                       <Video className="w-4 h-4 shrink-0" />
                       Virtual
                     </span>
-                    <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 dark:bg-slate-700" />
+                    {/* Interruptor de shadcn en lugar del checkbox sr-only +
+                        pista pintada con ::after; mismo tamaño (44×24). */}
+                    <Switch
+                      aria-label="Entrevista presencial"
+                      checked={isPresencial}
+                      onCheckedChange={(checked) =>
+                        handleTipoChange(checked ? presencialLabel : virtualLabel)
+                      }
+                      className="h-6 w-11 data-[state=checked]:bg-[var(--color-blue)] data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-slate-700"
+                      thumbClassName="h-5 w-5 border border-gray-300 data-[state=checked]:translate-x-5 dark:bg-white"
+                    />
                     <span
                       className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
                         isPresencial
@@ -900,10 +908,22 @@ export default function InterviewCreatePage() {
                 {/* Fecha */}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">Fecha</label>
-                  <input
-                    {...register("fecha")}
-                    type="date"
-                    className={`input w-full ${errors.fecha ? "border-red-500" : ""}`}
+                  {/* DatePicker de shadcn: guarda "yyyy-MM-dd", igual que el
+                      <input type="date">; va con Controller, no con register. */}
+                  <Controller
+                    name="fecha"
+                    control={control}
+                    render={({ field }) => (
+                      <DatePicker
+                        ref={field.ref}
+                        aria-label="Fecha"
+                        aria-invalid={!!errors.fecha}
+                        value={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        className={errors.fecha ? "border-red-500" : ""}
+                      />
+                    )}
                   />
                   {errors.fecha && (
                     <p className="text-red-500 text-xs mt-1">
@@ -915,10 +935,11 @@ export default function InterviewCreatePage() {
                 {/* Hora */}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">Hora</label>
-                  <input
+                  <Input
                     {...register("hora")}
                     type="time"
-                    className={`input w-full ${errors.hora ? "border-red-500" : ""}`}
+                    aria-label="Hora"
+                    className={errors.hora ? "border-red-500" : ""}
                   />
                   {errors.hora && (
                     <p className="text-red-500 text-xs mt-1">
@@ -930,17 +951,17 @@ export default function InterviewCreatePage() {
                 {/* Duración (solo para la invitación de calendario) */}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">Duración</label>
-                  <select
+                  <AppSelect
+                    aria-label="Duración"
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="dropdown"
-                  >
-                    {durationOptions.map((d) => (
-                      <option key={d.idParametro} value={d.num2}>
-                        {d.string1}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setDurationMinutes(Number(v))}
+                    options={durationOptions.map((d) => ({
+                      value: d.num2,
+                      label: d.string1,
+                    }))}
+                    emptyOption={false}
+                    className="text-[#3f3f46]"
+                  />
                 </div>
               </div>
 
@@ -963,10 +984,11 @@ export default function InterviewCreatePage() {
                       <div className="flex items-center justify-center w-[46px] h-[46px] rounded-lg bg-gray-50 border border-gray-100 text-gray-400 shrink-0 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500">
                         <LinkIcon className="w-5 h-5" />
                       </div>
-                      <input
+                      <Input
                         {...register("enlaceEntrevista")}
                         type="url"
-                        className={`input w-full ${errors.enlaceEntrevista ? "border-red-500" : ""}`}
+                        aria-label="Enlace de la entrevista"
+                        className={errors.enlaceEntrevista ? "border-red-500" : ""}
                         placeholder="https://zoom.us/j/..."
                       />
                     </div>
@@ -1026,17 +1048,29 @@ export default function InterviewCreatePage() {
                   <label className="input-label font-medium">
                     Etapa de la Entrevista
                   </label>
-                  <select
-                    {...register("etapa")}
-                    className={`dropdown ${errors.etapa ? "border-red-500" : ""}`}
-                  >
-                    <option value={0}>Seleccione etapa</option>
-                    {interviewStages.map((stage) => (
-                      <option key={stage.idParametro} value={stage.num1}>
-                        {stage.string1}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="etapa"
+                    control={control}
+                    render={({ field }) => (
+                      // El <select> nativo entregaba el valor como string ("0"
+                      // en la opción vacía) y el esquema cuenta con eso: se
+                      // mantiene el mismo contrato.
+                      <AppSelect
+                        ref={field.ref}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        aria-label="Etapa de la entrevista"
+                        value={field.value}
+                        onChange={(v) => field.onChange(v === "" ? "0" : v)}
+                        options={interviewStages.map((stage) => ({
+                          value: stage.num1,
+                          label: stage.string1,
+                        }))}
+                        placeholder="Seleccione etapa"
+                        className={`text-[#3f3f46] ${errors.etapa ? "border-red-500" : ""}`}
+                      />
+                    )}
+                  />
                   {errors.etapa && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.etapa.message}
@@ -1049,16 +1083,28 @@ export default function InterviewCreatePage() {
                   <label className="input-label font-medium">
                     Estado de la Entrevista
                   </label>
-                  <select
-                    {...register("estado")}
-                    className={`dropdown ${errors.estado ? "border-red-500" : ""}`}
-                  >
-                    {interviewStates.map((state) => (
-                      <option key={state.idParametro} value={state.num1}>
-                        {state.string1}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="estado"
+                    control={control}
+                    render={({ field }) => (
+                      // Sin opción vacía, igual que el <select> original.
+                      <AppSelect
+                        ref={field.ref}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        aria-label="Estado de la entrevista"
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={interviewStates.map((state) => ({
+                          value: state.num1,
+                          label: state.string1,
+                        }))}
+                        emptyOption={false}
+                        placeholder="Seleccione estado"
+                        className={`text-[#3f3f46] ${errors.estado ? "border-red-500" : ""}`}
+                      />
+                    )}
+                  />
                   {errors.estado && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.estado.message}
@@ -1071,17 +1117,23 @@ export default function InterviewCreatePage() {
                   <label className="input-label font-medium">
                     Perfil / Puesto <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    {...register("perfil")}
-                    className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
-                  >
-                    <option value="">Seleccione un perfil</option>
-                    {profileOptions.map((opt, i) => (
-                      <option key={i} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="perfil"
+                    control={control}
+                    render={({ field }) => (
+                      <AppSelect
+                        ref={field.ref}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        aria-label="Perfil / Puesto"
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={profileOptions}
+                        placeholder="Seleccione un perfil"
+                        className={`text-[#3f3f46] ${errors.perfil ? "border-red-500" : ""}`}
+                      />
+                    )}
+                  />
                   {errors.perfil && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.perfil.message}
@@ -1167,10 +1219,11 @@ export default function InterviewCreatePage() {
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
                           Nombre Completo
                         </label>
-                        <input
+                        <Input
                           {...register(`entrevistadores.${index}.fullname`)}
+                          aria-label={`Nombre del entrevistador ${index + 1}`}
                           placeholder="Ej: Ana García"
-                          className={`input w-full bg-white dark:bg-slate-800 ${
+                          className={`bg-white ${
                             errors.entrevistadores?.[index]?.fullname
                               ? "border-red-500"
                               : ""
@@ -1186,10 +1239,11 @@ export default function InterviewCreatePage() {
                         <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
                           Email (Opcional)
                         </label>
-                        <input
+                        <Input
                           {...register(`entrevistadores.${index}.email`)}
+                          aria-label={`Email del entrevistador ${index + 1}`}
                           placeholder="ana.garcia@empresa.com"
-                          className={`input w-full bg-white dark:bg-slate-800 ${
+                          className={`bg-white ${
                             errors.entrevistadores?.[index]?.email
                               ? "border-red-500"
                               : ""
@@ -1202,48 +1256,65 @@ export default function InterviewCreatePage() {
                         )}
                       </div>
                       {interviewerFields.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => removeInterviewer(index)}
-                          className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
-                          title="Eliminar entrevistador"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-5 h-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
+                        <Hint label="Eliminar entrevistador">
+                          <button
+                            type="button"
+                            onClick={() => removeInterviewer(index)}
+                            aria-label="Eliminar entrevistador"
+                            className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-5 h-5"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </Hint>
                       )}
                     </div>
 
                     {/* Email notification footer */}
                     <div className="flex items-center px-4 py-2.5 bg-white border-t border-gray-100 dark:bg-slate-800 dark:border-slate-700">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          id={`entrevistadores.${index}.notificacion`}
-                          {...register(`entrevistadores.${index}.notificacion`)}
-                          className="sr-only peer"
-                        />
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400">
-                          <Mail className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500" />
-                          <span>Notificación por email</span>
-                        </div>
-                        <span className="text-xs text-gray-400 transition-colors peer-checked:text-[var(--color-blue)] dark:text-slate-500">
-                          Enviar al registrar
-                        </span>
-                        <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 dark:bg-slate-700" />
-                      </label>
+                      {/* El Switch de Radix no es un <input>: va con
+                          Controller, no con register(). */}
+                      <Controller
+                        name={`entrevistadores.${index}.notificacion`}
+                        control={control}
+                        render={({ field: notif }) => (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400">
+                              <Mail className="w-3.5 h-3.5 text-gray-400 dark:text-slate-500" />
+                              <span>Notificación por email</span>
+                            </div>
+                            <span
+                              className={`text-xs transition-colors ${
+                                notif.value
+                                  ? "text-[var(--color-blue)]"
+                                  : "text-gray-400 dark:text-slate-500"
+                              }`}
+                            >
+                              Enviar al registrar
+                            </span>
+                            <Switch
+                              ref={notif.ref}
+                              checked={!!notif.value}
+                              onCheckedChange={notif.onChange}
+                              onBlur={notif.onBlur}
+                              className="w-9 data-[state=checked]:bg-[var(--color-blue)] data-[state=unchecked]:bg-gray-200 dark:data-[state=unchecked]:bg-slate-700"
+                              thumbClassName="border border-gray-300 data-[state=checked]:translate-x-4 dark:bg-white"
+                            />
+                          </label>
+                        )}
+                      />
                     </div>
                   </div>
                 ))}

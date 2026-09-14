@@ -8,14 +8,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useFetchClients } from "../../../../core/hooks/useFetchClients";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
 import {
   getSeleccionRendimiento,
   PerformanceRow,
-} from "../../../../core/services/seleccion.service";
-import { FiltersBar } from "../components/FiltersBar";
-import { ChartCard, SectionState } from "../components/ui";
-import { useSelectionSection } from "../useSelectionSection";
+} from "@/core/services/seleccion.service";
+import { FiltersBar } from "@/pages/private/seleccion/components/FiltersBar";
+import { ChartCard, SectionState } from "@/pages/private/seleccion/components/ui";
+import { useSelectionSection } from "@/pages/private/seleccion/useSelectionSection";
 
 const TEAL = "#009688";
 const INDIGO = "#5C6BC0";

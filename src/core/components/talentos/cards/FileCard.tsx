@@ -1,5 +1,6 @@
 import { Download, FileText } from "lucide-react";
-import { TalentFile } from "../../../models";
+import { TalentFile } from "@/core/models";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface Props {
   data: TalentFile;
@@ -13,12 +14,11 @@ export const FileCard = ({ data, onDownload, downloading = false }: Props) => {
       <div className="flex gap-3 sm:gap-6 items-center min-w-0">
         <FileText className="w-8 h-8 shrink-0 text-[#71717A] dark:text-slate-400" />
         <div className="flex flex-col gap-1 min-w-0">
-          <h2
-            className="text-[#27272A] text-base truncate dark:text-slate-100"
-            title={data.nombreArchivo}
-          >
-            {data.nombreArchivo}
-          </h2>
+          <Hint label={data.nombreArchivo}>
+            <h2 className="text-[#27272A] text-base truncate dark:text-slate-100">
+              {data.nombreArchivo}
+            </h2>
+          </Hint>
           <p className="text-[#71717A] text-sm flex gap-2 items-center dark:text-slate-400">
             {data.tipoArchivo && (
               <span className="uppercase">{data.tipoArchivo}</span>
@@ -35,15 +35,17 @@ export const FileCard = ({ data, onDownload, downloading = false }: Props) => {
 
       {/* Actions */}
       <div>
-        <button
-          type="button"
-          onClick={onDownload}
-          disabled={downloading}
-          title="Descargar"
-          className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12 disabled:opacity-50 dark:hover:bg-slate-700"
-        >
-          <Download className="w-6 h-6 opacity-40 hover:opacity-100" />
-        </button>
+        <Hint label="Descargar">
+          <button
+            type="button"
+            onClick={onDownload}
+            disabled={downloading}
+            aria-label={`Descargar ${data.nombreArchivo}`}
+            className="bg-transparent hover:shadow-lg hover:rounded-full hover:bg-zinc-50 flex items-center justify-center h-12 w-12 disabled:opacity-50 dark:hover:bg-slate-700"
+          >
+            <Download className="w-6 h-6 opacity-40 hover:opacity-100" />
+          </button>
+        </Hint>
       </div>
     </div>
   );

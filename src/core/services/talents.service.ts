@@ -5,9 +5,9 @@ import {
   axiosInstanceFMI,
   axiosInstanceNoToken,
 } from "./axiosService";
-import { Utils } from "../utilities/utils";
-import { AddOrUpdateEducationParams, AddOrUpdateExperienceParams, AddOrUpdateFeedbackParams, AddOrUpdateLanguageParams, AddTalentParams, BaseResponse, BaseResponseFMI, FavouritesResponse, FeedbackResponse, FileResponse, InsertUpdateResponse, SaveTalentFMIParams, TalentConfirmUploadRequest, TalentDownloadUrlRequest, TalentParams, TalentPhotoUploadUrlRequest, TalentPhotoUrlResponse, TalentPresignedUrlResponse, TalentResponse, TalentUploadUrlRequest, TalentsResponse } from "../models";
-import { TalentAvailabilityParams, TalentCertParams, TalentContactParams, TalentCvParams, TalentDescriptionParams, TalentProfilePhotoParams, TalentSalaryParams, TalentSocialMediaParams, TalentSoftSkillParams, TalentTechSkillParams } from "../models/params/TalentUpdateParams";
+import { Utils } from "@/core/utilities/utils";
+import { AddOrUpdateEducationParams, AddOrUpdateExperienceParams, AddOrUpdateFeedbackParams, AddOrUpdateLanguageParams, AddTalentParams, BaseResponse, BaseResponseFMI, FavouritesResponse, FeedbackResponse, FileResponse, InsertUpdateResponse, SaveTalentFMIParams, TalentConfirmUploadRequest, TalentDownloadUrlRequest, TalentParams, TalentPhotoUploadUrlRequest, TalentPhotoUrlResponse, TalentPresignedUrlResponse, TalentResponse, TalentUploadUrlRequest, TalentsResponse } from "@/core/models";
+import { TalentAvailabilityParams, TalentCertParams, TalentContactParams, TalentCvParams, TalentDescriptionParams, TalentProfilePhotoParams, TalentSalaryParams, TalentSocialMediaParams, TalentSoftSkillParams, TalentTechSkillParams } from "@/core/models/params/TalentUpdateParams";
 
 // user
 export const createNewFavList = (data: {

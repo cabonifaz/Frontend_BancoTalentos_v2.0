@@ -1,5 +1,5 @@
-import { ApiConfig } from "../hooks/useAsyncService";
-import { OperationResult } from "../models/response/BaseResponse";
+import { ApiConfig } from "@/core/hooks/useAsyncService";
+import { OperationResult } from "@/core/models/response/BaseResponse";
 import { axiosInstanceFMI } from "./axiosService";
 
 /** Filtros comunes de las estadísticas de Selección. Fechas en yyyy-MM-dd. */

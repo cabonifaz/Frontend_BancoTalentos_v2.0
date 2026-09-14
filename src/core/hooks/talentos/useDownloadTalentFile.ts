@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { generateTalentDownloadUrl } from "../../services/talents.service";
-import { handleError } from "../../utilities/errorHandler";
+import { generateTalentDownloadUrl } from "@/core/services/talents.service";
+import { handleError } from "@/core/utilities/errorHandler";
 
 /**
  * Descarga de archivos de talento vía URL pre-firmada (S3 directo).

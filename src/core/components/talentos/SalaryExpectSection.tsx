@@ -1,5 +1,7 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
-import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { AddTalentType } from "@/core/models/schemas/AddTalentSchema";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface SalaryExpecProps {
   coins: { idCoin: number; stringVal: string }[];
@@ -8,6 +10,15 @@ interface SalaryExpecProps {
   control: Control<AddTalentType>;
   errors: FieldErrors<AddTalentType>;
 }
+
+/** "" del Select = sin valor, como la opción vacía del <select> anterior. */
+const toIdOrUndef = (v: string) => (v === "" ? undefined : Number(v));
+
+// Celdas de la tabla de montos: sin caja propia, solo el separador vertical.
+const cellSelect =
+  "h-auto rounded-none border-0 border-r bg-transparent p-2 text-sm dark:border-slate-700 dark:bg-transparent";
+const cellInput =
+  "h-auto rounded-none border-0 bg-transparent p-2 text-right text-sm dark:bg-transparent";
 
 export const SalaryExpectSection = ({
   coins,
@@ -21,6 +32,11 @@ export const SalaryExpectSection = ({
     const num = Number(val);
     return isNaN(num) || num < 0 ? undefined : Math.round(num * 100) / 100; // Redondea a 2 decimales
   };
+
+  const coinOptions = coins.map((coin) => ({
+    value: coin.idCoin,
+    label: coin.stringVal,
+  }));
 
   return (
     <div>
@@ -41,23 +57,21 @@ export const SalaryExpectSection = ({
           name="idModalidadFacturacion"
           control={control}
           render={({ field }) => (
-            <select
-              {...field}
+            <AppSelect
+              ref={field.ref}
               id="idModalidadFacturacion"
+              name={field.name}
+              onBlur={field.onBlur}
               value={field.value ?? 0}
-              onChange={(e) => field.onChange(Number(e.target.value))}
-              className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-            >
-              <option value={0}>Seleccione una modalidad</option>
-              {modalidades.map((modalidad) => (
-                <option
-                  key={modalidad.idModalidad}
-                  value={modalidad.idModalidad}
-                >
-                  {modalidad.stringVal}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => field.onChange(v === "" ? 0 : Number(v))}
+              options={modalidades.map((modalidad) => ({
+                value: modalidad.idModalidad,
+                label: modalidad.stringVal,
+              }))}
+              placeholder="Seleccione una modalidad"
+              aria-invalid={!!errors.idModalidadFacturacion}
+              className="h-auto p-3 text-[#3f3f46] dark:border-slate-700 dark:text-slate-200"
+            />
           )}
         />
         {errors.idModalidadFacturacion && (
@@ -84,23 +98,17 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.rxh.coin"
               control={control}
               render={({ field }) => (
-                <select
-                  {...field}
+                <AppSelect
+                  ref={field.ref}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  aria-label="Moneda RxH"
                   value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value === "" ? undefined : Number(e.target.value)
-                    )
-                  }
-                  className="p-2 border-r text-sm dark:border-slate-700"
-                >
-                  <option value="">Elija una moneda</option>
-                  {coins.map((coin) => (
-                    <option key={coin.idCoin} value={coin.idCoin}>
-                      {coin.stringVal}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => field.onChange(toIdOrUndef(v))}
+                  options={coinOptions}
+                  placeholder="Elija una moneda"
+                  className={cellSelect}
+                />
               )}
             />
 
@@ -109,8 +117,9 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.rxh.min"
               control={control}
               render={({ field }) => (
-                <input
+                <Input
                   {...field}
+                  aria-label="Mínimo RxH"
                   value={field.value ?? ""}
                   onChange={(e) =>
                     field.onChange(toNumberOrUndef(e.target.value))
@@ -119,7 +128,7 @@ export const SalaryExpectSection = ({
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  className="p-2 border-r text-sm text-right outline-none dark:border-slate-700"
+                  className={`${cellInput} border-r dark:border-slate-700`}
                 />
               )}
             />
@@ -129,8 +138,9 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.rxh.max"
               control={control}
               render={({ field }) => (
-                <input
+                <Input
                   {...field}
+                  aria-label="Máximo RxH"
                   value={field.value ?? ""}
                   onChange={(e) =>
                     field.onChange(toNumberOrUndef(e.target.value))
@@ -139,7 +149,7 @@ export const SalaryExpectSection = ({
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  className="p-2 text-sm text-right outline-none"
+                  className={cellInput}
                 />
               )}
             />
@@ -177,23 +187,17 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.planilla.coin"
               control={control}
               render={({ field }) => (
-                <select
-                  {...field}
+                <AppSelect
+                  ref={field.ref}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  aria-label="Moneda planilla"
                   value={field.value ?? ""}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value === "" ? undefined : Number(e.target.value)
-                    )
-                  }
-                  className="p-2 border-r text-sm dark:border-slate-700"
-                >
-                  <option value="">Elija una moneda</option>
-                  {coins.map((coin) => (
-                    <option key={coin.idCoin} value={coin.idCoin}>
-                      {coin.stringVal}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => field.onChange(toIdOrUndef(v))}
+                  options={coinOptions}
+                  placeholder="Elija una moneda"
+                  className={cellSelect}
+                />
               )}
             />
 
@@ -202,8 +206,9 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.planilla.min"
               control={control}
               render={({ field }) => (
-                <input
+                <Input
                   {...field}
+                  aria-label="Mínimo planilla"
                   value={field.value ?? ""}
                   onChange={(e) =>
                     field.onChange(toNumberOrUndef(e.target.value))
@@ -212,7 +217,7 @@ export const SalaryExpectSection = ({
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  className="p-2 border-r text-sm text-right outline-none dark:border-slate-700"
+                  className={`${cellInput} border-r dark:border-slate-700`}
                 />
               )}
             />
@@ -222,8 +227,9 @@ export const SalaryExpectSection = ({
               name="salaryExpectations.planilla.max"
               control={control}
               render={({ field }) => (
-                <input
+                <Input
                   {...field}
+                  aria-label="Máximo planilla"
                   value={field.value ?? ""}
                   onChange={(e) =>
                     field.onChange(toNumberOrUndef(e.target.value))
@@ -232,7 +238,7 @@ export const SalaryExpectSection = ({
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  className="p-2 text-sm text-right outline-none"
+                  className={cellInput}
                 />
               )}
             />

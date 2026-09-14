@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { DynamicSectionProps } from "../../../models";
+import { DynamicSectionProps } from "@/core/models";
 import { DynamicSection } from "./DynamicSection";
-import { YearPicker } from "../../ui/YearPicker";
-import { MonthYearPicker } from "../../ui/MonthYearPicker";
+import { YearPicker } from "@/core/components/ui/YearPicker";
+import { MonthYearPicker } from "@/core/components/ui/MonthYearPicker";
 import {
   FieldValues,
   Path,
@@ -12,10 +12,18 @@ import {
   useFormContext,
   useWatch,
 } from "react-hook-form";
-import { useParams } from "../../../context/ParamsContext";
+import { useParams } from "@/core/context/ParamsContext";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface EducationsSectionProps<F extends FieldValues>
   extends DynamicSectionProps<F> {}
+
+const fieldClass = "h-12 border-gray-300 dark:border-slate-600";
+const checkboxClass =
+  "h-4 w-4 data-[state=checked]:border-[#4F46E5] data-[state=checked]:bg-[#4F46E5]";
 
 export const EducationsSection = <F extends FieldValues>({
   control,
@@ -102,13 +110,13 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.institucion` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
                     id={`educaciones.${index}.institucion`}
                     type="text"
                     placeholder="Nombre de la institución"
                     autoComplete="organization"
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                    className={fieldClass}
                   />
                 )}
               />
@@ -132,13 +140,13 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.carrera` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
                     id={`educaciones.${index}.carrera`}
                     type="text"
                     placeholder="Carrera"
                     autoComplete="on"
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                    className={fieldClass}
                   />
                 )}
               />
@@ -161,18 +169,21 @@ export const EducationsSection = <F extends FieldValues>({
                 name={`educaciones.${index}.grado` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <select
-                    {...field}
+                  // El grado se guarda como string (valor del <select> anterior).
+                  <AppSelect
+                    ref={field.ref}
                     id={`educaciones.${index}.grado`}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-                  >
-                    <option value="">Selecciona un grado</option>
-                    {grados?.map((gr) => (
-                      <option key={gr.num1} value={gr.num1}>
-                        {gr.string1}
-                      </option>
-                    ))}
-                  </select>
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={grados.map((gr) => ({
+                      value: gr.num1,
+                      label: gr.string1,
+                    }))}
+                    placeholder="Selecciona un grado"
+                    className={`${fieldClass} p-3`}
+                  />
                 )}
               />
               {(errors as any).educaciones?.[index]?.grado && (
@@ -191,24 +202,18 @@ export const EducationsSection = <F extends FieldValues>({
                 render={({ field }) => {
                   const checked = Number(field.value ?? 1) === 2;
                   return (
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={checked}
-                      onClick={() => {
-                        field.onChange(checked ? 1 : 2);
+                    // Switch de shadcn en lugar del botón role="switch" pintado
+                    // a mano; mismo tamaño (36×20) y color.
+                    <Switch
+                      aria-label="Fechas con mes y año"
+                      checked={checked}
+                      onCheckedChange={(next) => {
+                        field.onChange(next ? 2 : 1);
                         clearEntryDates(index);
                       }}
-                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:ring-offset-1 ${
-                        checked ? "bg-[#4F46E5]" : "bg-gray-300 dark:bg-slate-600"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform dark:bg-slate-800 ${
-                          checked ? "translate-x-4" : "translate-x-1"
-                        }`}
-                      />
-                    </button>
+                      className="h-5 w-9 border-0 focus-visible:ring-[#4F46E5] data-[state=checked]:bg-[#4F46E5]"
+                      thumbClassName="h-3.5 w-3.5 shadow data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-1"
+                    />
                   );
                 }}
               />
@@ -257,14 +262,14 @@ export const EducationsSection = <F extends FieldValues>({
                     name={`educaciones.${index}.flActualidad` as Path<F>}
                     control={control}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="checkbox"
+                      <Checkbox
+                        ref={field.ref}
                         id={`educaciones.${index}.flActualidad`}
-                        className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
+                        className={checkboxClass}
                         checked={!!field.value}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
+                        onBlur={field.onBlur}
+                        onCheckedChange={(value) => {
+                          const checked = value === true;
                           field.onChange(checked);
                           if (checked) {
                             setValue(

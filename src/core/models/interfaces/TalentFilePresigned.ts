@@ -1,4 +1,4 @@
-import { BaseResponse } from "../response/BaseResponse";
+import { BaseResponse } from "@/core/models/response/BaseResponse";
 
 // Interfaces de subida/descarga de archivos de talento vía URL pre-firmada (S3).
 

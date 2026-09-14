@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { axiosInstance } from "../../services/axiosService";
-import { TalentForFractalCV } from "../../models/interfaces/TalentDataForFractal";
-import { TalentDataTranslatedResponse } from "../../models/response/TalentDataTranslatedResponse";
+import { axiosInstance } from "@/core/services/axiosService";
+import { TalentForFractalCV } from "@/core/models/interfaces/TalentDataForFractal";
+import { TalentDataTranslatedResponse } from "@/core/models/response/TalentDataTranslatedResponse";
 
 /**
  * Traducción de los datos de un talento para el CV Fractal, usando Amazon Translate

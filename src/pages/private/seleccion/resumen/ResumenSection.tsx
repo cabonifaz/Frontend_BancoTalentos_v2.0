@@ -9,12 +9,12 @@ import { LucideIcon } from "lucide-react";
 import {
   getSeleccionResumen,
   SelectionSummary,
-} from "../../../../core/services/seleccion.service";
-import { SectionProps } from "../sections";
-import { KpiCard, SectionState } from "../components/ui";
-import { Meter } from "../components/Meter";
-import { SERIES } from "../components/chartTheme";
-import { useSelectionSection } from "../useSelectionSection";
+} from "@/core/services/seleccion.service";
+import { SectionProps } from "@/pages/private/seleccion/sections";
+import { KpiCard, SectionState } from "@/pages/private/seleccion/components/ui";
+import { Meter } from "@/pages/private/seleccion/components/Meter";
+import { SERIES } from "@/pages/private/seleccion/components/chartTheme";
+import { useSelectionSection } from "@/pages/private/seleccion/useSelectionSection";
 
 const EMPTY: SelectionSummary = { totalEntrevistas: 0, totalIngresos: 0 };
 

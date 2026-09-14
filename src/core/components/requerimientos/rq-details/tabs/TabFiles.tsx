@@ -1,20 +1,34 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   AddFilesSchemaType,
   Param,
   addFilesSchema,
-} from "../../../../models";
+} from "@/core/models";
 import { useEffect, useState } from "react";
-import { useDeleteHook } from "../../../../hooks/useDeleteHook";
-import { useDownloadRqFile } from "../../../../hooks/requerimientos/useDownloadRqFile";
-import { Utils } from "../../../../utilities/utils";
-import { confirmRqUpload, generateRqUploadUrl } from "../../../../services/requirements.service";
-import { uploadFileToS3 } from "../../../../services/s3.service";
+import { useDeleteHook } from "@/core/hooks/useDeleteHook";
+import { useDownloadRqFile } from "@/core/hooks/requerimientos/useDownloadRqFile";
+import { Utils } from "@/core/utilities/utils";
+import { confirmRqUpload, generateRqUploadUrl } from "@/core/services/requirements.service";
+import { uploadFileToS3 } from "@/core/services/s3.service";
 import { enqueueSnackbar } from "notistack";
-import { Loading } from "../../../ui/Loading";
-import { allowedFileExtensions } from "../../../../utilities/file-utils";
+import { Loading } from "@/core/components/ui/Loading";
+import { allowedFileExtensions } from "@/core/utilities/file-utils";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Badge } from "@/core/components/ui/shadcn/badge";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { cn } from "@/core/lib/utils";
+import {
+  FileDropzone,
+  FileList,
+  FileRow,
+  IconAction,
+  SectionHeader,
+  TabBody,
+  fileMeta,
+  rqControl,
+} from "@/core/components/requerimientos/rq-ui";
 
 interface Archivo {
   idRequerimientoArchivo: number;
@@ -44,15 +58,14 @@ export const TabFiles = ({
   const [files, setFiles] = useState<Archivo[]>(initialFiles);
   const allowedFileTypes = allowedFileExtensions(extensionsParams);
   const { deleteData, deleteLoading } = useDeleteHook();
-  const hasNewFiles = files.some(
+  const newFilesCount = files.filter(
     (f) => f.idRequerimientoArchivo === 0
-  );
+  ).length;
   const [isLoading, downloadFile] = useDownloadRqFile();
   const [uploading, setUploading] = useState(false);
 
   // Formulario independiente con su propio esquema de validación
   const {
-    register,
     getValues,
     setValue,
     formState: { errors },
@@ -164,25 +177,41 @@ export const TabFiles = ({
     }
   };
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files) {
-      const newFiles = Array.from(event.target.files).map((file) => ({
-        idRequerimientoArchivo: 0,
-        name: file.name,
-        size: file.size,
-        file,
-        idTipoArchivoRq: 0,
-      }));
+  const handleAddFiles = (picked: File[]) => {
+    const newFiles = picked.map((file) => ({
+      idRequerimientoArchivo: 0,
+      name: file.name,
+      size: file.size,
+      file,
+      idTipoArchivoRq: 0,
+    }));
 
-      const currentFormArchivos = getValues("lstArchivos") || [];
-      setFiles((prev) => [...prev, ...newFiles]);
-      setValue("lstArchivos", [...currentFormArchivos, ...newFiles], {
+    const currentFormArchivos = getValues("lstArchivos") || [];
+    setFiles((prev) => [...prev, ...newFiles]);
+    setValue("lstArchivos", [...currentFormArchivos, ...newFiles], {
+      shouldValidate: true,
+    });
+  };
+
+  // El <select> anterior ya escribía el tipo con setValue (su onChange pisaba
+  // al de register), así que el Select no necesita registrarse.
+  const handleTipoChange = (index: number, value: number) => {
+    setValue(
+      `lstArchivos.${index}.idTipoArchivoRq`,
+      value,
+      {
         shouldValidate: true,
-      });
-      event.target.value = "";
-    }
+      }
+    );
+
+    setFiles((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        idTipoArchivoRq: value,
+      };
+      return updated;
+    });
   };
 
   const handleRemoveFile = async (
@@ -211,150 +240,116 @@ export const TabFiles = ({
     downloadFile(rqFile);
   };
 
+  const typeLabel = (id?: number) =>
+    fileOptions.find((option) => option.num1 === id)?.string1;
+
   return (
-    <>
-      <div className="flex h-full min-h-0 flex-col p-4">
-        {(uploading || deleteLoading || isLoading) && (
-          <Loading opacity="opacity-60" />
-        )}
-        <div className="flex min-h-0 flex-1 flex-col">
-          {/* Encabezado */}
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
-              Archivos elegidos:
-            </label>
-            <button
-              type="button"
-              onClick={() =>
-                document.getElementById("fileInput")?.click()
-              }
-              className="btn btn-text"
-            >
-              Elegir archivos
-            </button>
-          </div>
-
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-            id="fileInput"
-            accept={allowedFileTypes}
-          />
-
-          {/* Lista de archivos */}
-          <div className="mt-2 mb-4 min-h-0 flex-1 overflow-y-auto">
-            {/**@marker files maps */}
-            {files.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between gap-2 p-2 bg-gray-50 rounded-md mb-1 dark:bg-slate-800"
+    <TabBody>
+      {(uploading || deleteLoading || isLoading) && (
+        <Loading opacity="opacity-60" />
+      )}
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          title="Archivos"
+          helper="Documentos del requerimiento. Los nuevos se suben al pulsar el botón."
+          actions={
+            newFilesCount > 0 && (
+              <Button
+                onClick={onSubmitAddFiles}
+                disabled={uploading}
+                className="font-medium"
               >
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleDownloadRqFile(file.idRequerimientoArchivo);
-                  }}
-                  className="text-blue-500 hover:text-blue-600 focus:outline-none dark:hover:text-blue-400"
-                >
-                  <Eye className="w-5 h-5" />
-                </button>
-                <span className="text-sm text-gray-700 truncate flex-1 mr-2 dark:text-slate-200">
-                  {file.name}
-                </span>
-                {file.idRequerimientoArchivo === 0 && (
-                  <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2 dark:bg-green-500/15 dark:text-green-300">
-                    Nuevo
-                  </span>
-                )}
-                <div className="flex flex-col">
-                  <select
-                    {...register(
-                      `lstArchivos.${index}.idTipoArchivoRq`,
-                      {
-                        valueAsNumber: true,
-                      }
-                    )}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
+                <Upload className="h-4 w-4" aria-hidden />
+                {newFilesCount === 1
+                  ? "Subir 1 archivo nuevo"
+                  : `Subir ${newFilesCount} archivos nuevos`}
+              </Button>
+            )
+          }
+        />
 
-                      setValue(
-                        `lstArchivos.${index}.idTipoArchivoRq`,
-                        value,
-                        {
-                          shouldValidate: true,
-                        }
-                      );
+        <FileDropzone compact accept={allowedFileTypes} onFiles={handleAddFiles} />
 
-                      setFiles((prev) => {
-                        const updated = [...prev];
-                        updated[index] = {
-                          ...updated[index],
-                          idTipoArchivoRq: value,
-                        };
-                        return updated;
-                      });
-                    }}
-                    value={
-                      getValues(
-                        `lstArchivos.${index}.idTipoArchivoRq`
-                      ) || 0
-                    }
-                    className="w-60 px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-400 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                    disabled={file.idRequerimientoArchivo !== 0}
-                  >
-                    <option value={0} disabled>
-                      Elija un tipo
-                    </option>
-                    {fileOptions.map((option) => (
-                      <option
-                        value={option.num1}
-                        key={option.idParametro}
-                      >
-                        {option.string1}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.lstArchivos?.[index]?.idTipoArchivoRq && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {
-                        errors.lstArchivos?.[index]?.idTipoArchivoRq
-                          ?.message
-                      }
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleRemoveFile(
-                      index,
-                      file.idRequerimientoArchivo || 0
+        {/**@marker files maps */}
+        {files.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-gray-200 py-6 text-center text-sm text-gray-500 dark:border-slate-700 dark:text-slate-400">
+            Este requerimiento aún no tiene archivos.
+          </p>
+        ) : (
+          <FileList>
+            {files.map((file, index) => {
+              const isNew = file.idRequerimientoArchivo === 0;
+              const typeError =
+                errors.lstArchivos?.[index]?.idTipoArchivoRq?.message;
+              return (
+                <FileRow
+                  key={`${file.idRequerimientoArchivo}-${index}`}
+                  name={file.name}
+                  meta={fileMeta(file.name, isNew ? file.size : 0)}
+                  tag={isNew && <Badge variant="green">Nuevo</Badge>}
+                  control={
+                    isNew ? (
+                      <div className="flex flex-col gap-1">
+                        {/* "Elija un tipo" era una opción disabled: no hay opción vacía. */}
+                        <AppSelect
+                          aria-label={`Tipo de ${file.name}`}
+                          aria-invalid={!!typeError}
+                          value={file.idTipoArchivoRq || 0}
+                          onChange={(v) => handleTipoChange(index, Number(v))}
+                          options={fileOptions.map((option) => ({
+                            value: option.num1,
+                            label: option.string1,
+                          }))}
+                          placeholder="Elige un tipo"
+                          emptyOption={false}
+                          className={cn(
+                            rqControl,
+                            typeError && "border-red-500 dark:border-red-400"
+                          )}
+                        />
+                        {typeError && (
+                          <span className="text-xs text-red-500 dark:text-red-400">
+                            {typeError}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-700 dark:text-slate-200">
+                        {typeLabel(file.idTipoArchivoRq) || "Sin tipo"}
+                      </span>
                     )
                   }
-                  className="text-red-500 hover:text-red-600 focus:outline-none dark:hover:text-red-400"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute bottom-5 right-5 mt-auto flex justify-end">
-            <button
-              type="button"
-              onClick={onSubmitAddFiles}
-              disabled={!hasNewFiles}
-              className={`btn w-fit text-sm ${
-                hasNewFiles ? "btn-primary" : "btn-disabled"
-              }`}
-            >
-              Agregar archivos nuevos
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
+                  actions={
+                    <>
+                      {!isNew && (
+                        <IconAction
+                          icon={Eye}
+                          tone="blue"
+                          label={`Ver ${file.name}`}
+                          onClick={() =>
+                            handleDownloadRqFile(file.idRequerimientoArchivo)
+                          }
+                        />
+                      )}
+                      <IconAction
+                        icon={Trash2}
+                        tone="red"
+                        label={isNew ? `Quitar ${file.name}` : `Eliminar ${file.name}`}
+                        onClick={() =>
+                          handleRemoveFile(
+                            index,
+                            file.idRequerimientoArchivo || 0
+                          )
+                        }
+                      />
+                    </>
+                  }
+                />
+              );
+            })}
+          </FileList>
+        )}
+      </section>
+    </TabBody>
   );
 };

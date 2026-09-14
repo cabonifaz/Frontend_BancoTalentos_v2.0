@@ -1,15 +1,16 @@
 import { useRef, useState, useEffect } from "react";
-import { Modal } from "../../modals/Modal";
-import { TalentDescriptionParams } from "../../../models/params/TalentUpdateParams";
-import { updateTalentDescription } from "../../../services/talents.service";
-import { BaseResponse } from "../../../models";
+import { Modal } from "@/core/components/modals/Modal";
+import { TalentDescriptionParams } from "@/core/models/params/TalentUpdateParams";
+import { updateTalentDescription } from "@/core/services/talents.service";
+import { BaseResponse } from "@/core/models";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../hooks/useApi";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
-import { useModal } from "../../../context/ModalContext";
-import { processText } from "../../../utilities/textUtils";
-import { Loading } from "../../ui/Loading";
-// import { validateText } from "../../../utilities/validation";
+import { useApi } from "@/core/hooks/useApi";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { useModal } from "@/core/context/ModalContext";
+import { processText } from "@/core/utilities/textUtils";
+import { Loading } from "@/core/components/ui/Loading";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+// import { validateText } from "@/core/utilities/validation";
 
 interface Props {
   idTalento?: number;
@@ -150,15 +151,15 @@ export const ModalSummary = ({
             </svg>
             <span>Los emojis y espacios extras se eliminarán automáticamente</span>
           </div>
-          <textarea
+          <Textarea
             name="description"
             id="description"
             ref={descriptionRef}
             value={inputValue}
             onChange={handleInputChange}
             onBlur={handleBlur}
-            className="input resize-none h-32"
-          ></textarea>
+            className="resize-none h-32"
+          />
 
            {inputValue.length > 5000 && (
             <p className="text-red-400 text-sm mt-2 flex items-center gap-1">

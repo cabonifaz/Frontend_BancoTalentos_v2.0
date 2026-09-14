@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { IACVResponse } from "../../models/response/AICVResponse";
-import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { IACVResponse } from "@/core/models/response/AICVResponse";
+import { AddTalentType } from "@/core/models/schemas/AddTalentSchema";
 import { UseFormSetValue } from "react-hook-form";
-import { Param } from "../../models";
+import { Param } from "@/core/models";
 
 /**
  * Custom hook for auto-completing a talent form with data from an AI CV response.

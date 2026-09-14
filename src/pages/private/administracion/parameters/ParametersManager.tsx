@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Pencil, Plus, RefreshCw, Search, Trash2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../../core/hooks/useApi";
-import { Loading } from "../../../../core/components/ui/Loading";
-import { Pagination } from "../../../../core/components";
-import { deleteParam, getParamMasters, getParamsByMaster } from "../../../../core/services/administration.service";
+import { useApi } from "@/core/hooks/useApi";
+import { Loading } from "@/core/components/ui/Loading";
+import { Pagination } from "@/core/components";
+import { deleteParam, getParamMasters, getParamsByMaster } from "@/core/services/administration.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import {
   BaseResponse,
   ParamItem,
@@ -17,7 +17,24 @@ import {
   ParamMaster,
   ParamMasterListParams,
   ParamMasterListResponse,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { Hint } from "@/core/components/ui/Hint";
 import { ParamFormModal } from "./ParamFormModal";
 
 type View = "masters" | "detail";
@@ -140,14 +157,14 @@ export const ParametersManager = () => {
                 Selecciona un maestro para ver y editar sus parámetros.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setModal({ mode: "create", initial: null })}
-              className="btn btn-primary flex items-center gap-2 flex-shrink-0"
-              title="Crear un parámetro (usa un ID de maestro nuevo para crear un maestro)"
-            >
-              <Plus size={16} /> Nuevo parámetro
-            </button>
+            <Hint label="Crear un parámetro (usa un ID de maestro nuevo para crear un maestro)">
+              <Button
+                onClick={() => setModal({ mode: "create", initial: null })}
+                className="mx-1 flex-shrink-0"
+              >
+                <Plus size={16} /> Nuevo parámetro
+              </Button>
+            </Hint>
           </header>
 
           <div className="flex items-center gap-2 mb-4">
@@ -156,80 +173,80 @@ export const ParametersManager = () => {
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
               />
-              <input
-                className="input w-full !pl-10"
+              <Input
+                className="!pl-10"
+                aria-label="Buscar maestros"
                 placeholder="Buscar por ID o descripción…"
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && canSearch && searchMasters()}
               />
             </div>
-            <button
-              type="button"
-              onClick={searchMasters}
-              disabled={!canSearch}
-              className={`btn ${canSearch ? "btn-primary" : "btn-disabled"}`}
-            >
+            <Button onClick={searchMasters} disabled={!canSearch} className="mx-1">
               Buscar
-            </button>
-            <button
-              type="button"
-              onClick={searchMasters}
-              title="Recargar"
-              className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
-            >
-              <RefreshCw size={16} />
-            </button>
+            </Button>
+            <Hint label="Recargar">
+              <button
+                type="button"
+                onClick={searchMasters}
+                aria-label="Recargar"
+                className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </Hint>
           </div>
 
           <div className="flex-1 min-h-0 overflow-auto border border-gray-100 rounded-lg dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
-                <tr className="text-left">
-                  <th className="px-4 py-2.5 font-medium">Maestro</th>
-                  <th className="px-4 py-2.5 font-medium">Descripción</th>
-                  <th className="px-4 py-2.5 font-medium text-right">Total</th>
-                  <th className="px-4 py-2.5 font-medium text-right">Activos</th>
-                  <th className="px-4 py-2.5 font-medium text-right">Inactivos</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-sm">
+              <TableHeader className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
+                <TableRow className="text-left">
+                  <TableHead className="px-4 py-2.5 font-medium">Maestro</TableHead>
+                  <TableHead className="px-4 py-2.5 font-medium">Descripción</TableHead>
+                  <TableHead className="px-4 py-2.5 font-medium text-right">Total</TableHead>
+                  <TableHead className="px-4 py-2.5 font-medium text-right">Activos</TableHead>
+                  <TableHead className="px-4 py-2.5 font-medium text-right">Inactivos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {masters.map((m) => (
-                  <tr
+                  <TableRow
                     key={m.idMaestro}
                     onClick={() => openMaster(m)}
                     className="border-t border-gray-100 hover:bg-[#009688]/5 cursor-pointer transition-colors dark:border-slate-700"
                   >
-                    <td className="px-4 py-2.5 font-medium text-gray-700 dark:text-slate-200">{m.idMaestro}</td>
-                    <td className="px-4 py-2.5 text-gray-600 dark:text-slate-300">{cell(m.descripcion)}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{m.totalRegistros}</td>
-                    <td className="px-4 py-2.5 text-right text-emerald-600">{m.registrosActivos}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-400 dark:text-slate-500">{m.registrosInactivos}</td>
-                  </tr>
+                    <TableCell className="px-4 py-2.5 font-medium text-gray-700 dark:text-slate-200">{m.idMaestro}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-gray-600 dark:text-slate-300">{cell(m.descripcion)}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-right text-gray-600 dark:text-slate-300">{m.totalRegistros}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-right text-emerald-600">{m.registrosActivos}</TableCell>
+                    <TableCell className="px-4 py-2.5 text-right text-gray-400 dark:text-slate-500">{m.registrosInactivos}</TableCell>
+                  </TableRow>
                 ))}
                 {!loadingMasters && masters.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
+                  <TableRow>
+                    <TableCell colSpan={5} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
                       No se encontraron maestros.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </>
       ) : (
         <>
           <header className="mb-5 flex items-start justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <button
-                type="button"
-                onClick={backToMasters}
-                className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
-                title="Volver a maestros"
-              >
-                <ArrowLeft size={18} />
-              </button>
+              <Hint label="Volver a maestros">
+                <button
+                  type="button"
+                  onClick={backToMasters}
+                  aria-label="Volver a maestros"
+                  className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+              </Hint>
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-gray-800 truncate dark:text-slate-100">
                   Maestro {selected?.idMaestro}
@@ -241,56 +258,55 @@ export const ParametersManager = () => {
                 </p>
               </div>
             </div>
-            <button
-              type="button"
+            <Button
               onClick={() => setModal({ mode: "create", initial: null })}
-              className="btn btn-primary flex items-center gap-2 flex-shrink-0"
+              className="mx-1 flex-shrink-0"
             >
               <Plus size={16} /> Nuevo parámetro
-            </button>
+            </Button>
           </header>
 
           <div className="flex-1 min-h-0 overflow-auto border border-gray-100 rounded-lg dark:border-slate-700">
-            <table className="w-full text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
-                <tr className="text-left">
-                  <th className="px-3 py-2.5 font-medium">ID</th>
-                  <th className="px-3 py-2.5 font-medium">Descripción</th>
-                  <th className="px-3 py-2.5 font-medium">Sub</th>
-                  <th className="px-3 py-2.5 font-medium">NUM1</th>
-                  <th className="px-3 py-2.5 font-medium">NUM2</th>
-                  <th className="px-3 py-2.5 font-medium">NUM3</th>
-                  <th className="px-3 py-2.5 font-medium">STRING1</th>
-                  <th className="px-3 py-2.5 font-medium">STRING2</th>
-                  <th className="px-3 py-2.5 font-medium">STRING3</th>
-                  <th className="px-3 py-2.5 font-medium">DATE1</th>
-                  <th className="px-3 py-2.5 font-medium">DATE2</th>
-                  <th className="px-3 py-2.5 font-medium">DATE3</th>
-                  <th className="px-3 py-2.5 font-medium">Estado</th>
-                  <th className="px-3 py-2.5 font-medium text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="w-full text-sm whitespace-nowrap">
+              <TableHeader className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
+                <TableRow className="text-left">
+                  <TableHead className="px-3 py-2.5 font-medium">ID</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">Descripción</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">Sub</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">NUM1</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">NUM2</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">NUM3</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">STRING1</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">STRING2</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">STRING3</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">DATE1</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">DATE2</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">DATE3</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium">Estado</TableHead>
+                  <TableHead className="px-3 py-2.5 font-medium text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {items.map((p) => (
-                  <tr
+                  <TableRow
                     key={p.idParametro}
                     className={`border-t border-gray-100 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-700 ${
                       p.idEstadoRegistro !== 1 ? "text-gray-400 dark:text-slate-500" : "text-gray-600 dark:text-slate-300"
                     }`}
                   >
-                    <td className="px-3 py-2.5 font-medium">{p.idParametro}</td>
-                    <td className="px-3 py-2.5">{cell(p.descripcion)}</td>
-                    <td className="px-3 py-2.5">{cell(p.idSubMaestro)}</td>
-                    <td className="px-3 py-2.5">{cell(p.num1)}</td>
-                    <td className="px-3 py-2.5">{cell(p.num2)}</td>
-                    <td className="px-3 py-2.5">{cell(p.num3)}</td>
-                    <td className="px-3 py-2.5">{cell(p.string1)}</td>
-                    <td className="px-3 py-2.5">{cell(p.string2)}</td>
-                    <td className="px-3 py-2.5">{cell(p.string3)}</td>
-                    <td className="px-3 py-2.5">{cell(p.date1)}</td>
-                    <td className="px-3 py-2.5">{cell(p.date2)}</td>
-                    <td className="px-3 py-2.5">{cell(p.date3)}</td>
-                    <td className="px-3 py-2.5">
+                    <TableCell className="px-3 py-2.5 font-medium">{p.idParametro}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.descripcion)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.idSubMaestro)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.num1)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.num2)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.num3)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.string1)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.string2)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.string3)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.date1)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.date2)}</TableCell>
+                    <TableCell className="px-3 py-2.5">{cell(p.date3)}</TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           p.idEstadoRegistro === 1
@@ -300,40 +316,44 @@ export const ParametersManager = () => {
                       >
                         {p.idEstadoRegistro === 1 ? "Activo" : "Inactivo"}
                       </span>
-                    </td>
-                    <td className="px-3 py-2.5">
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setModal({ mode: "edit", initial: p })}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
-                          title="Editar"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        {p.idEstadoRegistro === 1 && (
+                        <Hint label="Editar">
                           <button
                             type="button"
-                            onClick={() => setToDelete(p)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
-                            title="Eliminar"
+                            onClick={() => setModal({ mode: "edit", initial: p })}
+                            aria-label="Editar"
+                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
                           >
-                            <Trash2 size={15} />
+                            <Pencil size={15} />
                           </button>
+                        </Hint>
+                        {p.idEstadoRegistro === 1 && (
+                          <Hint label="Eliminar">
+                            <button
+                              type="button"
+                              onClick={() => setToDelete(p)}
+                              aria-label="Eliminar"
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </Hint>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {!loadingItems && items.length === 0 && (
-                  <tr>
-                    <td colSpan={14} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
+                  <TableRow>
+                    <TableCell colSpan={14} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
                       Este maestro no tiene parámetros.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           {detailTotal > ITEMS_PER_PAGE && (
@@ -360,17 +380,22 @@ export const ParametersManager = () => {
       )}
 
       {toDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setToDelete(null)} />
-          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm p-6 text-center flex flex-col items-center gap-3 dark:bg-slate-800 dark:border-slate-700">
+        <Dialog open onOpenChange={(open) => { if (!open) setToDelete(null); }}>
+          <DialogContent
+            overlayClassName="bg-black/40"
+            aria-describedby="param-delete-desc"
+            className="flex w-[calc(100%-2rem)] max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 p-6 text-center shadow-2xl dark:border-slate-700"
+          >
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 dark:bg-red-500/10">
               <Trash2 size={22} />
             </div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Eliminar parámetro</h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400">
+            <DialogTitle asChild>
+              <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Eliminar parámetro</h3>
+            </DialogTitle>
+            <DialogDescription id="param-delete-desc" className="text-gray-500 dark:text-slate-400">
               ¿Dar de baja el parámetro <span className="font-medium">#{toDelete.idParametro}</span>{" "}
               del maestro {toDelete.idMaestro}? Se marcará como inactivo.
-            </p>
+            </DialogDescription>
             <div className="flex gap-2 w-full mt-2">
               <button
                 type="button"
@@ -379,17 +404,17 @@ export const ParametersManager = () => {
               >
                 Cancelar
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="btn btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                className="mx-1 flex-1"
               >
                 Eliminar
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

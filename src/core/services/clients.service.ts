@@ -3,7 +3,7 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstanceFMI,
 } from "./axiosService";
-import { ClientListResponse } from "../models";
+import { ClientListResponse } from "@/core/models";
 
 // requirements
 export const getClients = (): Promise<

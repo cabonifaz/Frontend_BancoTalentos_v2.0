@@ -1,29 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import { AppError, Talent, TalentResponse } from "../../../../models";
-import { MODAL_FRACTAL_CV } from "../../../../utilities/modalsIds";
-import { Modal } from "../../../modals/Modal";
+import { AppError, Talent, TalentResponse } from "@/core/models";
+import { MODAL_FRACTAL_CV } from "@/core/utilities/modalsIds";
+import { Modal } from "@/core/components/modals/Modal";
 import {
   detectLanguage,
   getTextForDetection,
-} from "../../../../utilities/language.utils";
+} from "@/core/utilities/language.utils";
 import { enqueueSnackbar } from "notistack";
-import { Utils } from "../../../../utilities/utils";
-import { usePDFFromReact } from "../../../../hooks/talentos/usePDFFromTemplate";
-import { Loading } from "../../../ui/Loading";
+import { Utils } from "@/core/utilities/utils";
+import { usePDFFromReact } from "@/core/hooks/talentos/usePDFFromTemplate";
+import { Loading } from "@/core/components/ui/Loading";
 import { PDFViewer } from "@react-pdf/renderer";
 import { FractalCVTemplate } from "./FractalCVTemplate";
-import { useTranslateTalentData } from "../../../../hooks/talentos/useTranslateTalentData";
-import { TalentForFractalCV } from "../../../../models/interfaces/TalentDataForFractal";
-import { useViewTalentFile } from "../../../../hooks/talentos/useViewTalentFile";
-import { useUploadTalentFileS3 } from "../../../../hooks/talentos/useUploadTalentFileS3";
+import { useTranslateTalentData } from "@/core/hooks/talentos/useTranslateTalentData";
+import { TalentForFractalCV } from "@/core/models/interfaces/TalentDataForFractal";
+import { useViewTalentFile } from "@/core/hooks/talentos/useViewTalentFile";
+import { useUploadTalentFileS3 } from "@/core/hooks/talentos/useUploadTalentFileS3";
 import {
   ARCHIVO_PDF,
   DOCUMENTO_CV_FR_EN,
   DOCUMENTO_CV_FR_ES,
-} from "../../../../utilities/constants";
-import { downloadFractalCVDocx } from "../../../../utilities/fractalCVDocx";
-import { describeS3Error, uploadFileToS3 } from "../../../../services/s3.service";
-import { generateTalentUploadUrl } from "../../../../services/talents.service";
+} from "@/core/utilities/constants";
+import { downloadFractalCVDocx } from "@/core/utilities/fractalCVDocx";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
+import { generateTalentUploadUrl } from "@/core/services/talents.service";
+import { Button } from "@/core/components/ui/shadcn/button";
 
 const PDF_MIME = "application/pdf";
 
@@ -374,53 +375,55 @@ export const ModalFractalCV = ({
     >
       {isLoading && <Loading opacity="opacity-60" />}
       <div className="mt-5 flex flex-col h-min-[700px]">
+        {/* Button de shadcn con los colores propios de cada acción; al
+            deshabilitarse se atenúa (opacity) en lugar de volverse gris. */}
         <div className="flex gap-5 items-center justify-center mb-5">
           {showGenerateButton && (
-            <button
-              className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+            <Button
+              className="bg-green-600 text-white shadow hover:bg-green-700"
               onClick={handleGenerate}
               disabled={isLoading}
             >
               Generar
-            </button>
+            </Button>
           )}
 
           {showRegenerateButton && (
             <div className="flex gap-8">
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+              <Button
+                className="bg-blue-600 text-white shadow hover:bg-blue-700"
                 onClick={openFile}
               >
                 Ver actual
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+              </Button>
+              <Button
+                className="bg-blue-600 text-white shadow hover:bg-blue-700"
                 onClick={handleGenerate}
                 disabled={isLoading}
               >
                 Re-generar
-              </button>
+              </Button>
             </div>
           )}
 
           {showSaveButton && (
-            <button
-              className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+            <Button
+              className="bg-green-600 text-white shadow hover:bg-green-700"
               onClick={handleSave}
               disabled={isLoading}
             >
               Guardar
-            </button>
+            </Button>
           )}
 
           {showUpdateButton && (
-            <button
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg shadow hover:bg-orange-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+            <Button
+              className="bg-orange-600 text-white shadow hover:bg-orange-700"
               onClick={handleUpdate}
               disabled={isLoading}
             >
               Actualizar
-            </button>
+            </Button>
           )}
         </div>
 
@@ -434,20 +437,20 @@ export const ModalFractalCV = ({
               debe ser PDF).
             </p>
             <div className="flex flex-wrap gap-4 items-center justify-center">
-              <button
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+              <Button
+                className="bg-indigo-600 text-white shadow hover:bg-indigo-700"
                 onClick={handleDownloadForEdit}
                 disabled={isLoading || !talentForCV}
               >
                 Descargar para editar
-              </button>
-              <button
-                className="px-4 py-2 bg-slate-600 text-white rounded-lg shadow hover:bg-slate-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-slate-500"
+              </Button>
+              <Button
+                className="bg-slate-600 text-white shadow hover:bg-slate-700"
                 onClick={() => editedInputRef.current?.click()}
                 disabled={isLoading || !existingFile?.idArchivo}
               >
                 Subir CV editado
-              </button>
+              </Button>
               <input
                 ref={editedInputRef}
                 type="file"

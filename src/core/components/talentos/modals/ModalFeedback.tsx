@@ -2,22 +2,23 @@ import { Trash2, Star } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../../context/ModalContext";
-import { useApi } from "../../../hooks/useApi";
+import { useModal } from "@/core/context/ModalContext";
+import { useApi } from "@/core/hooks/useApi";
 import {
   AddOrUpdateFeedbackParams,
   BaseResponse,
   Feedback,
   FeedbackResponse,
   Talent,
-} from "../../../models";
-import { addOrUpdateTalentFeedback, deleteTalenteFeedback } from "../../../services/talents.service";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
-import { Modal } from "../../modals/Modal";
-import { Loading } from "../../ui/Loading";
+} from "@/core/models";
+import { addOrUpdateTalentFeedback, deleteTalenteFeedback } from "@/core/services/talents.service";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
 import { useEffect } from "react";
 import { z } from "zod";
-import { trim } from "../../../models/schemas/Validations";
+import { trim } from "@/core/models/schemas/Validations";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
 
 interface Props {
   idTalento?: number;
@@ -181,6 +182,7 @@ export const ModalFeedback = ({
         {isEditing && (
           <button
             type="button"
+            aria-label="Eliminar feedback"
             onClick={handleOnDelete}
             className="absolute -right-2 top-0 rounded-lg hover:bg-red-50 w-10 h-10 dark:hover:bg-red-500/10"
           >
@@ -230,11 +232,11 @@ export const ModalFeedback = ({
               name="feedback"
               control={control}
               render={({ field }) => (
-                <textarea
+                <Textarea
                   {...field}
                   id="feedback"
                   placeholder="Agrega un comentario"
-                  className="input resize-none min-h-[100px]"
+                  className="resize-none min-h-[100px]"
                 />
               )}
             />

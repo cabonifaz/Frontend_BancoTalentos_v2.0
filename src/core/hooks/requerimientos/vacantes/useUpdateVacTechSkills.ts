@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { VacanteSkill } from "../../../models/interfaces/VacanteSkill";
-import { axiosInstanceFMI } from "../../../services/axiosService";
-import { AppError, BaseResponseFMI } from "../../../models";
+import { VacanteSkill } from "@/core/models/interfaces/VacanteSkill";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
+import { AppError, BaseResponseFMI } from "@/core/models";
 
 export const useUpdateVacTechSkills = () => {
   const [isLoading, setIsLoading] = useState(false);

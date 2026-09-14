@@ -1,23 +1,28 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../../core/hooks/useApi";
-import { useParams } from "../../../../core/context/ParamsContext";
+import { useApi } from "@/core/hooks/useApi";
+import { useParams } from "@/core/context/ParamsContext";
 import {
   PERFIL,
   TIPO_MONEDA,
   TIPO_TARIFA,
-} from "../../../../core/utilities/constants";
-import { createTariff, updateTariff } from "../../../../core/services/administration.service";
+} from "@/core/utilities/constants";
+import { createTariff, updateTariff } from "@/core/services/administration.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import {
   BaseResponse,
   Tariff,
   TariffUpsertParams,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface Option {
   value: number;
@@ -134,14 +139,16 @@ export const TariffFormModal = ({ mode, initial, clients, existing, onClose, onS
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-      <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:border-slate-700">
+    // Como antes, un clic fuera cierra; ahora también Escape.
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        overlayClassName="bg-black/40"
+        className="flex w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] flex-col gap-0 rounded-xl border border-gray-200 p-0 shadow-2xl dark:border-slate-700"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 rounded-t-xl flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
-          <h2 className="font-semibold text-gray-800 dark:text-slate-100">
+          <DialogTitle className="font-semibold text-gray-800 dark:text-slate-100">
             {mode === "create" ? "Nueva tarifa" : "Editar tarifa"}
-          </h2>
+          </DialogTitle>
           <button
             type="button"
             onClick={onClose}
@@ -155,37 +162,36 @@ export const TariffFormModal = ({ mode, initial, clients, existing, onClose, onS
         <div className="px-6 py-5 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Cliente *">
-              <Select value={form.idCliente} onChange={set("idCliente")} options={clients} />
+              <AppSelect className="h-auto p-3" value={form.idCliente} onChange={set("idCliente")} options={clients} />
             </Field>
             <Field label="Perfil *">
-              <Select value={form.idPerfil} onChange={set("idPerfil")} options={perfilOptions} />
+              <AppSelect className="h-auto p-3" value={form.idPerfil} onChange={set("idPerfil")} options={perfilOptions} />
             </Field>
             <Field label="Moneda *">
-              <Select value={form.idMoneda} onChange={set("idMoneda")} options={monedaOptions} />
+              <AppSelect className="h-auto p-3" value={form.idMoneda} onChange={set("idMoneda")} options={monedaOptions} />
             </Field>
             <Field label="Tipo de tarifa *">
-              <Select
+              <AppSelect
+                className="h-auto p-3"
                 value={form.idTipoTarifa}
                 onChange={set("idTipoTarifa")}
                 options={tipoTarifaOptions}
               />
             </Field>
             <Field label="Tarifa *">
-              <input
+              <Input
                 type="number"
                 min={0}
                 step="0.01"
-                className="input w-full"
                 value={form.tarifa}
                 onChange={(e) => set("tarifa")(e.target.value)}
               />
             </Field>
             <Field label="Tipo de cambio (opcional)">
-              <input
+              <Input
                 type="number"
                 min={0}
                 step="0.001"
-                className="input w-full"
                 value={form.tipoCambio}
                 onChange={(e) => set("tipoCambio")(e.target.value)}
               />
@@ -208,39 +214,16 @@ export const TariffFormModal = ({ mode, initial, clients, existing, onClose, onS
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={saving || isDuplicate}
-            className={`btn ${saving || isDuplicate ? "btn-disabled" : "btn-primary"}`}
-          >
+          <Button onClick={onSubmit} disabled={saving || isDuplicate} className="mx-1">
             {saving ? "Guardando…" : "Guardar"}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-const Select = ({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: Option[];
-}) => (
-  <select className="input w-full" value={value} onChange={(e) => onChange(e.target.value)}>
-    <option value="">Seleccione…</option>
-    {options.map((o) => (
-      <option key={o.value} value={o.value}>
-        {o.label}
-      </option>
-    ))}
-  </select>
-);
-
+/** La etiqueta envuelve al control: queda asociada sin necesitar ids. */
 const Field = ({
   label,
   children,
@@ -248,10 +231,10 @@ const Field = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className="flex flex-col gap-1">
+  <Label className="flex flex-col gap-1">
     <span className="input-label">{label}</span>
     {children}
-  </div>
+  </Label>
 );
 
 export default TariffFormModal;

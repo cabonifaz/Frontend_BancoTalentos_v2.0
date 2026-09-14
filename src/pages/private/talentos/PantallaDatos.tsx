@@ -2,31 +2,32 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { Loading } from "../../../core/components";
-import BackButton from "../../../core/components/ui/BackButton";
+import { Loading } from "@/core/components";
+import BackButton from "@/core/components/ui/BackButton";
 import {
   DropdownForm,
   FormRow,
   InputForm,
-} from "../../../core/components/forms";
-import { useParams } from "../../../core/context/ParamsContext";
-import { useApi } from "../../../core/hooks/useApi";
+} from "@/core/components/forms";
+import { useParams } from "@/core/context/ParamsContext";
+import { useApi } from "@/core/hooks/useApi";
 import {
   BaseResponseFMI,
   DataFormSchema,
   DataFormType,
   SaveTalentFMIParams,
   TalentoFMI,
-} from "../../../core/models";
+} from "@/core/models";
 import {
   handleError,
   handleResponse,
-} from "../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import { enqueueSnackbar } from "notistack";
-import { saveTalentFMI } from "../../../core/services/talents.service";
-import useFetchTalento from "../../../core/hooks/talentos/useFetchTalento";
+import { saveTalentFMI } from "@/core/services/talents.service";
+import useFetchTalento from "@/core/hooks/talentos/useFetchTalento";
 import { format } from "date-fns";
-import { Dashboard } from "../Dashboard";
+import { Dashboard } from "@/pages/private/Dashboard";
+import { Button } from "@/core/components/ui/shadcn/button";
 
 const PantallaDatos = () => {
   const navigate = useNavigate();
@@ -272,22 +273,20 @@ const PantallaDatos = () => {
 
           {/* Form options */}
           <div className="flex justify-center gap-4">
-            <button
-              type="button"
-              className="btn btn-outline-gray"
+            <Button
+              variant="outline"
+              className="mx-1"
               onClick={goBack}
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              className={`btn ${
-                isDirty ? "btn-primary" : "btn-disabled"
-              }`}
+              className="mx-1"
               disabled={!isDirty}
             >
               Guardar
-            </button>
+            </Button>
           </div>
           </form>
         </div>

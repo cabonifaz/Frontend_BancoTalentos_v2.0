@@ -3,7 +3,7 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstanceNoToken,
 } from "./axiosService";
-import { LoginParams, LoginResponse } from "../models";
+import { LoginParams, LoginResponse } from "@/core/models";
 
 // auth
 export const loginApp = ({

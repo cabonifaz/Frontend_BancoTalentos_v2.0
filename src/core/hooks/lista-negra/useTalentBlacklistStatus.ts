@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { getTalentBlacklistStatus } from "../../services/blacklist.service";
-import { BlacklistStatusClient } from "../../models";
+import { getTalentBlacklistStatus } from "@/core/services/blacklist.service";
+import { BlacklistStatusClient } from "@/core/models";
 
 /**
  * Estado de un talento en la lista negra, para el icono del detalle: si tiene

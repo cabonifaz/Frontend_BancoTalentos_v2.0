@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { deleteEquipmentRequestFMI, undoCeseFMI, undoIngresoFMI, undoMovimientoFMI } from "../../services/administration.service";
+import { deleteEquipmentRequestFMI, undoCeseFMI, undoIngresoFMI, undoMovimientoFMI } from "@/core/services/administration.service";
 
 /**
  * Deshacer el último movimiento de un empleado (ingreso, movimiento, cese o

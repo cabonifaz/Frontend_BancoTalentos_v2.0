@@ -1,5 +1,5 @@
 import { Upload, FileCheck } from "lucide-react";
-import { AddTalentType } from "../../models/schemas/AddTalentSchema";
+import { AddTalentType } from "@/core/models/schemas/AddTalentSchema";
 import { FieldErrors, FieldValues, UseFormRegister } from "react-hook-form";
 
 interface FileInputProps<F extends FieldValues> {

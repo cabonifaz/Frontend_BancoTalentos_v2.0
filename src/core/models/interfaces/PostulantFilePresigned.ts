@@ -1,4 +1,4 @@
-import { BaseResponseFMI } from "../response/BaseResponse";
+import { BaseResponseFMI } from "@/core/models/response/BaseResponse";
 
 // Interfaces de archivos de postulante (REQUERIMIENTO_TALENTO) vía URL pre-firmada (S3).
 // La respuesta de subida/descarga reutiliza RqPresignedUrlResponse (ver RqFilePresigned.ts).

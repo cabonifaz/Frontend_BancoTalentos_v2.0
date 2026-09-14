@@ -7,8 +7,11 @@ import {
   ArrayPath,
   Path,
 } from "react-hook-form";
-import { DynamicSectionProps, Param } from "../../../models";
+import { DynamicSectionProps, Param } from "@/core/models";
 import { DynamicSection } from "./DynamicSection";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+
+const selectClass = "h-12 border-gray-300 p-3 dark:border-slate-600";
 
 interface LanguagesSectionProps<F extends FieldValues>
   extends DynamicSectionProps<F> {
@@ -23,6 +26,7 @@ export const LanguagesSection = <F extends FieldValues>({
   nivelesIdioma,
   shouldShowEmptyForm = true,
   shouldAddElements = true,
+  itemVariant = "plain",
 }: LanguagesSectionProps<F>) => {
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
     control,
@@ -59,6 +63,7 @@ export const LanguagesSection = <F extends FieldValues>({
       onRemove={remove}
       canRemoveFirst={!shouldShowEmptyForm}
       canAddSections={shouldAddElements}
+      itemVariant={itemVariant}
     >
       {fields.map((field, index) => (
         <div key={field.id}>
@@ -74,22 +79,22 @@ export const LanguagesSection = <F extends FieldValues>({
               name={`idiomas.${index}.idIdioma` as Path<F>}
               control={control}
               render={({ field: controllerField }) => (
-                <select
-                  {...controllerField}
+                <AppSelect
+                  ref={controllerField.ref}
                   id={`idiomas.${index}.idIdioma`}
+                  name={controllerField.name}
+                  onBlur={controllerField.onBlur}
                   value={controllerField.value ?? 0}
-                  onChange={(e) =>
-                    controllerField.onChange(Number(e.target.value))
+                  onChange={(v) =>
+                    controllerField.onChange(v === "" ? 0 : Number(v))
                   }
-                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-                >
-                  <option value={0}>Seleccione un idioma</option>
-                  {idiomas.map((idioma) => (
-                    <option key={idioma.idParametro} value={idioma.num1}>
-                      {idioma.string1}
-                    </option>
-                  ))}
-                </select>
+                  options={idiomas.map((idioma) => ({
+                    value: idioma.num1,
+                    label: idioma.string1,
+                  }))}
+                  placeholder="Seleccione un idioma"
+                  className={selectClass}
+                />
               )}
             />
             {(errors as any)?.idiomas?.[index]?.idIdioma && (
@@ -111,22 +116,22 @@ export const LanguagesSection = <F extends FieldValues>({
               name={`idiomas.${index}.idNivel` as Path<F>}
               control={control}
               render={({ field: controllerField }) => (
-                <select
-                  {...controllerField}
+                <AppSelect
+                  ref={controllerField.ref}
                   id={`idiomas.${index}.idNivel`}
+                  name={controllerField.name}
+                  onBlur={controllerField.onBlur}
                   value={controllerField.value ?? 0}
-                  onChange={(e) =>
-                    controllerField.onChange(Number(e.target.value))
+                  onChange={(v) =>
+                    controllerField.onChange(v === "" ? 0 : Number(v))
                   }
-                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-                >
-                  <option value={0}>Seleccione un nivel</option>
-                  {nivelesIdioma.map((nivel) => (
-                    <option key={nivel.idParametro} value={nivel.num1}>
-                      {nivel.string1}
-                    </option>
-                  ))}
-                </select>
+                  options={nivelesIdioma.map((nivel) => ({
+                    value: nivel.num1,
+                    label: nivel.string1,
+                  }))}
+                  placeholder="Seleccione un nivel"
+                  className={selectClass}
+                />
               )}
             />
             {(errors as any)?.idiomas?.[index]?.idNivel && (

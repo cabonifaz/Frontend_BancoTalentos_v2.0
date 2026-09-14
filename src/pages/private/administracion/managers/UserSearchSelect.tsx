@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { getUsersAdmin } from "../../../../core/services/administration.service";
-import { handleError } from "../../../../core/utilities/errorHandler";
-import { UserAdmin } from "../../../../core/models";
+import { getUsersAdmin } from "@/core/services/administration.service";
+import { handleError } from "@/core/utilities/errorHandler";
+import { UserAdmin } from "@/core/models";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 interface Props {
   /** IDs ya asignados en el otro slot: se ocultan para evitar duplicados. */
@@ -49,12 +50,14 @@ export const UserSearchSelect = ({ excludeIds = [], onSelect, onCancel }: Props)
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div className="relative border-b border-gray-100 dark:border-slate-700">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-        <input
+        {/* Input de shadcn sin caja propia: el borde lo pone el contenedor. */}
+        <Input
           ref={inputRef}
           value={term}
           onChange={(e) => setTerm(e.target.value)}
+          aria-label="Buscar usuario"
           placeholder="Buscar usuario por nombre o correo…"
-          className="w-full bg-transparent py-2.5 pl-9 pr-9 text-sm outline-none"
+          className="rounded-none border-0 bg-transparent py-2.5 pl-9 pr-9 text-sm focus-visible:ring-0 dark:bg-transparent"
         />
         <button
           type="button"

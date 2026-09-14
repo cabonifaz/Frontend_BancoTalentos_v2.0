@@ -3,8 +3,8 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstanceFMI,
 } from "./axiosService";
-import { Utils } from "../utilities/utils";
-import { AddReqFilesParams, BaseResponse, BaseResponseFMI, PostulantConfirmUploadRequest, PostulantDownloadUrlRequest, PostulantFileListResponse, PostulantUploadUrlRequest, ReqListParams, RequerimientosResponse, RequirementResponse, RqConfirmUploadRequest, RqPresignedUrlResponse, RqUploadUrlRequest, UpdateReqParams } from "../models";
+import { Utils } from "@/core/utilities/utils";
+import { AddReqFilesParams, BaseResponse, BaseResponseFMI, PostulantConfirmUploadRequest, PostulantDownloadUrlRequest, PostulantFileListResponse, PostulantUploadUrlRequest, ReqListParams, RequerimientosResponse, RequirementResponse, RqConfirmUploadRequest, RqPresignedUrlResponse, RqUploadUrlRequest, UpdateReqParams } from "@/core/models";
 
 export const getRequirements = (
   params: ReqListParams

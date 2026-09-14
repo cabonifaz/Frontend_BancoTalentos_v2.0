@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useSnackbar } from "notistack";
 import { Navigate } from "react-router-dom";
-import { useApi } from "../../core/hooks/useApi";
+import { useApi } from "@/core/hooks/useApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { loginApp } from "../../core/services/auth.service";
-import { Loading, InputForm } from "../../core/components";
-import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import { loginApp } from "@/core/services/auth.service";
+import { Loading, InputForm } from "@/core/components";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { Button } from "@/core/components/ui/shadcn/button";
 import {
   LoginFormSchema,
   LoginFormType,
   LoginParams,
   LoginResponse,
-} from "../../core/models";
+} from "@/core/models";
 
 export const Login = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -83,9 +84,9 @@ export const Login = () => {
             type="password"
             error={errors.password}
           />
-          <button type="submit" className="btn btn-primary">
+          <Button type="submit" className="mx-1">
             Iniciar sesión
-          </button>
+          </Button>
         </form>
       </section>
       <section className="flex-1 flex-col items-center justify-center bg-[#F4F4F5] relative hidden lg:flex dark:bg-slate-700">

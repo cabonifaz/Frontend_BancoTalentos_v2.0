@@ -9,20 +9,38 @@ import {
   Trash2,
 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../../core/hooks/useApi";
-import { Loading } from "../../../../core/components/ui/Loading";
-import { Pagination } from "../../../../core/components";
-import { deleteClient, getClientsAdmin, reactivateClient } from "../../../../core/services/administration.service";
+import { useApi } from "@/core/hooks/useApi";
+import { Loading } from "@/core/components/ui/Loading";
+import { Pagination } from "@/core/components";
+import { deleteClient, getClientsAdmin, reactivateClient } from "@/core/services/administration.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import {
   BaseResponse,
   ClientAdmin,
   ClientAdminListParams,
   ClientAdminListResponse,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 import { ClientFormModal } from "./ClientFormModal";
 
 const cell = (v: unknown) =>
@@ -34,6 +52,11 @@ const cell = (v: unknown) =>
 
 /** null = todos, 1 = activos, 0 = inactivos. */
 type EstadoFilter = "" | "1" | "0";
+
+const ESTADO_OPTIONS = [
+  { value: "1", label: "Activos" },
+  { value: "0", label: "Inactivos" },
+];
 
 // Debe coincidir con el tamaño de página configurado en BD (PARAMETROS maestro 11).
 const ITEMS_PER_PAGE = 5;
@@ -125,13 +148,12 @@ export const ClientsManager = () => {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Clientes</h2>
           <p className="text-sm text-gray-500 dark:text-slate-400">Administra los clientes del sistema.</p>
         </div>
-        <button
-          type="button"
+        <Button
           onClick={() => setModal({ mode: "create", initial: null })}
-          className="btn btn-primary flex items-center gap-2 flex-shrink-0"
+          className="mx-1 flex-shrink-0"
         >
           <Plus size={16} /> Nuevo cliente
-        </button>
+        </Button>
       </header>
 
       <div className="flex items-center gap-2 mb-4">
@@ -140,67 +162,66 @@ export const ClientsManager = () => {
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
           />
-          <input
-            className="input w-full !pl-10"
+          <Input
+            className="!pl-10"
+            aria-label="Buscar clientes"
             placeholder="Buscar por RUC o razón social…"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && canSearch && search()}
           />
         </div>
-        <select
-          className="input"
+        <AppSelect
+          aria-label="Estado"
+          className="h-auto w-auto min-w-[9rem] p-3"
           value={estado}
-          onChange={(e) => changeEstado(e.target.value as EstadoFilter)}
-        >
-          <option value="">Todos</option>
-          <option value="1">Activos</option>
-          <option value="0">Inactivos</option>
-        </select>
-        <button
-          type="button"
-          onClick={search}
-          disabled={!canSearch}
-          className={`btn ${canSearch ? "btn-primary" : "btn-disabled"}`}
-        >
+          onChange={(v) => changeEstado(v as EstadoFilter)}
+          options={ESTADO_OPTIONS}
+          placeholder="Todos"
+        />
+        <Button onClick={search} disabled={!canSearch} className="mx-1">
           Buscar
-        </button>
-        <button
-          type="button"
-          onClick={load}
-          title="Recargar"
-          className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
-        >
-          <RefreshCw size={16} />
-        </button>
+        </Button>
+        <Hint label="Recargar">
+          <button
+            type="button"
+            onClick={load}
+            aria-label="Recargar"
+            className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+          >
+            <RefreshCw size={16} />
+          </button>
+        </Hint>
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto border border-gray-100 rounded-lg dark:border-slate-700">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
-            <tr className="text-left">
-              <th className="px-4 py-2.5 font-medium">RUC</th>
-              <th className="px-4 py-2.5 font-medium">Razón social</th>
-              <th className="px-4 py-2.5 font-medium">Dirección</th>
-              <th className="px-4 py-2.5 font-medium">Ubicación</th>
-              <th className="px-4 py-2.5 font-medium">Estado</th>
-              <th className="px-4 py-2.5 font-medium text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full text-sm">
+          <TableHeader className="bg-gray-50 text-gray-500 sticky top-0 dark:bg-slate-800 dark:text-slate-400">
+            <TableRow className="text-left">
+              <TableHead className="px-4 py-2.5 font-medium">RUC</TableHead>
+              <TableHead className="px-4 py-2.5 font-medium">Razón social</TableHead>
+              <TableHead className="px-4 py-2.5 font-medium">Dirección</TableHead>
+              <TableHead className="px-4 py-2.5 font-medium">Ubicación</TableHead>
+              <TableHead className="px-4 py-2.5 font-medium">Estado</TableHead>
+              <TableHead className="px-4 py-2.5 font-medium text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {clients.map((c) => (
-              <tr
+              <TableRow
                 key={c.idCliente}
                 className={`border-t border-gray-100 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-700 ${
                   c.idEstadoRegistro !== 1 ? "text-gray-400 dark:text-slate-500" : "text-gray-600 dark:text-slate-300"
                 }`}
               >
-                <td className="px-4 py-2.5 font-medium">{cell(c.ruc)}</td>
-                <td className="px-4 py-2.5">{cell(c.razonSocial)}</td>
-                <td className="px-4 py-2.5 max-w-xs truncate" title={c.direccion ?? ""}>
-                  {cell(c.direccion)}
-                </td>
-                <td className="px-4 py-2.5">
+                <TableCell className="px-4 py-2.5 font-medium">{cell(c.ruc)}</TableCell>
+                <TableCell className="px-4 py-2.5">{cell(c.razonSocial)}</TableCell>
+                <Hint label={c.direccion ?? ""}>
+                  <TableCell className="px-4 py-2.5 max-w-xs truncate">
+                    {cell(c.direccion)}
+                  </TableCell>
+                </Hint>
+                <TableCell className="px-4 py-2.5">
                   {c.ubicacion ? (
                     <a
                       href={c.ubicacion}
@@ -213,8 +234,8 @@ export const ClientsManager = () => {
                   ) : (
                     <span className="text-gray-300 dark:text-slate-600">—</span>
                   )}
-                </td>
-                <td className="px-4 py-2.5">
+                </TableCell>
+                <TableCell className="px-4 py-2.5">
                   <span
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                       c.idEstadoRegistro === 1
@@ -224,49 +245,55 @@ export const ClientsManager = () => {
                   >
                     {c.idEstadoRegistro === 1 ? "Activo" : "Inactivo"}
                   </span>
-                </td>
-                <td className="px-4 py-2.5">
+                </TableCell>
+                <TableCell className="px-4 py-2.5">
                   <div className="flex items-center justify-end gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setModal({ mode: "edit", initial: c })}
-                      className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
-                      title="Editar"
-                    >
-                      <Pencil size={15} />
-                    </button>
+                    <Hint label="Editar">
+                      <button
+                        type="button"
+                        onClick={() => setModal({ mode: "edit", initial: c })}
+                        aria-label="Editar"
+                        className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                    </Hint>
                     {c.idEstadoRegistro === 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => setToDelete(c)}
-                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <Hint label="Eliminar">
+                        <button
+                          type="button"
+                          onClick={() => setToDelete(c)}
+                          aria-label="Eliminar"
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </Hint>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => reactivate(c)}
-                        className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors dark:hover:bg-emerald-500/10"
-                        title="Reactivar"
-                      >
-                        <RotateCcw size={15} />
-                      </button>
+                      <Hint label="Reactivar">
+                        <button
+                          type="button"
+                          onClick={() => reactivate(c)}
+                          aria-label="Reactivar"
+                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors dark:hover:bg-emerald-500/10"
+                        >
+                          <RotateCcw size={15} />
+                        </button>
+                      </Hint>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {!loadingList && clients.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
+              <TableRow>
+                <TableCell colSpan={6} className="px-4 py-10 text-center text-gray-400 dark:text-slate-500">
                   No se encontraron clientes.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {total > ITEMS_PER_PAGE && (
@@ -290,17 +317,22 @@ export const ClientsManager = () => {
       )}
 
       {toDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setToDelete(null)} />
-          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm p-6 text-center flex flex-col items-center gap-3 dark:bg-slate-800 dark:border-slate-700">
+        <Dialog open onOpenChange={(open) => { if (!open) setToDelete(null); }}>
+          <DialogContent
+            overlayClassName="bg-black/40"
+            aria-describedby="client-delete-desc"
+            className="flex w-[calc(100%-2rem)] max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 p-6 text-center shadow-2xl dark:border-slate-700"
+          >
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 dark:bg-red-500/10">
               <Trash2 size={22} />
             </div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Eliminar cliente</h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400">
+            <DialogTitle asChild>
+              <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Eliminar cliente</h3>
+            </DialogTitle>
+            <DialogDescription id="client-delete-desc" className="text-gray-500 dark:text-slate-400">
               ¿Dar de baja a <span className="font-medium">{toDelete.razonSocial}</span>? Se
               marcará como inactivo.
-            </p>
+            </DialogDescription>
             <div className="flex gap-2 w-full mt-2">
               <button
                 type="button"
@@ -309,17 +341,17 @@ export const ClientsManager = () => {
               >
                 Cancelar
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="btn btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                className="mx-1 flex-1"
               >
                 Eliminar
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

@@ -1,19 +1,30 @@
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { CloseModalButton } from "../../ui/CloseModalButton";
-import { Tabs } from "../../ui/Tabs";
+import {
+  DeepPartialSkipArrayKey,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+  useWatch,
+} from "react-hook-form";
+import { CloseModalButton } from "@/core/components/ui/CloseModalButton";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
 import {
   newRQSchema,
   newRQSchemaType,
-} from "../../../models/schemas/NewRQSchemaV1";
+} from "@/core/models/schemas/NewRQSchemaV1";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TabData } from "./tabs/TabData";
 import { TabClients } from "./tabs/TabClients";
-import { Client } from "../../../models/interfaces/Client";
-import { Param, SaveRequirementResponse } from "../../../models";
+import { Client } from "@/core/models/interfaces/Client";
+import { Param, SaveRequirementResponse } from "@/core/models";
 import { format } from "date-fns";
 import { TabVacancies } from "./tabs/TabVacancies";
-import { Loading } from "../../ui/Loading";
-import { useFetchTarifario } from "../../../hooks/requerimientos/useFetchTarifario";
+import { Loading } from "@/core/components/ui/Loading";
+import { useFetchTarifario } from "@/core/hooks/requerimientos/useFetchTarifario";
 import {
   DURACION_RQ,
   GRADO_ESTUDIO,
@@ -23,31 +34,67 @@ import {
   TIPO_ARCHIVOS_RQ,
   TIPO_MODALIDAD,
   TIPO_MONEDA,
-} from "../../../utilities/constants";
-import { useParams } from "../../../context/ParamsContext";
+} from "@/core/utilities/constants";
+import { useParams } from "@/core/context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
 import { TabManagement } from "./tabs/TabManagment";
-import { Utils } from "../../../utilities/utils";
-import { usePostHook } from "../../../hooks/usePostHook";
-import { uploadFileToS3 } from "../../../services/s3.service";
+import { Utils } from "@/core/utilities/utils";
+import { usePostHook } from "@/core/hooks/usePostHook";
+import { uploadFileToS3 } from "@/core/services/s3.service";
 import { enqueueSnackbar } from "notistack";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { RQTabLabel } from "@/core/components/requerimientos/rq-ui";
 
-interface TabLabelProps {
+type CreateValues = DeepPartialSkipArrayKey<newRQSchemaType>;
+
+/** Estado de cada pestaña a partir de lo que lleva escrito el formulario. */
+const clientDone = (v: CreateValues) => Number(v.idCliente) > 0;
+
+const dataDone = (v: CreateValues) =>
+  !!(
+    v.titulo &&
+    v.codigoRQ &&
+    Number(v.idEstado) > 0 &&
+    v.fechaSolicitud &&
+    v.fechaVencimiento &&
+    v.descripcion
+  );
+
+/** Personas que se piden en total (suma de cantidades). */
+const vacanciesCount = (v: CreateValues) =>
+  (v.lstVacantes ?? []).reduce((sum, x) => sum + Number(x?.cantidad || 0), 0);
+
+const filesCount = (v: CreateValues) => v.lstArchivos?.length ?? 0;
+
+const managementDone = (v: CreateValues) =>
+  Number(v.idModalidad) > 0 &&
+  Number(v.contrato?.duration) > 0 &&
+  Number(v.contrato?.idDuration) > 0 &&
+  (!v.tieneDuracion || (Number(v.duracion) > 0 && Number(v.idDuracion) > 0));
+
+interface CreateTabLabelProps {
   label: string;
-  hasError?: boolean;
+  hasError: boolean;
+  done?: (values: CreateValues) => boolean;
+  count?: (values: CreateValues) => number;
 }
 
-const TabLabel = ({ label, hasError }: TabLabelProps) => (
-  <div className="flex items-center gap-2">
-    <span>{label}</span>
-    {hasError && (
-      <span
-        className="inline-block w-2 h-2 bg-red-500 rounded-full"
-        title="Hay errores en esta sección"
-      />
-    )}
-  </div>
-);
+/**
+ * Etiqueta de pestaña que observa el formulario por su cuenta: así solo se
+ * vuelve a pintar ella al escribir, no el modal entero.
+ */
+const CreateTabLabel = ({ label, hasError, done, count }: CreateTabLabelProps) => {
+  const values = useWatch<newRQSchemaType>();
+  return (
+    <RQTabLabel
+      label={label}
+      hasError={hasError}
+      done={done?.(values)}
+      count={count?.(values)}
+    />
+  );
+};
 
 interface ModalProps {
   rqStates: Param[];
@@ -107,6 +154,9 @@ export const ModalRQCreate = ({
       fechaSolicitud: format(new Date(), "yyyy-MM-dd"),
       descripcion: "",
       idEstado: 0,
+      // Antes lo inicializaba el registro del checkbox nativo (false) y nunca
+      // cambiaba después; con el Checkbox de Radix hace falta darlo aquí.
+      autogenRQ: false,
       lstVacantes: [],
       lstArchivos: [],
       duracion: 1,
@@ -293,15 +343,23 @@ export const ModalRQCreate = ({
     return !!(errors.idCliente || errors.lstContactos);
   };
 
+  const isSubmitting = methods.formState.isSubmitting;
+
   return (
     <>
       {(loadingTariff || loadingParams || postloading) && (
         <Loading opacity="opacity-10" />
       )}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] p-4">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[1200px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 overflow-hidden relative flex flex-col dark:bg-slate-800">
-          <header className="flex shrink-0 items-center justify-between">
-            <h2 className="text-lg font-bold mb-2">Agregar Nuevo RQ</h2>
+      {/* Escape cierra como la X (sin confirmar, igual que ella); un clic fuera no. */}
+      <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent
+          className="flex w-[calc(100%-2rem)] max-w-none md:w-[90%] lg:w-[1200px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 flex-col gap-0 overflow-hidden p-0"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <header className="flex shrink-0 items-center justify-between gap-4 px-6 pb-4 pt-5">
+            <DialogTitle className="text-lg font-bold text-gray-800 dark:text-slate-100">
+              Nuevo requerimiento
+            </DialogTitle>
             <CloseModalButton onClick={onClose} />
           </header>
           <FormProvider {...methods}>
@@ -309,88 +367,100 @@ export const ModalRQCreate = ({
               onSubmit={methods.handleSubmit(onSubmit)}
               className="flex min-h-0 flex-1 flex-col"
             >
+              {/* forceMount en cada panel: el formulario está repartido entre
+                  pestañas y sin él se perdería lo escrito al cambiar de una a
+                  otra. TabsContent oculta las inactivas. */}
               <Tabs
-                isDataLoading={false}
-                tabs={[
-                  {
-                    label: (
-                      <TabLabel label="Cliente" hasError={clientHasErrors()} />
-                    ),
-                    children: (
-                      <TabClients
-                        clients={clients}
-                        fetchTarifario={fetchTarifario}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <TabLabel label="Datos RQ" hasError={rqHasErrors()} />
-                    ),
-                    children: <TabData rqStates={rqStates} />,
-                  },
+                defaultValue="cliente"
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <TabsList className="px-4">
+                  <TabsTrigger value="cliente">
+                    <CreateTabLabel
+                      label="Cliente"
+                      hasError={clientHasErrors()}
+                      done={clientDone}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="datos">
+                    <CreateTabLabel
+                      label="Datos RQ"
+                      hasError={rqHasErrors()}
+                      done={dataDone}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="vacantes">
+                    <CreateTabLabel
+                      label="Vacantes"
+                      hasError={vacantesHasErrors()}
+                      count={vacanciesCount}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="archivos">
+                    <CreateTabLabel
+                      label="Archivos"
+                      hasError={filesHasErrors()}
+                      count={filesCount}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="gestion">
+                    <CreateTabLabel
+                      label="Gestión"
+                      hasError={managementHasErrors()}
+                      done={managementDone}
+                    />
+                  </TabsTrigger>
+                </TabsList>
 
-                  {
-                    label: (
-                      <TabLabel
-                        label="Vacantes"
-                        hasError={vacantesHasErrors()}
-                      />
-                    ),
-                    children: (
-                      <TabVacancies
-                        tarifario={tarifario}
-                        techSkills={techSkills}
-                        availableDegrees={availableDegrees}
-                        refetchParams={refetchParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <TabLabel label="Archivos" hasError={filesHasErrors()} />
-                    ),
-                    children: (
-                      <TabFiles
-                        fileOptions={fileOptions}
-                        filesParms={fileExtensionsParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <TabLabel
-                        label="Gestión"
-                        hasError={managementHasErrors()}
-                      />
-                    ),
-                    children: (
-                      <TabManagement
-                        rqDuration={rqDuration}
-                        rqModes={rqModes}
-                        factModes={factModes}
-                        currencyTypes={currencyOptions}
-                      />
-                    ),
-                  },
-                ]}
-              />
-              {/* Botones de acción */}
-              <div className="flex shrink-0 justify-end space-x-4 mt-4 me-1">
-                <button
+                <TabsContent value="cliente" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabClients
+                    clients={clients}
+                    fetchTarifario={fetchTarifario}
+                  />
+                </TabsContent>
+                <TabsContent value="datos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabData rqStates={rqStates} />
+                </TabsContent>
+                <TabsContent value="vacantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabVacancies
+                    tarifario={tarifario}
+                    techSkills={techSkills}
+                    availableDegrees={availableDegrees}
+                    refetchParams={refetchParams}
+                  />
+                </TabsContent>
+                <TabsContent value="archivos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabFiles
+                    fileOptions={fileOptions}
+                    filesParms={fileExtensionsParams}
+                  />
+                </TabsContent>
+                <TabsContent value="gestion" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabManagement
+                    rqDuration={rqDuration}
+                    rqModes={rqModes}
+                    factModes={factModes}
+                    currencyTypes={currencyOptions}
+                  />
+                </TabsContent>
+              </Tabs>
+              {/* Pie fijo: el mismo en todas las pestañas. */}
+              <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-slate-700">
+                <Button variant="outline" onClick={onClose} className="font-medium">
+                  Cancelar
+                </Button>
+                <Button
                   type="submit"
-                  disabled={methods.formState.isSubmitting}
-                  className={`btn ${
-                    methods.formState.isSubmitting ? "btn-disabled" : "btn-primary"
-                  }`}
+                  disabled={isSubmitting}
+                  className="font-medium"
                 >
-                  {methods.formState.isSubmitting ? "Guardando…" : "Agregar RQ"}
-                </button>
-              </div>
+                  {isSubmitting ? "Guardando…" : "Agregar RQ"}
+                </Button>
+              </footer>
             </form>
           </FormProvider>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

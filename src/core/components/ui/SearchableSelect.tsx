@@ -1,5 +1,18 @@
-import { useState, useRef, useEffect } from "react";
-import { OutsideClickHandler } from "./OutsideClickHandler";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/core/components/ui/shadcn/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/core/components/ui/shadcn/command";
 
 export interface SearchableOption {
   value: string | number;
@@ -15,6 +28,12 @@ interface SearchableSelectProps {
   disabled?: boolean;
 }
 
+/**
+ * Select con búsqueda sobre Popover + Command (Radix + cmdk): navegable con
+ * teclado y anunciado como combobox. Conserva el comportamiento anterior:
+ * filtro por subcadena (no el difuso de cmdk), opciones en orden alfabético y
+ * búsqueda vacía cada vez que se abre.
+ */
 export const SearchableSelect = ({
   options,
   value,
@@ -25,13 +44,9 @@ export const SearchableSelect = ({
 }: SearchableSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const selectedOption = options.find(
-    (option) => option.value === value
-  );
+  const selectedOption = options.find((option) => option.value === value);
 
-  // Filtrar y ordenar opciones alfabéticamente
   const filteredOptions = options
     .filter((option) =>
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -42,116 +57,86 @@ export const SearchableSelect = ({
       })
     );
 
-  const handleToggle = () => {
+  const handleOpenChange = (open: boolean) => {
     if (disabled) return;
-    setIsOpen(!isOpen);
+    setIsOpen(open);
     setSearchTerm("");
   };
 
-  const handleOptionClick = (optionValue: string | number) => {
+  const handleSelect = (optionValue: string | number) => {
     onChange(optionValue);
     setIsOpen(false);
     setSearchTerm("");
   };
 
-  const handleSearchChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setIsOpen(false);
-      setSearchTerm("");
-    }
-  };
-
-  // Focus en el input cuando se abre
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={handleToggle}
-        disabled={disabled}
-        className={`w-full h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] text-left bg-white flex items-center justify-between dark:border-slate-600 dark:bg-slate-800 ${
-          disabled
-            ? "bg-gray-100 cursor-not-allowed dark:bg-slate-700"
-            : "cursor-pointer"
-        } ${className}`}
-      >
-        <span
-          className={
-            selectedOption ? "text-gray-900 dark:text-slate-50" : "text-gray-500 dark:text-slate-400"
-          }
+    // `modal`: dentro de un Dialog, sin esto la lista no hace scroll (el
+    // bloqueo de scroll del diálogo se queda con la rueda del ratón).
+    <Popover open={isOpen} onOpenChange={handleOpenChange} modal>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          aria-expanded={isOpen}
+          disabled={disabled}
+          className={cn(
+            "w-full h-10 px-4 border-gray-300 border rounded-lg focus:outline-none focus-visible:ring-1 focus-visible:ring-ring text-left bg-white flex items-center justify-between gap-2 dark:border-slate-600 dark:bg-slate-800",
+            disabled
+              ? "bg-gray-100 cursor-not-allowed dark:bg-slate-700"
+              : "cursor-pointer",
+            className
+          )}
         >
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <svg
-          className={`w-5 h-5 text-gray-400 transition-transform duration-200 dark:text-slate-500 ${
-            isOpen ? "transform rotate-180" : ""
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M19 9l-7 7-7-7"
+          <span
+            className={cn(
+              "truncate",
+              selectedOption
+                ? "text-gray-900 dark:text-slate-50"
+                : "text-gray-500 dark:text-slate-400"
+            )}
+          >
+            {selectedOption ? selectedOption.label : placeholder}
+          </span>
+          <ChevronDown
+            className={cn(
+              "w-5 h-5 shrink-0 text-gray-400 transition-transform duration-200 dark:text-slate-500",
+              isOpen && "rotate-180"
+            )}
           />
-        </svg>
-      </button>
-
-      {isOpen && (
-        <OutsideClickHandler onOutsideClick={() => setIsOpen(false)}>
-          <div className="absolute z-[50] w-full min-w-[300px] mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-hidden dark:bg-slate-800 dark:border-slate-600">
-            {/* Search input */}
-            <div className="p-3 border-b border-gray-200 dark:border-slate-700">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Buscar..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onKeyDown={handleKeyDown}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-
-            {/* Options list */}
-            <div className="max-h-48 overflow-y-auto">
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    onClick={() => handleOptionClick(option.value)}
-                    className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors dark:hover:bg-slate-700 ${
-                      option.value === value
-                        ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
-                        : "text-gray-900 dark:text-slate-50"
-                    }`}
-                  >
-                    {option.label}
-                  </div>
-                ))
-              ) : (
-                <div className="px-4 py-3 text-gray-500 text-center dark:text-slate-400">
-                  No se encontraron opciones
-                </div>
-              )}
-            </div>
-          </div>
-        </OutsideClickHandler>
-      )}
-    </div>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[var(--radix-popover-trigger-width)] min-w-[300px] p-0"
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Buscar..."
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+          />
+          <CommandList className="max-h-48">
+            <CommandEmpty className="px-4 py-3 text-center text-gray-500 dark:text-slate-400">
+              No se encontraron opciones
+            </CommandEmpty>
+            {filteredOptions.map((option) => (
+              <CommandItem
+                key={option.value}
+                value={String(option.value)}
+                onSelect={() => handleSelect(option.value)}
+                className={cn(
+                  "px-4 py-3 text-base",
+                  option.value === value
+                    ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
+                    : "text-gray-900 dark:text-slate-50"
+                )}
+              >
+                {option.label}
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 };

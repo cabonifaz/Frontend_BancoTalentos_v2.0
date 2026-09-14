@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 export type CareerProps = {
   label: string;
@@ -71,14 +78,19 @@ export const AddCareerModal = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full md:w-[90%] lg:w-[700px] min-h-[400px] max-h-[80vh] overflow-y-auto relative dark:bg-slate-800">
-        <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-slate-100">
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="block w-full max-w-none md:w-[90%] lg:w-[700px] min-h-[400px] max-h-[80vh] overflow-y-auto p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="text-lg font-bold mb-4 text-gray-800 dark:text-slate-100">
           Seleccionar carreras
-        </h2>
+        </DialogTitle>
 
         <button
           type="button"
+          aria-label="Cerrar"
           onClick={onClose}
           className="absolute top-4 right-4 focus:outline-none"
         >
@@ -88,81 +100,65 @@ export const AddCareerModal = ({
         {/* Inputs */}
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            <input
+            <Input
               type="text"
-              className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300 dark:border-slate-700"
+              aria-label="Nombre de la carrera"
+              className="h-12 px-3"
               placeholder="Nombre de la carrera..."
               value={careerName}
               onChange={(e) => setCareerName(e.target.value)}
             />
 
-            <select
-              className="border rounded-lg px-3 py-2 w-full focus:ring focus:ring-blue-300 dark:border-slate-700"
+            <AppSelect
+              aria-label="Grado"
+              className="h-12 px-3"
               value={selectedDegreeId}
-              onChange={(e) =>
-                setSelectedDegreeId(parseInt(e.target.value) || "")
-              }
-            >
-              <option value="">Selecciona un grado...</option>
-              {degreeOptions.map((degree) => (
-                <option key={degree.id} value={degree.id}>
-                  {degree.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setSelectedDegreeId(parseInt(v) || "")}
+              options={degreeOptions.map((d) => ({ value: d.id, label: d.label }))}
+              placeholder="Selecciona un grado..."
+            />
 
-            <button
-              type="button"
-              className="btn btn-blue shadow-sm"
-              onClick={handleAddCareer}
-            >
+            <Button variant="blue" className="mx-1 h-12 shadow-sm" onClick={handleAddCareer}>
               Agregar
-            </button>
+            </Button>
           </div>
 
-          {/* Checkbox para carrera opcional */}
+          {/* Interruptor para carrera opcional */}
           <div className="flex items-center gap-2">
-            <label className="inline-flex items-center cursor-pointer">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={isOptional}
-                  onChange={(e) => setIsOptional(e.target.checked)}
-                  className="sr-only"
-                />
-                <div
-                  className={`block w-10 h-6 rounded-full transition-colors duration-200 ${
-                    isOptional ? "bg-blue-600" : "bg-gray-300 dark:bg-slate-600"
-                  }`}
-                >
-                  <div
-                    className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 dark:bg-slate-800 ${
-                      isOptional ? "transform translate-x-4" : ""
-                    }`}
-                  ></div>
-                </div>
-              </div>
-              <span className="ml-3 text-sm font-medium text-gray-700 dark:text-slate-200">
-                Carrera opcional
-              </span>
-            </label>
-            <div className="group relative">
-              <svg
-                className="w-4 h-4 text-gray-400 cursor-help dark:text-slate-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+            <div className="inline-flex items-center">
+              <Switch
+                id="career-optional"
+                size="md"
+                checked={isOptional}
+                onCheckedChange={setIsOptional}
+              />
+              <Label
+                htmlFor="career-optional"
+                className="ml-3 cursor-pointer text-sm font-medium text-gray-700 dark:text-slate-200"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10 dark:bg-slate-900">
-                Si está marcado, esta carrera será opcional para el
-                candidato
-              </div>
+                Carrera opcional
+              </Label>
             </div>
+            <Hint label="Si está marcado, esta carrera será opcional para el candidato">
+              <button
+                type="button"
+                aria-label="Qué significa carrera opcional"
+                className="text-gray-400 cursor-help dark:text-slate-500"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </Hint>
           </div>
         </div>
 
@@ -203,13 +199,16 @@ export const AddCareerModal = ({
                     )}
                   </div>
 
-                  <button
-                    className="text-red-500 hover:text-red-700 ml-3 dark:hover:text-red-300"
-                    title="Eliminar carrera"
-                    onClick={() => handleRemoveCareer(career.label)}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <Hint label="Eliminar carrera">
+                    <button
+                      type="button"
+                      aria-label={`Eliminar carrera ${career.label}`}
+                      className="text-red-500 hover:text-red-700 ml-3 dark:hover:text-red-300"
+                      onClick={() => handleRemoveCareer(career.label)}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </Hint>
                 </li>
               );
             })
@@ -223,23 +222,17 @@ export const AddCareerModal = ({
         {/* Footer */}
         <div className="absolute bottom-4 left-0 right-0 flex items-center justify-end px-4">
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn btn-secondary"
-            >
+            {/* Era `btn btn-secondary`, clase que no existe en App.css: se
+                veía como texto con padding. ghost es lo más fiel. */}
+            <Button variant="ghost" onClick={onClose} className="mx-1">
               Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              className="btn btn-blue"
-            >
+            </Button>
+            <Button variant="blue" onClick={handleSave} className="mx-1">
               Guardar
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

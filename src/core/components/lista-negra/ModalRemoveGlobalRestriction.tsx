@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import { AlertTriangle, Search } from "lucide-react";
-import { Modal } from "../modals/Modal";
-import { Loading } from "../ui/Loading";
-import { useModal } from "../../context/ModalContext";
-import { useBlacklist } from "../../hooks/lista-negra/useBlacklist";
-import { BlacklistItem, BlacklistKeptClient } from "../../models";
-import { Client } from "../../models/interfaces/Client";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { useModal } from "@/core/context/ModalContext";
+import { useBlacklist } from "@/core/hooks/lista-negra/useBlacklist";
+import { BlacklistItem, BlacklistKeptClient } from "@/core/models";
+import { Client } from "@/core/models/interfaces/Client";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
 
 export const MODAL_REMOVE_GLOBAL_RESTRICTION = "modalRemoveGlobalRestriction";
 
@@ -22,7 +26,7 @@ interface Props {
 }
 
 const inputClass =
-  "w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+  "bg-white px-3 py-2 text-sm text-gray-700 dark:text-slate-200";
 
 /**
  * Quitar una restricción global no libera al talento de golpe: se da de baja el
@@ -220,16 +224,17 @@ export const ModalRemoveGlobalRestriction = ({
 
         {!pendingRetry && (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            <Label htmlFor="global-removal-motivo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
               Motivo por el que se quita la restricción global
-            </label>
-            <textarea
+            </Label>
+            <Textarea
+              id="global-removal-motivo"
               value={motivoEliminacion}
               onChange={(e) => setMotivoEliminacion(e.target.value)}
               rows={2}
               maxLength={1000}
               placeholder="Describa por qué se levanta la restricción global"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:border-slate-600"
+              className="px-3 py-2 text-sm resize-none"
             />
           </div>
         )}
@@ -237,8 +242,9 @@ export const ModalRemoveGlobalRestriction = ({
         {!pendingRetry && (
           <div className="flex relative h-10">
             <Search className="absolute top-2 left-3 text-gray-400 dark:text-slate-500" size={20} />
-            <input
+            <Input
               type="text"
+              aria-label="Buscar cliente"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar cliente"
@@ -278,19 +284,19 @@ export const ModalRemoveGlobalRestriction = ({
             visibleClients.map((c) => (
               <div key={c.idCliente} className="p-2 border-b last:border-b-0 dark:border-slate-700">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={!!kept[c.idCliente]}
-                    onChange={() => toggle(c.idCliente)}
-                    className="h-4 w-4 flex-shrink-0 accent-indigo-600"
+                    onCheckedChange={() => toggle(c.idCliente)}
+                    className="h-4 w-4 flex-shrink-0 data-[state=checked]:border-indigo-600 data-[state=checked]:bg-indigo-600"
                   />
                   <span className="text-sm text-gray-800 truncate dark:text-slate-100">
                     {c.razonSocial}
                   </span>
                 </label>
                 {kept[c.idCliente] && (
-                  <input
+                  <Input
                     type="text"
+                    aria-label={`Motivo para ${c.razonSocial}`}
                     value={motivos[c.idCliente] ?? ""}
                     onChange={(e) => setMotivo(c.idCliente, e.target.value)}
                     maxLength={1000}

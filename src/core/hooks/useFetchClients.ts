@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { Client } from "../models/interfaces/Client";
-import { axiosInstanceFMI } from "../services/axiosService";
-import { ClientListResponse } from "../models";
+import { Client } from "@/core/models/interfaces/Client";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
+import { ClientListResponse } from "@/core/models";
 
 export const useFetchClients = () => {
   const [clientes, setClientes] = useState<Client[]>([]);

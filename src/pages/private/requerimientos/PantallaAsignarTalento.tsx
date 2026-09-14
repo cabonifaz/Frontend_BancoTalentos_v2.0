@@ -1,30 +1,50 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { CircleAlert } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { axiosInstanceFMI } from "../../../core/services/axiosService";
-import BackButton from "../../../core/components/ui/BackButton";
-import Toast from "../../../core/components/ui/Toast";
-import { Dashboard } from "../Dashboard";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
+import BackButton from "@/core/components/ui/BackButton";
+import Toast from "@/core/components/ui/Toast";
+import { Dashboard } from "@/pages/private/Dashboard";
 import {
   ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
   ESTADO_CONFIRMADO,
   ESTADO_DATOS_COMPLETOS,
   ESTADO_OBSERVADO,
-} from "../../../core/utilities/constants";
-import { Loading } from "../../../core/components";
+} from "@/core/utilities/constants";
+import { Loading } from "@/core/components";
 import {
   AsignarTalentoType,
   BlacklistValidation,
   ReqVacante,
-} from "../../../core/models";
-import { validateBlacklist } from "../../../core/services/blacklist.service";
+} from "@/core/models";
+import { validateBlacklist } from "@/core/services/blacklist.service";
 import { format, parseISO, set } from "date-fns";
-import { ModalIngreso } from "../../../core/components/requerimientos/modals/ModalIngreso";
-import { ModalSolicitudEquipo } from "../../../core/components/requerimientos/modals/ModalSolicitudEquipo";
-import { ModalRiesgoTalento } from "../../../core/components/requerimientos/modals/ModalRiesgoTalento";
-import { useFetchTarifario } from "../../../core/hooks/requerimientos/useFetchTarifario";
-import type { FilaBanda } from "../../../core/utilities/riesgoTalento";
+import { ModalIngreso } from "@/core/components/requerimientos/modals/ModalIngreso";
+import { ModalSolicitudEquipo } from "@/core/components/requerimientos/modals/ModalSolicitudEquipo";
+import { ModalRiesgoTalento } from "@/core/components/requerimientos/modals/ModalRiesgoTalento";
+import { useFetchTarifario } from "@/core/hooks/requerimientos/useFetchTarifario";
+import type { FilaBanda } from "@/core/utilities/riesgoTalento";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 // Types
 type RequerimientoType = {
@@ -64,22 +84,23 @@ const upsertTalent = (
   return next;
 };
 
-// Componentes
-const TableHeader = () => (
-  <thead>
-    <tr className="table-header">
-      <th className="table-header-cell">ID</th>
-      <th className="table-header-cell">Nombres y apellidos</th>
-      <th className="table-header-cell">Doc. Identidad</th>
-      <th className="table-header-cell">Celular</th>
-      <th className="table-header-cell">Correo</th>
-      <th className="table-header-cell">Situación</th>
-      <th className="table-header-cell">Estado</th>
-      <th className="table-header-cell">Perfil</th>
-      <th className="table-header-cell">Confirmado</th>
-      <th className="table-header-cell">Acciones</th>
-    </tr>
-  </thead>
+// Componentes. Llevan el prefijo Talent para no chocar con TableHeader /
+// TableRow de shadcn, que se usan dentro.
+const TalentTableHeader = () => (
+  <TableHeader>
+    <TableRow className="table-header">
+      <TableHead className="table-header-cell">ID</TableHead>
+      <TableHead className="table-header-cell">Nombres y apellidos</TableHead>
+      <TableHead className="table-header-cell">Doc. Identidad</TableHead>
+      <TableHead className="table-header-cell">Celular</TableHead>
+      <TableHead className="table-header-cell">Correo</TableHead>
+      <TableHead className="table-header-cell">Situación</TableHead>
+      <TableHead className="table-header-cell">Estado</TableHead>
+      <TableHead className="table-header-cell">Perfil</TableHead>
+      <TableHead className="table-header-cell">Confirmado</TableHead>
+      <TableHead className="table-header-cell">Acciones</TableHead>
+    </TableRow>
+  </TableHeader>
 );
 
 interface TableRowProps {
@@ -95,7 +116,7 @@ interface TableRowProps {
   disabled: boolean;
 }
 
-const TableRow: React.FC<TableRowProps> = ({
+const TalentTableRow: React.FC<TableRowProps> = ({
   talento,
   onRemove,
   onUpdate,
@@ -112,53 +133,54 @@ const TableRow: React.FC<TableRowProps> = ({
     talento.estado?.toUpperCase() === "OBSERVADO" ||
     talento.idEstado === 1;
 
-  const handleCheckboxChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // La casilla es controlada: solo cambia si el padre acepta el cambio. Antes,
+  // cuando no lo aceptaba, había que forzar `e.target.checked` a mano.
+  const handleCheckedChange = (checked: boolean) => {
     // Si ya está confirmado desde API o no es ACEPTADO, no hacer nada
     if (isConfirmedFromAPI || !isAceptado) return;
-
-    // Intentar cambiar el estado
-    const newValue = e.target.checked;
-    onConfirmChange(talento, newValue);
-
-    // Forzar el estado del checkbox si no se pudo cambiar
-    if (newValue !== talento.confirmado) {
-      e.target.checked = !!talento.confirmado;
-    }
+    onConfirmChange(talento, checked);
   };
 
+  const nombreCompleto = `${talento.nombres} ${
+    talento.apellidos ||
+    `${talento.apellidoPaterno || ""} ${talento.apellidoMaterno || ""}`
+  }`.trim();
+
   return (
-    <tr className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
-      <td className="table-cell">{talento.idTalento}</td>
-      <td className="table-cell">
+    <TableRow className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
+      <TableCell className="table-cell">{talento.idTalento}</TableCell>
+      <TableCell className="table-cell">
         {talento.nombres}{" "}
         {talento.apellidos ||
           `${talento.apellidoPaterno || ""} ${
             talento.apellidoMaterno || ""
           }`}
-      </td>
-      <td className="table-cell">{talento.dni}</td>
-      <td className="table-cell">{talento.celular}</td>
-      <td className="table-cell">{talento.email}</td>
-      <td className="table-cell">
+      </TableCell>
+      <TableCell className="table-cell">{talento.dni}</TableCell>
+      <TableCell className="table-cell">{talento.celular}</TableCell>
+      <TableCell className="table-cell">{talento.email}</TableCell>
+      <TableCell className="table-cell">
         <div className="min-w-full flex justify-center gap-1 items-center">
           <p>{talento?.situacion || ""}</p>
           {talento.idSituacion === 2 && (
-            <div className="w-fit relative group">
-              <CircleAlert
-                className="min-w-5 min-h-5 w-5 h-5 cursor-pointer"
-                color="#ef4444"
-              />
-              <div className="absolute invisible group-hover:visible z-10 left-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                <p className="text-start">{talento?.tooltip || ""}</p>
-                <div className="absolute top-1/2 right-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-t-transparent border-b-transparent border-r-[#484848] dark:border-slate-700"></div>
-              </div>
-            </div>
+            // Era un tooltip hecho con group-hover: solo con ratón. Ahora el
+            // icono es un botón y el motivo se lee también con teclado.
+            <Hint label={talento?.tooltip || ""} side="right">
+              <button
+                type="button"
+                aria-label="Ver motivo de la situación"
+                className="w-fit"
+              >
+                <CircleAlert
+                  className="min-w-5 min-h-5 w-5 h-5 cursor-pointer"
+                  color="#ef4444"
+                />
+              </button>
+            </Hint>
           )}
         </div>
-      </td>
-      <td className="table-cell">
+      </TableCell>
+      <TableCell className="table-cell">
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
             isAceptado
@@ -173,65 +195,58 @@ const TableRow: React.FC<TableRowProps> = ({
             (talento.idEstado === 2 ? "DATOS COMPLETOS" : "OBSERVADO")
           ).toUpperCase()}
         </span>
-      </td>
-      <td className="table-cell">{talento?.perfil}</td>
-      <td className="table-cell text-center">
-        <input
-          type="checkbox"
+      </TableCell>
+      <TableCell className="table-cell">{talento?.perfil}</TableCell>
+      <TableCell className="table-cell text-center">
+        <Checkbox
+          aria-label={`Confirmar a ${nombreCompleto}`}
           checked={talento.confirmado || false}
           disabled={
             isConfirmedFromAPI || !isAceptado || disabled //||
             // talento?.idSituacion === 2
           }
-          onChange={handleCheckboxChange}
+          onCheckedChange={(checked) => handleCheckedChange(checked === true)}
           className={
             isConfirmedFromAPI ||
             !isAceptado ||
             disabled ||
             talento?.idSituacion === 2
-              ? "input-checkbox-readonly"
-              : "input-checkbox"
+              ? "cursor-default"
+              : undefined
           }
         />
-      </td>
-      <td className="py-3 px-4 flex gap-2 whitespace-nowrap">
-        <button
+      </TableCell>
+      <TableCell className="py-3 px-4 flex gap-2 whitespace-nowrap">
+        <Button
+          variant="blue"
           onClick={() => onUpdate(talento)}
           disabled={disabled || isConfirmedFromAPI || !isObservado}
-          className={`btn ${
-            !disabled && !isConfirmedFromAPI && isObservado
-              ? "btn-blue"
-              : "btn-disabled"
-          } text-sm`}
+          className="mx-1 text-sm"
         >
           Actualizar
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="destructive"
           onClick={() => onRemove(talento.idTalento)}
           disabled={disabled || isConfirmedFromAPI}
-          className={`btn ${
-            disabled || isConfirmedFromAPI
-              ? "btn-disabled"
-              : "btn-red"
-          } text-sm`}
+          className="mx-1 text-sm"
         >
           Remover
-        </button>
-        <button
-          onClick={() => onRisk(talento)}
-          className="btn btn-yellow text-sm inline-flex items-center gap-1.5"
-          title="Comparar su pretensión salarial con la tarifa del perfil"
-        >
-          Calcular Riesgo
-        </button>
-        <button
-          onClick={() => onInterview(talento)}
-          className="btn btn-primary text-sm"
-        >
+        </Button>
+        <Hint label="Comparar su pretensión salarial con la tarifa del perfil">
+          <Button
+            variant="yellow"
+            onClick={() => onRisk(talento)}
+            className="mx-1 gap-1.5 text-sm"
+          >
+            Calcular Riesgo
+          </Button>
+        </Hint>
+        <Button onClick={() => onInterview(talento)} className="mx-1 text-sm">
           Entrevistar
-        </button>
-      </td>
-    </tr>
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 };
 
@@ -263,15 +278,14 @@ const TalentoSelection: React.FC<TalentoSelectionProps> = ({
         {talent.apellidoMaterno}
       </p>
     </div>
-    <button
+    <Button
+      variant="blue"
       onClick={() => onSelect(talent, perfil, idPerfil)}
       disabled={isSelected || !isPerfilSet}
-      className={`btn ${
-        isSelected || !isPerfilSet ? "btn-disabled" : "btn-blue"
-      }`}
+      className="mx-1"
     >
       {isSelected ? "Seleccionado" : "Seleccionar"}
-    </button>
+    </Button>
   </div>
 );
 
@@ -336,13 +350,19 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col dark:bg-slate-800">
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="flex w-[calc(100%-2rem)] max-w-md max-h-[80vh] flex-col gap-0 p-0"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div className="p-4 border-b flex justify-between items-center dark:border-slate-700">
-          <h2 className="text-xl font-semibold">
+          <DialogTitle className="text-xl font-semibold">
             Seleccione el talento
-          </h2>
+          </DialogTitle>
           <button
+            type="button"
+            aria-label="Cerrar"
             onClick={onClose}
             className="text-gray-600 hover:text-gray-900 dark:text-slate-300 dark:hover:text-slate-50"
           >
@@ -365,45 +385,45 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
 
         <div className="p-4 border-b flex flex-col dark:border-slate-700">
           <div className="flex items-center pb-4">
-            <label
+            <Label
               htmlFor="t-perfil"
               className="dropdown-label w-1/2"
             >
               Perfil
-            </label>
-            <select
+            </Label>
+            <AppSelect
               id="t-perfil"
-              className="dropdown text-sm"
-              onChange={(e) => {
-                setIdPerfil(Number(e.target.value));
+              className="text-sm"
+              value={idPerfil}
+              onChange={(v) => {
+                const id = Number(v);
+                setIdPerfil(id);
                 setPerfil(
-                  e.target.options[e.target.selectedIndex].text
+                  vacantesUnicas.find((vac) => vac.idPerfil === id)
+                    ?.perfilProfesional ?? ""
                 );
               }}
-              defaultValue={idPerfil}
-            >
-              <option value={0}>Seleccione un perfil</option>
-              {vacantesUnicas.map((vacante) => (
-                <option
-                  key={vacante.idRequerimientoVacante}
-                  value={vacante.idPerfil}
-                >
-                  {vacante.perfilProfesional}
-                </option>
-              ))}
-            </select>
+              options={vacantesUnicas.map((vacante) => ({
+                value: vacante.idPerfil,
+                label: vacante.perfilProfesional,
+              }))}
+              placeholder="Seleccione un perfil"
+            />
           </div>
           <div className="flex items-center">
             <div className="relative flex-grow">
-              <input
+              <Input
                 type="text"
+                aria-label="Buscar talento por nombre"
                 placeholder="Buscar por nombre"
-                className="w-full px-4 py-2 border rounded-lg pr-10 dark:border-slate-700"
+                className="px-4 py-2 pr-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
                 <button
+                  type="button"
+                  aria-label="Limpiar búsqueda"
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
                 >
@@ -424,12 +444,9 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
                 </button>
               )}
             </div>
-            <button
-              onClick={handleSearchSubmit}
-              className="ml-2 btn btn-primary"
-            >
+            <Button onClick={handleSearchSubmit} className="ml-2 mr-1">
               Buscar
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -463,8 +480,8 @@ const SelectionModal: React.FC<SelectionModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -490,11 +507,15 @@ const BlacklistWarningModal: React.FC<BlacklistWarningModalProps> = ({
   const esGlobal = validation.idCliente === 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 dark:bg-slate-800">
-        <h2 className="text-xl font-semibold mb-4 text-red-700 dark:text-red-300">
+    // Escape equivale a Cancelar; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent
+        className="block w-[calc(100%-2rem)] max-w-md p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="text-xl font-semibold mb-4 text-red-700 dark:text-red-300">
           Talento restringido
-        </h2>
+        </DialogTitle>
 
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 mb-4 dark:bg-red-500/10">
           <p className="text-sm text-red-800 dark:text-red-300">
@@ -522,15 +543,15 @@ const BlacklistWarningModal: React.FC<BlacklistWarningModalProps> = ({
         </p>
 
         <div className="flex justify-end gap-4">
-          <button onClick={onCancel} className="btn btn-outline-gray">
+          <Button variant="outline" onClick={onCancel} className="mx-1">
             Cancelar
-          </button>
-          <button onClick={onConfirm} className="btn btn-red">
+          </Button>
+          <Button variant="destructive" onClick={onConfirm} className="mx-1">
             Asignar igual
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -550,20 +571,29 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 dark:bg-slate-800">
-        <h2 className="text-xl font-semibold mb-4">Confirmación</h2>
-        <p className="mb-6">{message}</p>
+    // Antes iba a z-20, por DEBAJO del sidebar (z-40), que seguía clicable
+    // detrás del overlay. El Dialog va a z-[60] como el resto.
+    // Escape equivale a Cancelar; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        aria-describedby="asignar-confirm-desc"
+        className="block w-[calc(100%-2rem)] max-w-md p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="text-xl font-semibold mb-4">Confirmación</DialogTitle>
+        <DialogDescription id="asignar-confirm-desc" className="mb-6 text-base text-inherit">
+          {message}
+        </DialogDescription>
         <div className="flex justify-end gap-4">
-          <button onClick={onClose} className="btn btn-outline-gray">
+          <Button variant="outline" onClick={onClose} className="mx-1">
             Cancelar
-          </button>
-          <button onClick={onConfirm} className="btn btn-blue">
+          </Button>
+          <Button variant="blue" onClick={onConfirm} className="mx-1">
             Confirmar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -1301,7 +1331,8 @@ const TalentTable: React.FC = () => {
 
           {/* Acciones principales */}
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="blue"
               onClick={() => {
                 setSearchTerm("");
                 setSearchResults([]);
@@ -1309,21 +1340,17 @@ const TalentTable: React.FC = () => {
                 handleSearch("");
               }}
               disabled={buttonsDisabled}
-              className={`btn ${
-                buttonsDisabled ? "btn-disabled" : "btn-blue"
-              }`}
+              className="mx-1"
             >
               Agregar Talento
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleConfirmOpen}
               disabled={buttonsDisabled}
-              className={`btn ${
-                buttonsDisabled ? "btn-disabled" : "btn-primary"
-              }`}
+              className="mx-1"
             >
               Finalizar
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -1367,14 +1394,14 @@ const TalentTable: React.FC = () => {
         {/* Tabla de talentos */}
         <div className="table-container min-h-0 flex-1">
           <div className="table-wrapper h-full overflow-auto">
-            <table className="table">
-              <TableHeader />
-              <tbody>
+            <Table className="table">
+              <TalentTableHeader />
+              <TableBody>
                 {localTalents.length > 0 ? (
                   localTalents.map(
                     (talento) =>
                       talento.idEstadoRegistro !== 0 && (
-                        <TableRow
+                        <TalentTableRow
                           key={talento.idTalento}
                           talento={talento}
                           onRemove={handleRemoveTalent}
@@ -1387,17 +1414,17 @@ const TalentTable: React.FC = () => {
                       )
                   )
                 ) : (
-                  <tr>
-                    <td
+                  <TableRow>
+                    <TableCell
                       colSpan={10}
                       className="py-4 text-center text-gray-500 dark:text-slate-400"
                     >
                       No hay talentos seleccionados
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 

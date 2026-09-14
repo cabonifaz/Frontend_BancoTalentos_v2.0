@@ -11,27 +11,27 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useFetchClients } from "../../../../core/hooks/useFetchClients";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
 import {
   getSeleccionEntrevistas,
   SelectionInterviews,
   SelectionUser,
-} from "../../../../core/services/seleccion.service";
-import { Utils } from "../../../../core/utilities/utils";
-import { FiltersBar } from "../components/FiltersBar";
-import { SERIES, colorizeSlices } from "../components/chartTheme";
-import { useChartChrome } from "../components/useChartChrome";
-import { DonutChart } from "../components/DonutChart";
-import { UserPicker } from "../components/UserPicker";
-import { periodLabel } from "../components/dateRange";
-import type { ChartView } from "../components/ui";
+} from "@/core/services/seleccion.service";
+import { Utils } from "@/core/utilities/utils";
+import { FiltersBar } from "@/pages/private/seleccion/components/FiltersBar";
+import { SERIES, colorizeSlices } from "@/pages/private/seleccion/components/chartTheme";
+import { useChartChrome } from "@/pages/private/seleccion/components/useChartChrome";
+import { DonutChart } from "@/pages/private/seleccion/components/DonutChart";
+import { UserPicker } from "@/pages/private/seleccion/components/UserPicker";
+import { periodLabel } from "@/pages/private/seleccion/components/dateRange";
+import type { ChartView } from "@/pages/private/seleccion/components/ui";
 import {
   ChartCard,
   ChartViewToggle,
   KpiCard,
   SectionState,
-} from "../components/ui";
-import { useSelectionSection } from "../useSelectionSection";
+} from "@/pages/private/seleccion/components/ui";
+import { useSelectionSection } from "@/pages/private/seleccion/useSelectionSection";
 
 const TEAL = SERIES[0];
 const INDIGO = SERIES[1];

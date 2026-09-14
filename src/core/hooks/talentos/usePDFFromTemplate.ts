@@ -1,11 +1,11 @@
 // src/core/hooks/usePDFFromReact.ts
 import { useState } from "react";
-import { AppError } from "../../models";
+import { AppError } from "@/core/models";
 import { pdf } from "@react-pdf/renderer";
-import { Experience } from "../../models";
-import { FractalCVTemplate } from "../../components/talentos/modals/generate-cv/FractalCVTemplate";
+import { Experience } from "@/core/models";
+import { FractalCVTemplate } from "@/core/components/talentos/modals/generate-cv/FractalCVTemplate";
 import React from "react";
-import { TalentForFractalCV } from "../../models/interfaces/TalentDataForFractal";
+import { TalentForFractalCV } from "@/core/models/interfaces/TalentDataForFractal";
 
 export const usePDFFromReact = () => {
   const [isLoading, setIsLoading] = useState(false);

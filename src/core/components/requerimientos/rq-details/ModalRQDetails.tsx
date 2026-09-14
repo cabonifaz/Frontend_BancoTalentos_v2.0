@@ -1,21 +1,28 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { CloseModalButton } from "../../ui/CloseModalButton";
-import { Tabs } from "../../ui/Tabs";
+import { Pencil } from "lucide-react";
+import { CloseModalButton } from "@/core/components/ui/CloseModalButton";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { LoadingOverlay } from "@/core/components/ui/LoadingOverlay";
 import {
   UpdateBaseRQSchema,
   UpdateBaseRQSchemaType,
-} from "../../../models/schemas/UpdateBaseRQSchema";
+} from "@/core/models/schemas/UpdateBaseRQSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Param, RequirementResponse } from "../../../models";
+import { Param, RequirementResponse } from "@/core/models";
 import { TabRQData } from "./tabs/TabRQData";
-import { useFetchRequirement } from "../../../hooks/requerimientos/useFetchRequirement";
-import { formatISODate } from "../../../utilities/date.utils";
-import { Client } from "../../../models/interfaces/Client";
+import { useFetchRequirement } from "@/core/hooks/requerimientos/useFetchRequirement";
+import { formatISODate } from "@/core/utilities/date.utils";
+import { Client } from "@/core/models/interfaces/Client";
 import { TabClient } from "./tabs/TabClient";
-import { useFetchTarifario } from "../../../hooks/requerimientos/useFetchTarifario";
+import { useFetchTarifario } from "@/core/hooks/requerimientos/useFetchTarifario";
 import { TabVacancies } from "./tabs/TabVacancies";
-import { Utils } from "../../../utilities/utils";
+import { Utils } from "@/core/utilities/utils";
 import {
   DURACION_RQ,
   MODALIDAD_RQ,
@@ -25,14 +32,28 @@ import {
   TIPO_ARCHIVOS_RQ,
   TIPO_ARCHIVO,
   TIPO_MONEDA,
-} from "../../../utilities/constants";
-import { useParams } from "../../../context/ParamsContext";
+} from "@/core/utilities/constants";
+import { useParams } from "@/core/context/ParamsContext";
 import { TabFiles } from "./tabs/TabFiles";
 import { TabPostulant } from "./tabs/TabPostulant";
 import { TabManagment } from "./tabs/TabManagement";
-import { Loading } from "../../ui/Loading";
-import { usePostHook } from "../../../hooks/usePostHook";
+import { Loading } from "@/core/components/ui/Loading";
+import { usePostHook } from "@/core/hooks/usePostHook";
 import { enqueueSnackbar } from "notistack";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { EstadoBadge } from "@/core/components/requerimientos/EstadoBadge";
+import { RQTabLabel, displayDate } from "@/core/components/requerimientos/rq-ui";
+
+/** Pestañas en orden: `initialTab` es el índice de la que se abre. */
+const DETAIL_TABS = [
+  "cliente",
+  "datos",
+  "vacantes",
+  "archivos",
+  "postulantes",
+  "gestion",
+] as const;
 
 interface ModalProps {
   rqId: number;
@@ -136,7 +157,8 @@ export const ModalRQDetails = ({
         maxTravelAllowance: f.maxTravelAllowance,
 
         minMonthlyAmount: f.minMonthlyAmount,
-        maxMonthlyAmount: f.minMonthlyAmount,
+        // Antes copiaba el mínimo: el máximo mensual se perdía al guardar.
+        maxMonthlyAmount: f.maxMonthlyAmount,
 
         minQuarterlyAmount: f.minQuarterlyAmount,
         maxQuarterlyAmount: f.maxQuarterlyAmount,
@@ -250,6 +272,10 @@ export const ModalRQDetails = ({
     }
   }, [res]);
 
+  /**
+   * Entra y sale del modo edición. Siempre repone los datos guardados, así que
+   * "Cancelar" deshace lo que se haya cambiado.
+   */
   const handleToggleEdit = () => {
     const req = res?.requerimiento;
 
@@ -396,16 +422,90 @@ export const ModalRQDetails = ({
     console.log("Errors: ", methods.formState.errors);
   }, [methods.formState.errors]);
 
+  // Errores por pestaña: solo pueden aparecer al guardar en modo edición.
+  const { errors, isSubmitting } = methods.formState;
+  const rqHasErrors = !!(
+    errors.codigoRQ ||
+    errors.descripcion ||
+    errors.idEstadoRQ ||
+    errors.titulo ||
+    errors.fechaSolicitud ||
+    errors.fechaVencimiento
+  );
+  const vacanciesHaveErrors = !!errors.lstVacantes;
+  const managementHasErrors = !!(
+    errors.idDuracion ||
+    errors.tieneDuracion ||
+    errors.duracion ||
+    errors.idModalidad ||
+    errors.idModalidadFact ||
+    errors.contrato ||
+    errors.lstFacturacion
+  );
+
+  // Cabecera: datos guardados del RQ (no los que se están editando).
+  const req = res?.requerimiento;
+  const estadoLabel = rqStates.find((s) => s.num1 === req?.idEstado)?.string1;
+  const title = req
+    ? [req.codigoRQ, req.titulo].filter(Boolean).join(" · ")
+    : "Detalle del RQ";
+  const meta = req
+    ? [
+        req.cliente,
+        req.fechaSolicitud &&
+          `Solicitado el ${displayDate(formatISODate(req.fechaSolicitud))}`,
+        req.fechaVencimiento &&
+          `Vence el ${displayDate(formatISODate(req.fechaVencimiento))}`,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
+
   return (
     <>
       {(reqLoading || postloading || loadTariff) && (
         <Loading opacity="opacity-20" />
       )}
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60] p-4">
-        <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[95%] lg:w-[1300px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 overflow-hidden relative flex flex-col dark:bg-slate-800">
-          <header className="flex shrink-0 items-center justify-between">
-            <h2 className="text-lg font-bold mb-2">Detalles RQ</h2>
-            <CloseModalButton onClick={onClose} />
+      {/* Escape cierra como la X (sin confirmar, igual que ella); un clic fuera no. */}
+      <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent
+          className="flex w-[calc(100%-2rem)] max-w-none md:w-[95%] lg:w-[1300px] h-[calc(100vh-2rem)] max-h-[720px] min-h-0 flex-col gap-0 overflow-hidden p-0"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <header className="flex shrink-0 items-start justify-between gap-4 px-6 pb-4 pt-5">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-3">
+                <DialogTitle className="text-lg font-bold text-gray-800 dark:text-slate-100">
+                  {title}
+                </DialogTitle>
+                {req && estadoLabel && (
+                  <EstadoBadge idEstado={req.idEstado ?? 0} estado={estadoLabel} />
+                )}
+              </div>
+              {meta && (
+                <p className="text-sm text-gray-500 dark:text-slate-400">{meta}</p>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              {/* Un solo "Editar" para Datos RQ, Vacantes y Gestión (antes, un
+                  lápiz en cada pestaña que activaba la edición de todas). */}
+              {isEditing ? (
+                <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-[var(--color-blue)] dark:bg-sky-400/15 dark:text-sky-300">
+                  Editando
+                </span>
+              ) : (
+                <Button
+                  variant="outline-blue"
+                  onClick={handleToggleEdit}
+                  disabled={!req}
+                  className="font-medium"
+                >
+                  <Pencil className="h-4 w-4" aria-hidden />
+                  Editar
+                </Button>
+              )}
+              <CloseModalButton onClick={onClose} />
+            </div>
           </header>
 
           <FormProvider {...methods}>
@@ -413,99 +513,126 @@ export const ModalRQDetails = ({
               onSubmit={methods.handleSubmit(onSubmit)}
               className="flex min-h-0 flex-1 flex-col"
             >
+              {reqLoading && <LoadingOverlay />}
+              {/* forceMount en cada panel: Datos RQ, Vacantes y Gestión son un
+                  solo formulario y sin él se perdería lo editado al cambiar de
+                  pestaña. TabsContent oculta las inactivas. */}
               <Tabs
-                isDataLoading={reqLoading}
-                initialTab={initialTab}
-                tabs={[
-                  {
-                    label: "Cliente",
-                    children: (
-                      <TabClient
-                        rqId={rqId}
-                        clients={clients}
-                        contacts={res?.requerimiento.lstRqContactos || []}
-                        fetchRequirement={fetchRequirement}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Datos RQ",
-                    children: (
-                      <TabRQData
-                        rqStates={rqStates}
-                        isEditing={isEditing}
-                        handleToggleEdit={handleToggleEdit}
-                      />
-                    ),
-                  },
+                defaultValue={DETAIL_TABS[initialTab] ?? DETAIL_TABS[0]}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <TabsList className="px-4">
+                  <TabsTrigger value="cliente">
+                    <RQTabLabel label="Cliente" />
+                  </TabsTrigger>
+                  <TabsTrigger value="datos">
+                    <RQTabLabel
+                      label="Datos RQ"
+                      hasError={isEditing && rqHasErrors}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="vacantes">
+                    <RQTabLabel
+                      label="Vacantes"
+                      count={totalVacs}
+                      hasError={isEditing && vacanciesHaveErrors}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="archivos">
+                    <RQTabLabel
+                      label="Archivos"
+                      count={req?.lstRqArchivo?.length}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="postulantes">
+                    <RQTabLabel
+                      label="Postulantes"
+                      count={req?.lstRqTalento?.length}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="gestion">
+                    <RQTabLabel
+                      label="Gestión"
+                      hasError={isEditing && managementHasErrors}
+                    />
+                  </TabsTrigger>
+                </TabsList>
 
-                  {
-                    label: (
-                      <p className="flex gap-2">
-                        Vacantes
-                        <span
-                          className={`flex items-center justify-center rounded-full bg-[var(--color-blue)] text-white w-8 h-8 text-xs`}
-                        >
-                          {totalVacs}
-                        </span>
-                      </p>
-                    ),
-                    children: (
-                      <TabVacancies
-                        tariff={tarifario}
-                        isEditing={isEditing}
-                        toggleEdit={handleToggleEdit}
-                        availableDegrees={availableDegrees}
-                        availableTechSkills={availableTechSkills}
-                        refetchParams={refetchParams}
-                        vacancies={res?.requerimiento.lstRqVacantes || []}
-                        fetchRequirement={fetchRequirement}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Archivos",
-                    children: (
-                      <TabFiles
-                        rqId={rqId}
-                        fileOptions={fileTypes}
-                        initialFiles={initialFiles}
-                        fetchRequirement={fetchRequirement}
-                        extensionsParams={fileExtensionsParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Postulantes",
-                    children: (
-                      <TabPostulant
-                        rqId={rqId}
-                        idCliente={res?.requerimiento.idCliente || 0}
-                        rqState={res?.requerimiento.idEstado || 0}
-                        handleAssign={handleAssingPost}
-                        talents={res?.requerimiento.lstRqTalento || []}
-                      />
-                    ),
-                  },
-                  {
-                    label: "Gestión",
-                    children: (
-                      <TabManagment
-                        isEditing={isEditing}
-                        handleToggleEdit={handleToggleEdit}
-                        rqDurationOptions={rqDurationOptions}
-                        paymentModes={paymentModes}
-                        rqMode={rqMode}
-                        currencyOptions={currencyOptions}
-                      />
-                    ),
-                  },
-                ]}
-              />
+                <TabsContent value="cliente" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabClient
+                    rqId={rqId}
+                    clients={clients}
+                    contacts={res?.requerimiento.lstRqContactos || []}
+                    fetchRequirement={fetchRequirement}
+                  />
+                </TabsContent>
+                <TabsContent value="datos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabRQData rqStates={rqStates} isEditing={isEditing} />
+                </TabsContent>
+                <TabsContent value="vacantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabVacancies
+                    tariff={tarifario}
+                    isEditing={isEditing}
+                    availableDegrees={availableDegrees}
+                    availableTechSkills={availableTechSkills}
+                    refetchParams={refetchParams}
+                    vacancies={res?.requerimiento.lstRqVacantes || []}
+                    fetchRequirement={fetchRequirement}
+                  />
+                </TabsContent>
+                <TabsContent value="archivos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabFiles
+                    rqId={rqId}
+                    fileOptions={fileTypes}
+                    initialFiles={initialFiles}
+                    fetchRequirement={fetchRequirement}
+                    extensionsParams={fileExtensionsParams}
+                  />
+                </TabsContent>
+                <TabsContent value="postulantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabPostulant
+                    rqId={rqId}
+                    idCliente={res?.requerimiento.idCliente || 0}
+                    rqState={res?.requerimiento.idEstado || 0}
+                    handleAssign={handleAssingPost}
+                    talents={res?.requerimiento.lstRqTalento || []}
+                  />
+                </TabsContent>
+                <TabsContent value="gestion" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabManagment
+                    isEditing={isEditing}
+                    rqDurationOptions={rqDurationOptions}
+                    paymentModes={paymentModes}
+                    rqMode={rqMode}
+                    currencyOptions={currencyOptions}
+                  />
+                </TabsContent>
+              </Tabs>
+
+              {/* Pie solo en modo edición: guarda Datos RQ, Vacantes y Gestión. */}
+              {isEditing && (
+                <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-slate-700">
+                  <Button
+                    variant="outline"
+                    onClick={handleToggleEdit}
+                    disabled={isSubmitting}
+                    className="font-medium"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="font-medium"
+                  >
+                    {isSubmitting ? "Guardando…" : "Guardar cambios"}
+                  </Button>
+                </footer>
+              )}
             </form>
           </FormProvider>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

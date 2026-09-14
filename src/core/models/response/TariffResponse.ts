@@ -1,4 +1,4 @@
-import { Tariff } from "../interfaces/Tariff";
+import { Tariff } from "@/core/models/interfaces/Tariff";
 import { BaseResponse } from "./BaseResponse";
 
 export interface TariffListResponse {

@@ -1,8 +1,8 @@
-import { ReqArchivo } from "../interfaces/ReqArchivo";
-import { ReqContacto } from "../interfaces/ReqContacto";
-import { ReqTalento } from "../interfaces/ReqTalento";
-import { ReqVacante } from "../interfaces/ReqVacante";
-import { RQFacturacion } from "../interfaces/RQFacturacion";
+import { ReqArchivo } from "@/core/models/interfaces/ReqArchivo";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
+import { ReqTalento } from "@/core/models/interfaces/ReqTalento";
+import { ReqVacante } from "@/core/models/interfaces/ReqVacante";
+import { RQFacturacion } from "@/core/models/interfaces/RQFacturacion";
 
 export interface RequirementResponse {
   idTipoMensaje: number;

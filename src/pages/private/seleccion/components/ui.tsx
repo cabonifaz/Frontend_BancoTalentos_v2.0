@@ -6,6 +6,7 @@ import {
   PieChart as PieChartIcon,
 } from "lucide-react";
 import { ReactNode } from "react";
+import { Hint } from "@/core/components/ui/Hint";
 
 /** Tarjeta KPI: valor grande + etiqueta. */
 export const KpiCard = ({
@@ -91,21 +92,21 @@ export const ChartViewToggle = ({
       {options.map(({ key, label, icon: Icon }) => {
         const active = value === key;
         return (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onChange(key)}
-            aria-pressed={active}
-            title={label}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-              active
-                ? "bg-white text-gray-800 shadow-sm dark:bg-slate-800 dark:text-slate-100"
-                : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
-            }`}
-          >
-            <Icon size={14} strokeWidth={2} />
-            {label}
-          </button>
+          <Hint key={key} label={label}>
+            <button
+              type="button"
+              onClick={() => onChange(key)}
+              aria-pressed={active}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                active
+                  ? "bg-white text-gray-800 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                  : "text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
+            >
+              <Icon size={14} strokeWidth={2} />
+              {label}
+            </button>
+          </Hint>
         );
       })}
     </div>

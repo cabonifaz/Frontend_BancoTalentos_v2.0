@@ -4,7 +4,7 @@ import {
   BlacklistItem,
   BlacklistStatusClient,
   BlacklistValidation,
-} from "../interfaces/Blacklist";
+} from "@/core/models/interfaces/Blacklist";
 
 export interface BlacklistListResponse {
   result: BaseResponse;

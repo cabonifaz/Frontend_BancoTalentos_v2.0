@@ -1,5 +1,5 @@
-import { axiosInstance } from "../../services/axiosService";
-import { IACVResponse } from "../../models/response/AICVResponse";
+import { axiosInstance } from "@/core/services/axiosService";
+import { IACVResponse } from "@/core/models/response/AICVResponse";
 
 export const useFetchCVData = () => {
   /**

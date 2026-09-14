@@ -1,4 +1,4 @@
-import { ApiConfig } from "../hooks/useAsyncService";
+import { ApiConfig } from "@/core/hooks/useAsyncService";
 import { axiosInstance } from "./axiosService";
 
 interface SummaryResponse {

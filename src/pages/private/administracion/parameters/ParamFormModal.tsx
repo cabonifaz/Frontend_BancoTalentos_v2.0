@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../../core/hooks/useApi";
-import { createParam, updateParam } from "../../../../core/services/administration.service";
+import { useApi } from "@/core/hooks/useApi";
+import { createParam, updateParam } from "@/core/services/administration.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import {
   BaseResponse,
   InsertUpdateResponse,
   ParamItem,
   ParamUpsertParams,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { DatePicker } from "@/core/components/ui/DatePicker";
 
 interface Props {
   mode: "create" | "edit";
@@ -166,12 +171,14 @@ export const ParamFormModal = ({
     mode === "create" ? "Nuevo parámetro" : `Editar parámetro #${initial?.idParametro}`;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-      <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:border-slate-700">
+    // Como antes, un clic fuera cierra; ahora también Escape.
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        overlayClassName="bg-black/40"
+        className="flex w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] flex-col gap-0 rounded-xl border border-gray-200 p-0 shadow-2xl dark:border-slate-700"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 rounded-t-xl flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
-          <h2 className="font-semibold text-gray-800 dark:text-slate-100">{title}</h2>
+          <DialogTitle className="font-semibold text-gray-800 dark:text-slate-100">{title}</DialogTitle>
           <button
             type="button"
             onClick={onClose}
@@ -185,26 +192,23 @@ export const ParamFormModal = ({
         <div className="px-6 py-5 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="ID Maestro *">
-              <input
+              <Input
                 type="number"
-                className="input w-full"
                 value={form.idMaestro}
                 onChange={(e) => set("idMaestro")(e.target.value)}
               />
             </Field>
             <Field label="ID Sub-maestro">
-              <input
+              <Input
                 type="number"
-                className="input w-full"
                 value={form.idSubMaestro}
                 onChange={(e) => set("idSubMaestro")(e.target.value)}
               />
             </Field>
             <div className="sm:col-span-3">
               <Field label="Descripción">
-                <input
+                <Input
                   type="text"
-                  className="input w-full"
                   value={form.descripcion}
                   onChange={(e) => set("descripcion")(e.target.value)}
                 />
@@ -212,33 +216,35 @@ export const ParamFormModal = ({
             </div>
 
             <Field label="NUM1">
-              <input type="number" className="input w-full" value={form.num1} onChange={(e) => set("num1")(e.target.value)} />
+              <Input type="number" value={form.num1} onChange={(e) => set("num1")(e.target.value)} />
             </Field>
             <Field label="NUM2">
-              <input type="number" className="input w-full" value={form.num2} onChange={(e) => set("num2")(e.target.value)} />
+              <Input type="number" value={form.num2} onChange={(e) => set("num2")(e.target.value)} />
             </Field>
             <Field label="NUM3">
-              <input type="number" className="input w-full" value={form.num3} onChange={(e) => set("num3")(e.target.value)} />
+              <Input type="number" value={form.num3} onChange={(e) => set("num3")(e.target.value)} />
             </Field>
 
             <Field label="STRING1">
-              <input type="text" className="input w-full" value={form.string1} onChange={(e) => set("string1")(e.target.value)} />
+              <Input type="text" value={form.string1} onChange={(e) => set("string1")(e.target.value)} />
             </Field>
             <Field label="STRING2">
-              <input type="text" className="input w-full" value={form.string2} onChange={(e) => set("string2")(e.target.value)} />
+              <Input type="text" value={form.string2} onChange={(e) => set("string2")(e.target.value)} />
             </Field>
             <Field label="STRING3">
-              <input type="text" className="input w-full" value={form.string3} onChange={(e) => set("string3")(e.target.value)} />
+              <Input type="text" value={form.string3} onChange={(e) => set("string3")(e.target.value)} />
             </Field>
 
+            {/* DatePicker de shadcn: devuelve "yyyy-MM-dd" (o "" al vaciarla),
+                igual que el <input type="date">. */}
             <Field label="DATE1">
-              <input type="date" className="input w-full" value={form.date1} onChange={(e) => set("date1")(e.target.value)} />
+              <DatePicker value={form.date1} onChange={set("date1")} />
             </Field>
             <Field label="DATE2">
-              <input type="date" className="input w-full" value={form.date2} onChange={(e) => set("date2")(e.target.value)} />
+              <DatePicker value={form.date2} onChange={set("date2")} />
             </Field>
             <Field label="DATE3">
-              <input type="date" className="input w-full" value={form.date3} onChange={(e) => set("date3")(e.target.value)} />
+              <DatePicker value={form.date3} onChange={set("date3")} />
             </Field>
           </div>
 
@@ -253,20 +259,16 @@ export const ParamFormModal = ({
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={loading}
-            className={`btn ${loading ? "btn-disabled" : "btn-primary"}`}
-          >
+          <Button onClick={onSubmit} disabled={loading} className="mx-1">
             {loading ? "Guardando…" : "Guardar"}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
+/** La etiqueta envuelve al control: queda asociada sin necesitar ids. */
 const Field = ({
   label,
   children,
@@ -274,10 +276,10 @@ const Field = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className="flex flex-col gap-1">
+  <Label className="flex flex-col gap-1">
     <span className="input-label">{label}</span>
     {children}
-  </div>
+  </Label>
 );
 
 export default ParamFormModal;

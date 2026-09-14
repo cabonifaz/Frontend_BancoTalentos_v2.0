@@ -1,14 +1,21 @@
 import { Info, X } from "lucide-react";
-import { AsignarTalentoType } from "../../../models/interfaces/TalentoFMI";
-import { Tarifa } from "../../../models/interfaces/Tarifa";
-import { PanelRiesgo } from "../PanelRiesgo";
-import type { DatosRiesgo } from "../PanelRiesgo";
+import { AsignarTalentoType } from "@/core/models/interfaces/TalentoFMI";
+import { Tarifa } from "@/core/models/interfaces/Tarifa";
+import { PanelRiesgo } from "@/core/components/requerimientos/PanelRiesgo";
+import type { DatosRiesgo } from "@/core/components/requerimientos/PanelRiesgo";
 import {
   MAESTRO_MODALIDAD_FACT,
   nombreModalidad,
-} from "../../../utilities/riesgoTalento";
-import type { FilaBanda } from "../../../utilities/riesgoTalento";
-import { useParams } from "../../../context/ParamsContext";
+} from "@/core/utilities/riesgoTalento";
+import type { FilaBanda } from "@/core/utilities/riesgoTalento";
+import { useParams } from "@/core/context/ParamsContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
 
 interface Props {
   talento: AsignarTalentoType | null;
@@ -65,22 +72,25 @@ export const ModalRiesgoTalento = ({
   };
 
   return (
-    // z-[60] y no z-20: el rail del sidebar es z-40 y el logo de Fractal z-[42],
-    // así que por debajo de eso el overlay no los tapa y siguen siendo clicables.
-    // Es el mismo nivel que usan ModalIngreso, ModalSolicitudEquipo y el aviso de
-    // lista negra.
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+    // El Dialog va a z-[60], por encima del rail del sidebar (z-40) y del logo
+    // de Fractal (z-[42]), como el resto de modales. Escape cierra; un clic
+    // fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        aria-describedby="riesgo-talento-desc"
+        className="block w-[calc(100%-2rem)] max-w-3xl max-h-[90vh] overflow-y-auto p-0 shadow-none"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div className="flex items-start justify-between p-6 pb-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-50">
+            <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-slate-50">
               Riesgo de asignación
-            </h2>
-            <p className="text-sm text-gray-500 mt-1 dark:text-slate-400">
+            </DialogTitle>
+            <DialogDescription id="riesgo-talento-desc" className="text-gray-500 mt-1 dark:text-slate-400">
               {nombreCompleto}
               {talento.perfil ? ` · ${talento.perfil}` : ""}
               {modalidadTalento ? ` · ${modalidadTalento}` : ""}
-            </p>
+            </DialogDescription>
           </div>
           <button
             type="button"
@@ -114,15 +124,11 @@ export const ModalRiesgoTalento = ({
         )}
 
         <div className="flex justify-end px-6 pb-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline-gray mx-0"
-          >
+          <Button variant="outline" onClick={onClose} className="mx-0">
             Cerrar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

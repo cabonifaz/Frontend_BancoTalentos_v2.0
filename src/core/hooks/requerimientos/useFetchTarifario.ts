@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
-import { Tarifa } from "../../models/interfaces/Tarifa";
-import { TarifarioResponse } from "../../models/response/TarifarioResponse";
+import { Tarifa } from "@/core/models/interfaces/Tarifa";
+import { TarifarioResponse } from "@/core/models/response/TarifarioResponse";
 import { enqueueSnackbar } from "notistack";
-import { axiosInstanceFMI } from "../../services/axiosService";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 export const useFetchTarifario = () => {
   const [tarifario, setTarifario] = useState<Tarifa[]>([]);

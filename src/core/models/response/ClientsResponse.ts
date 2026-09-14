@@ -1,4 +1,4 @@
-import { Client } from "../interfaces/Client";
+import { Client } from "@/core/models/interfaces/Client";
 
 export interface ClientListResponse {
     idTipoMensaje: number;

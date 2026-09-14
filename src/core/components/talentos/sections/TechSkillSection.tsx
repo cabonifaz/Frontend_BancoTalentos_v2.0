@@ -6,8 +6,10 @@ import {
   useFieldArray,
   useFormContext,
 } from "react-hook-form";
-import { DynamicSection } from "../..";
-import { DynamicSectionProps, Param } from "../../../models";
+import { DynamicSection } from "@/core/components";
+import { DynamicSectionProps, Param } from "@/core/models";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 import { useState, useEffect, useRef } from "react";
 
 interface TechSkillsSectionProps<F extends FieldValues>
@@ -109,7 +111,7 @@ export const TechSkillsSection = <F extends FieldValues>({
 
                   return (
                     <div className="relative">
-                      <input
+                      <Input
                         {...field}
                         id={`habilidadesTecnicas.${index}.habilidad`}
                         name={field.name}
@@ -149,7 +151,7 @@ export const TechSkillsSection = <F extends FieldValues>({
                         }}
                         role="combobox"
                         placeholder="Escribe para buscar..."
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full dark:border-slate-600"
+                        className="h-12 border-gray-300 dark:border-slate-600"
                         aria-expanded={showSuggestions[index]}
                       />
 
@@ -189,12 +191,14 @@ export const TechSkillsSection = <F extends FieldValues>({
                 name={`habilidadesTecnicas.${index}.idHabilidad` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <select
-                    {...field}
+                  <AppSelect
+                    ref={field.ref}
                     id={`habilidadesTecnicas.${index}.idHabilidad`}
+                    name={field.name}
+                    onBlur={field.onBlur}
                     value={field.value ?? 0}
-                    onChange={(e) => {
-                      const newValue = Number(e.target.value);
+                    onChange={(v) => {
+                      const newValue = v === "" ? 0 : Number(v);
                       field.onChange(newValue);
 
                       // También actualizar el campo habilidad con el texto seleccionado
@@ -210,18 +214,13 @@ export const TechSkillsSection = <F extends FieldValues>({
                         );
                       }
                     }}
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-                  >
-                    <option value={0}>Seleccione una habilidad</option>
-                    {habilidadesTecnicas.map((habilidad) => (
-                      <option
-                        key={habilidad.idParametro}
-                        value={habilidad.num1}
-                      >
-                        {habilidad.string1}
-                      </option>
-                    ))}
-                  </select>
+                    options={habilidadesTecnicas.map((habilidad) => ({
+                      value: habilidad.num1,
+                      label: habilidad.string1,
+                    }))}
+                    placeholder="Seleccione una habilidad"
+                    className="h-12 border-gray-300 p-3 dark:border-slate-600"
+                  />
                 )}
               />
             )}
@@ -254,7 +253,7 @@ export const TechSkillsSection = <F extends FieldValues>({
               name={`habilidadesTecnicas.${index}.anios` as Path<F>}
               control={control}
               render={({ field }) => (
-                <input
+                <Input
                   {...field}
                   id={`habilidadesTecnicas.${index}.anios`}
                   type="text"
@@ -266,7 +265,7 @@ export const TechSkillsSection = <F extends FieldValues>({
                   onFocus={(e) => e.target.select()}
                   onWheel={(e) => e.currentTarget.blur()}
                   placeholder="Nro. años"
-                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                  className="h-12 border-gray-300 dark:border-slate-600"
                 />
               )}
             />

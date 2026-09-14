@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { AppError } from "../../../models";
-import { axiosInstanceFMI } from "../../../services/axiosService";
-import { VacanteCareersResponse } from "../../../models/response/VacateCareersResponse";
+import { AppError } from "@/core/models";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
+import { VacanteCareersResponse } from "@/core/models/response/VacateCareersResponse";
 
 export const useFetchVacCarreras = () => {
   const [isLoading, setIsLoading] = useState(false);

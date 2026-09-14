@@ -1,4 +1,4 @@
-import { Param } from "../models";
+import { Param } from "@/core/models";
 
 export const downloadAnyFile = (file64: string, ext: string) => {
   // Limpiar la cadena base64

@@ -1,5 +1,5 @@
 import { BaseResponse } from "./BaseResponse";
-import { UserAdmin } from "../interfaces/UserAdmin";
+import { UserAdmin } from "@/core/models/interfaces/UserAdmin";
 
 export interface UserAdminListResponse {
   result: BaseResponse;

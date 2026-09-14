@@ -1,10 +1,13 @@
 import { Controller, Control, FieldValues, Path } from "react-hook-form";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { cn } from "@/core/lib/utils";
 
 interface NumberInputProps<T extends FieldValues> {
   control: Control<T>;
   name: Path<T>;
   error?: string;
   isDisabled?: boolean;
+  className?: string;
 }
 
 export const NumberInput = <T extends FieldValues>({
@@ -12,6 +15,7 @@ export const NumberInput = <T extends FieldValues>({
   name,
   error,
   isDisabled = false,
+  className,
 }: NumberInputProps<T>) => {
   return (
     <Controller
@@ -52,13 +56,18 @@ export const NumberInput = <T extends FieldValues>({
 
         return (
           <>
-            <input
+            <Input
               type="text"
               {...fieldProps}
               value={stringValue}
               onChange={handleChange}
               inputMode="decimal" // teclado numérico en móviles
-              className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+              // w-auto: el <input> anterior no ocupaba todo el ancho.
+              className={cn(
+                "h-12 w-auto border-gray-300 dark:border-slate-600",
+                className
+              )}
+              aria-invalid={!!error}
               disabled={isDisabled}
             />
             {error && <p className="text-red-400 text-sm">{error}</p>}

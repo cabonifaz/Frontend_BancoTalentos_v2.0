@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dashboard } from "../Dashboard";
+import { Dashboard } from "@/pages/private/Dashboard";
 import { SeleccionSidebar } from "./SeleccionSidebar";
 import { SeleccionContent } from "./SeleccionContent";
 import { SELECCION_SECTIONS } from "./sections";

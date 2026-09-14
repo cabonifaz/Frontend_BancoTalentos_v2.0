@@ -1,6 +1,6 @@
 import { Heart, MapPin } from "lucide-react";
-import { Talent } from "../../../models/interfaces/Talent";
-import { Utils } from "../../../utilities/utils";
+import { Talent } from "@/core/models/interfaces/Talent";
+import { Utils } from "@/core/utilities/utils";
 
 interface Props {
   talent: Talent;

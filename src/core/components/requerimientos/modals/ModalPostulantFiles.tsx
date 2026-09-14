@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Upload, Download, Trash2 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { ReqTalento } from "../../../models/interfaces/ReqTalento";
+import { ReqTalento } from "@/core/models/interfaces/ReqTalento";
 import {
   MAESTRO_TIPO_ARCHIVO_POSTULANTE,
   POSTULANT_ALLOWED_EXTENSIONS,
   POSTULANT_MAX_FILE_SIZE_MB,
-} from "../../../utilities/constants";
-import { usePostulantFiles } from "../../../hooks/requerimientos/usePostulantFiles";
-import { useParams } from "../../../context/ParamsContext";
-import { Loading } from "../../ui/Loading";
-import { CloseModalButton } from "../../ui/CloseModalButton";
+} from "@/core/utilities/constants";
+import { usePostulantFiles } from "@/core/hooks/requerimientos/usePostulantFiles";
+import { useParams } from "@/core/context/ParamsContext";
+import { Loading } from "@/core/components/ui/Loading";
+import { CloseModalButton } from "@/core/components/ui/CloseModalButton";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface ModalProps {
   rqId: number;
@@ -20,13 +24,13 @@ interface ModalProps {
   onClose: () => void;
 }
 
-const selectClass =
-  "w-full px-3 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-400 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
-
 /**
  * Modal de archivos de un postulante (REQUERIMIENTO_TALENTO). Se abre desde la tabla
  * de Postulantes con el postulante ya seleccionado: carga y gestiona sus archivos vía
  * URL pre-firmada (sin combo de selección).
+ *
+ * Se abre por encima de Detalle RQ. Antes necesitaba z-[70] para ganarle; con Radix
+ * los diálogos anidados se apilan solos por orden de apertura.
  */
 export const ModalPostulantFiles = ({
   rqId,
@@ -115,15 +119,19 @@ export const ModalPostulantFiles = ({
   }`.trim();
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="relative flex h-[calc(100vh-2rem)] max-h-[640px] min-h-0 w-full flex-col overflow-hidden rounded-lg bg-white p-4 shadow-lg md:w-[600px] dark:bg-slate-800">
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="flex h-[calc(100vh-2rem)] max-h-[640px] min-h-0 w-[calc(100%-2rem)] max-w-none flex-col gap-0 overflow-hidden p-4 md:w-[600px]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {isBusy && <Loading opacity="opacity-30" />}
 
         <header className="flex shrink-0 items-center justify-between">
-          <h2 className="mb-2 text-lg font-bold">
+          <DialogTitle className="mb-2 text-lg font-bold">
             Archivos del postulante
             {fullName ? ` — ${fullName}` : ""}
-          </h2>
+          </DialogTitle>
           <CloseModalButton onClick={onClose} />
         </header>
 
@@ -159,30 +167,33 @@ export const ModalPostulantFiles = ({
 
             {/* Tipo de documento */}
             <div className="mt-3 shrink-0">
-              <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
-                Tipo de documento
-              </label>
-              <select
-                value={docTypeId || ""}
-                onChange={(e) => setDocTypeId(Number(e.target.value))}
-                className={`mt-1 ${selectClass}`}
+              <Label
+                htmlFor="postulant-doc-type"
+                className="text-sm font-medium text-gray-700 dark:text-slate-200"
               >
-                <option value="">Elija un tipo</option>
-                {docTypes.map((type) => (
-                  <option key={type.num1} value={type.num1}>
-                    {type.num2 === idCliente
+                Tipo de documento
+              </Label>
+              <AppSelect
+                id="postulant-doc-type"
+                className="mt-1 h-auto rounded-xl border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm dark:border-slate-600 dark:text-slate-200"
+                value={docTypeId || ""}
+                onChange={(v) => setDocTypeId(Number(v))}
+                options={docTypes.map((type) => ({
+                  value: type.num1,
+                  label:
+                    type.num2 === idCliente
                       ? `${type.string1} (Obligatorio)`
-                      : type.string1}
-                  </option>
-                ))}
-              </select>
+                      : type.string1,
+                }))}
+                placeholder="Elija un tipo"
+              />
             </div>
 
             {/* Listado de archivos */}
             <div className="mt-4 flex min-h-0 flex-1 flex-col">
-              <label className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
+              <span className="mb-1 text-sm font-medium text-gray-700 dark:text-slate-200">
                 Listado de archivos
-              </label>
+              </span>
               <div className="min-h-0 flex-1 overflow-y-auto">
                 {!loadingList && files.length === 0 ? (
                   <p className="mt-4 text-center text-sm text-gray-500 dark:text-slate-400">
@@ -202,26 +213,30 @@ export const ModalPostulantFiles = ({
                           {typeLabel(file.idTipoArchivo)}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        title="Descargar"
-                        onClick={() =>
-                          downloadFile(file.idRequerimientoTalentoArchivo)
-                        }
-                        className="text-blue-500 hover:text-blue-600 focus:outline-none dark:hover:text-blue-400"
-                      >
-                        <Download className="h-5 w-5" />
-                      </button>
-                      <button
-                        type="button"
-                        title="Eliminar"
-                        onClick={() =>
-                          deleteFile(file.idRequerimientoTalentoArchivo)
-                        }
-                        className="text-red-500 hover:text-red-600 focus:outline-none dark:hover:text-red-400"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <Hint label="Descargar">
+                        <button
+                          type="button"
+                          aria-label={`Descargar ${file.nombreArchivo}`}
+                          onClick={() =>
+                            downloadFile(file.idRequerimientoTalentoArchivo)
+                          }
+                          className="text-blue-500 hover:text-blue-600 focus:outline-none dark:hover:text-blue-400"
+                        >
+                          <Download className="h-5 w-5" />
+                        </button>
+                      </Hint>
+                      <Hint label="Eliminar">
+                        <button
+                          type="button"
+                          aria-label={`Eliminar ${file.nombreArchivo}`}
+                          onClick={() =>
+                            deleteFile(file.idRequerimientoTalentoArchivo)
+                          }
+                          className="text-red-500 hover:text-red-600 focus:outline-none dark:hover:text-red-400"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </Hint>
                     </div>
                   ))
                 )}
@@ -229,7 +244,7 @@ export const ModalPostulantFiles = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

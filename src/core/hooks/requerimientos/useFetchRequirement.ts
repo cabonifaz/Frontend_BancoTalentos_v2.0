@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSnackbar } from "notistack";
-import { RequirementResponse } from "../../models/response/RequirementResponse";
-import { axiosInstanceFMI } from "../../services/axiosService";
+import { RequirementResponse } from "@/core/models/response/RequirementResponse";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 export const useFetchRequirement = (idRequerimiento: number | null) => {
   const [requirement, setRequirement] = useState<RequirementResponse | null>(

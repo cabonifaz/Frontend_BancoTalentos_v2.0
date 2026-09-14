@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, ChevronDown } from "lucide-react";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 export interface ComboOption {
   /** Valor que se guarda al seleccionar (dirección de texto o URL de ubicación). */
@@ -78,7 +79,7 @@ export const InterviewComboField = ({
   return (
     <div className="relative flex flex-col gap-1" ref={containerRef}>
       <div className="relative">
-        <input
+        <Input
           type="text"
           value={value}
           disabled={disabled}
@@ -89,7 +90,8 @@ export const InterviewComboField = ({
           }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className={`input w-full pr-9 ${error ? "border-red-500" : ""}`}
+          aria-invalid={!!error}
+          className={`pr-9 ${error ? "border-red-500" : ""}`}
           autoComplete="off"
         />
         {options.length > 0 && (

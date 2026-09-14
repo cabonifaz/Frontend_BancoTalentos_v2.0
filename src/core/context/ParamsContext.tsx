@@ -1,9 +1,9 @@
 import React from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Param, ParamsResponse } from "../models";
-import { axiosInstanceNoToken } from "../services/axiosService";
-import { ALL_PARAMS_IDS } from "../utilities/constants";
+import { Param, ParamsResponse } from "@/core/models";
+import { axiosInstanceNoToken } from "@/core/services/axiosService";
+import { ALL_PARAMS_IDS } from "@/core/utilities/constants";
 
 const PARAMS_QUERY_KEY = ["params"];
 

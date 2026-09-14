@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { X, Pencil } from "lucide-react";
-import { Autocomplete } from "../../ui/AutoComplete";
+import { Autocomplete } from "@/core/components/ui/AutoComplete";
 import { enqueueSnackbar } from "notistack";
-import { AppError } from "../../../models";
-import { Loading } from "../../ui/Loading";
+import { AppError } from "@/core/models";
+import { Loading } from "@/core/components/ui/Loading";
 import {
   useFetchVacTechSkills,
   useUpdateVacTechSkills,
-} from "../../../hooks/requerimientos/vacantes";
-import { VacanteSkill } from "../../../models/interfaces/VacanteSkill";
-import { useCreateNewTechSkill } from "../../../hooks/requerimientos/useCreateNewTechSkill";
+} from "@/core/hooks/requerimientos/vacantes";
+import { VacanteSkill } from "@/core/models/interfaces/VacanteSkill";
+import { useCreateNewTechSkill } from "@/core/hooks/requerimientos/useCreateNewTechSkill";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { Hint } from "@/core/components/ui/Hint";
 
 // Helpers
 const showWarningSnack = (message: string) =>
@@ -237,8 +243,13 @@ export const ModalDetailsVacSkills = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-2xl p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-hidden relative flex flex-col dark:bg-slate-800">
+    // Escape cierra como la X (handleOnClose); un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) handleOnClose(); }}>
+      <DialogContent
+        overlayClassName="bg-black/40"
+        className="flex w-full max-w-none md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] flex-col gap-0 overflow-hidden p-6 shadow-2xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {(isLoading || isUpdating || isCreating) && (
           <Loading opacity="opacity-50" />
         )}
@@ -249,22 +260,23 @@ export const ModalDetailsVacSkills = ({
               modalMode === MODAL_MODES.ADD ? "none" : "flex",
           }}
         >
-          <h2 className="text-lg font-bold mb-4 shrink-0">
+          <DialogTitle className="text-lg font-bold mb-4 shrink-0">
             Lista de habilidades para esta vacante
-          </h2>
+          </DialogTitle>
           <div className="flex justify-end my-2 shrink-0">
-            <button
-              type="button"
-              className="btn btn-outline-blue flex gap-2 items-center"
+            <Button
+              variant="outline-blue"
+              className="mx-1"
               onClick={changeEditMode}
             >
               {modalMode === MODAL_MODES.EDIT ? "Cancelar" : "Editar"}
               <Pencil className="w-6 h-6" />
-            </button>
+            </Button>
           </div>
 
           <button
             type="button"
+            aria-label="Cerrar"
             onClick={handleOnClose}
             className="absolute top-4 right-4 focus:outline-none"
           >
@@ -321,10 +333,14 @@ export const ModalDetailsVacSkills = ({
 
                       {/* Centro: Años de experiencia */}
                       <div className="flex items-center gap-2 mx-4">
-                        <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                        <Label
+                          htmlFor={`vac-skill-years-${skill.idHabilidad}`}
+                          className="text-sm font-medium text-gray-700 dark:text-slate-200"
+                        >
                           Años:
-                        </label>
-                        <input
+                        </Label>
+                        <Input
+                          id={`vac-skill-years-${skill.idHabilidad}`}
                           type="number"
                           min={0}
                           disabled={modalMode !== MODAL_MODES.EDIT}
@@ -343,43 +359,23 @@ export const ModalDetailsVacSkills = ({
                               );
                           }}
                           onFocus={(e) => e.target.select()}
-                          className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed dark:border-slate-600 dark:disabled:bg-slate-700"
+                          className="w-16 px-2 py-1 text-center text-sm disabled:bg-gray-100 disabled:opacity-100 dark:disabled:bg-slate-700"
                         />
                       </div>
 
-                      {/* Lado derecho: Switch opcional y botón eliminar */}
+                      {/* Lado derecho: interruptor opcional y botón eliminar */}
                       <div className="flex items-center gap-3">
-                        {/* Switch para cambiar estado opcional */}
                         {modalMode === MODAL_MODES.EDIT && (
                           <label className="inline-flex items-center cursor-pointer">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={skill.isOptional || false}
-                                onChange={(e) =>
-                                  handleOptionalChange(
-                                    skill.idHabilidad,
-                                    e.target.checked
-                                  )
-                                }
-                                className="sr-only"
-                              />
-                              <div
-                                className={`block w-8 h-5 rounded-full transition-colors duration-200 ${
-                                  skill.isOptional
-                                    ? "bg-blue-600"
-                                    : "bg-gray-300 dark:bg-slate-600"
-                                }`}
-                              >
-                                <div
-                                  className={`dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 dark:bg-slate-800 ${
-                                    skill.isOptional
-                                      ? "transform translate-x-3"
-                                      : ""
-                                  }`}
-                                ></div>
-                              </div>
-                            </div>
+                            <Switch
+                              checked={skill.isOptional || false}
+                              onCheckedChange={(checked) =>
+                                handleOptionalChange(
+                                  skill.idHabilidad,
+                                  checked
+                                )
+                              }
+                            />
                             <span className="ml-2 text-xs font-medium text-gray-600 dark:text-slate-300">
                               Opcional
                             </span>
@@ -388,15 +384,18 @@ export const ModalDetailsVacSkills = ({
 
                         {/* Botón eliminar */}
                         {modalMode === MODAL_MODES.EDIT && (
-                          <button
-                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200 dark:hover:text-red-300 dark:hover:bg-red-500/10"
-                            title="Eliminar habilidad"
-                            onClick={() =>
-                              handleRemoveSkill(skill.idHabilidad)
-                            }
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                          <Hint label="Eliminar habilidad">
+                            <button
+                              type="button"
+                              aria-label={`Eliminar habilidad ${skill.habilidad}`}
+                              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200 dark:hover:text-red-300 dark:hover:bg-red-500/10"
+                              onClick={() =>
+                                handleRemoveSkill(skill.idHabilidad)
+                              }
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </Hint>
                         )}
                       </div>
                     </div>
@@ -427,20 +426,16 @@ export const ModalDetailsVacSkills = ({
             </div>
             {modalMode === MODAL_MODES.EDIT && (
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleUpdate}
-                  className="btn btn-blue"
-                >
+                <Button variant="blue" onClick={handleUpdate} className="mx-1">
                   Actualizar
-                </button>
+                </Button>
               </div>
             )}
           </div>
         </div>
 
         {modalMode === MODAL_MODES.ADD && (
-          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-8 flex flex-col h-[450px] shrink-0 dark:bg-slate-800">
+          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-6 flex flex-col h-[450px] shrink-0 dark:bg-slate-800">
             {/* Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
@@ -455,13 +450,16 @@ export const ModalDetailsVacSkills = ({
             {/* Input en el centro */}
             <div className="flex-1 flex items-center justify-center">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-200">
+                <Label
+                  htmlFor="new-vac-tech-skill"
+                  className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-200"
+                >
                   Habilidad:
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="new-vac-tech-skill"
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 shadow-sm 
-                   focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                  className="h-12 px-3 text-gray-700 shadow-sm"
                   value={newSkillName}
                   onChange={(e) =>
                     setNewSkillName(e.target.value.toUpperCase())
@@ -490,7 +488,7 @@ export const ModalDetailsVacSkills = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

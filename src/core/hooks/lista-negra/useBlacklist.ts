@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { createBlacklist, getBlacklist, getBlacklistHistory, removeBlacklist, updateBlacklist } from "../../services/blacklist.service";
+import { createBlacklist, getBlacklist, getBlacklistHistory, removeBlacklist, updateBlacklist } from "@/core/services/blacklist.service";
 import {
   BlacklistCreateParams,
   BlacklistHistory,
@@ -10,7 +10,7 @@ import {
   BlacklistReplaceGlobalParams,
   BlacklistReplaceGlobalResult,
   BlacklistUpdateParams,
-} from "../../models";
+} from "@/core/models";
 
 /**
  * Gestiona la Lista Negra: listado de restricciones activas (con filtros),

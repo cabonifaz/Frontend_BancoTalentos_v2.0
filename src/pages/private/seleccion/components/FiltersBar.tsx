@@ -1,6 +1,9 @@
 import { Search } from "lucide-react";
 import { ReactNode } from "react";
-import { Client } from "../../../../core/models/interfaces/Client";
+import { Client } from "@/core/models/interfaces/Client";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { DatePicker } from "@/core/components/ui/DatePicker";
 
 export interface FiltersState {
   fechaIni: string;
@@ -21,8 +24,11 @@ interface Props {
   children?: ReactNode;
 }
 
-const inputCls =
-  "h-9 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688] dark:border-slate-600 dark:text-slate-200";
+// Controles de 36px con el foco en el verde del módulo.
+const dateCls =
+  "h-9 w-40 border-gray-300 px-3 py-0 text-sm text-gray-700 focus-visible:ring-[#009688] dark:border-slate-600 dark:text-slate-200";
+const selectCls =
+  "h-9 border-gray-300 px-3 py-0 text-sm text-gray-700 focus:ring-[#009688] dark:border-slate-600 dark:text-slate-200";
 
 /** Barra de filtros de una sección: rango de fechas + cliente opcional + aplicar. */
 export const FiltersBar = ({
@@ -44,61 +50,73 @@ export const FiltersBar = ({
       onSubmit={submit}
       className="flex flex-wrap items-end justify-center gap-3 rounded-xl border border-gray-200 bg-gray-50/60 p-4 dark:border-slate-700 dark:bg-slate-800/60"
     >
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Desde</span>
-        <input
-          type="date"
-          className={inputCls}
+      {/* Cada extremo limita al otro, como hacían min/max en los
+          <input type="date">. Una fecha se puede vaciar (volviendo a pulsarla):
+          algunas secciones arrancan sin fechas y "vacío" significa sin filtro. */}
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor="seleccion-fecha-ini"
+          className="text-xs font-medium text-gray-500 dark:text-slate-400"
+        >
+          Desde
+        </label>
+        <DatePicker
+          id="seleccion-fecha-ini"
+          className={dateCls}
           value={value.fechaIni}
           max={value.fechaFin}
-          onChange={(e) => onChange({ ...value, fechaIni: e.target.value })}
+          onChange={(fechaIni) => onChange({ ...value, fechaIni })}
         />
-      </label>
+      </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Hasta</span>
-        <input
-          type="date"
-          className={inputCls}
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor="seleccion-fecha-fin"
+          className="text-xs font-medium text-gray-500 dark:text-slate-400"
+        >
+          Hasta
+        </label>
+        <DatePicker
+          id="seleccion-fecha-fin"
+          className={dateCls}
           value={value.fechaFin}
           min={value.fechaIni}
-          onChange={(e) => onChange({ ...value, fechaFin: e.target.value })}
+          onChange={(fechaFin) => onChange({ ...value, fechaFin })}
         />
-      </label>
+      </div>
 
       {showClient && (
         <label className="flex flex-col gap-1 min-w-[220px]">
           <span className="text-xs font-medium text-gray-500 dark:text-slate-400">Cliente</span>
-          <select
-            className={inputCls}
+          <AppSelect
+            aria-label="Cliente"
             value={value.idCliente ?? ""}
-            onChange={(e) =>
+            onChange={(v) =>
               onChange({
                 ...value,
-                idCliente: e.target.value ? Number(e.target.value) : null,
+                idCliente: v ? Number(v) : null,
               })
             }
-          >
-            <option value="">Todos los clientes</option>
-            {clientes.map((c) => (
-              <option key={c.idCliente} value={c.idCliente}>
-                {c.razonSocial}
-              </option>
-            ))}
-          </select>
+            options={clientes.map((c) => ({
+              value: c.idCliente,
+              label: c.razonSocial,
+            }))}
+            placeholder="Todos los clientes"
+            className={selectCls}
+          />
         </label>
       )}
 
       {children}
 
-      <button
+      <Button
         type="submit"
         disabled={loading}
-        className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#009688] px-4 text-sm font-medium text-white transition-colors hover:bg-[#00796B] disabled:opacity-60"
+        className="h-9 bg-[#009688] px-4 py-0 text-sm font-medium hover:bg-[#00796B] disabled:opacity-60"
       >
         <Search size={16} />
         {loading ? "Cargando…" : "Aplicar"}
-      </button>
+      </Button>
     </form>
   );
 };

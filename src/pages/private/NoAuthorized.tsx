@@ -1,8 +1,9 @@
 import { ShieldX, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { Utils } from "../../core/utilities/utils";
-import { getFirstAllowedPath } from "../../core/config/navigation";
+import { Utils } from "@/core/utilities/utils";
+import { getFirstAllowedPath } from "@/core/config/navigation";
+import { Button } from "@/core/components/ui/shadcn/button";
 
 /**
  * Pantalla mostrada cuando un usuario autenticado no tiene ningún módulo permitido
@@ -33,13 +34,12 @@ export const NoAuthorized = () => {
         </p>
         <div className="flex flex-col gap-2 w-full mt-2">
           {fallback && (
-            <button
-              type="button"
+            <Button
               onClick={() => navigate(fallback, { replace: true })}
-              className="btn btn-primary w-full"
+              className="mx-1 w-full"
             >
               Ir al inicio
-            </button>
+            </Button>
           )}
           <button
             type="button"

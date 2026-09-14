@@ -1,21 +1,26 @@
 import { Upload } from "lucide-react";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useId, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { enqueueSnackbar } from "notistack";
-import { Modal } from "../../modals/Modal";
-import { useModal } from "../../../context/ModalContext";
-import { useParams } from "../../../context/ParamsContext";
-import { Loading } from "../../ui/Loading";
-import { MODAL_UPDATE_WITH_CV } from "../../../utilities/modalsIds";
-import { useFetchCVDiff } from "../../../hooks/talentos/useFetchCVDiff";
-import { IACVResponse } from "../../../models/response/AICVResponse";
-import { Param, TalentResponse } from "../../../models";
-import { EducationsSection, TechSkillsSection } from "../..";
+import { Modal } from "@/core/components/modals/Modal";
+import { useModal } from "@/core/context/ModalContext";
+import { useParams } from "@/core/context/ParamsContext";
+import { Loading } from "@/core/components/ui/Loading";
+import { MODAL_UPDATE_WITH_CV } from "@/core/utilities/modalsIds";
+import { useFetchCVDiff } from "@/core/hooks/talentos/useFetchCVDiff";
+import { IACVResponse } from "@/core/models/response/AICVResponse";
+import { Param, TalentResponse } from "@/core/models";
+import { EducationsSection, TechSkillsSection } from "@/core/components";
 import { educationSchema, EducationFormData } from "./ModalEducation";
 import { techSkillSchema, TechSkillFormData } from "./ModalTechSkills";
-import { addOrUpdateTalentEducation, addOrUpdateTalentExperience, addOrUpdateTalentLanguage, addTalentTechSkill, updateTalentDescription, updateTalentSocialMedia } from "../../../services/talents.service";
+import { addOrUpdateTalentEducation, addOrUpdateTalentExperience, addOrUpdateTalentLanguage, addTalentTechSkill, updateTalentDescription, updateTalentSocialMedia } from "@/core/services/talents.service";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { DatePicker } from "@/core/components/ui/DatePicker";
 
 interface Props {
   idTalento?: number;
@@ -496,21 +501,20 @@ export const ModalUpdateWithCV = ({
             <p className="text-sm text-red-500">{fileError}</p>
           )}
           <div className="mt-2 flex gap-4 *:px-4 *:py-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={handleClose}
-              className="flex w-1/2 items-center justify-center font-semibold btn btn-outline-gray"
+              className="mx-1 w-1/2 font-semibold"
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={handleAnalyze}
               disabled={!cvFile}
-              className="flex w-1/2 items-center justify-center font-semibold btn btn-primary disabled:opacity-50"
+              className="mx-1 w-1/2 font-semibold"
             >
               Analizar con IA
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -599,15 +603,18 @@ export const ModalUpdateWithCV = ({
                       className="rounded-lg border border-gray-200 p-3 dark:border-slate-700"
                     >
                       <div className="mb-3 flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                        <Checkbox
+                          id={`cv-exp-${i}`}
                           checked={isSelected(`exp-${i}`)}
-                          onChange={() => toggle(`exp-${i}`)}
+                          onCheckedChange={() => toggle(`exp-${i}`)}
                           className="h-4 w-4 shrink-0"
                         />
-                        <span className="text-xs text-[#71717A] dark:text-slate-400">
+                        <label
+                          htmlFor={`cv-exp-${i}`}
+                          className="text-xs text-[#71717A] dark:text-slate-400"
+                        >
                           Incluir esta experiencia
-                        </span>
+                        </label>
                         {exp.idExperiencia ? (
                           <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                             mejora
@@ -660,17 +667,15 @@ export const ModalUpdateWithCV = ({
                       </div>
 
                       <label className="mt-3 flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={isCurrent}
-                          onChange={(e) =>
+                          onCheckedChange={(value) => {
+                            const checked = value === true;
                             updateExp(i, {
-                              flActualidad: e.target.checked ? 1 : 0,
-                              ...(e.target.checked
-                                ? { fechaFin: null }
-                                : {}),
-                            })
-                          }
+                              flActualidad: checked ? 1 : 0,
+                              ...(checked ? { fechaFin: null } : {}),
+                            });
+                          }}
                           className="h-4 w-4"
                         />
                         <span className="text-sm text-[#52525B] dark:text-slate-300">
@@ -679,17 +684,21 @@ export const ModalUpdateWithCV = ({
                       </label>
 
                       <div className="mt-3 flex flex-col gap-1">
-                        <label className="text-xs text-[#71717A] dark:text-slate-400">
+                        <label
+                          htmlFor={`cv-exp-${i}-funciones`}
+                          className="text-xs text-[#71717A] dark:text-slate-400"
+                        >
                           Funciones / Descripción
                         </label>
-                        <textarea
+                        <Textarea
+                          id={`cv-exp-${i}-funciones`}
                           value={exp.funciones || ""}
                           onChange={(e) =>
                             updateExp(i, { funciones: e.target.value })
                           }
                           rows={4}
                           placeholder="Describe las funciones y responsabilidades"
-                          className="w-full resize-y rounded-lg border border-gray-300 p-2 text-sm focus:border-[#4F46E5] focus:outline-none dark:border-slate-600"
+                          className="resize-y border-gray-300 p-2 text-sm dark:border-slate-600"
                         />
                       </div>
                     </div>
@@ -761,15 +770,14 @@ export const ModalUpdateWithCV = ({
           )}
 
           <div className="mt-2 flex gap-4 *:px-4 *:py-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
               onClick={handleClose}
-              className="flex w-1/2 items-center justify-center font-semibold btn btn-outline-gray"
+              className="mx-1 w-1/2 font-semibold"
             >
               Cancelar
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={handleApply}
               disabled={
                 applying ||
@@ -778,10 +786,10 @@ export const ModalUpdateWithCV = ({
                 !techValid ||
                 !eduValid
               }
-              className="flex w-1/2 items-center justify-center font-semibold btn btn-primary disabled:opacity-50"
+              className="mx-1 w-1/2 font-semibold"
             >
               Aplicar cambios
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -829,27 +837,45 @@ const FieldInput = ({
   disabled?: boolean;
   required?: boolean;
   error?: string;
-}) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs text-[#71717A] dark:text-slate-400">
-      {label}
-      {required && <span className="text-red-400"> *</span>}
-    </label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      disabled={disabled}
-      className={`h-10 rounded-lg border p-2 text-sm focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 dark:border-slate-700 ${
-        error
-          ? "border-red-400 focus:border-red-400"
-          : "border-gray-300 focus:border-[#4F46E5] dark:border-slate-600"
-      }`}
-    />
-    {error && <p className="text-red-400 text-sm">{error}</p>}
-  </div>
-);
+}) => {
+  const id = useId();
+  const fieldClass = `h-10 p-2 text-sm disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-100 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 ${
+    error
+      ? "border-red-400 focus-visible:ring-red-400"
+      : "border-gray-300 dark:border-slate-600"
+  }`;
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-xs text-[#71717A] dark:text-slate-400">
+        {label}
+        {required && <span className="text-red-400"> *</span>}
+      </label>
+      {type === "date" ? (
+        // DatePicker de shadcn: mismo "yyyy-MM-dd" que el <input type="date">.
+        <DatePicker
+          id={id}
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          aria-invalid={!!error}
+          className={fieldClass}
+        />
+      ) : (
+        <Input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          aria-invalid={!!error}
+          className={fieldClass}
+        />
+      )}
+      {error && <p className="text-red-400 text-sm">{error}</p>}
+    </div>
+  );
+};
 
 /** Fila con checkbox para seleccionar/deseleccionar un cambio propuesto. */
 const SelectableRow = ({
@@ -862,10 +888,9 @@ const SelectableRow = ({
   children: ReactNode;
 }) => (
   <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-700">
-    <input
-      type="checkbox"
+    <Checkbox
       checked={checked}
-      onChange={onToggle}
+      onCheckedChange={onToggle}
       className="mt-1 h-4 w-4 shrink-0"
     />
     <div className="min-w-0 flex-1">{children}</div>

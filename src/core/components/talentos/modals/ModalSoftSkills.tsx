@@ -1,18 +1,18 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useParams } from "../../../context/ParamsContext";
-import { useApi } from "../../../hooks/useApi";
-import { BaseResponse } from "../../../models";
-import { TalentSoftSkillParams } from "../../../models/params/TalentUpdateParams";
-import { addTalentSoftSkill } from "../../../services/talents.service";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
-import { Modal } from "../../modals/Modal";
-import { useModal } from "../../../context/ModalContext";
-import { Loading } from "../../ui/Loading";
+import { useParams } from "@/core/context/ParamsContext";
+import { useApi } from "@/core/hooks/useApi";
+import { BaseResponse } from "@/core/models";
+import { TalentSoftSkillParams } from "@/core/models/params/TalentUpdateParams";
+import { addTalentSoftSkill } from "@/core/services/talents.service";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { useModal } from "@/core/context/ModalContext";
+import { Loading } from "@/core/components/ui/Loading";
 import { z } from "zod";
-import { SoftSkillsSection } from "../..";
-import { emptyToNull } from "../../../models/schemas/Validations";
+import { SoftSkillsSection } from "@/core/components";
+import { emptyToNull } from "@/core/models/schemas/Validations";
 import { useFieldArray } from "react-hook-form";
 
 interface Props {

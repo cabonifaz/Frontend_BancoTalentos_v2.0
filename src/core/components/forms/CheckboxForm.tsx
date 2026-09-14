@@ -1,59 +1,43 @@
+import { useId } from "react";
 import { Control, Controller, FieldError } from "react-hook-form";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Label } from "@/core/components/ui/shadcn/label";
 
 interface CheckboxFormProps {
     name: string;
     control: Control<any>;
     label: string;
-    value?: string;
     defaultChecked?: boolean;
     error?: FieldError;
-    group?: string; // Añadido para agrupar checkboxes
 }
 
-const CheckboxForm = ({ name, control, label, value, defaultChecked, error, group }: CheckboxFormProps) => {
+/**
+ * Casilla booleana ligada a react-hook-form, sobre el Checkbox de shadcn.
+ * Para opciones excluyentes (Sí/No) usa RadioGroupForm: el antiguo modo
+ * `group` de este componente era un radio disfrazado de casilla.
+ */
+const CheckboxForm = ({ name, control, label, defaultChecked, error }: CheckboxFormProps) => {
+    const id = useId();
+
     return (
         <div className="flex items-center">
             <Controller
                 name={name}
                 control={control}
-                defaultValue={defaultChecked ? value : undefined}
-                render={({ field }) => {
-                    // Para checkboxes buttons (grupos)
-                    if (group) {
-                        return (
-                            <>
-                                <input
-                                    type="checkbox"
-                                    id={`${group}-${value}`}
-                                    className="input-checkbox"
-                                    value={value}
-                                    checked={field.value === value}
-                                    onChange={() => field.onChange(value)}
-                                    onBlur={field.onBlur}
-                                />
-                                <label htmlFor={`${group}-${value}`} className="input-label">
-                                    {label}
-                                </label>
-                            </>
-                        );
-                    }
-                    // Para checkboxes normales
-                    return (
-                        <>
-                            <input
-                                type="checkbox"
-                                id={`${name}-${value || label}`}
-                                className="input-checkbox"
-                                checked={field.value}
-                                onChange={(e) => field.onChange(e.target.checked)}
-                                onBlur={field.onBlur}
-                            />
-                            <label htmlFor={`${name}-${value || label}`} className="input-label">
-                                {label}
-                            </label>
-                        </>
-                    );
-                }}
+                defaultValue={defaultChecked}
+                render={({ field }) => (
+                    <>
+                        <Checkbox
+                            id={id}
+                            checked={!!field.value}
+                            onCheckedChange={(checked) => field.onChange(checked === true)}
+                            onBlur={field.onBlur}
+                        />
+                        <Label htmlFor={id} className="input-label">
+                            {label}
+                        </Label>
+                    </>
+                )}
             />
             {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error.message}</p>}
         </div>

@@ -3,7 +3,7 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstanceNoTokenFMI,
 } from "./axiosService";
-import { AddPostulanteParams, BaseResponseFMI } from "../models";
+import { AddPostulanteParams, BaseResponseFMI } from "@/core/models";
 
 // postulantes
 export const addPostulanteService = (

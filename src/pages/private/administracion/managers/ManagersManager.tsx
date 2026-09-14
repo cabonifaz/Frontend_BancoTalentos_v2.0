@@ -7,14 +7,24 @@ import {
   UserCog,
 } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { Loading } from "../../../../core/components/ui/Loading";
-import { assignClientGestor, changeClientGestor, getClientGestores, removeClientGestor, swapClientGestores } from "../../../../core/services/administration.service";
-import { getClients } from "../../../../core/services/clients.service";
+import { Loading } from "@/core/components/ui/Loading";
+import { assignClientGestor, changeClientGestor, getClientGestores, removeClientGestor, swapClientGestores } from "@/core/services/administration.service";
+import { getClients } from "@/core/services/clients.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
-import { Client, ClientGestor, UserAdmin } from "../../../../core/models";
+} from "@/core/utilities/errorHandler";
+import { Client, ClientGestor, UserAdmin } from "@/core/models";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Label } from "@/core/components/ui/shadcn/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 import { UserSearchSelect } from "./UserSearchSelect";
 
 const PRIORIDADES = [1, 2] as const;
@@ -167,19 +177,15 @@ export const ManagersManager = () => {
       </header>
 
       <div className="mb-6 max-w-md">
-        <label className="input-label">Cliente</label>
-        <select
-          className="input w-full mt-1"
+        <Label htmlFor="managers-client" className="input-label">Cliente</Label>
+        <AppSelect
+          id="managers-client"
+          className="h-auto p-3 mt-1"
           value={clientId === "" ? "" : String(clientId)}
-          onChange={(e) => onSelectClient(e.target.value)}
-        >
-          <option value="">Seleccione un cliente…</option>
-          {clients.map((c) => (
-            <option key={c.idCliente} value={c.idCliente}>
-              {c.razonSocial}
-            </option>
-          ))}
-        </select>
+          onChange={onSelectClient}
+          options={clients.map((c) => ({ value: c.idCliente, label: c.razonSocial }))}
+          placeholder="Seleccione un cliente…"
+        />
       </div>
 
       {clientId === "" ? (
@@ -234,25 +240,29 @@ export const ManagersManager = () => {
                         <p className="truncate text-xs text-gray-400 dark:text-slate-500">@{gestor.usuario}</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAssignPrioridad(null);
-                            setChanging(gestor);
-                          }}
-                          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
-                          title="Cambiar gestor"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setToRemove(gestor)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
-                          title="Quitar gestor"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        <Hint label="Cambiar gestor">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAssignPrioridad(null);
+                              setChanging(gestor);
+                            }}
+                            aria-label="Cambiar gestor"
+                            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors dark:text-slate-400 dark:hover:bg-slate-700"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                        </Hint>
+                        <Hint label="Quitar gestor">
+                          <button
+                            type="button"
+                            onClick={() => setToRemove(gestor)}
+                            aria-label="Quitar gestor"
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors dark:hover:bg-red-500/10"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </Hint>
                       </div>
                     </div>
                   ) : (
@@ -269,21 +279,29 @@ export const ManagersManager = () => {
                   )}
                 </div>
 
-                {/* Botón de intercambio entre los dos slots */}
+                {/* Botón de intercambio entre los dos slots. El tooltip va sobre
+                    un <span>: explica por qué está deshabilitado, y un botón
+                    disabled no recibe los eventos que abren el tooltip. */}
                 {idx === 0 && (
-                  <button
-                    type="button"
-                    onClick={doSwap}
-                    disabled={!bothFilled}
-                    title={
+                  <Hint
+                    label={
                       bothFilled
                         ? "Intercambiar prioridades"
                         : "Se necesitan dos gestores para intercambiar"
                     }
-                    className="mx-auto flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
                   >
-                    <ArrowLeftRight size={16} />
-                  </button>
+                    <span className="mx-auto inline-flex flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={doSwap}
+                        disabled={!bothFilled}
+                        aria-label="Intercambiar prioridades"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+                      >
+                        <ArrowLeftRight size={16} />
+                      </button>
+                    </span>
+                  </Hint>
                 )}
               </div>
             );
@@ -292,20 +310,25 @@ export const ManagersManager = () => {
       )}
 
       {toRemove && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setToRemove(null)} />
-          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm p-6 text-center flex flex-col items-center gap-3 dark:bg-slate-800 dark:border-slate-700">
+        <Dialog open onOpenChange={(open) => { if (!open) setToRemove(null); }}>
+          <DialogContent
+            overlayClassName="bg-black/40"
+            aria-describedby="manager-remove-desc"
+            className="flex w-[calc(100%-2rem)] max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 p-6 text-center shadow-2xl dark:border-slate-700"
+          >
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 dark:bg-red-500/10">
               <Trash2 size={22} />
             </div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Quitar gestor</h3>
-            <p className="text-sm text-gray-500 dark:text-slate-400">
+            <DialogTitle asChild>
+              <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">Quitar gestor</h3>
+            </DialogTitle>
+            <DialogDescription id="manager-remove-desc" className="text-gray-500 dark:text-slate-400">
               ¿Quitar a{" "}
               <span className="font-medium">
                 {`${toRemove.nombres} ${toRemove.apellidos}`.trim() || `@${toRemove.usuario}`}
               </span>{" "}
               de la prioridad {toRemove.prioridad}?
-            </p>
+            </DialogDescription>
             <div className="flex gap-2 w-full mt-2">
               <button
                 type="button"
@@ -314,17 +337,17 @@ export const ManagersManager = () => {
               >
                 Cancelar
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
                 onClick={confirmRemove}
                 disabled={saving}
-                className="btn btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                className="mx-1 flex-1"
               >
                 Quitar
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

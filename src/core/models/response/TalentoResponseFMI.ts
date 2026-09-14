@@ -1,4 +1,4 @@
-import { TalentoDetailFMI } from "../interfaces/TalentoDetailFMI";
+import { TalentoDetailFMI } from "@/core/models/interfaces/TalentoDetailFMI";
 
 export interface TalentoResponseFMI {
     idTipoMensaje: number;

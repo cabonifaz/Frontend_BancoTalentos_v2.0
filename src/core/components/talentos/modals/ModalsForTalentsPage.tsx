@@ -7,8 +7,8 @@ import {
   Language,
   Talent,
   TalentResponse,
-} from "../../../models";
-import { DOCUMENTO_CV } from "../../../utilities/constants";
+} from "@/core/models";
+import { DOCUMENTO_CV } from "@/core/utilities/constants";
 
 // Lazy imports
 const ModalResume = lazy(() =>

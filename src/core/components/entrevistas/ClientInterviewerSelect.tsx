@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { Users } from "lucide-react";
-import { useFetchClientContacts } from "../../hooks/useFetchClientContacts";
-import { ReqContacto } from "../../models/interfaces/ReqContacto";
-import { SearchableSelect } from "../ui/SearchableSelect";
+import { useFetchClientContacts } from "@/core/hooks/useFetchClientContacts";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
+import { SearchableSelect } from "@/core/components/ui/SearchableSelect";
 
 interface Props {
   /** Cliente del que se cargan los contactos registrados. */

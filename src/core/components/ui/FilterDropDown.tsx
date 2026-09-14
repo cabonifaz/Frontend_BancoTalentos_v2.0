@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { OutsideClickHandler } from "./OutsideClickHandler";
+import { cn } from "@/core/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/core/components/ui/shadcn/popover";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Badge } from "@/core/components/ui/shadcn/badge";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { RadioGroup, RadioGroupItem } from "@/core/components/ui/shadcn/radio-group";
 
 export interface BaseOption {
   value: string | number;
@@ -22,6 +32,18 @@ interface Props<T extends BaseOption> {
   onChange: (selectedValues: string[]) => void;
 }
 
+// Casillas en índigo, como los checkbox nativos (accent-[#4f46e5]) de antes.
+const INDIGO =
+  "h-4 w-4 data-[state=checked]:border-[#4f46e5] data-[state=checked]:bg-[#4f46e5] text-[#4f46e5]";
+
+/**
+ * Filtro en píldora con panel de opciones, sobre Popover + Checkbox/RadioGroup
+ * de shadcn. La API no cambia: el padre sigue controlando `isOpen`/`onToggle`
+ * (así garantiza un solo filtro abierto a la vez).
+ * El estado de cada casilla sale solo de `selectedValues`; el componente
+ * anterior además tocaba el DOM (`input.checked = …`) y se desincronizaba.
+ * En modo "radio", pulsar la opción ya elegida la deselecciona, como antes.
+ */
 export const FilterDropDown = <T extends BaseOption>({
   label,
   options,
@@ -37,199 +59,169 @@ export const FilterDropDown = <T extends BaseOption>({
   onChange,
 }: Props<T>) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const handleInputClick = (
-    event: React.MouseEvent,
-    value: string
-  ) => {
-    event.stopPropagation();
+  const isActive = selectedValues.length > 0;
 
-    if (optionsType === "radio") {
-      if (selectedValues.includes(value)) {
-        event.preventDefault();
-        onChange([]);
-        setTimeout(() => {
-          const inputElement = document.querySelector(
-            `input[option-value="${value}"]`
-          ) as HTMLInputElement;
-          if (inputElement) {
-            inputElement.checked = false;
-          }
-        }, 0);
-      } else {
-        onChange([value]);
-      }
-    } else if (optionsType === "checkbox") {
-      const newSelectedValues = selectedValues.includes(value)
+  const toggleCheckbox = (value: string) => {
+    onChange(
+      selectedValues.includes(value)
         ? selectedValues.filter((v) => v !== value)
-        : [...selectedValues, value];
-      onChange(newSelectedValues);
-    }
-  };
-
-  const handleOptionClick = (index: number) => {
-    const inputElement = document.getElementById(
-      `${name}-${index}`
-    ) as HTMLInputElement;
-    if (!inputElement) return;
-
-    const value = inputElement.getAttribute("option-value") || "";
-
-    if (optionsType === "checkbox") {
-      inputElement.checked = !inputElement.checked;
-      const newSelectedValues = selectedValues.includes(value)
-        ? selectedValues.filter((v) => v !== value)
-        : [...selectedValues, value];
-
-      onChange(newSelectedValues);
-      return;
-    }
-
-    if (selectedValues.includes(value)) {
-      inputElement.checked = false;
-      onChange([]);
-    } else {
-      inputElement.checked = true;
-      onChange([value]);
-    }
+        : [...selectedValues, value]
+    );
   };
 
   const handleRemoveOption = (value: string) => {
-    if (optionsType !== "checkbox") return;
+    onChange(selectedValues.filter((v) => v !== value));
+  };
 
-    const newSelectedValues = selectedValues.filter(
-      (v) => v !== value
+  const visibleOptions = [...options]
+    .filter((option) =>
+      searchable && searchTerm
+        ? option.label.toLowerCase().includes(searchTerm.toLowerCase())
+        : true
+    )
+    .sort((a, b) =>
+      sortOptions
+        ? a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+        : 0
     );
-    onChange(newSelectedValues);
 
-    const inputElement = document.querySelector(
-      `input[option-value="${value}"]`
-    ) as HTMLInputElement;
-    if (inputElement) {
-      inputElement.checked = false;
-    }
-  };
-
-  const handleClearFilter = () => {
-    onChange([]);
-  };
+  const rowClass = cn(
+    inputPosition === "left" ? "gap-2" : "justify-between flex-row-reverse",
+    "flex items-center hover:bg-[#f2f4f7] rounded-lg px-2 cursor-pointer dark:hover:bg-slate-700"
+  );
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`filter ${
-          selectedValues.length > 0
-            ? "btn-filter-active"
-            : "btn-filter"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span>{label}</span>
-          {selectedValues.length > 0 && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClearFilter();
-              }}
-              className="flex items-center"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-      </button>
-      {isOpen && (
-        <OutsideClickHandler onOutsideClick={onToggle}>
-          <div
-            className={`${optionsPanelSize} max-h-[480px] overflow-y-auto opacity-100 z-[43] absolute bg-white shadow-lg my-4 rounded p-2 flex flex-col dark:bg-slate-800`}
+    <Popover
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open !== isOpen) onToggle();
+      }}
+    >
+      {/* La X de limpiar va FUERA del botón que abre el panel: antes era un
+          <button> dentro de otro <button>, que no es HTML válido. */}
+      <div className="relative inline-flex">
+        <PopoverTrigger asChild>
+          <Button
+            variant={isActive ? "filter-active" : "filter"}
+            size="none"
+            className={cn("py-2 px-4", isActive && "pr-11")}
           >
-            {searchable && (
-              <div className="mb-2">
-                <input
-                  type="text"
-                  placeholder="Buscar opciones..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 dark:border-slate-600"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            )}
-            <div
-              className={`border border-gray-300 rounded-lg mb-2 p-2 dark:border-slate-600 ${
-                optionsType === "checkbox" ? "block" : "hidden"
-              }`}
-            >
-              <ul className="list-none text-[#312e81] flex gap-1 flex-wrap min-h-8 dark:text-indigo-300">
-                {selectedValues.map((value, index) => (
-                  <li
-                    className="bg-[#EEF2FF] rounded-md p-1 flex items-center gap-1 max-w-full dark:bg-indigo-500/10"
-                    key={index}
-                  >
-                    <span className="flex-1 overflow-hidden text-ellipsis text-sm whitespace-nowrap max-w-[calc(100%-10px)]">
-                      {options.find(
-                        (opt) => opt.value.toString() === value
-                      )?.label || value}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOption(value)}
+            {label}
+          </Button>
+        </PopoverTrigger>
+        {isActive && (
+          <button
+            type="button"
+            aria-label={`Quitar filtro ${label}`}
+            onClick={() => onChange([])}
+            className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        className={cn(
+          optionsPanelSize,
+          "max-h-[480px] overflow-y-auto rounded p-2 flex flex-col shadow-lg"
+        )}
+      >
+        {searchable && (
+          <div className="mb-2">
+            <Input
+              type="text"
+              placeholder="Buscar opciones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-2 rounded-md text-sm"
+            />
+          </div>
+        )}
+
+        {optionsType === "checkbox" ? (
+          <>
+            <div className="border border-gray-300 rounded-lg mb-2 p-2 dark:border-slate-600">
+              <ul className="list-none flex gap-1 flex-wrap min-h-8">
+                {selectedValues.map((value) => (
+                  <li key={value} className="max-w-full">
+                    <Badge
+                      variant="outline"
+                      className="max-w-full gap-1 rounded-md border-transparent bg-[#EEF2FF] p-1 text-sm font-normal text-[#312e81] dark:bg-indigo-500/10 dark:text-indigo-300"
                     >
-                      <X className="h-5 w-5" />
-                    </button>
+                      <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-[calc(100%-10px)]">
+                        {options.find((opt) => opt.value.toString() === value)
+                          ?.label || value}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Quitar"
+                        onClick={() => handleRemoveOption(value)}
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </Badge>
                   </li>
                 ))}
               </ul>
             </div>
-            {([...options]
-              .filter((option) =>
-                searchable && searchTerm
-                  ? option.label
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                  : true
-              ))
-              .sort((a, b) =>
-                sortOptions
-                  ? a.label.localeCompare(b.label, undefined, {
-                      sensitivity: "base",
-                    })
-                  : 0
-              )
-              .map((option, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleOptionClick(index)}
-                  className={`${
-                    inputPosition === "left"
-                      ? "gap-2"
-                      : "justify-between flex-row-reverse"
-                  } flex items-center hover:bg-[#f2f4f7] rounded-lg px-2 cursor-pointer dark:hover:bg-slate-700`}
-                >
-                  <input
-                    name={name}
-                    type={optionsType}
-                    id={`${name}-${index}`}
-                    option-value={option.value}
-                    checked={selectedValues.includes(
-                      option.value.toString()
-                    )}
-                    onClick={(e) =>
-                      handleInputClick(e, option.value.toString())
-                    }
-                    readOnly
-                    className="cursor-pointer h-4 w-4 accent-[#4f46e5]"
+            {visibleOptions.map((option) => {
+              const value = option.value.toString();
+              const id = `${name}-${value}`;
+              return (
+                <label key={value} htmlFor={id} className={rowClass}>
+                  <Checkbox
+                    id={id}
+                    checked={selectedValues.includes(value)}
+                    onCheckedChange={() => toggleCheckbox(value)}
+                    className={INDIGO}
                   />
-                  <p className="flex items-center cursor-pointer text-sm my-2">
+                  <span className="flex items-center text-sm my-2">
                     {option.label}
-                  </p>
-                </div>
-              ))}
-          </div>
-        </OutsideClickHandler>
-      )}
-    </div>
+                  </span>
+                </label>
+              );
+            })}
+          </>
+        ) : (
+          <RadioGroup
+            value={selectedValues[0] ?? ""}
+            onValueChange={(value) => onChange([value])}
+            className="gap-0"
+          >
+            {visibleOptions.map((option) => {
+              const value = option.value.toString();
+              const id = `${name}-${value}`;
+              const selected = selectedValues.includes(value);
+              return (
+                <label
+                  key={value}
+                  htmlFor={id}
+                  className={rowClass}
+                  onClick={(e) => {
+                    // Radix no deselecciona un radio ya marcado: se hace aquí.
+                    if (selected) {
+                      e.preventDefault();
+                      onChange([]);
+                    }
+                  }}
+                >
+                  <RadioGroupItem
+                    id={id}
+                    value={value}
+                    className="h-4 w-4 text-[#4f46e5] data-[state=checked]:border-[#4f46e5]"
+                  />
+                  <span className="flex items-center text-sm my-2">
+                    {option.label}
+                  </span>
+                </label>
+              );
+            })}
+          </RadioGroup>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 };

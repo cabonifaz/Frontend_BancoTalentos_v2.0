@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Pencil } from "lucide-react";
-import { SearchableSelect } from "../ui/SearchableSelect";
+import { SearchableSelect } from "@/core/components/ui/SearchableSelect";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 /** Valor centinela para la opción "escribir una ubicación personalizada". */
 const CUSTOM_LOCATION = "__CUSTOM_LOCATION__";
@@ -53,13 +54,15 @@ export const InterviewLocationField = ({
   if (isCustom) {
     return (
       <div className="flex flex-col gap-1">
-        <input
+        <Input
           type="text"
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value, true)}
           placeholder="Escribe la ubicación (ej. Sede San Isidro)"
-          className={`input w-full ${error ? "border-red-500" : ""}`}
+          aria-label="Ubicación"
+          aria-invalid={!!error}
+          className={error ? "border-red-500" : ""}
         />
         {options.length > 0 && (
           <button

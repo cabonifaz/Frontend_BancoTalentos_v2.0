@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import { X, Pencil } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { AppError } from "../../../models";
-import { Loading } from "../../ui/Loading";
+import { AppError } from "@/core/models";
+import { Loading } from "@/core/components/ui/Loading";
 import {
   useFetchVacCarreras,
   useUpdateVacCarreras,
-} from "../../../hooks/requerimientos/carreras";
-import { VacanteCarrera } from "../../../models/interfaces/VacanteCarrera";
+} from "@/core/hooks/requerimientos/carreras";
+import { VacanteCarrera } from "@/core/models/interfaces/VacanteCarrera";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 // Helpers
 const showWarningSnack = (message: string) =>
@@ -175,31 +181,42 @@ export const ModalDetailsVacCarreras = ({
     (c) => c.idEstadoRegistro === 1
   );
 
+  const degreeOptions = availableDegrees.map((g) => ({
+    value: g.id,
+    label: g.label,
+  }));
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-2xl p-6 w-full md:w-[90%] lg:w-[700px] min-h-[400px] max-h-[80vh] overflow-y-auto relative dark:bg-slate-800">
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        overlayClassName="bg-black/40"
+        className="block w-full max-w-none md:w-[90%] lg:w-[700px] min-h-[400px] max-h-[80vh] overflow-y-auto p-6 shadow-2xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {(isLoading || isUpdating) && (
           <Loading opacity="opacity-60" />
         )}
 
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-slate-100">
+          <DialogTitle className="text-lg font-bold text-gray-800 dark:text-slate-100">
             Lista de carreras asociadas
-          </h2>
+          </DialogTitle>
 
           <div className="flex gap-2">
-            <button
-              type="button"
-              className="btn btn-outline-blue flex gap-2 items-center"
+            <Button
+              variant="outline-blue"
+              className="mx-1"
               onClick={toggleEditMode}
             >
               {modalMode === MODAL_MODES.EDIT ? "Cancelar" : "Editar"}
               <Pencil className="w-5 h-5" />
-            </button>
+            </Button>
 
             <button
               type="button"
+              aria-label="Cerrar"
               onClick={onClose}
               className="focus:outline-none"
             >
@@ -212,9 +229,10 @@ export const ModalDetailsVacCarreras = ({
         {modalMode === MODAL_MODES.EDIT && (
           <div className="flex flex-col gap-3 mb-4 p-3 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
             <div className="flex gap-2">
-              <input
+              <Input
                 type="text"
-                className="flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 dark:border-slate-700"
+                aria-label="Nombre de la carrera"
+                className="h-12 flex-1 px-3"
                 placeholder="Escribe el nombre de una carrera..."
                 value={newCareer}
                 onChange={(e) => setNewCareer(e.target.value)}
@@ -222,13 +240,9 @@ export const ModalDetailsVacCarreras = ({
                   e.key === "Enter" && handleAddCareer()
                 }
               />
-              <button
-                type="button"
-                onClick={handleAddCareer}
-                className="btn btn-blue"
-              >
+              <Button variant="blue" onClick={handleAddCareer} className="mx-1 h-12">
                 Agregar
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -262,17 +276,20 @@ export const ModalDetailsVacCarreras = ({
                   </div>
 
                   {modalMode === MODAL_MODES.EDIT && (
-                    <button
-                      className="text-red-500 hover:text-red-700 dark:hover:text-red-300"
-                      title="Eliminar carrera"
-                      onClick={() => handleRemoveCareer(c.carrera)}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <Hint label="Eliminar carrera">
+                      <button
+                        type="button"
+                        aria-label={`Eliminar carrera ${c.carrera}`}
+                        className="text-red-500 hover:text-red-700 dark:hover:text-red-300"
+                        onClick={() => handleRemoveCareer(c.carrera)}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </Hint>
                   )}
                 </div>
 
-                {/* Fila inferior: Grado y switch opcional */}
+                {/* Fila inferior: Grado e interruptor opcional */}
                 <div className="flex justify-between items-center">
                   {/* Select grado de estudios */}
                   <div className="flex items-center gap-2">
@@ -280,23 +297,18 @@ export const ModalDetailsVacCarreras = ({
                       Grado:
                     </span>
                     {modalMode === MODAL_MODES.EDIT ? (
-                      <select
-                        className="border rounded px-2 py-1 text-sm dark:border-slate-700"
+                      // "Seleccione un grado" era la opción value=0: la opción
+                      // vacía del AppSelect devuelve "" y Number("") es 0.
+                      <AppSelect
+                        aria-label={`Grado de ${c.carrera}`}
+                        className="h-auto w-auto gap-1 rounded px-2 py-1 text-sm"
                         value={c.idGradoEstudios ?? 0}
-                        onChange={(e) =>
-                          handleChangeGrado(
-                            c.carrera,
-                            Number(e.target.value)
-                          )
+                        onChange={(v) =>
+                          handleChangeGrado(c.carrera, Number(v))
                         }
-                      >
-                        <option value={0}>Seleccione un grado</option>
-                        {availableDegrees.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.label}
-                          </option>
-                        ))}
-                      </select>
+                        options={degreeOptions}
+                        placeholder="Seleccione un grado"
+                      />
                     ) : (
                       <span className="text-sm text-gray-800 dark:text-slate-100">
                         {availableDegrees.find(
@@ -306,37 +318,15 @@ export const ModalDetailsVacCarreras = ({
                     )}
                   </div>
 
-                  {/* Switch para carrera opcional */}
+                  {/* Interruptor para carrera opcional */}
                   {modalMode === MODAL_MODES.EDIT && (
                     <label className="inline-flex items-center cursor-pointer">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={c.isOptional || false}
-                          onChange={(e) =>
-                            handleChangeOptional(
-                              c.carrera,
-                              e.target.checked
-                            )
-                          }
-                          className="sr-only"
-                        />
-                        <div
-                          className={`block w-8 h-5 rounded-full transition-colors duration-200 ${
-                            c.isOptional
-                              ? "bg-blue-600"
-                              : "bg-gray-300 dark:bg-slate-600"
-                          }`}
-                        >
-                          <div
-                            className={`dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 dark:bg-slate-800 ${
-                              c.isOptional
-                                ? "transform translate-x-3"
-                                : ""
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
+                      <Switch
+                        checked={c.isOptional || false}
+                        onCheckedChange={(checked) =>
+                          handleChangeOptional(c.carrera, checked)
+                        }
+                      />
                       <span className="ml-2 text-xs font-medium text-gray-700 dark:text-slate-200">
                         Opcional
                       </span>
@@ -355,16 +345,12 @@ export const ModalDetailsVacCarreras = ({
         {/* Footer */}
         {modalMode === MODAL_MODES.EDIT && (
           <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={handleUpdate}
-              className="btn btn-blue"
-            >
+            <Button variant="blue" onClick={handleUpdate} className="mx-1">
               Guardar cambios
-            </button>
+            </Button>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

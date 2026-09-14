@@ -1,14 +1,15 @@
 import { useRef, useState } from "react";
-import { Modal } from "../../modals/Modal";
-import { TalentSocialMediaParams } from "../../../models/params/TalentUpdateParams";
-import { BaseResponse } from "../../../models";
-import { useApi } from "../../../hooks/useApi";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { TalentSocialMediaParams } from "@/core/models/params/TalentUpdateParams";
+import { BaseResponse } from "@/core/models";
+import { useApi } from "@/core/hooks/useApi";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../../context/ModalContext";
-import { updateTalentSocialMedia } from "../../../services/talents.service";
-import { Loading } from "../../ui/Loading";
-import { validateGitHubURL, validateLinkedInURL } from "../../../utilities/validation";
+import { useModal } from "@/core/context/ModalContext";
+import { updateTalentSocialMedia } from "@/core/services/talents.service";
+import { Loading } from "@/core/components/ui/Loading";
+import { validateGitHubURL, validateLinkedInURL } from "@/core/utilities/validation";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 interface Props {
     idTalento?: number
@@ -67,12 +68,12 @@ export const ModalSocialMedia = ({ idTalento, linkedin, github, onUpdate }: Prop
                 <h3 className="text-[#71717A] text-sm mt-6 dark:text-slate-400">Agrega y muestra tus medios sociales</h3>
                 <div className="flex flex-col my-2">
                     <label htmlFor="linkedin" className="input-label">LinkedIn</label>
-                    <input type="text" name="linkedin" ref={linkedinRef} defaultValue={linkedin} className="input" />
+                    <Input type="text" id="linkedin" name="linkedin" ref={linkedinRef} defaultValue={linkedin} />
                     {errors.linkedin && <p className="text-red-500 text-sm mt-2">{errors.linkedin}</p>}
                 </div>
                 <div className="flex flex-col my-2">
                     <label htmlFor="github" className="input-label">Github</label>
-                    <input type="text" name="github" ref={githubRef} defaultValue={github} className="input" />
+                    <Input type="text" id="github" name="github" ref={githubRef} defaultValue={github} />
                     {errors.github && <p className="text-red-500 text-sm mt-2">{errors.github}</p>}
                 </div>
             </div>

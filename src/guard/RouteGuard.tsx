@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
-import { Utils } from "../core/utilities/utils";
-import { getFirstAllowedPath, isRouteAllowed } from "../core/config/navigation";
+import { Utils } from "@/core/utilities/utils";
+import { getFirstAllowedPath, isRouteAllowed } from "@/core/config/navigation";
 
 /**
  * Guard de autorización por ruta. Asume que la sesión ya fue validada aguas arriba

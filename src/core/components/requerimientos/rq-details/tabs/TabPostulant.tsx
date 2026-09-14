@@ -1,12 +1,29 @@
-import { Eye, FolderOpen } from "lucide-react";
+import { Eye, FolderOpen, UserPlus } from "lucide-react";
 import { useState } from "react";
-import { useModal } from "../../../../context/ModalContext";
-import { ReqTalento } from "../../../../models/interfaces/ReqTalento";
-import { ESTADO_ATENDIDO } from "../../../../utilities/constants";
-import { MODAL_DETALLES_RQ } from "../../../../utilities/modalsIds";
-import { useViewTalentFile } from "../../../../hooks/talentos/useViewTalentFile";
-import { Loading } from "../../../ui/Loading";
-import { ModalPostulantFiles } from "../../modals/ModalPostulantFiles";
+import { useModal } from "@/core/context/ModalContext";
+import { ReqTalento } from "@/core/models/interfaces/ReqTalento";
+import { ESTADO_ATENDIDO } from "@/core/utilities/constants";
+import { MODAL_DETALLES_RQ } from "@/core/utilities/modalsIds";
+import { useViewTalentFile } from "@/core/hooks/talentos/useViewTalentFile";
+import { Loading } from "@/core/components/ui/Loading";
+import { ModalPostulantFiles } from "@/core/components/requerimientos/modals/ModalPostulantFiles";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Badge } from "@/core/components/ui/shadcn/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { cn } from "@/core/lib/utils";
+import {
+  IconAction,
+  SectionHeader,
+  TabBody,
+  rqTable,
+} from "@/core/components/requerimientos/rq-ui";
 
 interface TabProps {
   rqId: number;
@@ -16,6 +33,23 @@ interface TabProps {
   talents: ReqTalento[];
   handleAssign: (reqId: number) => void;
 }
+
+/** .badge-green / .badge-yellow; sin estado conocido, un badge gris. */
+const estadoBadgeVariant = (estado?: string) => {
+  const upper = estado?.toUpperCase();
+  if (upper === "DATOS COMPLETOS") return "green" as const;
+  if (upper === "OBSERVADO") return "yellow" as const;
+  return "outline" as const;
+};
+
+/** "DATOS COMPLETOS" → "Datos completos". */
+const toSentence = (text: string) =>
+  text ? text.charAt(0).toUpperCase() + text.slice(1).toLowerCase() : text;
+
+const initialsOf = (talent: ReqTalento) =>
+  `${talent.nombresTalento?.trim().charAt(0) ?? ""}${
+    talent.apellidosTalento?.trim().charAt(0) ?? ""
+  }`.toUpperCase();
 
 export const TabPostulant = ({
   rqId,
@@ -35,127 +69,144 @@ export const TabPostulant = ({
   const { viewingId, viewFile } = useViewTalentFile();
   const downloadingFile = viewingId !== null;
 
-  const openFile = (index: number) => {
-    if (talents[index].idCvFile) {
-      viewFile(talents[index].idCvFile);
+  const openFile = (talent: ReqTalento) => {
+    if (talent.idCvFile) {
+      viewFile(talent.idCvFile);
     }
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <TabBody>
       {downloadingFile && <Loading opacity="opacity-30" />}
-      <div className="text-end">
-        {rqState !== ESTADO_ATENDIDO && (
-          <button
-            type="button"
-            className="focus:outline-none text-sm rounded-lg py-1 px-2 mx-1 my-2 btn-blue cursor-pointer"
-            onClick={() => {
-              if (isModalOpen(MODAL_DETALLES_RQ)) {
-                closeModal(MODAL_DETALLES_RQ);
-              }
-              handleAssign(rqId);
-            }}
-          >
-            Asignar
-          </button>
-        )}
-      </div>
-      <div className="flex-1 overflow-auto custom-scroll min-h-0">
-        <table className="table w-full">
-          <thead>
-            <tr className="table-header">
-              <th scope="col" className="table-header-cell">
-                CV
-              </th>
-              <th scope="col" className="table-header-cell">
-                Nombres y apellidos
-              </th>
-              <th scope="col" className="table-header-cell">
-                Doc. Identidad
-              </th>
-              <th scope="col" className="table-header-cell">
-                Celular
-              </th>
-              <th scope="col" className="table-header-cell">
-                Correo
-              </th>
-              <th scope="col" className="table-header-cell">
-                Situación
-              </th>
-              <th scope="col" className="table-header-cell">
-                Estado
-              </th>
-              <th scope="col" className="table-header-cell">
-                Perfil
-              </th>
-              <th scope="col" className="table-header-cell">
-                Archivos
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {talents.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="table-empty">
-                  No hay postulantes disponibles.
-                </td>
-              </tr>
-            ) : (
-              talents.map((talent, index) => (
-                <tr key={talent.idTalento} className="table-row">
-                  <td className="text-center">
-                    <button
-                      type="button"
-                      className="hover:shadow-lg hover:rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-                      onClick={() => openFile(index)}
-                    >
-                      <Eye className="w-5 h-5" />
-                    </button>
-                  </td>
-                  <td className="table-cell">
-                    {talent.nombresTalento} {talent.apellidosTalento}
-                  </td>
-                  <td className="table-cell">{talent.dni}</td>
-                  <td className="table-cell">{talent.celular}</td>
-                  <td className="table-cell">{talent.email}</td>
-                  <td className="table-cell">{talent.situacion}</td>
-                  <td className="table-cell">
-                    <span
-                      className={`badge ${
-                        talent.estado?.toUpperCase() ===
-                        "DATOS COMPLETOS"
-                          ? "badge-green"
-                          : talent.estado?.toUpperCase() ===
-                            "OBSERVADO"
-                          ? "badge-yellow"
-                          : ""
-                      }`}
-                    >
-                      {(
-                        talent.estado ||
-                        (talent.idEstado === 1
-                          ? "DATOS COMPLETOS"
-                          : "OBSERVADO")
-                      ).toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="table-cell">{talent.perfil}</td>
-                  <td className="text-center">
-                    <button
-                      type="button"
-                      title="Ver archivos del postulante"
-                      className="p-1 hover:rounded-full hover:bg-gray-100 hover:shadow-lg dark:hover:bg-slate-700"
-                      onClick={() => setFilesFor(talent)}
-                    >
-                      <FolderOpen className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <section className="flex flex-col gap-4">
+        <SectionHeader
+          title="Postulantes"
+          helper="Talentos asignados a este requerimiento."
+          actions={
+            rqState !== ESTADO_ATENDIDO && (
+              <Button
+                variant="blue"
+                className="font-medium"
+                onClick={() => {
+                  if (isModalOpen(MODAL_DETALLES_RQ)) {
+                    closeModal(MODAL_DETALLES_RQ);
+                  }
+                  handleAssign(rqId);
+                }}
+              >
+                <UserPlus className="h-4 w-4" aria-hidden />
+                Asignar talentos
+              </Button>
+            )
+          }
+        />
+
+        <div className={rqTable.wrapper}>
+          <div className="overflow-x-auto">
+            <Table className={cn(rqTable.table, "min-w-[60rem]")}>
+              <TableHeader>
+                <TableRow className={rqTable.headRow}>
+                  <TableHead scope="col" className={rqTable.head}>
+                    Talento
+                  </TableHead>
+                  <TableHead scope="col" className={rqTable.head}>
+                    Contacto
+                  </TableHead>
+                  <TableHead scope="col" className={rqTable.head}>
+                    Perfil
+                  </TableHead>
+                  <TableHead scope="col" className={rqTable.head}>
+                    Situación
+                  </TableHead>
+                  <TableHead scope="col" className={cn(rqTable.head, "w-40")}>
+                    Estado
+                  </TableHead>
+                  <TableHead scope="col" className={cn(rqTable.head, "w-28")}>
+                    <span className="sr-only">Acciones</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {talents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className={rqTable.empty}>
+                      Aún no hay postulantes asignados.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  talents.map((talent) => {
+                    const variant = estadoBadgeVariant(talent.estado);
+                    const nombre = `${talent.nombresTalento} ${talent.apellidosTalento}`;
+                    const estado =
+                      talent.estado ||
+                      (talent.idEstado === 1 ? "DATOS COMPLETOS" : "OBSERVADO");
+                    return (
+                      <TableRow key={talent.idTalento} className={rqTable.row}>
+                        <TableCell className={rqTable.cell}>
+                          <div className="flex items-center gap-3">
+                            <span
+                              aria-hidden
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-50 text-[13px] font-bold text-[var(--color-blue)] dark:bg-sky-400/15 dark:text-sky-300"
+                            >
+                              {initialsOf(talent)}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{nombre}</p>
+                              <p className="truncate text-[13px] text-gray-500 dark:text-slate-400">
+                                Doc. {talent.dni}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className={rqTable.cell}>
+                          <p className="tabular-nums">{talent.celular}</p>
+                          <p className="truncate text-[13px] text-gray-500 dark:text-slate-400">
+                            {talent.email}
+                          </p>
+                        </TableCell>
+                        <TableCell className={rqTable.cell}>{talent.perfil}</TableCell>
+                        <TableCell className={rqTable.cell}>{talent.situacion}</TableCell>
+                        <TableCell className={rqTable.cell}>
+                          <Badge
+                            variant={variant}
+                            className={
+                              variant === "outline"
+                                ? "border-transparent bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300"
+                                : undefined
+                            }
+                          >
+                            {toSentence(estado)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className={cn(rqTable.cell, "py-2")}>
+                          <div className="flex items-center gap-1">
+                            <IconAction
+                              icon={Eye}
+                              tone="blue"
+                              label={
+                                talent.idCvFile
+                                  ? `Ver CV de ${nombre}`
+                                  : `${nombre} no tiene CV`
+                              }
+                              disabled={!talent.idCvFile}
+                              onClick={() => openFile(talent)}
+                            />
+                            <IconAction
+                              icon={FolderOpen}
+                              label={`Ver archivos de ${nombre}`}
+                              onClick={() => setFilesFor(talent)}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </section>
 
       {filesFor && (
         <ModalPostulantFiles
@@ -165,6 +216,6 @@ export const TabPostulant = ({
           onClose={() => setFilesFor(null)}
         />
       )}
-    </div>
+    </TabBody>
   );
 };

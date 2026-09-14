@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { Modal } from "../modals/Modal";
-import { Loading } from "../ui/Loading";
-import { useModal } from "../../context/ModalContext";
-import { useFetchClients } from "../../hooks/useFetchClients";
-import { useBlacklist } from "../../hooks/lista-negra/useBlacklist";
-import { Talent } from "../../models";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { useModal } from "@/core/context/ModalContext";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
+import { useBlacklist } from "@/core/hooks/lista-negra/useBlacklist";
+import { Talent } from "@/core/models";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 export const MODAL_ADD_TO_BLACKLIST = "modalAddToBlacklist";
 
@@ -16,7 +19,7 @@ interface Props {
 }
 
 const selectClass =
-  "w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+  "h-auto bg-white px-3 py-2 text-sm text-gray-700 dark:text-slate-200";
 
 /**
  * Modal para restringir un talento (lista negra). Se abre desde el botón calavera
@@ -85,33 +88,34 @@ export const ModalAddToBlacklist = ({ talent, onRestricted }: Props) => {
         )}
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cliente</label>
-          <select
+          <Label htmlFor="blacklist-add-client" className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            Cliente
+          </Label>
+          <AppSelect
+            id="blacklist-add-client"
             value={idCliente}
-            onChange={(e) =>
-              setIdCliente(e.target.value === "" ? "" : Number(e.target.value))
-            }
+            onChange={(v) => setIdCliente(v === "" ? "" : Number(v))}
+            options={[
+              { value: 0, label: "TODOS LOS CLIENTES" },
+              ...clientes.map((c) => ({ value: c.idCliente, label: c.razonSocial })),
+            ]}
+            placeholder="Elija un cliente"
             className={selectClass}
-          >
-            <option value="">Elija un cliente</option>
-            <option value={0}>TODOS LOS CLIENTES</option>
-            {clientes.map((c) => (
-              <option key={c.idCliente} value={c.idCliente}>
-                {c.razonSocial}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Motivo</label>
-          <textarea
+          <Label htmlFor="blacklist-add-motivo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            Motivo
+          </Label>
+          <Textarea
+            id="blacklist-add-motivo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={4}
             maxLength={1000}
             placeholder="Describa el motivo de la restricción"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:border-slate-600"
+            className="px-3 py-2 text-sm resize-none"
           />
         </div>
       </div>

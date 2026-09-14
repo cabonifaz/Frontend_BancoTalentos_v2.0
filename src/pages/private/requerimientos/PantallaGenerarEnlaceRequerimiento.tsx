@@ -1,10 +1,24 @@
-import React, { useRef, useState } from 'react';
-import { axiosInstanceFMI } from '../../../core/services/axiosService';
-import { axiosInstance } from '../../../core/services/axiosService';
-import { Dashboard } from '../Dashboard';
-import { ESTADO_REGISTRADO } from '../../../core/utilities/constants';
+import React, { useState } from 'react';
+import { axiosInstanceFMI } from '@/core/services/axiosService';
+import { axiosInstance } from '@/core/services/axiosService';
+import { Dashboard } from '@/pages/private/Dashboard';
+import { ESTADO_REGISTRADO } from '@/core/utilities/constants';
 import { enqueueSnackbar } from 'notistack';
-import { Loading } from '../../../core/components';
+import { Loading } from '@/core/components';
+import { Button } from '@/core/components/ui/shadcn/button';
+import { Input } from '@/core/components/ui/shadcn/input';
+import { Dialog, DialogContent, DialogTitle } from '@/core/components/ui/shadcn/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/core/components/ui/shadcn/table';
+import { AppSelect } from '@/core/components/ui/AppSelect';
+import { Hint } from '@/core/components/ui/Hint';
+import { Check, ClipboardCopy, X } from 'lucide-react';
 
 type RequerimientoType = {
   idRequerimiento: number;
@@ -24,8 +38,15 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
-  // Ref for each select element
-  const perfilesRef = useRef<HTMLSelectElement[]>([]);
+  // Perfil elegido en cada RQ. Antes se leía del DOM con una ref a cada
+  // <select>; el Select de Radix no es un <select>, así que ahora es estado.
+  const [perfilByRq, setPerfilByRq] = useState<Record<number, number>>({});
+
+  // Sin elección explícita, un RQ con un único perfil lo lleva preseleccionado
+  // (el defaultValue que tenía el <select>).
+  const perfilDe = (req: RequerimientoType) =>
+    perfilByRq[req.idRequerimiento] ??
+    (req.lstPerfiles.length === 1 ? req.lstPerfiles[0].idPerfil : 0);
 
   const fetchRequirements = async (term = '') => {
     try {
@@ -62,7 +83,7 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
         lstRequerimientos: selectedRequirements.map(req => {
           return {
             idRQ: req.idRequerimiento,
-            idPerfil: Number(perfilesRef.current.at(req.idRequerimiento)?.value) || 0
+            idPerfil: perfilDe(req)
           };
         })
       };
@@ -101,16 +122,16 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
     }
   };
 
-  const handleRQSelect = (idRQ: number) => {
-    const selectedPerfil = perfilesRef.current.at(idRQ)?.value;
-    if (selectedPerfil) {
+  const handleRQSelect = (idRQ: number, value: string) => {
+    setPerfilByRq(prev => ({ ...prev, [idRQ]: Number(value) }));
+    if (value) {
       setSelectedRequirements(prev => prev.map(req => {
         if (req.idRequerimiento === idRQ) {
           return {
             ...req,
             lstPerfiles: req.lstPerfiles.map(perf => ({
               ...perf,
-              selected: perf.idPerfil === parseInt(selectedPerfil)
+              selected: perf.idPerfil === parseInt(value)
             }))
           };
         }
@@ -123,118 +144,101 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
     <Dashboard>
       {isLoading && (<Loading opacity="opacity-60" />)}
       <div className="flex h-full flex-col overflow-x-hidden">
-        <div className="flex shrink-0 items-center justify-between mb-2">
+        <div className="flex shrink-0 items-center justify-between mb-5">
           <h3 className="text-2xl font-semibold">Generación de enlace</h3>
 
           {/* Agregar Requerimiento section */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleAddRequirement}
-              className="btn btn-blue"
-            >
+            <Button variant="blue" onClick={handleAddRequirement} className="mx-1">
               Agregar Requerimiento
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Selected requirements table */}
         <div className="table-container shrink-0">
           <div className="table-wrapper max-h-[50vh] overflow-auto">
-            <table className="table">
-              <thead>
-                <tr className="table-header">
-                  <th className="table-header-cell text-center">ID</th>
-                  <th className="table-header-cell text-center">Título</th>
-                  <th className="table-header-cell text-center">Código RQ</th>
-                  <th className="table-header-cell text-center">Perfil</th>
-                  <th className="table-header-cell text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
+            <Table className="table">
+              <TableHeader>
+                <TableRow className="table-header">
+                  <TableHead className="table-header-cell text-center">ID</TableHead>
+                  <TableHead className="table-header-cell text-center">Título</TableHead>
+                  <TableHead className="table-header-cell text-center">Código RQ</TableHead>
+                  <TableHead className="table-header-cell text-center">Perfil</TableHead>
+                  <TableHead className="table-header-cell text-center">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
                 {selectedRequirements.map((req) => (
-                  <tr key={req.idRequerimiento} className="table-row">
-                    <td className="table-cell text-center">{req.idRequerimiento}</td>
-                    <td className="table-cell text-center">{req.titulo}</td>
-                    <td className="table-cell text-center">{req.codigoRQ}</td>
-                    <td className="table-cell text-center">
-                      <select
-                        id="t-perfil"
-                        onChange={() => handleRQSelect(req.idRequerimiento)}
-                        ref={el => {
-                          if (el) perfilesRef.current[req.idRequerimiento] = el;
-                        }}
-                        defaultValue={req.lstPerfiles.length === 1 ? req.lstPerfiles[0].idPerfil : 0}
-                        className="border rounded-lg focus:outline-none cursor-pointer px-3 py-2 text-sm dark:border-slate-700">
-                        <option value={0}>
-                          Seleccione un perfil
-                        </option>
-                        {req.lstPerfiles?.map((perf) => (
-                          <option key={perf.idPerfil} value={perf.idPerfil}>
-                            {perf.perfil}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="table-cell text-center">
-                      <button
+                  <TableRow key={req.idRequerimiento} className="table-row">
+                    <TableCell className="table-cell text-center">{req.idRequerimiento}</TableCell>
+                    <TableCell className="table-cell text-center">{req.titulo}</TableCell>
+                    <TableCell className="table-cell text-center">{req.codigoRQ}</TableCell>
+                    <TableCell className="table-cell text-center">
+                      <AppSelect
+                        aria-label={`Perfil para ${req.codigoRQ}`}
+                        className="mx-auto h-auto w-auto gap-2 px-3 py-2 text-sm"
+                        value={perfilDe(req)}
+                        onChange={(v) => handleRQSelect(req.idRequerimiento, v)}
+                        options={(req.lstPerfiles ?? []).map((perf) => ({
+                          value: perf.idPerfil,
+                          label: perf.perfil,
+                        }))}
+                        placeholder="Seleccione un perfil"
+                      />
+                    </TableCell>
+                    <TableCell className="table-cell text-center">
+                      <Button
+                        variant="destructive"
                         onClick={() => handleRemoveRequirement(req.idRequerimiento)}
-                        className="btn btn-actions btn-red"
+                        className="mx-1 rounded text-xs"
                       >
                         Remover
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {selectedRequirements.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="table-empty">
+                  <TableRow>
+                    <TableCell colSpan={5} className="table-empty">
                       No hay requerimientos seleccionados
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
 
         {/* Generate link section */}
-        <div className="flex shrink-0 flex-col gap-4 mt-3">
-          <button
-            onClick={handleGenerateLink}
-            className="btn btn-primary w-fit"
-          >
+        <div className="flex shrink-0 flex-col gap-4 mt-6">
+          <Button onClick={handleGenerateLink} className="mx-1 w-fit">
             Generar enlace
-          </button>
+          </Button>
 
           {generatedLink && (
             <div className="w-full">
               <div className="relative flex items-center group">
-                <input
+                <Input
                   type="text"
+                  aria-label="Enlace generado"
                   value={generatedLink}
                   readOnly
-                  className="w-full input"
                 />
-                <button
-                  onClick={handleCopyToClipboard}
-                  className="absolute right-2 p-2 rounded-md transition-colors bg-white group-hover:bg-gray-100 dark:bg-slate-800 dark:group-hover:bg-slate-700"
-                  aria-label="Copiar enlace"
-                >
-                  {isCopied ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    <div className="relative">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                      <span className="absolute -top-8 -left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap dark:bg-slate-900">
-                        Copiar enlace
-                      </span>
-                    </div>
-                  )}
-                </button>
+                <Hint label="Copiar enlace">
+                  <button
+                    type="button"
+                    onClick={handleCopyToClipboard}
+                    className="absolute right-2 p-2 rounded-md transition-colors bg-white group-hover:bg-gray-100 dark:bg-slate-800 dark:group-hover:bg-slate-700"
+                    aria-label="Copiar enlace"
+                  >
+                    {isCopied ? (
+                      <Check className="h-5 w-5 text-green-500" aria-hidden />
+                    ) : (
+                      <ClipboardCopy className="h-5 w-5 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200" aria-hidden />
+                    )}
+                  </button>
+                </Hint>
               </div>
             </div>
           )}
@@ -242,50 +246,55 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
 
         {/* Requirement Selection Modal */}
         {isRequirementModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col dark:bg-slate-800">
+          // Escape cierra como la X; un clic fuera no (como antes).
+          <Dialog open onOpenChange={(open) => { if (!open) setIsRequirementModalOpen(false); }}>
+            <DialogContent
+              className="flex w-[calc(100%-2rem)] max-w-md max-h-[80vh] flex-col gap-0 p-0"
+              onInteractOutside={(e) => e.preventDefault()}
+            >
               <div className="p-4 border-b flex justify-between items-center dark:border-slate-700">
-                <h2 className="text-xl font-semibold">Buscar requerimiento</h2>
+                <DialogTitle className="text-xl font-semibold">Buscar requerimiento</DialogTitle>
                 <button
+                  type="button"
+                  aria-label="Cerrar"
                   onClick={() => setIsRequirementModalOpen(false)}
                   className="text-gray-600 hover:text-gray-900 dark:text-slate-300 dark:hover:text-slate-50"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
+                  <X className="w-6 h-6" aria-hidden />
                 </button>
               </div>
 
               <div className="p-4 border-b dark:border-slate-700">
                 <div className="flex items-center">
                   <div className="relative flex-grow">
-                    <input
+                    <Input
                       type="text"
+                      aria-label="Buscar requerimiento"
                       placeholder="Buscar por título o código RQ"
-                      className="w-full px-4 py-2 border rounded-lg pr-10 dark:border-slate-700"
+                      className="px-4 py-2 pr-10"
                       value={requirementSearchTerm}
                       onChange={(e) => setRequirementSearchTerm(e.target.value)}
                     />
                     {requirementSearchTerm && (
                       <button
+                        type="button"
+                        aria-label="Limpiar búsqueda"
                         onClick={() => {
                           setRequirementSearchTerm('');
                           fetchRequirements('');
                         }}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                        <X className="w-5 h-5" aria-hidden />
                       </button>
                     )}
                   </div>
-                  <button
+                  <Button
                     onClick={() => fetchRequirements(requirementSearchTerm)}
-                    className="btn btn-primary"
+                    className="ml-3 shrink-0"
                   >
                     Buscar
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -303,16 +312,14 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                           <p className="font-medium">{req.codigoRQ}</p>
                           <p className="text-sm text-zinc-500 font-medium dark:text-slate-400">{req.titulo}</p>
                         </div>
-                        <button
+                        <Button
+                          variant="blue"
                           onClick={() => !isSelected && handleSelectRequirement(req)}
                           disabled={isSelected}
-                          className={`btn ${isSelected
-                            ? 'btn-disabled'
-                            : 'btn-blue'
-                            }`}
+                          className="mx-1"
                         >
                           {isSelected ? 'Seleccionado' : 'Seleccionar'}
-                        </button>
+                        </Button>
                       </div>
                     );
                   })
@@ -324,8 +331,8 @@ const PantallaGenerarEnlaceRequerimiento: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </Dashboard>

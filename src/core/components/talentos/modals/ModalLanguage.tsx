@@ -2,19 +2,19 @@ import { Trash2 } from "lucide-react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../../context/ModalContext";
-import { useParams } from "../../../context/ParamsContext";
-import { useApi } from "../../../hooks/useApi";
+import { useModal } from "@/core/context/ModalContext";
+import { useParams } from "@/core/context/ParamsContext";
+import { useApi } from "@/core/hooks/useApi";
 import {
   AddOrUpdateLanguageParams,
   BaseResponse,
   Language,
-} from "../../../models";
-import { addOrUpdateTalentLanguage, deleteTalenteLanguage } from "../../../services/talents.service";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
-import { Modal } from "../../modals/Modal";
-import { Loading } from "../../ui/Loading";
-import { LanguagesSection } from "../..";
+} from "@/core/models";
+import { addOrUpdateTalentLanguage, deleteTalenteLanguage } from "@/core/services/talents.service";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { LanguagesSection } from "@/core/components";
 import { useEffect } from "react";
 import { z } from "zod";
 
@@ -193,6 +193,7 @@ export const ModalLanguage = ({ idTalento, languageRef, onUpdate }: Props) => {
           {isEditing && (
             <button
               type="button"
+              aria-label="Eliminar idioma"
               onClick={handleOnDelete}
               className="absolute -right-2 top-0 rounded-lg hover:bg-red-50 w-10 h-10 dark:hover:bg-red-500/10"
             >

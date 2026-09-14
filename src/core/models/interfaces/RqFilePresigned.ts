@@ -1,4 +1,4 @@
-import { BaseResponseFMI } from "../response/BaseResponse";
+import { BaseResponseFMI } from "@/core/models/response/BaseResponse";
 
 // Interfaces de subida/descarga de archivos de requerimiento vía URL pre-firmada (S3).
 
