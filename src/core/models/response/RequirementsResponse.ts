@@ -1,4 +1,4 @@
-import { RequirementItem } from "../interfaces/RequirementItem";
+import { RequirementItem } from "@/core/models/interfaces/RequirementItem";
 
 export interface RequerimientosResponse {
     idTipoMensaje: number;

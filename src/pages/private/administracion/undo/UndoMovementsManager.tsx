@@ -1,14 +1,31 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { RefreshCw, Search, Undo2, User } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { Loading } from "../../../../core/components/ui/Loading";
-import { Pagination } from "../../../../core/components";
-import { getEmployeeDetailFMI, listEmployeesFMI } from "../../../../core/services/administration.service";
-import { useUndoMovement } from "../../../../core/hooks/administracion/useUndoMovement";
+import { Loading } from "@/core/components/ui/Loading";
+import { Pagination } from "@/core/components";
+import { getEmployeeDetailFMI, listEmployeesFMI } from "@/core/services/administration.service";
+import { useUndoMovement } from "@/core/hooks/administracion/useUndoMovement";
 import {
   EmployeeListItem,
   EmployeeUndoDetailResponse,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { Hint } from "@/core/components/ui/Hint";
 
 // Debe coincidir con el tamaño de página del SP (PARAMETROS maestro 11).
 const ITEMS_PER_PAGE = 5;
@@ -179,29 +196,28 @@ export const UndoMovementsManager = () => {
                 size={15}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
               />
-              <input
-                className="input w-full !pl-9"
+              <Input
+                className="!pl-9"
+                aria-label="Buscar empleado"
                 placeholder="Buscar empleado…"
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && search()}
               />
             </div>
-            <button
-              type="button"
-              onClick={search}
-              className="btn btn-primary"
-            >
+            <Button onClick={search} className="mx-1">
               Buscar
-            </button>
-            <button
-              type="button"
-              onClick={loadList}
-              title="Recargar"
-              className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
-            >
-              <RefreshCw size={15} />
-            </button>
+            </Button>
+            <Hint label="Recargar">
+              <button
+                type="button"
+                onClick={loadList}
+                aria-label="Recargar"
+                className="p-2.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                <RefreshCw size={15} />
+              </button>
+            </Hint>
           </div>
 
           <div className="flex-1 min-h-0 overflow-auto">
@@ -212,6 +228,7 @@ export const UndoMovementsManager = () => {
                   key={emp.idTalento}
                   type="button"
                   onClick={() => selectEmployee(emp)}
+                  aria-pressed={active}
                   className={`w-full text-left px-4 py-3 border-b border-gray-100 flex items-center gap-3 transition-colors dark:border-slate-700 ${
                     active ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" : "hover:bg-gray-50 text-gray-700 dark:hover:bg-slate-700 dark:text-slate-200"
                   }`}
@@ -269,28 +286,28 @@ export const UndoMovementsManager = () => {
 
               {/* Movimientos (ingreso / movimiento) */}
               <Section title="Movimientos">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
-                    <tr className="text-left">
-                      <th className="px-3 py-2 font-medium">Fecha</th>
-                      <th className="px-3 py-2 font-medium">Tipo</th>
-                      <th className="px-3 py-2 font-medium">Motivo</th>
-                      <th className="px-3 py-2 font-medium">Cargo</th>
-                      <th className="px-3 py-2 font-medium text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full min-w-[600px] text-sm">
+                  <TableHeader className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                    <TableRow className="text-left">
+                      <TableHead className="px-3 py-2 font-medium">Fecha</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Tipo</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Motivo</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Cargo</TableHead>
+                      <TableHead className="px-3 py-2 font-medium text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {(detail?.movements ?? []).map((m, i) => {
                       const isIngreso = m.movementTypeId === TIPO_INGRESO;
                       const isLast =
                         (m.movementId ?? 0) === lastMovementId && lastMovementId > 0;
                       return (
-                        <tr key={i} className="border-t border-gray-100 dark:border-slate-700">
-                          <td className="px-3 py-2">{cell(m.movementDate)}</td>
-                          <td className="px-3 py-2">{cell(m.movementType)}</td>
-                          <td className="px-3 py-2">{cell(m.reason)}</td>
-                          <td className="px-3 py-2">{cell(m.position)}</td>
-                          <td className="px-3 py-2 text-right">
+                        <TableRow key={i} className="border-t border-gray-100 dark:border-slate-700">
+                          <TableCell className="px-3 py-2">{cell(m.movementDate)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(m.movementType)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(m.reason)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(m.position)}</TableCell>
+                          <TableCell className="px-3 py-2 text-right">
                             {isLast && (
                               <UndoButton
                                 onClick={() =>
@@ -314,40 +331,40 @@ export const UndoMovementsManager = () => {
                                 }
                               />
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                     {(detail?.movements ?? []).length === 0 && (
                       <EmptyRow cols={5} />
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </Section>
 
               {/* Solicitudes de equipo */}
               <Section title="Solicitudes de equipo">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
-                    <tr className="text-left">
-                      <th className="px-3 py-2 font-medium">Equipo</th>
-                      <th className="px-3 py-2 font-medium">Marca</th>
-                      <th className="px-3 py-2 font-medium">F. Solicitud</th>
-                      <th className="px-3 py-2 font-medium">F. Entrega</th>
-                      <th className="px-3 py-2 font-medium text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full min-w-[600px] text-sm">
+                  <TableHeader className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                    <TableRow className="text-left">
+                      <TableHead className="px-3 py-2 font-medium">Equipo</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Marca</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">F. Solicitud</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">F. Entrega</TableHead>
+                      <TableHead className="px-3 py-2 font-medium text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {(detail?.equipmentRequests ?? []).map((e, i) => {
                       const isLast =
                         (e.requestId ?? 0) === lastRequestId && lastRequestId > 0;
                       return (
-                        <tr key={i} className="border-t border-gray-100 dark:border-slate-700">
-                          <td className="px-3 py-2">{cell(e.equipmentType)}</td>
-                          <td className="px-3 py-2">{cell(e.brand)}</td>
-                          <td className="px-3 py-2">{cell(e.requestDate)}</td>
-                          <td className="px-3 py-2">{cell(e.deliveryDate)}</td>
-                          <td className="px-3 py-2 text-right">
+                        <TableRow key={i} className="border-t border-gray-100 dark:border-slate-700">
+                          <TableCell className="px-3 py-2">{cell(e.equipmentType)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(e.brand)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(e.requestDate)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(e.deliveryDate)}</TableCell>
+                          <TableCell className="px-3 py-2 text-right">
                             {isLast && (
                               <UndoButton
                                 onClick={() =>
@@ -365,41 +382,41 @@ export const UndoMovementsManager = () => {
                                 }
                               />
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                     {(detail?.equipmentRequests ?? []).length === 0 && (
                       <EmptyRow cols={5} />
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </Section>
 
               {/* Ceses */}
               <Section title="Ceses">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
-                    <tr className="text-left">
-                      <th className="px-3 py-2 font-medium">Fecha</th>
-                      <th className="px-3 py-2 font-medium">Motivo</th>
-                      <th className="px-3 py-2 font-medium">Cliente</th>
-                      <th className="px-3 py-2 font-medium">Código RQ</th>
-                      <th className="px-3 py-2 font-medium text-right">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table className="w-full min-w-[600px] text-sm">
+                  <TableHeader className="bg-gray-50 text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                    <TableRow className="text-left">
+                      <TableHead className="px-3 py-2 font-medium">Fecha</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Motivo</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Cliente</TableHead>
+                      <TableHead className="px-3 py-2 font-medium">Código RQ</TableHead>
+                      <TableHead className="px-3 py-2 font-medium text-right">Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {(detail?.terminations ?? []).map((t, i) => {
                       const isLast =
                         (t.terminationId ?? 0) === lastTerminationId &&
                         lastTerminationId > 0;
                       return (
-                        <tr key={i} className="border-t border-gray-100 dark:border-slate-700">
-                          <td className="px-3 py-2">{cell(t.terminationDate)}</td>
-                          <td className="px-3 py-2">{cell(t.terminationReason)}</td>
-                          <td className="px-3 py-2">{cell(t.client)}</td>
-                          <td className="px-3 py-2">{cell(t.requirementCode)}</td>
-                          <td className="px-3 py-2 text-right">
+                        <TableRow key={i} className="border-t border-gray-100 dark:border-slate-700">
+                          <TableCell className="px-3 py-2">{cell(t.terminationDate)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(t.terminationReason)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(t.client)}</TableCell>
+                          <TableCell className="px-3 py-2">{cell(t.requirementCode)}</TableCell>
+                          <TableCell className="px-3 py-2 text-right">
                             {isLast && (
                               <UndoButton
                                 onClick={() =>
@@ -418,15 +435,15 @@ export const UndoMovementsManager = () => {
                                 }
                               />
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
                     {(detail?.terminations ?? []).length === 0 && (
                       <EmptyRow cols={5} />
                     )}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </Section>
             </div>
           )}
@@ -435,16 +452,20 @@ export const UndoMovementsManager = () => {
 
       {/* Confirmación */}
       {pending && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setPending(null)}
-          />
-          <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md p-6 dark:bg-slate-800 dark:border-slate-700">
-            <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-slate-100">
-              {pending.title}
-            </h3>
-            <p className="mb-6 text-sm text-gray-600 dark:text-slate-300">{pending.message}</p>
+        <Dialog open onOpenChange={(open) => { if (!open) setPending(null); }}>
+          <DialogContent
+            overlayClassName="bg-black/40"
+            aria-describedby="undo-confirm-desc"
+            className="block w-[calc(100%-2rem)] max-w-md rounded-xl border border-gray-200 p-6 shadow-2xl dark:border-slate-700"
+          >
+            <DialogTitle asChild>
+              <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-slate-100">
+                {pending.title}
+              </h3>
+            </DialogTitle>
+            <DialogDescription id="undo-confirm-desc" className="mb-6 text-gray-600 dark:text-slate-300">
+              {pending.message}
+            </DialogDescription>
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -453,17 +474,17 @@ export const UndoMovementsManager = () => {
               >
                 Cancelar
               </button>
-              <button
-                type="button"
+              <Button
+                variant="destructive"
                 onClick={confirmUndo}
                 disabled={undoing}
-                className="btn btn-primary !bg-red-500 hover:!bg-red-600"
+                className="mx-1"
               >
                 Deshacer
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
@@ -485,19 +506,19 @@ const Section = ({
 );
 
 const EmptyRow = ({ cols }: { cols: number }) => (
-  <tr>
-    <td colSpan={cols} className="px-3 py-6 text-center text-gray-400 dark:text-slate-500">
+  <TableRow>
+    <TableCell colSpan={cols} className="px-3 py-6 text-center text-gray-400 dark:text-slate-500">
       Sin registros.
-    </td>
-  </tr>
+    </TableCell>
+  </TableRow>
 );
 
+// Sin tooltip: el `title` anterior repetía el texto visible del botón.
 const UndoButton = ({ onClick }: { onClick: () => void }) => (
   <button
     type="button"
     onClick={onClick}
     className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 text-sm dark:text-red-400 dark:hover:text-red-300"
-    title="Deshacer"
   >
     <Undo2 size={16} /> Deshacer
   </button>

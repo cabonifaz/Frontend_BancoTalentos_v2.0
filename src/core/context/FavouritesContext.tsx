@@ -1,9 +1,9 @@
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
-import { useApi } from "../hooks/useApi";
-import { getUserFavourites, addTalentToFav, createNewFavList, removeTalentFromFav } from "../services/talents.service";
-import { handleError, handleResponse } from "../utilities/errorHandler";
+import { useApi } from "@/core/hooks/useApi";
+import { getUserFavourites, addTalentToFav, createNewFavList, removeTalentFromFav } from "@/core/services/talents.service";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
 import { useSnackbar } from "notistack";
-import { BaseResponse, Favourite, FavouritesResponse } from "../models";
+import { BaseResponse, Favourite, FavouritesResponse } from "@/core/models";
 
 interface FavouritesContextType {
     favourites: Favourite[];

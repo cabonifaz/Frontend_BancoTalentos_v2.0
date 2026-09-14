@@ -6,7 +6,7 @@ import {
   AddSoftSkill,
   AddTechSkill,
 } from "..";
-import { AddTalentType } from "../schemas/AddTalentSchema";
+import { AddTalentType } from "@/core/models/schemas/AddTalentSchema";
 
 export const initialTechnicalSkill: AddTechSkill = {
   idHabilidad: 0,

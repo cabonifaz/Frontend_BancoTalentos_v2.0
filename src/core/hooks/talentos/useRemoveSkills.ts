@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { axiosInstance } from "../../services/axiosService";
-import { BaseResponse } from "../../models";
+import { axiosInstance } from "@/core/services/axiosService";
+import { BaseResponse } from "@/core/models";
 
 export const useRemoveSkill = () => {
   const [isLoading, setIsLoading] = useState(false);

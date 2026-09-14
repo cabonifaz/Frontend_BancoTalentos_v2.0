@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { confirmPostulantUpload, generatePostulantDownloadUrl, generatePostulantUploadUrl, listPostulantFiles, removePostulantFile } from "../../services/requirements.service";
-import { describeS3Error, uploadFileToS3 } from "../../services/s3.service";
-import { PostulantFile } from "../../models";
+import { confirmPostulantUpload, generatePostulantDownloadUrl, generatePostulantUploadUrl, listPostulantFiles, removePostulantFile } from "@/core/services/requirements.service";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
+import { PostulantFile } from "@/core/models";
 
 /**
  * Gestiona los archivos de un postulante (REQUERIMIENTO_TALENTO): listar, subir por

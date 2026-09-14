@@ -2,17 +2,19 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
-import { useParams } from "../../../context/ParamsContext";
-import { Modal } from "../../modals/Modal";
-import { useModal } from "../../../context/ModalContext";
-import { useApi } from "../../../hooks/useApi";
-import { TalentSalaryParams } from "../../../models/params/TalentUpdateParams";
-import { BaseResponse, Talent } from "../../../models";
+import { useParams } from "@/core/context/ParamsContext";
+import { Modal } from "@/core/components/modals/Modal";
+import { useModal } from "@/core/context/ModalContext";
+import { useApi } from "@/core/hooks/useApi";
+import { TalentSalaryParams } from "@/core/models/params/TalentUpdateParams";
+import { BaseResponse, Talent } from "@/core/models";
 import { enqueueSnackbar } from "notistack";
-import { updateTalentSalary } from "../../../services/talents.service";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
-import { Loading } from "../../ui/Loading";
-import { TIPO_MODALIDAD } from "../../../utilities/constants";
+import { updateTalentSalary } from "@/core/services/talents.service";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
+import { Loading } from "@/core/components/ui/Loading";
+import { TIPO_MODALIDAD } from "@/core/utilities/constants";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 // --- Helpers ---
 const toNumberOrUndef = (val: string | number): number | undefined => {
@@ -20,6 +22,15 @@ const toNumberOrUndef = (val: string | number): number | undefined => {
   const num = Number(val);
   return isNaN(num) || num < 0 ? undefined : Math.round(num * 100) / 100;
 };
+
+/** "" del Select = sin valor, como la opción vacía del <select> anterior. */
+const toIdOrUndef = (v: string) => (v === "" ? undefined : Number(v));
+
+// Celdas de la tabla de montos: sin caja propia, solo el separador vertical.
+const cellSelect =
+  "h-auto rounded-none border-0 border-r bg-transparent p-2 text-sm dark:border-slate-700 dark:bg-transparent";
+const cellInput =
+  "h-auto rounded-none border-0 bg-transparent p-2 text-right text-sm dark:bg-transparent";
 
 // --- Schema con validación cruzada para cada modalidad ---
 const salaryBlock = z
@@ -153,6 +164,7 @@ export const ModalSalary = ({
   const monedas = paramsByMaestro[2] || [];
   // Maestro 3, el mismo catalogo que usa Nuevo Talento y el Modal de Ingreso.
   const modalidadesFacturacion = paramsByMaestro[TIPO_MODALIDAD] || [];
+  const monedaOptions = monedas.map((m) => ({ value: m.num1, label: m.string1 }));
 
   const onSubmit = (data: SalaryFormData) => {
     if (!idTalento) return;
@@ -223,29 +235,20 @@ export const ModalSalary = ({
             name="idModalidadFacturacion"
             control={control}
             render={({ field }) => (
-              <select
-                {...field}
+              <AppSelect
+                ref={field.ref}
                 id="modalidadFacturacionSalary"
+                name={field.name}
+                onBlur={field.onBlur}
                 value={field.value ?? ""}
-                onChange={(e) =>
-                  field.onChange(
-                    e.target.value === ""
-                      ? undefined
-                      : Number(e.target.value)
-                  )
-                }
-                className="text-[#3f3f46] p-2 w-full border border-gray-300 rounded-lg focus:outline-none cursor-pointer text-sm dark:border-slate-600 dark:text-slate-200"
-              >
-                <option value="">Sin definir</option>
-                {modalidadesFacturacion.map((modalidad) => (
-                  <option
-                    key={modalidad.idParametro}
-                    value={modalidad.num1}
-                  >
-                    {modalidad.string1}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => field.onChange(toIdOrUndef(v))}
+                options={modalidadesFacturacion.map((modalidad) => ({
+                  value: modalidad.num1,
+                  label: modalidad.string1,
+                }))}
+                placeholder="Sin definir"
+                className="h-auto border-gray-300 p-2 text-sm text-[#3f3f46] dark:border-slate-600 dark:text-slate-200"
+              />
             )}
           />
           {errors.idModalidadFacturacion && (
@@ -272,36 +275,26 @@ export const ModalSalary = ({
                 name="rxh.coin"
                 control={control}
                 render={({ field }) => (
-                  <select
-                    {...field}
+                  <AppSelect
+                    ref={field.ref}
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    aria-label="Moneda RxH"
                     value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                    className="p-2 border-r text-sm dark:border-slate-700"
-                  >
-                    <option value="">Elija una moneda</option>
-                    {monedas.map((monedaOption) => (
-                      <option
-                        key={monedaOption.idParametro}
-                        value={monedaOption.num1}
-                      >
-                        {monedaOption.string1}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => field.onChange(toIdOrUndef(v))}
+                    options={monedaOptions}
+                    placeholder="Elija una moneda"
+                    className={cellSelect}
+                  />
                 )}
               />
               <Controller
                 name="rxh.min"
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
+                    aria-label="Mínimo RxH"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(toNumberOrUndef(e.target.value))
@@ -310,7 +303,7 @@ export const ModalSalary = ({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    className="p-2 border-r text-sm text-right outline-none dark:border-slate-700"
+                    className={`${cellInput} border-r dark:border-slate-700`}
                   />
                 )}
               />
@@ -318,8 +311,9 @@ export const ModalSalary = ({
                 name="rxh.max"
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
+                    aria-label="Máximo RxH"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(toNumberOrUndef(e.target.value))
@@ -328,7 +322,7 @@ export const ModalSalary = ({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    className="p-2 text-sm text-right outline-none"
+                    className={cellInput}
                   />
                 )}
               />
@@ -365,36 +359,26 @@ export const ModalSalary = ({
                 name="planilla.coin"
                 control={control}
                 render={({ field }) => (
-                  <select
-                    {...field}
+                  <AppSelect
+                    ref={field.ref}
+                    name={field.name}
+                    onBlur={field.onBlur}
+                    aria-label="Moneda planilla"
                     value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value)
-                      )
-                    }
-                    className="p-2 border-r text-sm dark:border-slate-700"
-                  >
-                    <option value="">Elija una moneda</option>
-                    {monedas.map((monedaOption) => (
-                      <option
-                        key={monedaOption.idParametro}
-                        value={monedaOption.num1}
-                      >
-                        {monedaOption.string1}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => field.onChange(toIdOrUndef(v))}
+                    options={monedaOptions}
+                    placeholder="Elija una moneda"
+                    className={cellSelect}
+                  />
                 )}
               />
               <Controller
                 name="planilla.min"
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
+                    aria-label="Mínimo planilla"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(toNumberOrUndef(e.target.value))
@@ -403,7 +387,7 @@ export const ModalSalary = ({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    className="p-2 border-r text-sm text-right outline-none dark:border-slate-700"
+                    className={`${cellInput} border-r dark:border-slate-700`}
                   />
                 )}
               />
@@ -411,8 +395,9 @@ export const ModalSalary = ({
                 name="planilla.max"
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
+                    aria-label="Máximo planilla"
                     value={field.value ?? ""}
                     onChange={(e) =>
                       field.onChange(toNumberOrUndef(e.target.value))
@@ -421,7 +406,7 @@ export const ModalSalary = ({
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    className="p-2 text-sm text-right outline-none"
+                    className={cellInput}
                   />
                 )}
               />

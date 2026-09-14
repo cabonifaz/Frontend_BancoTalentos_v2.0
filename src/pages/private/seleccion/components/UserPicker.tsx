@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   getSeleccionUsuarios,
   SelectionUser,
-} from "../../../../core/services/seleccion.service";
+} from "@/core/services/seleccion.service";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 interface Props {
   value: SelectionUser | null;
@@ -76,15 +77,16 @@ export const UserPicker = ({ value, onChange }: Props) => {
       ) : (
         <div className="relative">
           <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" />
-          <input
+          <Input
             value={term}
             onFocus={() => setOpen(true)}
             onChange={(e) => {
               setTerm(e.target.value);
               setOpen(true);
             }}
+            aria-label="Buscar usuario de selección"
             placeholder="Buscar usuario…"
-            className="h-9 w-[240px] rounded-lg border border-gray-300 pl-8 pr-3 text-sm text-gray-700 focus:border-[#009688] focus:outline-none focus:ring-1 focus:ring-[#009688] dark:border-slate-600 dark:text-slate-200"
+            className="h-9 w-[240px] border-gray-300 py-0 pl-8 pr-3 text-sm text-gray-700 focus-visible:ring-[#009688] dark:border-slate-600 dark:text-slate-200"
           />
         </div>
       )}

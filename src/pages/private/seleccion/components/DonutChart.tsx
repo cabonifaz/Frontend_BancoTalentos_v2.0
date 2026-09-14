@@ -1,6 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { fmtNumber, fmtShare, Slice } from "./chartTheme";
 import { useChartChrome } from "./useChartChrome";
+import { Hint } from "@/core/components/ui/Hint";
 
 /**
  * Torta (dona) de composición: cuánto aporta cada parte al total.
@@ -133,9 +134,9 @@ export const DonutChart = ({
                       style={{ backgroundColor: s.color }}
                       aria-hidden="true"
                     />
-                    <span className="truncate" title={s.label}>
-                      {s.label}
-                    </span>
+                    <Hint label={s.label}>
+                      <span className="truncate">{s.label}</span>
+                    </Hint>
                   </span>
                 </th>
                 <td className="py-1.5 text-right tabular-nums text-gray-900 dark:text-slate-50">

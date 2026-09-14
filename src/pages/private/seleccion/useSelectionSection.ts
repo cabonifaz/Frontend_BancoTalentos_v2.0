@@ -1,9 +1,9 @@
 import { AxiosResponse } from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiConfig } from "../../../core/hooks/useAsyncService";
-import { OperationResult } from "../../../core/models/response/BaseResponse";
-import { SelectionFilter } from "../../../core/services/seleccion.service";
+import { ApiConfig } from "@/core/hooks/useAsyncService";
+import { OperationResult } from "@/core/models/response/BaseResponse";
+import { SelectionFilter } from "@/core/services/seleccion.service";
 import { defaultRange } from "./components/dateRange";
 import { FiltersState } from "./components/FiltersBar";
 

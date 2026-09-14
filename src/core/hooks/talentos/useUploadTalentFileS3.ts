@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { AppError } from "../../models";
-import { describeS3Error, uploadFileToS3 } from "../../services/s3.service";
-import { confirmTalentUpload, generateTalentUploadUrl } from "../../services/talents.service";
+import { AppError } from "@/core/models";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
+import { confirmTalentUpload, generateTalentUploadUrl } from "@/core/services/talents.service";
 
 interface UploadArgs {
   idTalento: number;

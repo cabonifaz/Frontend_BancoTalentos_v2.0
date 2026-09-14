@@ -1,4 +1,4 @@
-import { ClientGestor } from "../interfaces/ClientGestor";
+import { ClientGestor } from "@/core/models/interfaces/ClientGestor";
 import { BaseResponse } from "./BaseResponse";
 
 export interface ClientGestorListResponse {

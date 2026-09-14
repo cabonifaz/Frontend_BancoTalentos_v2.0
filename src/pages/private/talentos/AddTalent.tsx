@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Dashboard } from "../Dashboard";
+import { Dashboard } from "@/pages/private/Dashboard";
 import { useState, useRef, useEffect } from "react";
 import {
   EducationsSection,
@@ -9,12 +9,12 @@ import {
   Loading,
   SoftSkillsSection,
   TechSkillsSection,
-} from "../../../core/components";
+} from "@/core/components";
 import {
   AddTalentParams,
   BaseResponse,
   initialFormValues,
-} from "../../../core/models";
+} from "@/core/models";
 import {
   Controller,
   FormProvider,
@@ -22,19 +22,19 @@ import {
   useForm,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "../../../core/context/ParamsContext";
+import { useParams } from "@/core/context/ParamsContext";
 import {
   AddTalentSchema,
   AddTalentType,
-} from "../../../core/models/schemas/AddTalentSchema";
-import { Utils } from "../../../core/utilities/utils";
+} from "@/core/models/schemas/AddTalentSchema";
+import { Utils } from "@/core/utilities/utils";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../core/hooks/useApi";
+import { useApi } from "@/core/hooks/useApi";
 import {
   handleError,
   handleResponse,
-} from "../../../core/utilities/errorHandler";
-import { addTalent } from "../../../core/services/talents.service";
+} from "@/core/utilities/errorHandler";
+import { addTalent } from "@/core/services/talents.service";
 import {
   ARCHIVO_IMAGEN,
   ARCHIVO_PDF,
@@ -43,17 +43,31 @@ import {
   FRASES_IA_MAESTRO,
   PROCEDENCIA_OPTIONS,
   TIPO_MODALIDAD,
-} from "../../../core/utilities/constants";
-import { validateFile } from "../../../core/utilities/validation";
-import { SalaryExpectSection } from "../../../core/components/talentos/SalaryExpectSection";
-import { useFetchCVData } from "../../../core/hooks/talentos/useFetchCVData";
-import { useAutoCompletTalForm } from "../../../core/hooks/talentos/useAutoCompletTalFormt";
-import { useModal } from "../../../core/context/ModalContext";
-import { MODAL_AI_WORKING } from "../../../core/utilities/modalsIds";
-import { ModalWorkingAI } from "../../../core/components/modals/ModalWorkingAI";
-import { processText } from "../../../core/utilities/textUtils";
-import { useFormPersistence } from "../../../core/hooks/talentos/useFormPersistence";
-import { FORM_STORAGE_KEY } from "../../../core/utilities/constants";
+} from "@/core/utilities/constants";
+import { validateFile } from "@/core/utilities/validation";
+import { SalaryExpectSection } from "@/core/components/talentos/SalaryExpectSection";
+import { useFetchCVData } from "@/core/hooks/talentos/useFetchCVData";
+import { useAutoCompletTalForm } from "@/core/hooks/talentos/useAutoCompletTalFormt";
+import { useModal } from "@/core/context/ModalContext";
+import { MODAL_AI_WORKING } from "@/core/utilities/modalsIds";
+import { ModalWorkingAI } from "@/core/components/modals/ModalWorkingAI";
+import { processText } from "@/core/utilities/textUtils";
+import { useFormPersistence } from "@/core/hooks/talentos/useFormPersistence";
+import { FORM_STORAGE_KEY } from "@/core/utilities/constants";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Label } from "@/core/components/ui/shadcn/label";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/core/components/ui/shadcn/radio-group";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+
+const selectClass =
+  "h-auto p-3 text-[#3f3f46] dark:border-slate-700 dark:text-slate-200";
+const socialInputClass = "h-12 border-gray-300 dark:border-slate-600";
 
 export const AddTalent = () => {
   const navigate = useNavigate();
@@ -400,8 +414,7 @@ export const AddTalent = () => {
                   </h3>
                 </div>
                 <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => {
                       reset(initialFormValues);
                       setCvFile(null);
@@ -410,26 +423,28 @@ export const AddTalent = () => {
                       setFotoFileErrors("");
                       clearStorage();
                     }}
-                    className="rounded-lg text-white text-base bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                    className="bg-red-600 text-base font-medium text-white shadow-md transition-all duration-200 hover:bg-red-700 hover:shadow-lg focus-visible:ring-red-400 focus-visible:ring-offset-2"
                   >
                     Limpiar
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={onGoBackClick}
-                    className="rounded-lg text-base text-[#3b82f6] bg-transparent border border-[#3b82f6] hover:bg-[#f5f9ff] dark:hover:bg-sky-500/10"
+                    className="border-[#3b82f6] text-base text-[#3b82f6] hover:bg-[#f5f9ff] dark:hover:bg-sky-500/10"
                   >
                     Volver
-                  </button>
-                  <button
-                    type="submit"
-                    className="rounded-lg text-white text-base bg-[#009695] hover:bg-[#2d8d8d]"
-                  >
+                  </Button>
+                  <Button type="submit" className="text-base">
                     Guardar
-                  </button>
+                  </Button>
                 </div>
               </div>
-              <div className="min-h-0 flex-1 px-8 pt-6 overflow-y-auto w-full md:w-[40rem]">
+              {/* `relative` es imprescindible: Checkbox, Select, RadioGroup y
+                  Switch de Radix dejan dentro del <form> un input nativo oculto
+                  con position: absolute. Sin un contenedor posicionado, esos
+                  inputs se salen del scroll y alargan la página con un gran
+                  espacio en blanco debajo del recuadro. */}
+              <div className="relative min-h-0 flex-1 px-8 pt-6 overflow-y-auto w-full md:w-[40rem]">
                 {/* files */}
                 <div>
                   <div className="flex justify-between items-center">
@@ -495,11 +510,10 @@ export const AddTalent = () => {
                       Doc. Identidad
                       <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       {...register("dni")}
                       id="dni"
                       type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                       placeholder="Doc. Identidad"
                     />
                     {errors.dni && (
@@ -515,11 +529,10 @@ export const AddTalent = () => {
                     >
                       Nombres<span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       {...register("nombres")}
                       id="name"
                       type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                       placeholder="Nombres"
                     />
                     {errors.nombres && (
@@ -536,11 +549,10 @@ export const AddTalent = () => {
                       Apellido paterno
                       <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       {...register("apellidoPaterno")}
                       id="lastname-f"
                       type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                       placeholder="Apellido paterno"
                     />
                     {errors.apellidoPaterno && (
@@ -556,11 +568,10 @@ export const AddTalent = () => {
                     >
                       Apellido materno
                     </label>
-                    <input
+                    <Input
                       {...register("apellidoMaterno")}
                       id="lastname-s"
                       type="text"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                       placeholder="Apellido materno"
                     />
                     {errors.apellidoMaterno && (
@@ -577,24 +588,31 @@ export const AddTalent = () => {
                       Número de Celular
                       <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="countrycode"
-                      autoComplete="tel-country-code"
-                      {...register("codigoPais", {
-                        valueAsNumber: true,
-                      })}
-                      className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <option value={0}>Seleccione un país</option>
-                      {paises.map((pais) => (
-                        <option
-                          key={pais.idParametro}
-                          value={pais.num1}
-                        >
-                          {pais.string1}
-                        </option>
-                      ))}
-                    </select>
+                    {/* Los selects de este formulario iban con register y
+                        valueAsNumber: el Select de Radix va con Controller y
+                        entrega el mismo número (0 = sin elegir). */}
+                    <Controller
+                      name="codigoPais"
+                      control={control}
+                      render={({ field }) => (
+                        <AppSelect
+                          ref={field.ref}
+                          id="countrycode"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          value={field.value}
+                          onChange={(v) =>
+                            field.onChange(v === "" ? 0 : Number(v))
+                          }
+                          options={paises.map((pais) => ({
+                            value: pais.num1,
+                            label: pais.string1,
+                          }))}
+                          placeholder="Seleccione un país"
+                          className={selectClass}
+                        />
+                      )}
+                    />
                     {errors.codigoPais && (
                       <p className="text-red-400 text-sm">
                         {errors.codigoPais.message}
@@ -614,12 +632,13 @@ export const AddTalent = () => {
                             }`
                           : "+00"}
                       </p>
-                      <input
+                      <Input
                         {...register("telefono")}
                         id="phone"
                         type="tel"
                         autoComplete="tel-national"
-                        className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                        aria-label="Número de celular"
+                        className="rounded-l-none border-gray-300 dark:border-slate-600"
                       />
                     </div>
                     {errors.telefono && (
@@ -636,11 +655,10 @@ export const AddTalent = () => {
                       Correo electrónico
                       <span className="text-red-500">*</span>
                     </label>
-                    <input
+                    <Input
                       {...register("email")}
                       type="email"
                       id="email"
-                      className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                       placeholder="Correo electrónico"
                     />
                     {errors.email && (
@@ -668,10 +686,10 @@ export const AddTalent = () => {
                       name="descripcion"
                       control={control}
                       render={({ field }) => (
-                        <textarea
+                        <Textarea
                           {...field}
                           id="description"
-                          className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5] transition-colors"
+                          className="resize-none h-24"
                           placeholder="Cuéntanos sobre este talento..."
                           onBlur={(e) => {
                             const {
@@ -713,20 +731,44 @@ export const AddTalent = () => {
                       <span className="text-red-400">*</span>
                     </label>
 
-                    {disponibilidades?.map((d) => (
-                      <label
-                        className="flex items-center gap-2"
-                        key={d.num1}
-                      >
-                        <input
-                          type="checkbox"
-                          value={d.num1}
-                          {...register("disponibilidad")}
-                          className="w-4 h-4"
-                        />
-                        <span>{d.string1}</span>
-                      </label>
-                    ))}
+                    {/* Con register, el grupo de checkboxes guardaba un array
+                        de strings (el `value` de cada uno); se mantiene. */}
+                    <Controller
+                      name="disponibilidad"
+                      control={control}
+                      render={({ field }) => {
+                        const current: string[] = Array.isArray(field.value)
+                          ? (field.value as unknown[]).map(String)
+                          : [];
+                        return (
+                          <>
+                            {disponibilidades?.map((d) => {
+                              const value = String(d.num1);
+                              return (
+                                <label
+                                  className="flex items-center gap-2"
+                                  key={d.num1}
+                                >
+                                  <Checkbox
+                                    checked={current.includes(value)}
+                                    onCheckedChange={(checked) =>
+                                      field.onChange(
+                                        checked === true
+                                          ? [...current, value]
+                                          : current.filter((v) => v !== value),
+                                      )
+                                    }
+                                    onBlur={field.onBlur}
+                                    className="w-4 h-4"
+                                  />
+                                  <span>{d.string1}</span>
+                                </label>
+                              );
+                            })}
+                          </>
+                        );
+                      }}
+                    />
 
                     {errors.disponibilidad && (
                       <p className="text-red-400 text-sm">
@@ -742,20 +784,26 @@ export const AddTalent = () => {
                       Procedencia
                       <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="procedencia"
-                      {...register("procedencia")}
-                      className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <option value="">
-                        Seleccione una procedencia
-                      </option>
-                      {PROCEDENCIA_OPTIONS.map((op) => (
-                        <option key={op} value={op}>
-                          {op}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="procedencia"
+                      control={control}
+                      render={({ field }) => (
+                        <AppSelect
+                          ref={field.ref}
+                          id="procedencia"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={PROCEDENCIA_OPTIONS.map((op) => ({
+                            value: op,
+                            label: op,
+                          }))}
+                          placeholder="Seleccione una procedencia"
+                          className={selectClass}
+                        />
+                      )}
+                    />
                     {errors.procedencia && (
                       <p className="text-red-400 text-sm">
                         {errors.procedencia.message}
@@ -775,22 +823,28 @@ export const AddTalent = () => {
                     >
                       País<span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="country"
-                      autoComplete="country"
-                      {...register("idPais", { valueAsNumber: true })}
-                      className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <option value={0}>Seleccione un país</option>
-                      {paises.map((pais) => (
-                        <option
-                          key={pais.idParametro}
-                          value={pais.num1}
-                        >
-                          {pais.string1}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="idPais"
+                      control={control}
+                      render={({ field }) => (
+                        <AppSelect
+                          ref={field.ref}
+                          id="country"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          value={field.value}
+                          onChange={(v) =>
+                            field.onChange(v === "" ? 0 : Number(v))
+                          }
+                          options={paises.map((pais) => ({
+                            value: pais.num1,
+                            label: pais.string1,
+                          }))}
+                          placeholder="Seleccione un país"
+                          className={`${selectClass} hover:bg-gray-100 dark:hover:bg-slate-700`}
+                        />
+                      )}
+                    />
                     {errors.idPais && (
                       <p className="text-red-400 text-sm">
                         {errors.idPais.message}
@@ -804,24 +858,28 @@ export const AddTalent = () => {
                     >
                       Ciudad<span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="city"
-                      autoComplete="address-level2"
-                      {...register("idCiudad", {
-                        valueAsNumber: true,
-                      })}
-                      className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-                    >
-                      <option value={0}>Seleccione una ciudad</option>
-                      {ciudadesFiltradas.map((ciudad) => (
-                        <option
-                          key={ciudad.idParametro}
-                          value={ciudad.num1}
-                        >
-                          {ciudad.string1}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="idCiudad"
+                      control={control}
+                      render={({ field }) => (
+                        <AppSelect
+                          ref={field.ref}
+                          id="city"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          value={field.value}
+                          onChange={(v) =>
+                            field.onChange(v === "" ? 0 : Number(v))
+                          }
+                          options={ciudadesFiltradas.map((ciudad) => ({
+                            value: ciudad.num1,
+                            label: ciudad.string1,
+                          }))}
+                          placeholder="Seleccione una ciudad"
+                          className={selectClass}
+                        />
+                      )}
+                    />
                     {errors.idCiudad && (
                       <p className="text-red-400 text-sm">
                         {errors.idCiudad.message}
@@ -849,7 +907,7 @@ export const AddTalent = () => {
                   habilidadesTecnicas={habilidadesTecnicas}
                   dropdownWithSearch={true}
                   shouldShowEmptyForm={true}
-                  //itemVariant="card"
+                  itemVariant="card"
                 />
                 {/* Soft skills */}
                 <SoftSkillsSection<AddTalentType>
@@ -858,12 +916,14 @@ export const AddTalent = () => {
                   habilidadesBlandas={habilidadesBlandas}
                   dropdownWithSearch={true}
                   shouldShowEmptyForm={false}
+                  itemVariant="card"
                 />
                 {/* Experience */}
                 <ExperiencesSection<AddTalentType>
                   control={control}
                   errors={errors}
                   shouldShowEmptyForm={false}
+                  itemVariant="card"
                 />
 
                 {/* Education */}
@@ -871,6 +931,7 @@ export const AddTalent = () => {
                   control={control}
                   errors={errors}
                   shouldShowEmptyForm={false}
+                  itemVariant="card"
                 />
 
                 {/* Languages */}
@@ -880,6 +941,7 @@ export const AddTalent = () => {
                   idiomas={idiomas}
                   nivelesIdioma={nivelesIdioma}
                   shouldShowEmptyForm={false}
+                  itemVariant="card"
                 />
                 {/* Social media */}
                 <div className="*:mb-4">
@@ -893,11 +955,11 @@ export const AddTalent = () => {
                     >
                       LinkedIn
                     </label>
-                    <input
+                    <Input
                       {...register("linkedin")}
                       id="linkedin"
                       type="text"
-                      className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                      className={socialInputClass}
                     />
                     {errors.linkedin && (
                       <p className="text-red-400 text-sm">
@@ -912,11 +974,11 @@ export const AddTalent = () => {
                     >
                       Github
                     </label>
-                    <input
+                    <Input
                       {...register("github")}
                       id="github"
                       type="text"
-                      className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                      className={socialInputClass}
                     />
                     {errors.github && (
                       <p className="text-red-400 text-sm">
@@ -931,34 +993,53 @@ export const AddTalent = () => {
                   control={control}
                   render={({ field }) => (
                     <div className="flex flex-col my-4 gap-2">
-                      <label className="text-wrap max-w-[20rem]">
+                      <span
+                        id="add-talent-equipo"
+                        className="text-wrap max-w-[20rem]"
+                      >
                         ¿Cuenta con equipo (Laptop)?{" "}
                         <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex items-center gap-6">
-                        <label className="flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                            checked={field.value === true}
-                            onChange={() => field.onChange(true)}
+                      </span>
+                      {/* RadioGroup sobre el booleano: "" mientras no se elija. */}
+                      <RadioGroup
+                        aria-labelledby="add-talent-equipo"
+                        value={
+                          field.value === true
+                            ? "si"
+                            : field.value === false
+                              ? "no"
+                              : ""
+                        }
+                        onValueChange={(v) => field.onChange(v === "si")}
+                        className="flex items-center gap-6"
+                      >
+                        <div className="flex items-center">
+                          <RadioGroupItem
+                            id="add-talent-equipo-si"
+                            value="si"
+                            className="h-4 w-4"
                           />
-                          <span className="ml-2 text-gray-700 dark:text-slate-200">
+                          <Label
+                            htmlFor="add-talent-equipo-si"
+                            className="ml-2 cursor-pointer text-gray-700 dark:text-slate-200"
+                          >
                             Sí
-                          </span>
-                        </label>
-                        <label className="flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                            checked={field.value === false}
-                            onChange={() => field.onChange(false)}
+                          </Label>
+                        </div>
+                        <div className="flex items-center">
+                          <RadioGroupItem
+                            id="add-talent-equipo-no"
+                            value="no"
+                            className="h-4 w-4"
                           />
-                          <span className="ml-2 text-gray-700 dark:text-slate-200">
+                          <Label
+                            htmlFor="add-talent-equipo-no"
+                            className="ml-2 cursor-pointer text-gray-700 dark:text-slate-200"
+                          >
                             No
-                          </span>
-                        </label>
-                      </div>
+                          </Label>
+                        </div>
+                      </RadioGroup>
                       {errors.tieneEquipo && (
                         <p className="text-sm text-red-600 mt-2 dark:text-red-400">
                           {errors.tieneEquipo.message}

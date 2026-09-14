@@ -3,8 +3,8 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstance,
 } from "./axiosService";
-import { Utils } from "../utilities/utils";
-import { BaseResponse, BlacklistCreateParams, BlacklistHistoryResponse, BlacklistListResponse, BlacklistRemoveParams, BlacklistStatusResponse, BlacklistUpdateParams, BlacklistValidateResponse } from "../models";
+import { Utils } from "@/core/utilities/utils";
+import { BaseResponse, BlacklistCreateParams, BlacklistHistoryResponse, BlacklistListResponse, BlacklistRemoveParams, BlacklistStatusResponse, BlacklistUpdateParams, BlacklistValidateResponse } from "@/core/models";
 
 // blacklist (lista negra)
 export const createBlacklist = (

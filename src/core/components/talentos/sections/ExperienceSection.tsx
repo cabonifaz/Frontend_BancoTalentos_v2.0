@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DynamicSectionProps } from "../../../models";
+import { DynamicSectionProps } from "@/core/models";
 import { DynamicSection } from "./DynamicSection";
 import {
   FieldValues,
@@ -11,9 +11,13 @@ import {
   useWatch,
 } from "react-hook-form";
 import { enqueueSnackbar } from "notistack";
-import { sumarizeFunctions } from "../../../services/ai.service";
-import { useAsyncService } from "../../../hooks/useAsyncService";
-import { ModalWorkingAI } from "../../modals/ModalWorkingAI";
+import { sumarizeFunctions } from "@/core/services/ai.service";
+import { useAsyncService } from "@/core/hooks/useAsyncService";
+import { ModalWorkingAI } from "@/core/components/modals/ModalWorkingAI";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { DatePicker } from "@/core/components/ui/DatePicker";
 
 interface ExperiencesSectionProps<
   F extends FieldValues,
@@ -21,12 +25,17 @@ interface ExperiencesSectionProps<
   empresaValue?: string;
 }
 
+const fieldClass = "h-12 border-gray-300 dark:border-slate-600";
+const checkboxClass =
+  "h-4 w-4 data-[state=checked]:border-[#4F46E5] data-[state=checked]:bg-[#4F46E5]";
+
 export const ExperiencesSection = <F extends FieldValues>({
   control,
   errors,
   shouldShowEmptyForm = true,
   shouldAddElements = true,
   empresaValue,
+  itemVariant = "plain",
 }: ExperiencesSectionProps<F>) => {
   const { setValue, getValues, clearErrors, watch, trigger } =
     useFormContext<F>();
@@ -72,11 +81,10 @@ export const ExperiencesSection = <F extends FieldValues>({
   }, [empresaValue]);
 
   const handleCurrentCompanyChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    isChecked: boolean,
     index: number,
     onChange: (value: any) => void,
   ) => {
-    const isChecked = e.target.checked;
     setDefaultCompanies((prev) => ({ ...prev, [index]: isChecked }));
 
     // Actualizar el valor del campo empresa
@@ -176,6 +184,7 @@ export const ExperiencesSection = <F extends FieldValues>({
         onRemove={remove}
         canRemoveFirst={!shouldShowEmptyForm}
         canAddSections={shouldAddElements}
+        itemVariant={itemVariant}
       >
       {fields.map((field, index) => {
         // Determinar si es Fractal basado en el valor actual del campo empresa
@@ -208,7 +217,7 @@ export const ExperiencesSection = <F extends FieldValues>({
                 render={({
                   field: { value, onChange, ...fieldProps },
                 }) => (
-                  <input
+                  <Input
                     {...fieldProps}
                     value={value || ""}
                     disabled={defaultCompanies[index]}
@@ -217,7 +226,7 @@ export const ExperiencesSection = <F extends FieldValues>({
                     onChange={onChange}
                     placeholder="Nombre de la empresa"
                     autoComplete="organization"
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-600 dark:border-slate-600 dark:disabled:bg-slate-700 dark:disabled:text-slate-300"
+                    className={`${fieldClass} disabled:bg-gray-100 disabled:text-gray-600 disabled:opacity-100 dark:disabled:bg-slate-700 dark:disabled:text-slate-300`}
                   />
                 )}
               />
@@ -236,19 +245,18 @@ export const ExperiencesSection = <F extends FieldValues>({
                 <Controller
                   name={`experiencias.${index}.empresa` as Path<F>}
                   control={control}
-                  render={({ field: { onChange, value } }) => (
-                    <input
-                      type="checkbox"
+                  render={({ field: { onChange } }) => (
+                    <Checkbox
                       id={`currentCompany-${index}`}
                       checked={isFractal || defaultCompanies[index]}
-                      onChange={(e) => {
+                      onCheckedChange={(value) => {
                         handleCurrentCompanyChange(
-                          e,
+                          value === true,
                           index,
                           onChange,
                         );
                       }}
-                      className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
+                      className={checkboxClass}
                     />
                   )}
                 />
@@ -273,13 +281,13 @@ export const ExperiencesSection = <F extends FieldValues>({
                 name={`experiencias.${index}.puesto` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
                     id={`experiencias.${index}.puesto`}
                     type="text"
                     placeholder="Puesto"
                     autoComplete="organization-title"
-                    className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                    className={fieldClass}
                   />
                 )}
               />
@@ -305,13 +313,13 @@ export const ExperiencesSection = <F extends FieldValues>({
                 name={`experiencias.${index}.funciones` as Path<F>}
                 control={control}
                 render={({ field }) => (
-                  <textarea
+                  <Textarea
                     {...field}
                     id={`experiencias.${index}.funciones`}
                     placeholder="Funciones"
                     autoComplete="organization-title"
                     rows={5}
-                    className="h-24 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] resize-y dark:border-slate-600"
+                    className="h-24 border-gray-300 resize-y dark:border-slate-600"
                   />
                 )}
               />
@@ -319,10 +327,11 @@ export const ExperiencesSection = <F extends FieldValues>({
               {/* --- BLOQUE DE RESUMEN CON IA --- */}
               <div className="mt-2 flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300 dark:bg-slate-800 dark:border-slate-600">
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="text"
+                    aria-label="Instrucciones para resumir"
                     placeholder="Instrucciones para resumir (ej: 'en 3 puntos clave', 'tono formal'...)"
-                    className="flex-1 h-9 px-3 text-sm border-gray-300 border rounded-md focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                    className="flex-1 h-9 rounded-md border-gray-300 px-3 py-0 text-sm dark:border-slate-600"
                     value={resumenInstructions[index] || ""}
                     onChange={(e) =>
                       setResumenInstructions((prev) => ({
@@ -372,12 +381,14 @@ export const ExperiencesSection = <F extends FieldValues>({
                   }
                   control={control}
                   render={({ field }) => (
-                    <input
-                      {...field}
-                      type="date"
+                    <DatePicker
+                      ref={field.ref}
                       id={`experiencias.${index}.fechaInicio`}
-                      autoComplete="bday"
-                      className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      toYear={new Date().getFullYear()}
+                      className={fieldClass}
                     />
                   )}
                 />
@@ -398,14 +409,14 @@ export const ExperiencesSection = <F extends FieldValues>({
                     }
                     control={control}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="checkbox"
+                      <Checkbox
+                        ref={field.ref}
                         id={`experiencias.${index}.flActualidad`}
-                        className="accent-[#4F46E5] h-4 w-4 cursor-pointer"
+                        className={checkboxClass}
                         checked={!!field.value}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
+                        onBlur={field.onBlur}
+                        onCheckedChange={(value) => {
+                          const checked = value === true;
                           field.onChange(checked);
                           setCurrentDates((prev) => ({
                             ...prev,
@@ -452,14 +463,16 @@ export const ExperiencesSection = <F extends FieldValues>({
                   name={`experiencias.${index}.fechaFin` as Path<F>}
                   control={control}
                   render={({ field }) => (
-                    <input
-                      {...field}
-                      type="date"
+                    <DatePicker
+                      ref={field.ref}
                       id={`experiencias.${index}.fechaFin`}
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
                       disabled={getValues(
                         `experiencias.${index}.flActualidad` as Path<F>,
                       )}
-                      className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] disabled:text-gray-400 dark:border-slate-600 dark:disabled:text-slate-500"
+                      className={`${fieldClass} disabled:text-gray-400 disabled:opacity-100 dark:disabled:text-slate-500`}
                     />
                   )}
                 />

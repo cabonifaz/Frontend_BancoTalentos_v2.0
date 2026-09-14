@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { generateRqDownloadUrl } from "../../services/requirements.service";
+import { generateRqDownloadUrl } from "@/core/services/requirements.service";
 import { enqueueSnackbar } from "notistack";
 
 export const useDownloadRqFile = () => {

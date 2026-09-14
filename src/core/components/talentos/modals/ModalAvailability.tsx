@@ -1,17 +1,18 @@
 import { enqueueSnackbar } from "notistack";
 import { useState, useEffect } from "react";
-import { useModal } from "../../../context/ModalContext";
-import { useApi } from "../../../hooks/useApi";
-import { BaseResponse } from "../../../models";
-import { TalentAvailabilityParams } from "../../../models/params/TalentUpdateParams";
-import { updateTalentAvailability } from "../../../services/talents.service";
+import { useModal } from "@/core/context/ModalContext";
+import { useApi } from "@/core/hooks/useApi";
+import { BaseResponse } from "@/core/models";
+import { TalentAvailabilityParams } from "@/core/models/params/TalentUpdateParams";
+import { updateTalentAvailability } from "@/core/services/talents.service";
 import {
   handleError,
   handleResponse,
-} from "../../../utilities/errorHandler";
-import { Modal } from "../../modals/Modal";
-import { Loading } from "../../ui/Loading";
-import { validateText } from "../../../utilities/validation";
+} from "@/core/utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { validateText } from "@/core/utilities/validation";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
 
 interface Props {
   idTalento?: number;
@@ -137,14 +138,12 @@ export const ModalAvailability = ({
               className="flex items-center gap-2"
               key={d.idParametro}
             >
-              <input
-                type="checkbox"
-                value={d.idParametro}
+              <Checkbox
                 className="w-4 h-4"
                 checked={selectedAvailabilities.includes(
                   d.idParametro
                 )}
-                onChange={() => handleCheckboxChange(d.idParametro)}
+                onCheckedChange={() => handleCheckboxChange(d.idParametro)}
               />
               <span>{d.string1}</span>
             </label>

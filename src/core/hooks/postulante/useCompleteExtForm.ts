@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { IACVResponse } from "../../models/response/AICVResponse";
+import { IACVResponse } from "@/core/models/response/AICVResponse";
 import { UseFormSetValue } from "react-hook-form";
-import { Param } from "../../models";
-import { AddPostulanteType } from "../../models";
+import { Param } from "@/core/models";
+import { AddPostulanteType } from "@/core/models";
 
 /**
  * `useCompleteExtForm` es un hook personalizado que proporciona funcionalidades para auto-completar un formulario

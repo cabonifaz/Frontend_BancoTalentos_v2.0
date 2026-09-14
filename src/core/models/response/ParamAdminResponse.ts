@@ -1,5 +1,5 @@
 import { BaseResponse } from "./BaseResponse";
-import { ParamItem, ParamMaster } from "../interfaces/ParamAdmin";
+import { ParamItem, ParamMaster } from "@/core/models/interfaces/ParamAdmin";
 
 export interface ParamMasterListResponse {
   result: BaseResponse;

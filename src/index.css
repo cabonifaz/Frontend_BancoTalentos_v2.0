@@ -70,6 +70,55 @@
 }
 
 /*
+ * Tokens de shadcn/ui (core/components/ui/shadcn). Los lee tailwind.config.js
+ * como bg-primary, border-input, ring-ring… Los valores NO son la paleta de
+ * shadcn: reproducen la marca y el convenio claro/oscuro de los bloques de
+ * arriba, para que un componente nuevo se vea como el resto de BDT.
+ * Formato HSL sin hsl(): Tailwind 3 lo envuelve y así admite opacidad (bg-primary/90).
+ */
+:root {
+    --background: 210 20% 98%;        /* #f9fafb = --surface-base */
+    --foreground: 215 28% 17%;        /* #1f2937 = --text-strong */
+    --card: 0 0% 100%;                /* = --surface-raised */
+    --card-foreground: 215 28% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+    --primary: 174 100% 29%;          /* #009688 teal de marca */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;         /* gray-100 */
+    --secondary-foreground: 215 28% 17%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;   /* #6b7280 = --text-muted */
+    --accent: 220 14% 96%;            /* hover claro del proyecto: gray-100 */
+    --accent-foreground: 215 28% 17%;
+    --destructive: 0 84% 60%;         /* red-500 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;            /* gray-200 */
+    --input: 220 13% 91%;
+    --ring: 200 89% 40%;              /* #0B85C3 azul de marca */
+    --radius: 0.5rem;
+}
+
+/* Marca y rojo no se redefinen: los acentos saturados van igual en ambos temas. */
+.dark {
+    --background: 222 47% 11%;        /* slate-900 */
+    --foreground: 210 40% 96%;        /* slate-100 */
+    --card: 217 33% 17%;              /* slate-800 */
+    --card-foreground: 210 40% 96%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 96%;
+    --secondary: 215 25% 27%;         /* slate-700 */
+    --secondary-foreground: 210 40% 96%;
+    --muted: 215 25% 27%;
+    --muted-foreground: 215 20% 65%;  /* slate-400 */
+    --accent: 215 25% 27%;            /* hover oscuro del proyecto: slate-700 */
+    --accent-foreground: 210 40% 96%;
+    --border: 215 25% 27%;            /* slate-700 */
+    --input: 215 19% 35%;             /* slate-600 */
+    --ring: 198 58% 59%;              /* #5BAFD3, el azul de foco en oscuro */
+}
+
+/*
  * Fondo y color base de la app. Sin esto el <body> se queda blanco por debajo
  * de las pantallas que no pintan fondo propio.
  */

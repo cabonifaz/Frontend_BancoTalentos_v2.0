@@ -1,26 +1,39 @@
-import { GraduationCap, Trash2, Wrench } from "lucide-react";
+import { GraduationCap, Plus, Trash2, Wrench } from "lucide-react";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
-import { Utils } from "../../../../utilities/utils";
-import { NumberInput } from "../../InputNumber";
+import { newRQSchemaType } from "@/core/models/schemas/NewRQSchemaV1";
+import { Utils } from "@/core/utilities/utils";
+import { NumberInput } from "@/core/components/requerimientos/InputNumber";
 import { useEffect, useState } from "react";
-import { Tarifa } from "../../../../models/interfaces/Tarifa";
+import { Tarifa } from "@/core/models/interfaces/Tarifa";
 import {
   BaseSkillProps,
   TechSkillsModal,
-} from "../../modals/ModalAddTechSkill";
-import { AddCareerModal, CareerProps } from "../../modals/ModalAddCareer";
+} from "@/core/components/requerimientos/modals/ModalAddTechSkill";
+import { AddCareerModal, CareerProps } from "@/core/components/requerimientos/modals/ModalAddCareer";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../../../context/ModalContext";
+import { useModal } from "@/core/context/ModalContext";
 import {
   MODAL_ADD_CAREER,
   MODAL_ADD_TECH_SKILL,
-} from "../../../../utilities/modalsIds";
-import { HABILIDADES_TECNICAS } from "../../../../utilities/constants";
+} from "@/core/utilities/modalsIds";
+import { SearchableSelect } from "@/core/components/ui/SearchableSelect";
+import { Button } from "@/core/components/ui/shadcn/button";
 import {
-  SearchableSelect,
-  SearchableOption,
-} from "../../../ui/SearchableSelect";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { cn } from "@/core/lib/utils";
+import {
+  IconAction,
+  RequirementChip,
+  SectionHeader,
+  TabBody,
+  rqTable,
+} from "@/core/components/requerimientos/rq-ui";
 
 /** Validate rol */
 const isRecruiter = (): boolean => {
@@ -62,7 +75,6 @@ export const TabVacancies = ({
   const [currentVacancyId, setCurrentVacancyId] = useState<string | null>(null);
 
   const {
-    register,
     formState: { errors },
     setValue,
     clearErrors,
@@ -170,17 +182,13 @@ export const TabVacancies = ({
     const idPerfil = Number(value);
     setValue(`lstVacantes.${index}.idPerfil`, idPerfil);
 
-    const tarifa =
-      tarifario
-        .find((item) => item.idPerfil === idPerfil)
-        ?.tarifa.toFixed(2) || "-";
-    const moneda =
-      tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
-      "S/.";
-
+    // La tarifa solo se muestra (no va en el payload); sin tarifario, vacía.
+    const found = tarifario.find((item) => item.idPerfil === idPerfil);
     setValue(
       `lstVacantes.${index}.tarifa`,
-      `${moneda} ${Utils.formatCoin(Number(tarifa))}`
+      found
+        ? `${found.moneda || "S/."} ${Utils.formatCoin(Number(found.tarifa.toFixed(2)))}`
+        : ""
     );
     clearErrors(`lstVacantes.${index}.idPerfil`);
   };
@@ -264,6 +272,11 @@ export const TabVacancies = ({
   };
 
   const availableProfiles = getAvailableProfiles();
+  const recruiter = isRecruiter();
+  // Tarifa y Tipo de tarifa no se muestran al rol Reclutador.
+  const columnCount = recruiter ? 4 : 6;
+  const listError =
+    errors.lstVacantes?.message ?? errors.lstVacantes?.root?.message;
 
   return (
     <>
@@ -290,86 +303,77 @@ export const TabVacancies = ({
           onClose={closeModalAddCareer}
         />
       )}
-      <div className="flex h-full min-h-0 flex-col">
-        <div className="mb-1 text-end">
-          <button
-            type="button"
-            className="btn btn-blue"
-            onClick={handleAddVacante}
-          >
-            Agregar
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 overflow-visible p-1">
-          <div className="table-container h-full">
-            <div className="table-wrapper h-full overflow-y-auto">
-              <table className="table">
-                <thead>
-                  <tr className="table-header">
-                    <th scope="col" className="table-header-cell">
+      <TabBody>
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title="Vacantes"
+            helper="Perfiles que solicita el cliente y cuántas personas se necesitan de cada uno."
+            actions={
+              <Button
+                variant="blue"
+                onClick={handleAddVacante}
+                className="font-medium"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Agregar vacante
+              </Button>
+            }
+          />
+
+          <div className={rqTable.wrapper}>
+            <div className="overflow-x-auto">
+              <Table className={cn(rqTable.table, "min-w-[56rem]")}>
+                <TableHeader>
+                  <TableRow className={rqTable.headRow}>
+                    <TableHead scope="col" className={rqTable.head}>
                       Perfil profesional
-                    </th>
-                    <th scope="col" className="table-header-cell">
+                    </TableHead>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-32")}>
                       Cantidad
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                      style={{
-                        display: isRecruiter()
-                          ? "none"
-                          : "table-header-cell",
-                      }}
-                    >
-                      Tarifa
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                      style={{
-                        display: isRecruiter()
-                          ? "none"
-                          : "table-header-cell",
-                      }}
-                    >
-                      Tipo Tarifa
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell text-center"
-                    >
-                      Otros
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
+                    </TableHead>
+                    {!recruiter && (
+                      <TableHead scope="col" className={cn(rqTable.head, "w-36 text-right")}>
+                        Tarifa
+                      </TableHead>
+                    )}
+                    {!recruiter && (
+                      <TableHead scope="col" className={cn(rqTable.head, "w-36")}>
+                        Tipo de tarifa
+                      </TableHead>
+                    )}
+                    <TableHead scope="col" className={cn(rqTable.head, "w-72")}>
+                      Requisitos
+                    </TableHead>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-16")}>
+                      <span className="sr-only">Acciones</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {fields.length <= 0 ? (
-                    <tr>
-                      <td colSpan={4} className="table-empty">
-                        No hay vacantes disponibles.
-                      </td>
-                    </tr>
+                    <TableRow>
+                      <TableCell colSpan={columnCount} className={rqTable.empty}>
+                        Aún no hay vacantes. Usa «Agregar vacante» para añadir la primera.
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     fields.map((field, index) => {
-                      const currentProfile =
-                        currentVacantes[index]?.idPerfil;
-                      const tempVacancyId =
-                        currentVacantes[index]?.tempVacancyId;
+                      const currentProfile = currentVacantes[index]?.idPerfil;
+                      const tempVacancyId = currentVacantes[index]?.tempVacancyId;
+                      const tarifa = currentVacantes[index]?.tarifa;
 
                       const tipoTarifa =
-                        tarifario.find(
-                          (item) =>
-                            item.idPerfil ===
-                            getValues(`lstVacantes.${index}.idPerfil`)
-                        )?.tipoTarifa || "-";
+                        tarifario.find((item) => item.idPerfil === currentProfile)
+                          ?.tipoTarifa || "—";
+
+                      const totalCareers = getTotalCareersForVacancy(tempVacancyId);
+                      const totalSkills = getTotalSkillsForVacancy(tempVacancyId);
+                      const profileError =
+                        errors.lstVacantes?.[index]?.idPerfil?.message;
 
                       return (
-                        <tr key={field.id} className="table-row">
-                          <td className="table-cell">
+                        <TableRow key={field.id} className={rqTable.row}>
+                          <TableCell className={cn(rqTable.cell, "py-2.5")}>
                             <SearchableSelect
                               options={[
                                 {
@@ -382,136 +386,86 @@ export const TabVacancies = ({
                                 })),
                               ]}
                               value={currentProfile || 0}
-                              onChange={(value) => {
-                                handleProfileChange(
-                                  index,
-                                  value.toString()
-                                );
-                                setValue(
-                                  `lstVacantes.${index}.idPerfil`,
-                                  Number(value)
-                                );
-                              }}
+                              onChange={(value) =>
+                                handleProfileChange(index, value.toString())
+                              }
                               placeholder="Seleccione un perfil"
+                              className={cn(
+                                "h-12",
+                                profileError && "border-red-500 dark:border-red-400"
+                              )}
                             />
-                            {errors.lstVacantes?.[index]
-                              ?.idPerfil && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.lstVacantes[index]?.idPerfil
-                                    ?.message
-                                }
+                            {profileError && (
+                              <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                                {profileError}
                               </p>
                             )}
-                          </td>
-                          <td className="table-cell">
-                            <div className="flex">
-                              <div className="flex flex-col gap-1 relative">
-                                <NumberInput<newRQSchemaType>
-                                  control={control}
-                                  name={`lstVacantes.${index}.cantidad`}
-                                  error={
-                                    errors.lstVacantes?.[index]
-                                      ?.cantidad?.message
-                                  }
-                                />
-                              </div>
-                            </div>
-                          </td>
-                          <td
-                            className="table-cell"
-                            style={{
-                              display: isRecruiter()
-                                ? "none"
-                                : "table-header-cell",
-                            }}
-                          >
-                            <input
-                              {...register(
-                                `lstVacantes.${index}.tarifa`
-                              )}
-                              defaultValue={`${Utils.formatCoin(
-                                Number(
-                                  getValues(
-                                    `lstVacantes.${index}.tarifa`
-                                  )
-                                )
-                              )}`}
-                              type="text"
-                              id="v-tarifa"
-                              className="input-readonly-text"
-                              readOnly
-                            />
-                          </td>
-                          <td
-                            className="table-cell"
-                            style={{
-                              display: isRecruiter()
-                                ? "none"
-                                : "table-cell",
-                            }}
-                          >
-                            <p>{tipoTarifa}</p>
-                          </td>
-                          <td className="table-cell text-center relative group">
-                            <div className="flex items-center gap-3 justify-center">
-                              <button
-                                type="button"
-                                className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                                title="Agregar carreras"
-                                onClick={() =>
-                                  openModalAddCareer(
-                                    tempVacancyId,
-                                    currentProfile
-                                  )
+                          </TableCell>
+                          <TableCell className={cn(rqTable.cell, "py-2.5")}>
+                            <div className="flex w-20 flex-col gap-1">
+                              <NumberInput<newRQSchemaType>
+                                control={control}
+                                name={`lstVacantes.${index}.cantidad`}
+                                error={
+                                  errors.lstVacantes?.[index]?.cantidad?.message
                                 }
-                              >
-                                <GraduationCap className="w-6 h-6" />
-                                {/**@marker skills careers */}
-                                <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalCareersForVacancy(tempVacancyId)}
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                                title="Agregar habilidades"
-                                onClick={() => {
-                                  handleOpenModal(
-                                    tempVacancyId,
-                                    currentProfile
-                                  );
-                                }}
-                              >
-                                <Wrench className="w-6 h-6" />
-                                <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalSkillsForVacancy(tempVacancyId)}
-                                </span>
-                              </button>
+                                className="w-full text-center"
+                              />
                             </div>
-                          </td>
-                          <td className="table-cell">
-                            <button
-                              type="button"
-                              title="Eliminar vacante"
-                              className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                              onClick={() =>
-                                handleRemoveVacante(index)
-                              }
-                            >
-                              <Trash2 className="w-6 h-6 text-red-500" />
-                            </button>
-                          </td>
-                        </tr>
+                          </TableCell>
+                          {!recruiter && (
+                            <TableCell className={cn(rqTable.cell, "text-right tabular-nums")}>
+                              {tarifa || "—"}
+                            </TableCell>
+                          )}
+                          {!recruiter && (
+                            <TableCell className={rqTable.cell}>{tipoTarifa}</TableCell>
+                          )}
+                          <TableCell className={rqTable.cell}>
+                            <div className="flex flex-wrap gap-2">
+                              <RequirementChip
+                                icon={GraduationCap}
+                                label="Carreras"
+                                count={totalCareers}
+                                hint="Agregar carreras"
+                                muted={!currentProfile}
+                                onClick={() =>
+                                  openModalAddCareer(tempVacancyId, currentProfile)
+                                }
+                              />
+                              <RequirementChip
+                                icon={Wrench}
+                                label="Habilidades"
+                                count={totalSkills}
+                                hint="Agregar habilidades"
+                                muted={!currentProfile}
+                                onClick={() =>
+                                  handleOpenModal(tempVacancyId, currentProfile)
+                                }
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className={cn(rqTable.cell, "py-2")}>
+                            <IconAction
+                              icon={Trash2}
+                              tone="red"
+                              label="Eliminar vacante"
+                              onClick={() => handleRemoveVacante(index)}
+                            />
+                          </TableCell>
+                        </TableRow>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </div>
-      </div>
+          {listError && (
+            <p className="text-[13px] text-red-500 dark:text-red-400">{listError}</p>
+          )}
+        </section>
+      </TabBody>
     </>
   );
 };

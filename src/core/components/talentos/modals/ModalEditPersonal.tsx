@@ -1,21 +1,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { useApi } from "../../../hooks/useApi";
-import { getTalent, updatePersonalDetails } from "../../../services/talents.service";
-import { useParams } from "../../../context/ParamsContext";
-import { useModal } from "../../../context/ModalContext";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
+import { useApi } from "@/core/hooks/useApi";
+import { getTalent, updatePersonalDetails } from "@/core/services/talents.service";
+import { useParams } from "@/core/context/ParamsContext";
+import { useModal } from "@/core/context/ModalContext";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
 import { useSnackbar } from "notistack";
 import {
   EditTalentPersonalSchema,
   EditTalentPersonalSchemaType,
-} from "../../../models/schemas/EditTalentPersonalSchema";
+} from "@/core/models/schemas/EditTalentPersonalSchema";
 
-import { Modal } from "../../modals/Modal";
+import { Modal } from "@/core/components/modals/Modal";
 import { useEffect, useMemo } from "react";
-import { AddTalentParams } from "../../../models";
-import { Loading } from "../../ui/Loading";
-import { PROCEDENCIA_OPTIONS } from "../../../utilities/constants";
+import { AddTalentParams } from "@/core/models";
+import { Loading } from "@/core/components/ui/Loading";
+import { PROCEDENCIA_OPTIONS } from "@/core/utilities/constants";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface Props {
   idTalento?: number;
@@ -144,8 +147,11 @@ export const ModalEditPersonal = ({
     }
   };
 
+  const labelStyle = "text-[11px] font-medium text-gray-500 dark:text-slate-400";
   const inputStyle =
-    "w-full px-3 py-2 border border-gray-200 rounded-md outline-none transition-all focus:border-blue-600 text-sm placeholder:text-gray-300 bg-white dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-600";
+    "px-3 py-2 border-gray-200 rounded-md text-sm placeholder:text-gray-300 bg-white dark:border-slate-700 dark:bg-slate-800 dark:placeholder:text-slate-600";
+  const selectStyle =
+    "h-auto px-3 py-2 border-gray-200 rounded-md text-sm bg-white dark:border-slate-700 dark:bg-slate-800";
 
   return (
     <>
@@ -156,13 +162,16 @@ export const ModalEditPersonal = ({
         confirmationLabel="Guardar"
         onConfirm={handleSubmit(onSubmit)}
       >
+        {/* 16 px entre campos: antes quedaban pegados uno debajo de otro. */}
+        <div className="mt-4 flex flex-col gap-4">
         {/* Doc. Identidad */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-dni" className={labelStyle}>
             Doc. Identidad
-          </label>
-          <input
+          </Label>
+          <Input
+            id="edit-personal-dni"
             {...register("dni")}
             type="text"
             className={inputStyle}
@@ -173,19 +182,25 @@ export const ModalEditPersonal = ({
         {/* Nombres */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-nombres" className={labelStyle}>
             Nombres
-          </label>
-          <input {...register("nombres")} type="text" className={inputStyle} />
+          </Label>
+          <Input
+            id="edit-personal-nombres"
+            {...register("nombres")}
+            type="text"
+            className={inputStyle}
+          />
         </div>
 
         {/* Apellido Paterno */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-paterno" className={labelStyle}>
             Apellido paterno
-          </label>
-          <input
+          </Label>
+          <Input
+            id="edit-personal-paterno"
             {...register("apellidoPaterno")}
             type="text"
             className={inputStyle}
@@ -195,10 +210,11 @@ export const ModalEditPersonal = ({
         {/* Apellido Materno */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-materno" className={labelStyle}>
             Apellido materno
-          </label>
-          <input
+          </Label>
+          <Input
+            id="edit-personal-materno"
             {...register("apellidoMaterno")}
             type="text"
             className={inputStyle}
@@ -208,25 +224,27 @@ export const ModalEditPersonal = ({
         {/* PAÍS */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">País</label>
+          <Label htmlFor="edit-personal-pais" className={labelStyle}>
+            País
+          </Label>
           <Controller
             name="idPais"
             control={control}
             render={({ field }) => (
-              <select
-                {...field}
-                key={`pais-${field.value}`}
+              <AppSelect
+                ref={field.ref}
+                id="edit-personal-pais"
+                name={field.name}
+                onBlur={field.onBlur}
                 value={field.value ?? 0}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                className={inputStyle}
-              >
-                <option value={0}>Seleccione un país</option>
-                {paises.map((p) => (
-                  <option key={p.idParametro} value={p.num1}>
-                    {p.string1}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => field.onChange(v === "" ? 0 : Number(v))}
+                options={paises.map((p) => ({
+                  value: p.num1,
+                  label: p.string1,
+                }))}
+                placeholder="Seleccione un país"
+                className={selectStyle}
+              />
             )}
           />
           {errors.idPais && (
@@ -237,28 +255,28 @@ export const ModalEditPersonal = ({
         {/* CIUDAD */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-ciudad" className={labelStyle}>
             Ciudad
-          </label>
+          </Label>
           <Controller
             name="idCiudad"
             control={control}
             render={({ field }) => (
-              <select
-                {...field}
-                key={`ciudad-${field.value}`}
+              <AppSelect
+                ref={field.ref}
+                id="edit-personal-ciudad"
+                name={field.name}
+                onBlur={field.onBlur}
                 value={field.value ?? 0}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-                className={inputStyle}
+                onChange={(v) => field.onChange(v === "" ? 0 : Number(v))}
+                options={ciudadesFiltradas.map((c) => ({
+                  value: c.num1,
+                  label: c.string1,
+                }))}
+                placeholder="Seleccione una ciudad"
+                className={selectStyle}
                 disabled={ciudadesFiltradas.length === 0}
-              >
-                <option value={0}>Seleccione una ciudad</option>
-                {ciudadesFiltradas.map((c) => (
-                  <option key={c.idParametro} value={c.num1}>
-                    {c.string1}
-                  </option>
-                ))}
-              </select>
+              />
             )}
           />
           {errors.idCiudad && (
@@ -271,22 +289,35 @@ export const ModalEditPersonal = ({
         {/* PROCEDENCIA */}
 
         <div className="flex flex-col gap-1">
-          <label className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+          <Label htmlFor="edit-personal-procedencia" className={labelStyle}>
             Procedencia
-          </label>
-          <select {...register("procedencia")} className={inputStyle}>
-            <option value="">Seleccione una procedencia</option>
-            {PROCEDENCIA_OPTIONS.map((op) => (
-              <option key={op} value={op}>
-                {op}
-              </option>
-            ))}
-          </select>
+          </Label>
+          <Controller
+            name="procedencia"
+            control={control}
+            render={({ field }) => (
+              <AppSelect
+                ref={field.ref}
+                id="edit-personal-procedencia"
+                name={field.name}
+                onBlur={field.onBlur}
+                value={field.value}
+                onChange={field.onChange}
+                options={PROCEDENCIA_OPTIONS.map((op) => ({
+                  value: op,
+                  label: op,
+                }))}
+                placeholder="Seleccione una procedencia"
+                className={selectStyle}
+              />
+            )}
+          />
           {errors.procedencia && (
             <p className="text-red-500 text-sm">
               {errors.procedencia.message}
             </p>
           )}
+        </div>
         </div>
       </Modal>
     </>

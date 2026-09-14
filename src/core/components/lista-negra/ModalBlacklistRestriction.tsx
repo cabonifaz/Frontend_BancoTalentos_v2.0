@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import { Search, X } from "lucide-react";
-import { Modal } from "../modals/Modal";
-import { Loading } from "../ui/Loading";
-import { useModal } from "../../context/ModalContext";
-import { useBlacklist } from "../../hooks/lista-negra/useBlacklist";
-import { getTalents } from "../../services/talents.service";
-import { BlacklistItem, Talent } from "../../models";
-import { Client } from "../../models/interfaces/Client";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { useModal } from "@/core/context/ModalContext";
+import { useBlacklist } from "@/core/hooks/lista-negra/useBlacklist";
+import { getTalents } from "@/core/services/talents.service";
+import { BlacklistItem, Talent } from "@/core/models";
+import { Client } from "@/core/models/interfaces/Client";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 export const MODAL_BLACKLIST_RESTRICTION = "modalBlacklistRestriction";
 
@@ -26,8 +31,8 @@ interface Props {
   onSaved: () => void;
 }
 
-const selectClass =
-  "w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200";
+const fieldClass =
+  "h-auto bg-white px-3 py-2 text-sm text-gray-700 dark:text-slate-200";
 
 const fullName = (t: Talent) =>
   `${t.nombres} ${t.apellidoPaterno} ${t.apellidoMaterno ?? ""}`.trim();
@@ -163,7 +168,7 @@ export const ModalBlacklistRestriction = ({
       <div className="flex flex-col gap-4 mt-2">
         {showTalentSearch ? (
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Talento</label>
+            <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Talento</span>
 
             {pickedTalent ? (
               <div className="flex items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:bg-indigo-500/10">
@@ -177,25 +182,28 @@ export const ModalBlacklistRestriction = ({
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setPickedTalent(null)}
-                  title="Elegir otro talento"
-                  className="flex-shrink-0 text-gray-500 hover:text-gray-800 dark:text-slate-400 dark:hover:text-slate-100"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <Hint label="Elegir otro talento">
+                  <button
+                    type="button"
+                    onClick={() => setPickedTalent(null)}
+                    aria-label="Elegir otro talento"
+                    className="flex-shrink-0 text-gray-500 hover:text-gray-800 dark:text-slate-400 dark:hover:text-slate-100"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </Hint>
               </div>
             ) : (
               <>
                 <div className="flex relative h-10">
                   <Search className="absolute top-2 left-3 text-gray-400 dark:text-slate-500" size={20} />
-                  <input
+                  <Input
                     type="text"
+                    aria-label="Buscar talento por nombre"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Buscar talento por nombre"
-                    className={`${selectClass} pl-10`}
+                    className={`${fieldClass} pl-10`}
                   />
                 </div>
 
@@ -241,44 +249,44 @@ export const ModalBlacklistRestriction = ({
         )}
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Cliente</label>
+          <Label htmlFor="blacklist-restriction-client" className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            Cliente
+          </Label>
           {isEdit ? (
-            <input
+            <Input
+              id="blacklist-restriction-client"
               type="text"
               value={restriction?.cliente ?? ""}
               disabled
-              className={`${selectClass} bg-gray-100 text-gray-500 dark:bg-slate-700 dark:text-slate-400`}
+              className={`${fieldClass} bg-gray-100 text-gray-500 disabled:opacity-100 dark:bg-slate-700 dark:text-slate-400`}
             />
           ) : (
-            <select
+            <AppSelect
+              id="blacklist-restriction-client"
               value={idCliente}
-              onChange={(e) =>
-                setIdCliente(
-                  e.target.value === "" ? "" : Number(e.target.value)
-                )
-              }
-              className={selectClass}
-            >
-              <option value="">Elija un cliente</option>
-              <option value={0}>TODOS LOS CLIENTES</option>
-              {clientes.map((c) => (
-                <option key={c.idCliente} value={c.idCliente}>
-                  {c.razonSocial}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setIdCliente(v === "" ? "" : Number(v))}
+              options={[
+                { value: 0, label: "TODOS LOS CLIENTES" },
+                ...clientes.map((c) => ({ value: c.idCliente, label: c.razonSocial })),
+              ]}
+              placeholder="Elija un cliente"
+              className={fieldClass}
+            />
           )}
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Motivo</label>
-          <textarea
+          <Label htmlFor="blacklist-restriction-motivo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
+            Motivo
+          </Label>
+          <Textarea
+            id="blacklist-restriction-motivo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={4}
             maxLength={1000}
             placeholder="Describa el motivo de la restricción"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:border-slate-600"
+            className="px-3 py-2 text-sm resize-none"
           />
         </div>
       </div>

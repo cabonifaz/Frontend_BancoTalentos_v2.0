@@ -1,5 +1,5 @@
-import { ApiConfig } from "../hooks/useAsyncService";
-import { BaseResponseFMI, OperationResult } from "../models";
+import { ApiConfig } from "@/core/hooks/useAsyncService";
+import { BaseResponseFMI, OperationResult } from "@/core/models";
 import { axiosInstanceFMI } from "./axiosService";
 
 export interface CreateInterviewType {

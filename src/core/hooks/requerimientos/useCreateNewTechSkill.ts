@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { AppError } from "../../models";
-import { axiosInstance } from "../../services/axiosService";
-import { NewTechSkillReq } from "../../models/requests/NewTechSkillReq";
-import { NewTechSkillRes } from "../../models/response/NewTechSkillResponse";
+import { AppError } from "@/core/models";
+import { axiosInstance } from "@/core/services/axiosService";
+import { NewTechSkillReq } from "@/core/models/requests/NewTechSkillReq";
+import { NewTechSkillRes } from "@/core/models/response/NewTechSkillResponse";
 
 export const useCreateNewTechSkill = () => {
   const [isLoading, setIsLoading] = useState(false);

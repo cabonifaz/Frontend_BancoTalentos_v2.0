@@ -1,11 +1,14 @@
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
-import { useModal } from "../../context/ModalContext";
-import { useFavouritesContext } from "../../context/FavouritesContext";
-import { Modal } from "../modals/Modal";
-import { validateText } from "../../utilities/validation";
-import { Loading } from "../ui/Loading";
-import { Talent } from "../../models";
+import { useModal } from "@/core/context/ModalContext";
+import { useFavouritesContext } from "@/core/context/FavouritesContext";
+import { Modal } from "@/core/components/modals/Modal";
+import { validateText } from "@/core/utilities/validation";
+import { Loading } from "@/core/components/ui/Loading";
+import { Talent } from "@/core/models";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 interface Props {
     idTalento: number;
@@ -26,10 +29,13 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
         setSelectedColecciones(idTalentoColecciones);
     }, [idTalentoColecciones]);
 
-    const handleFavourited = async (e: ChangeEvent<HTMLInputElement>, idColeccion: number) => {
+    // El Checkbox está controlado por selectedColecciones: si la API falla no
+    // se toca el estado y vuelve solo a su valor anterior (antes se revertía a
+    // mano el `checked` del <input>).
+    const handleFavourited = async (checked: boolean, idColeccion: number) => {
         if (!idTalento) return;
 
-        if (e.target.checked) {
+        if (checked) {
             // Agregar a la colección
             const response = await addToFavourites(idTalento, idColeccion);
 
@@ -38,8 +44,6 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
                 setSelectedColecciones(newSelectedColecciones);
                 setLocalIsFavourited(1);
                 onToggleFavorito(idTalento, { esFavorito: 1 });
-            } else {
-                e.target.checked = false;
             }
         } else {
             // Eliminar de la colección
@@ -53,8 +57,6 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
                     setLocalIsFavourited(0);
                     onToggleFavorito(idTalento, { esFavorito: 0 });
                 }
-            } else {
-                e.target.checked = true;
             }
         }
     };
@@ -87,6 +89,7 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
         <>
             <button
                 type="button"
+                aria-label="Añadir a favoritos"
                 onClick={() => openModal("modalFavourite")}
                 className="p-1 bg-white rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0 dark:bg-slate-800">
                 <Heart className="h-5 w-5" color="#e9399a" fill={localIsFavourited === 1 || isInAnyCollection ? "#e9399a" : "none"} />
@@ -96,13 +99,11 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
                     <ul className="flex flex-col gap-2 my-4">
                         {favourites && favourites.length > 0 && favourites.map((fav) => (
                             <li key={fav.nombreColeccion} className="flex items-center w-fit *:cursor-pointer">
-                                <input
-                                    type="checkbox"
+                                <Checkbox
                                     id={`fav-${fav.idColeccion}`}
                                     name="favourite-list"
                                     checked={selectedColecciones.includes(fav.idColeccion)}
-                                    onChange={(e) => handleFavourited(e, fav.idColeccion)}
-                                    className="h-5 w-5"
+                                    onCheckedChange={(checked) => handleFavourited(checked === true, fav.idColeccion)}
                                 />
                                 <label htmlFor={`fav-${fav.idColeccion}`} className="text-lg ps-4">
                                     {fav.nombreColeccion}
@@ -110,24 +111,25 @@ export const FavouriteButton = ({ isFavourited, idTalento, idTalentoColecciones,
                             </li>
                         ))}
                     </ul>
-                    <button
-                        type="button"
+                    <Button
                         onClick={newFavourite}
-                        className="p-2 text-white bg-[#009695] hover:bg-[#2d8d8d] rounded-lg w-full focus:outline-none">
+                        className="w-full p-2">
                         Agregar Favorito
-                    </button>
+                    </Button>
                 </div>
             </Modal>
 
             <Modal id="modalNewFavourite" title="Nueva lista" showButtonOptions={true} onConfirm={onCreate} confirmationLabel="Crear" >
                 {addToFavLoading && (<Loading opacity="opacity-60" />)}
                 <div className="flex flex-col mt-2">
-                    <input
+                    <Input
                         type="text"
                         id="new-fav"
                         ref={favNameRef}
+                        aria-label="Nombre de la lista"
+                        aria-invalid={!!error}
                         placeholder="Elige un nombre"
-                        className="invalid:border-red-500 my-2 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                        className="invalid:border-red-500 my-2 border-gray-300 dark:border-slate-600"
                     />
                     {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
                 </div>

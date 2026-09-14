@@ -7,8 +7,10 @@ import {
   useFormContext,
 } from "react-hook-form";
 import { useEffect, useRef, useState } from "react";
-import { DynamicSection } from "../..";
-import { DynamicSectionProps, Param } from "../../../models";
+import { DynamicSection } from "@/core/components";
+import { DynamicSectionProps, Param } from "@/core/models";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface SoftSkillsSectionProps<F extends FieldValues>
   extends DynamicSectionProps<F> {
@@ -23,6 +25,7 @@ export function SoftSkillsSection<F extends FieldValues>({
   dropdownWithSearch,
   shouldShowEmptyForm = true,
   shouldAddElements = true,
+  itemVariant = "plain",
 }: SoftSkillsSectionProps<F>) {
   const { setValue } = useFormContext<F>();
   const { fields, append, remove } = useFieldArray<F, ArrayPath<F>>({
@@ -77,6 +80,7 @@ export function SoftSkillsSection<F extends FieldValues>({
       onRemove={(index) => remove(index)}
       canRemoveFirst={!shouldShowEmptyForm}
       canAddSections={shouldAddElements}
+      itemVariant={itemVariant}
     >
       {fields.map((field, index) => (
         <div className="flex flex-col my-2 relative" key={field.id}>
@@ -99,8 +103,9 @@ export function SoftSkillsSection<F extends FieldValues>({
 
                 return (
                   <div className="relative">
-                    <input
+                    <Input
                       {...field}
+                      id={`habilidadesBlandas.${index}.habilidad`}
                       autoComplete="off"
                       value={searchValue}
                       onChange={(e) => {
@@ -136,7 +141,7 @@ export function SoftSkillsSection<F extends FieldValues>({
                       }}
                       role="combobox"
                       placeholder="Escribe para buscar..."
-                      className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full dark:border-slate-600"
+                      className="h-12 border-gray-300 dark:border-slate-600"
                       aria-expanded={showSuggestions[index]}
                     />
 
@@ -173,11 +178,14 @@ export function SoftSkillsSection<F extends FieldValues>({
               name={`habilidadesBlandas.${index}.idHabilidad` as Path<F>}
               control={control}
               render={({ field }) => (
-                <select
-                  {...field}
+                <AppSelect
+                  ref={field.ref}
+                  id={`habilidadesBlandas.${index}.habilidad`}
+                  name={field.name}
+                  onBlur={field.onBlur}
                   value={field.value ?? 0}
-                  onChange={(e) => {
-                    const newValue = Number(e.target.value);
+                  onChange={(v) => {
+                    const newValue = v === "" ? 0 : Number(v);
                     field.onChange(newValue);
 
                     // También actualizar el campo habilidad con el texto seleccionado
@@ -190,15 +198,13 @@ export function SoftSkillsSection<F extends FieldValues>({
                       setValue(habilidadPath, selectedHabilidad.string1 as any);
                     }
                   }}
-                  className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] w-full dark:border-slate-600"
-                >
-                  <option value={0}>Seleccione una habilidad</option>
-                  {habilidadesBlandas.map((habilidad) => (
-                    <option key={habilidad.idParametro} value={habilidad.num1}>
-                      {habilidad.string1}
-                    </option>
-                  ))}
-                </select>
+                  options={habilidadesBlandas.map((habilidad) => ({
+                    value: habilidad.num1,
+                    label: habilidad.string1,
+                  }))}
+                  placeholder="Seleccione una habilidad"
+                  className="h-12 border-gray-300 p-3 dark:border-slate-600"
+                />
               )}
             />
           )}

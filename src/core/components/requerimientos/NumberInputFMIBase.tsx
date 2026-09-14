@@ -6,6 +6,7 @@ import {
   useController,
   PathValue,
 } from "react-hook-form";
+import { Input } from "@/core/components/ui/shadcn/input";
 
 type NumberType = "int" | "float";
 
@@ -103,7 +104,9 @@ export const NumberInputFMIBase = <T extends Record<string, any>>({
   };
 
   return (
-    <input
+    // w-auto: el <input> anterior no ocupaba todo el ancho; className sigue
+    // pudiendo pisarlo.
+    <Input
       key={key}
       type="text"
       ref={field.ref}
@@ -111,7 +114,7 @@ export const NumberInputFMIBase = <T extends Record<string, any>>({
       onChange={handleChange}
       onBlur={handleBlur}
       disabled={disabled}
-      className={className}
+      className={`w-auto ${className}`}
     />
   );
 };

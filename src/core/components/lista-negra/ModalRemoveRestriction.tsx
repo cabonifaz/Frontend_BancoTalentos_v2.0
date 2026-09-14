@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import { AlertTriangle } from "lucide-react";
-import { Modal } from "../modals/Modal";
-import { Loading } from "../ui/Loading";
-import { useModal } from "../../context/ModalContext";
-import { useBlacklist } from "../../hooks/lista-negra/useBlacklist";
-import { BlacklistItem } from "../../models";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { useModal } from "@/core/context/ModalContext";
+import { useBlacklist } from "@/core/hooks/lista-negra/useBlacklist";
+import { BlacklistItem } from "@/core/models";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
 
 export const MODAL_REMOVE_RESTRICTION = "modalRemoveRestriction";
 
@@ -89,16 +91,17 @@ export const ModalRemoveRestriction = ({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
+          <Label htmlFor="remove-restriction-motivo" className="text-sm font-medium text-gray-700 dark:text-slate-200">
             Motivo de la eliminación
-          </label>
-          <textarea
+          </Label>
+          <Textarea
+            id="remove-restriction-motivo"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             rows={3}
             maxLength={1000}
             placeholder="Describa por qué se levanta la restricción"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none dark:border-slate-600"
+            className="px-3 py-2 text-sm resize-none"
           />
         </div>
       </div>

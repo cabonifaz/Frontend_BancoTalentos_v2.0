@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { generateTalentDownloadUrl } from "../../services/talents.service";
-import { handleError } from "../../utilities/errorHandler";
+import { generateTalentDownloadUrl } from "@/core/services/talents.service";
+import { handleError } from "@/core/utilities/errorHandler";
 
 /**
  * Visualización de archivos de talento (CV) en un visor del navegador vía URL

@@ -41,7 +41,7 @@ import {
   formatearMonto,
   maxToleranciaPermitida,
   pisoEnSoles,
-} from "../../utilities/riesgoTalento";
+} from "@/core/utilities/riesgoTalento";
 // isolatedModules: los tipos se importan aparte para que no queden como import
 // en tiempo de ejecución.
 import type {
@@ -51,9 +51,16 @@ import type {
   EstiloEstado,
   FilaBanda,
   RangoPretension,
-} from "../../utilities/riesgoTalento";
-import { useParams } from "../../context/ParamsContext";
-import { Tabs } from "../ui/Tabs";
+} from "@/core/utilities/riesgoTalento";
+import { useParams } from "@/core/context/ParamsContext";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Hint } from "@/core/components/ui/Hint";
 
 /**
  * Todo lo que hace falta para emitir un veredicto, desacoplado de su origen.
@@ -128,19 +135,21 @@ const Celda = ({
   /** El detalle del cálculo, para quien lo busque, sin ocupar sitio. */
   titulo?: string;
 }) => (
-  <div className="flex-1 min-w-[130px]" title={titulo}>
-    <p className="text-[11px] leading-4 uppercase tracking-wide text-gray-400 dark:text-slate-500">
-      {rotulo}
-    </p>
-    <p
-      className={`mt-0.5 text-lg leading-7 font-semibold tabular-nums ${
-        colorValor || "text-gray-900 dark:text-slate-50"
-      }`}
-    >
-      {valor}
-    </p>
-    {nota && <p className="text-xs leading-4 text-gray-500 dark:text-slate-400">{nota}</p>}
-  </div>
+  <Hint label={titulo}>
+    <div className="flex-1 min-w-[130px]">
+      <p className="text-[11px] leading-4 uppercase tracking-wide text-gray-400 dark:text-slate-500">
+        {rotulo}
+      </p>
+      <p
+        className={`mt-0.5 text-lg leading-7 font-semibold tabular-nums ${
+          colorValor || "text-gray-900 dark:text-slate-50"
+        }`}
+      >
+        {valor}
+      </p>
+      {nota && <p className="text-xs leading-4 text-gray-500 dark:text-slate-400">{nota}</p>}
+    </div>
+  </Hint>
 );
 
 /**
@@ -182,20 +191,19 @@ const Leyenda = ({
   /** El porqué del número, para no gastar una línea de texto en contarlo. */
   titulo?: string;
 }) => (
-  <span
-    className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400"
-    title={titulo}
-  >
-    <span
-      className={
-        forma === "marca"
-          ? "inline-block w-1 h-3.5 rounded-full"
-          : "inline-block w-2.5 h-2.5 rounded-sm"
-      }
-      style={{ backgroundColor: color, opacity: opacidad }}
-    />
-    {texto}
-  </span>
+  <Hint label={titulo}>
+    <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-slate-400">
+      <span
+        className={
+          forma === "marca"
+            ? "inline-block w-1 h-3.5 rounded-full"
+            : "inline-block w-2.5 h-2.5 rounded-sm"
+        }
+        style={{ backgroundColor: color, opacity: opacidad }}
+      />
+      {texto}
+    </span>
+  </Hint>
 );
 
 interface Segmento {
@@ -948,20 +956,24 @@ export const PanelRiesgo = ({ datos }: Props) => {
                 Franja a todo el ancho bajo la cabecera: da el resultado sin
                 gastar un bloque entero, y el color tiñe el modal entero de un
                 vistazo. El icono y la etiqueta acompañan siempre al color. */}
-      <div
-        className={`flex items-center flex-wrap gap-x-2.5 gap-y-1 px-6 py-3 ${estiloFranja.fondo}`}
-        title={principal.estado ? DESCRIPCION_ESTADO[principal.estado] : ""}
+      <Hint
+        label={principal.estado ? DESCRIPCION_ESTADO[principal.estado] : ""}
+        side="bottom"
       >
-        <IconoPrincipal className={`w-5 h-5 min-w-5 ${estiloFranja.acento}`} />
-        <span className={`text-base font-semibold ${estiloFranja.titulo}`}>
-          {principal.estado
-            ? ETIQUETA_ESTADO[principal.estado]
-            : "Sin comparar"}
-        </span>
-        <span className={`text-sm ${estiloFranja.detalle}`}>
-          · {detalleFranja || `en ${tituloPrincipal}, la modalidad del talento`}
-        </span>
-      </div>
+        <div
+          className={`flex items-center flex-wrap gap-x-2.5 gap-y-1 px-6 py-3 ${estiloFranja.fondo}`}
+        >
+          <IconoPrincipal className={`w-5 h-5 min-w-5 ${estiloFranja.acento}`} />
+          <span className={`text-base font-semibold ${estiloFranja.titulo}`}>
+            {principal.estado
+              ? ETIQUETA_ESTADO[principal.estado]
+              : "Sin comparar"}
+          </span>
+          <span className={`text-sm ${estiloFranja.detalle}`}>
+            · {detalleFranja || `en ${tituloPrincipal}, la modalidad del talento`}
+          </span>
+        </div>
+      </Hint>
 
       <div className="px-6 pb-6">
         {/* Las cuatro cifras que se usan para decidir quedan FUERA de las
@@ -1063,7 +1075,7 @@ export const PanelRiesgo = ({ datos }: Props) => {
             >
               Tipo de cambio (soles por 1 unidad de moneda extranjera)
             </label>
-            <input
+            <Input
               id="tipo-cambio-riesgo"
               type="number"
               step="0.001"
@@ -1071,7 +1083,7 @@ export const PanelRiesgo = ({ datos }: Props) => {
               value={tipoCambioTexto}
               onChange={(e) => setTipoCambioTexto(e.target.value)}
               placeholder="3.750"
-              className="input w-28 mx-0"
+              className="w-28 bg-white"
             />
           </div>
         )}
@@ -1079,8 +1091,23 @@ export const PanelRiesgo = ({ datos }: Props) => {
         <div className="mt-4">
           <Tabs
             key={mostrarTolerancia ? "con-tolerancia" : "sin-tolerancia"}
-            tabs={pestanas}
-          />
+            defaultValue="0"
+          >
+            <TabsList>
+              {pestanas.map((pestana, i) => (
+                <TabsTrigger key={i} value={String(i)}>
+                  {pestana.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {/* forceMount: como antes, los paneles no se desmontan al
+                cambiar de pestaña (TabsContent oculta los inactivos). */}
+            {pestanas.map((pestana, i) => (
+              <TabsContent key={i} value={String(i)} forceMount>
+                {pestana.children}
+              </TabsContent>
+            ))}
+          </Tabs>
         </div>
       </div>
     </>

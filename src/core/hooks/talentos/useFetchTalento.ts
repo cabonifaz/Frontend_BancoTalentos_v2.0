@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSnackbar } from 'notistack';
-import { axiosInstanceFMI } from '../../services/axiosService';
-import { TalentoDetailFMI, TalentoResponseFMI } from '../../models';
+import { axiosInstanceFMI } from '@/core/services/axiosService';
+import { TalentoDetailFMI, TalentoResponseFMI } from '@/core/models';
 
 const useFetchTalento = (talentoId: number) => {
     const [talentoDetails, setTalentoDetails] = useState<TalentoDetailFMI | null>(null);

@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { Utils } from "../core/utilities/utils";
+import { Utils } from "@/core/utilities/utils";
 
 interface Props {
     onFailNavigateTo: string;

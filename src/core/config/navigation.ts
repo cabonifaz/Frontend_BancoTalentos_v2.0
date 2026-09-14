@@ -1,5 +1,5 @@
 import { Home, FileText, Angry, Users, Link2, User, Settings, BarChart3 } from "lucide-react";
-import { NavModule } from "../models/interfaces/NavModule";
+import { NavModule } from "@/core/models/interfaces/NavModule";
 
 /**
  * Catálogo de módulos del Banco de Talentos. El acceso NO se decide aquí:

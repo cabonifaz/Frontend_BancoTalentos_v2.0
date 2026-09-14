@@ -1,15 +1,17 @@
 import { Copy, MessageCircle } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { Modal } from "../../modals/Modal";
-import { useApi } from "../../../hooks/useApi";
-import { BaseResponse } from "../../../models";
-import { updateTalentContact } from "../../../services/talents.service";
-import { TalentContactParams } from "../../../models/params/TalentUpdateParams";
-import { handleError, handleResponse } from "../../../utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { useApi } from "@/core/hooks/useApi";
+import { BaseResponse } from "@/core/models";
+import { updateTalentContact } from "@/core/services/talents.service";
+import { TalentContactParams } from "@/core/models/params/TalentUpdateParams";
+import { handleError, handleResponse } from "@/core/utilities/errorHandler";
 import { useRef, useState, useEffect } from "react";
-import { Loading } from "../../ui/Loading";
-import { useModal } from "../../../context/ModalContext";
-import { validateEmail, validatePhone } from "../../../utilities/validation";
+import { Loading } from "@/core/components/ui/Loading";
+import { useModal } from "@/core/context/ModalContext";
+import { validateEmail, validatePhone } from "@/core/utilities/validation";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface Props {
   idTalento?: number;
@@ -155,15 +157,17 @@ export const ModalContact = ({
             Correo Electrónico
           </label>
           <div className="flex items-stretch">
-            <input
+            <Input
               type="text"
+              id="email"
               name="email"
               value={emailValue}
               onChange={handleEmailChange}
-              className="flex-1 min-w-0 input"
+              className="flex-1 min-w-0"
             />
             <button
               type="button"
+              aria-label="Copiar correo"
               onClick={() => copyToClipboard(emailValue)}
               className="w-12 ms-4 shrink-0 flex items-center justify-center bg-[#4F46E5] rounded-lg"
             >
@@ -188,16 +192,18 @@ export const ModalContact = ({
               >
                 {phoneCode}
               </p>
-              <input
+              <Input
                 type="text"
+                id="phone"
                 name="phone"
                 value={phoneValue}
                 onChange={handlePhoneChange}
-                className="p-3 border-gray-300 border rounded-r-lg flex-1 min-w-0 focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                className="flex-1 min-w-0 rounded-l-none border-gray-300 dark:border-slate-600"
               />
             </div>
             <button
               type="button"
+              aria-label="Copiar celular"
               onClick={() =>
                 copyToClipboard(
                   `${codeRef.current?.textContent || "+00"} ${phoneValue}`,
@@ -208,26 +214,32 @@ export const ModalContact = ({
               <Copy className="w-6 h-6 text-white" />
             </button>
             {canOpenWhatsapp ? (
-              <a
-                href={`https://wa.me/${whatsappNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Enviar mensaje por WhatsApp"
-                aria-label="Enviar mensaje por WhatsApp"
-                className="w-12 ms-2 shrink-0 flex items-center justify-center bg-[#25D366] hover:bg-[#1da851] rounded-lg"
-              >
-                <MessageCircle className="w-6 h-6 text-white" />
-              </a>
+              <Hint label="Enviar mensaje por WhatsApp">
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Enviar mensaje por WhatsApp"
+                  className="w-12 ms-2 shrink-0 flex items-center justify-center bg-[#25D366] hover:bg-[#1da851] rounded-lg"
+                >
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </a>
+              </Hint>
             ) : (
-              <button
-                type="button"
-                disabled
-                title="Ingresa un número de celular válido con código de país"
-                aria-label="Enviar mensaje por WhatsApp"
-                className="w-12 ms-2 shrink-0 flex items-center justify-center bg-gray-300 rounded-lg cursor-not-allowed dark:bg-slate-600"
-              >
-                <MessageCircle className="w-6 h-6 text-white" />
-              </button>
+              <Hint label="Ingresa un número de celular válido con código de país">
+                {/* Radix no recibe eventos de un botón disabled: el span es el
+                    disparador del tooltip. */}
+                <span className="ms-2 flex shrink-0">
+                  <button
+                    type="button"
+                    disabled
+                    aria-label="Enviar mensaje por WhatsApp"
+                    className="w-12 shrink-0 flex items-center justify-center bg-gray-300 rounded-lg cursor-not-allowed dark:bg-slate-600"
+                  >
+                    <MessageCircle className="w-6 h-6 text-white" />
+                  </button>
+                </span>
+              </Hint>
             )}
           </div>
           {errors.phone && (

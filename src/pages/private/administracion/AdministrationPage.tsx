@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dashboard } from "../Dashboard";
+import { Dashboard } from "@/pages/private/Dashboard";
 import { AdministrationSidebar } from "./AdministrationSidebar";
 import { AdministrationContent } from "./AdministrationContent";
 import { ADMIN_SECTIONS } from "./sections";

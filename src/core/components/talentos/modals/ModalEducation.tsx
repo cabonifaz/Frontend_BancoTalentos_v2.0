@@ -2,25 +2,25 @@ import { Trash2 } from "lucide-react";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
-import { useModal } from "../../../context/ModalContext";
-import { Utils } from "../../../utilities/utils";
-import { useApi } from "../../../hooks/useApi";
+import { useModal } from "@/core/context/ModalContext";
+import { Utils } from "@/core/utilities/utils";
+import { useApi } from "@/core/hooks/useApi";
 import {
   AddOrUpdateEducationParams,
   BaseResponse,
   Education,
-} from "../../../models";
-import { addOrUpdateTalentEducation, deleteTalenteEducation } from "../../../services/talents.service";
+} from "@/core/models";
+import { addOrUpdateTalentEducation, deleteTalenteEducation } from "@/core/services/talents.service";
 import {
   handleError,
   handleResponse,
-} from "../../../utilities/errorHandler";
-import { Modal } from "../../modals/Modal";
-import { Loading } from "../../ui/Loading";
-import { EducationsSection } from "../..";
+} from "@/core/utilities/errorHandler";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { EducationsSection } from "@/core/components";
 import { useEffect } from "react";
 import { z } from "zod";
-import { trim, emptyToUndef } from "../../../models/schemas/Validations";
+import { trim, emptyToUndef } from "@/core/models/schemas/Validations";
 
 interface Props {
   idTalento?: number;
@@ -313,6 +313,7 @@ export const ModalEducation = ({
           {isEditing && (
             <button
               type="button"
+              aria-label="Eliminar educación"
               onClick={handleOnDelete}
               className="absolute -right-2 top-0 rounded-lg hover:bg-red-50 w-10 h-10 dark:hover:bg-red-500/10"
             >

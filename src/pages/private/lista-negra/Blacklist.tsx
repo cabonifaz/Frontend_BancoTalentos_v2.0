@@ -12,25 +12,28 @@ import {
   Angry,
   Trash2,
 } from "lucide-react";
-import { Dashboard } from "../Dashboard";
-import { Pagination } from "../../../core/components";
-import { useModal } from "../../../core/context/ModalContext";
-import { useFetchClients } from "../../../core/hooks/useFetchClients";
-import { useBlacklist } from "../../../core/hooks/lista-negra/useBlacklist";
-import { getTalent } from "../../../core/services/talents.service";
-import { BlacklistItem } from "../../../core/models";
+import { Dashboard } from "@/pages/private/Dashboard";
+import { Pagination } from "@/core/components";
+import { useModal } from "@/core/context/ModalContext";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
+import { useBlacklist } from "@/core/hooks/lista-negra/useBlacklist";
+import { getTalent } from "@/core/services/talents.service";
+import { BlacklistItem } from "@/core/models";
 import {
   ModalBlacklistRestriction,
   MODAL_BLACKLIST_RESTRICTION,
-} from "../../../core/components/lista-negra/ModalBlacklistRestriction";
+} from "@/core/components/lista-negra/ModalBlacklistRestriction";
 import {
   ModalRemoveRestriction,
   MODAL_REMOVE_RESTRICTION,
-} from "../../../core/components/lista-negra/ModalRemoveRestriction";
+} from "@/core/components/lista-negra/ModalRemoveRestriction";
 import {
   ModalRemoveGlobalRestriction,
   MODAL_REMOVE_GLOBAL_RESTRICTION,
-} from "../../../core/components/lista-negra/ModalRemoveGlobalRestriction";
+} from "@/core/components/lista-negra/ModalRemoveGlobalRestriction";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 /** "2026-07-14 16:25:23.0" | "2026-07-14..." → "14/07/2026". */
 const formatFecha = (raw?: string): string => {
@@ -326,51 +329,44 @@ export const Blacklist = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto gap-3">
-              <button
-                type="button"
+              <Button
+                variant="outline-blue"
                 onClick={openRegisterTalent}
-                className="flex items-center justify-center gap-1 btn btn-outline-blue w-full sm:w-auto flex-shrink-0 whitespace-nowrap"
+                className="mx-1 w-full sm:w-auto flex-shrink-0 gap-1 whitespace-nowrap"
               >
                 <Plus className="h-4 w-4" />
                 Agregar a lista negra
-              </button>
+              </Button>
 
-              <select
+              <AppSelect
+                aria-label="Filtrar por cliente"
                 value={clientFilter}
-                onChange={(e) =>
-                  setClientFilter(
-                    e.target.value === "" ? "" : Number(e.target.value)
-                  )
-                }
-                className="w-full sm:w-52 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <option value="">Seleccionar..</option>
-                <option value={0}>Todos los clientes</option>
-                {clientes.map((c) => (
-                  <option key={c.idCliente} value={c.idCliente}>
-                    {c.razonSocial}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setClientFilter(v === "" ? "" : Number(v))}
+                options={[
+                  { value: 0, label: "Todos los clientes" },
+                  ...clientes.map((c) => ({ value: c.idCliente, label: c.razonSocial })),
+                ]}
+                placeholder="Seleccionar.."
+                className="w-full sm:w-52 bg-white text-sm text-gray-700 dark:text-slate-200"
+              />
 
               <div className="flex items-center w-full sm:w-[320px] gap-3">
                 <div className="flex relative h-10 flex-1 min-w-0">
                   <Search className="absolute top-2 left-3" size={20} />
-                  <input
+                  {/* .input-search-container (App.css) sigue marcando la forma
+                      de píldora; va después de las utilidades y gana. */}
+                  <Input
                     type="text"
                     ref={searchInputRef}
+                    aria-label="Buscar por talento"
                     placeholder="Buscar por talento"
-                    className="input-search-container"
+                    className="input-search-container h-full py-0"
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSearch}
-                  className="btn btn-primary flex-shrink-0"
-                >
+                <Button onClick={handleSearch} className="mx-1 flex-shrink-0">
                   Buscar
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -476,14 +472,14 @@ export const Blacklist = () => {
                         )}
                       </div>
                     </div>
-                    <button
-                      type="button"
+                    <Button
+                      variant="outline-blue"
                       onClick={openAddRestriction}
-                      className="flex items-center gap-1 btn btn-outline-blue flex-shrink-0 whitespace-nowrap"
+                      className="mx-1 flex-shrink-0 gap-1 whitespace-nowrap"
                     >
                       <Plus className="h-4 w-4" />
                       Agregar restricción
-                    </button>
+                    </Button>
                   </div>
 
                   {/* Restricciones activas */}

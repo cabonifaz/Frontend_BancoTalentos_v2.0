@@ -1,9 +1,9 @@
 import { Eye, FileText, Pencil } from "lucide-react";
-import { useModal } from "../../../context/ModalContext";
-import { TalentFile } from "../../../models";
-import { Modal } from "../../modals/Modal";
-import { Loading } from "../../ui/Loading";
-import { useViewTalentFile } from "../../../hooks/talentos/useViewTalentFile";
+import { useModal } from "@/core/context/ModalContext";
+import { TalentFile } from "@/core/models";
+import { Modal } from "@/core/components/modals/Modal";
+import { Loading } from "@/core/components/ui/Loading";
+import { useViewTalentFile } from "@/core/hooks/talentos/useViewTalentFile";
 
 interface Props {
     cvData?: TalentFile;
@@ -34,10 +34,10 @@ export const ModalResume = ({ cvData }: Props) => {
                 <div className="my-8 flex flex-col justify-center w-fit items-center relative self-center">
                     <FileText className="w-48 h-48 text-[#71717A] dark:text-slate-400" strokeWidth={1} />
                     <p className="text-[#71717A] text-xs my-2 text-ellipsis max-w-40 line-clamp-1 dark:text-slate-400">{cvData?.nombreArchivo}</p>
-                    <button type="button" className="hover:shadow-lg hover:rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" onClick={replaceResumeFile}>
+                    <button type="button" aria-label="Reemplazar CV" className="hover:shadow-lg hover:rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" onClick={replaceResumeFile}>
                         <Pencil className="absolute right-0 top-0 w-6 h-6" />
                     </button>
-                    <button type="button" className="hover:shadow-lg hover:rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" onClick={openFile}>
+                    <button type="button" aria-label="Ver CV" className="hover:shadow-lg hover:rounded-full hover:bg-gray-100 dark:hover:bg-slate-700" onClick={openFile}>
                         <Eye className="absolute right-0 bottom-1 w-6 h-6" />
                     </button>
                 </div>

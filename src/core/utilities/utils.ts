@@ -1,7 +1,7 @@
 import { format, isValid, parse } from "date-fns";
 import { createElement, ReactNode } from "react";
 import { Star } from "lucide-react";
-import { Param } from "../models";
+import { Param } from "@/core/models";
 
 type fileNameType = string | undefined | null;
 

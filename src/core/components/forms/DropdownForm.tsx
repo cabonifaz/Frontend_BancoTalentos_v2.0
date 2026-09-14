@@ -1,4 +1,3 @@
-import { all } from "axios";
 import { useMemo } from "react";
 import {
   Control,
@@ -6,6 +5,14 @@ import {
   FieldError,
   UseFormClearErrors,
 } from "react-hook-form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/core/components/ui/shadcn/select";
+import { cn } from "@/core/lib/utils";
 
 interface Props {
   name: string;
@@ -22,7 +29,12 @@ interface Props {
   defaultValue?: number;
   allowEmpty?: boolean; // Nueva prop para campos opcionales
   allowEmptyMessage?: string; // Mensaje para la opción vacía
+  /** Clases extra del disparador (p. ej. el aspecto de campo bloqueado). */
+  triggerClassName?: string;
 }
+
+// Radix Select no admite un item con value "": la opción vacía usa un centinela.
+const EMPTY = "__empty__";
 
 const DropdownForm = ({
   name,
@@ -39,6 +51,7 @@ const DropdownForm = ({
   defaultValue,
   allowEmpty = false,
   allowEmptyMessage,
+  triggerClassName,
 }: Props) => {
   const safeDefault = useMemo(() => {
     // Si allowEmpty es true, no forzar un valor por defecto
@@ -48,6 +61,8 @@ const DropdownForm = ({
     const found = options.find((opt) => opt.value === defaultValue);
     return found ? found.value : options[0].value;
   }, [options, defaultValue, allowEmpty]);
+
+  const emptyLabel = allowEmptyMessage || "Elige una opción";
 
   return (
     <>
@@ -71,37 +86,52 @@ const DropdownForm = ({
           <Controller
             name={name}
             control={control}
-            render={({ field }) => (
-              <select
-                id={name}
-                {...field}
-                value={field.value ?? (allowEmpty ? "" : safeDefault)}
-                onChange={(e) => {
-                  const value =
-                    e.target.value === ""
-                      ? undefined
-                      : Number(e.target.value);
-                  field.onChange(value);
-                  if (clearErrors) {
-                    clearErrors(name);
-                    clearErrorsFrom?.forEach((path) => {
-                      clearErrors(path);
-                    });
-                  }
-                }}
-                disabled={disabled}
-                className="input w-full h-12 disabled:text-gray-400 dark:disabled:text-slate-500"
-              >
-                <option value="">
-                  {allowEmptyMessage || "Elige una opción"}
-                </option>
-                {options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            )}
+            render={({ field }) => {
+              // Igual que el <select> anterior: sin valor, muestra safeDefault
+              // (o la opción vacía si allowEmpty). Un valor que no está entre
+              // las opciones muestra el placeholder, como hacía el nativo.
+              const shown = field.value ?? (allowEmpty ? undefined : safeDefault);
+              const isKnown = options.some((opt) => opt.value === shown);
+              return (
+                <Select
+                  name={field.name}
+                  value={isKnown ? String(shown) : ""}
+                  onValueChange={(v) => {
+                    // Radix emite "" cuando el valor deja de estar entre las
+                    // opciones (p. ej. al recargarlas). No es una elección.
+                    if (v === "") return;
+                    field.onChange(v === EMPTY ? undefined : Number(v));
+                    if (clearErrors) {
+                      clearErrors(name);
+                      clearErrorsFrom?.forEach((path) => {
+                        clearErrors(path);
+                      });
+                    }
+                  }}
+                  disabled={disabled}
+                >
+                  <SelectTrigger
+                    id={name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    className={cn(
+                      "w-full h-12 p-3 disabled:text-gray-400 dark:disabled:text-slate-500",
+                      triggerClassName
+                    )}
+                  >
+                    <SelectValue placeholder={emptyLabel} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={EMPTY}>{emptyLabel}</SelectItem>
+                    {options.map((option) => (
+                      <SelectItem key={option.value} value={String(option.value)}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              );
+            }}
           />
           {error && (
             <p className="text-red-400 bg-transparent text-xs mt-2">

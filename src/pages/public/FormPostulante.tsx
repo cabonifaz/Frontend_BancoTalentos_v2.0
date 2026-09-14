@@ -1,4 +1,4 @@
-import { useParams } from "../../core/context/ParamsContext";
+import { useParams } from "@/core/context/ParamsContext";
 import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { enqueueSnackbar } from "notistack";
@@ -15,8 +15,8 @@ import {
   FileInput,
   LanguagesSection,
   TechSkillsSection,
-} from "../../core/components";
-import { useApi } from "../../core/hooks/useApi";
+} from "@/core/components";
+import { useApi } from "@/core/hooks/useApi";
 import {
   AddTalentParams,
   BaseResponseFMI,
@@ -25,30 +25,44 @@ import {
   AddPostulanteSchema,
   AddPostulanteType,
   initialFormValuesPostulante,
-} from "../../core/models";
-import { addPostulanteService } from "../../core/services/postulante.service";
-import { addTalent } from "../../core/services/talents.service";
+} from "@/core/models";
+import { addPostulanteService } from "@/core/services/postulante.service";
+import { addTalent } from "@/core/services/talents.service";
 import {
   ARCHIVO_PDF,
   DOCUMENTO_CV,
   ARCHIVO_IMAGEN,
   DOCUMENTO_FOTO_PERFIL,
   FRASES_IA_MAESTRO,
-} from "../../core/utilities/constants";
+} from "@/core/utilities/constants";
 import {
   handleError,
   handleResponse,
-} from "../../core/utilities/errorHandler";
-import { Utils } from "../../core/utilities/utils";
-import { validateFile } from "../../core/utilities/validation";
-import { SalaryExpectSectionExter } from "../../core/components/postulante/SalaryExpecSectExter";
-import { useFetchCVData } from "../../core/hooks/talentos/useFetchCVData";
-import { useCompleteExtForm } from "../../core/hooks/postulante/useCompleteExtForm";
-import { useModal } from "../../core/context/ModalContext";
-import { MODAL_AI_WORKING } from "../../core/utilities/modalsIds";
-import { ModalWorkingAI } from "../../core/components/modals/ModalWorkingAI";
+} from "@/core/utilities/errorHandler";
+import { Utils } from "@/core/utilities/utils";
+import { validateFile } from "@/core/utilities/validation";
+import { SalaryExpectSectionExter } from "@/core/components/postulante/SalaryExpecSectExter";
+import { useFetchCVData } from "@/core/hooks/talentos/useFetchCVData";
+import { useCompleteExtForm } from "@/core/hooks/postulante/useCompleteExtForm";
+import { useModal } from "@/core/context/ModalContext";
+import { MODAL_AI_WORKING } from "@/core/utilities/modalsIds";
+import { ModalWorkingAI } from "@/core/components/modals/ModalWorkingAI";
 
-import { processText } from "../../core/utilities/textUtils";
+import { processText } from "@/core/utilities/textUtils";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { Label } from "@/core/components/ui/shadcn/label";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/core/components/ui/shadcn/radio-group";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+
+const selectClass =
+  "h-auto p-3 text-[#3f3f46] dark:border-slate-700 dark:text-slate-200";
+const socialInputClass = "h-12 border-gray-300 dark:border-slate-600";
 
 export const FormPostulante = () => {
   const registerRef = useRef(false);
@@ -373,7 +387,9 @@ export const FormPostulante = () => {
               </p>
 
               <form className="" onSubmit={handleSubmit(onSubmit)}>
-                <div className="px-8 overflow-y-auto w-full md:h-[70vh]">
+                {/* `relative`: contiene los inputs ocultos (position: absolute)
+                    que Radix deja dentro del <form>; si no, se salen del scroll. */}
+                <div className="relative px-8 overflow-y-auto w-full md:h-[70vh]">
                   {/* files */}
                   <div>
                     <div className="flex items-center justify-between">
@@ -452,11 +468,10 @@ export const FormPostulante = () => {
                         Doc. Identidad
                         <span className="text-red-400">*</span>
                       </label>
-                      <input
+                      <Input
                         {...register("dni")}
                         id="dni"
                         type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                         placeholder="Documento de identidad"
                       />
                       {errors.dni && (
@@ -472,11 +487,10 @@ export const FormPostulante = () => {
                       >
                         Nombres<span className="text-red-400">*</span>
                       </label>
-                      <input
+                      <Input
                         {...register("nombres")}
                         id="name"
                         type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                         placeholder="Nombres"
                       />
                       {errors.nombres && (
@@ -493,11 +507,10 @@ export const FormPostulante = () => {
                         Apellido paterno
                         <span className="text-red-400">*</span>
                       </label>
-                      <input
+                      <Input
                         {...register("apellidoPaterno")}
                         id="lastname-f"
                         type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                         placeholder="Apellido paterno"
                       />
                       {errors.apellidoPaterno && (
@@ -513,11 +526,10 @@ export const FormPostulante = () => {
                       >
                         Apellido materno
                       </label>
-                      <input
+                      <Input
                         {...register("apellidoMaterno")}
                         id="lastname-s"
                         type="text"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                         placeholder="Apellido materno"
                       />
                       {errors.apellidoMaterno && (
@@ -534,24 +546,31 @@ export const FormPostulante = () => {
                         Número de Celular
                         <span className="text-red-400">*</span>
                       </label>
-                      <select
-                        id="countrycode"
-                        autoComplete="tel-country-code"
-                        {...register("codigoPais", {
-                          valueAsNumber: true,
-                        })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-                      >
-                        <option value={0}>Seleccione un país</option>
-                        {paises.map((pais: any) => (
-                          <option
-                            key={pais.idParametro}
-                            value={pais.num1}
-                          >
-                            {pais.string1}
-                          </option>
-                        ))}
-                      </select>
+                      {/* Los selects de este formulario iban con register y
+                          valueAsNumber: el Select de Radix va con Controller
+                          y entrega el mismo número (0 = sin elegir). */}
+                      <Controller
+                        name="codigoPais"
+                        control={control}
+                        render={({ field }) => (
+                          <AppSelect
+                            ref={field.ref}
+                            id="countrycode"
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            value={field.value}
+                            onChange={(v) =>
+                              field.onChange(v === "" ? 0 : Number(v))
+                            }
+                            options={paises.map((pais: any) => ({
+                              value: pais.num1,
+                              label: pais.string1,
+                            }))}
+                            placeholder="Seleccione un país"
+                            className={selectClass}
+                          />
+                        )}
+                      />
                       {errors.codigoPais && (
                         <p className="text-red-400 text-sm">
                           {errors.codigoPais.message}
@@ -571,12 +590,13 @@ export const FormPostulante = () => {
                               }`
                             : "+00"}
                         </p>
-                        <input
+                        <Input
                           {...register("telefono")}
                           id="phone"
                           type="tel"
                           autoComplete="tel-national"
-                          className="p-3 border-gray-300 border rounded-r-lg w-full focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                          aria-label="Número de celular"
+                          className="rounded-l-none border-gray-300 dark:border-slate-600"
                         />
                       </div>
                       {errors.telefono && (
@@ -593,11 +613,10 @@ export const FormPostulante = () => {
                         Correo electrónico
                         <span className="text-red-400">*</span>
                       </label>
-                      <input
+                      <Input
                         {...register("email")}
                         type="email"
                         id="email"
-                        className="border p-3 rounded-lg focus:outline-none focus:border-[#4F46E5]"
                         placeholder="Correo electrónico"
                       />
                       {errors.email && (
@@ -645,11 +664,11 @@ export const FormPostulante = () => {
                         name="descripcion"
                         control={control}
                         render={({ field }) => (
-                          <textarea
+                          <Textarea
                             {...field}
                             id="description"
                             maxLength={5000}
-                            className="border p-3 resize-none h-24 rounded-lg focus:outline-none focus:border-[#4F46E5] transition-colors"
+                            className="resize-none h-24"
                             placeholder="Cuéntanos sobre ti..."
                             onBlur={(e) => {
                               // Sanitizar cuando el usuario sale del campo
@@ -713,20 +732,46 @@ export const FormPostulante = () => {
                         <span className="text-red-400">*</span>
                       </label>
 
-                      {disponibilidades?.map((d: any) => (
-                        <label
-                          className="flex items-center gap-2"
-                          key={d.num1}
-                        >
-                          <input
-                            type="checkbox"
-                            value={d.num1}
-                            {...register("disponibilidad")}
-                            className="w-4 h-4"
-                          />
-                          <span>{d.string1}</span>
-                        </label>
-                      ))}
+                      {/* Con register, el grupo de checkboxes guardaba un
+                          array de strings (el `value` de cada uno); se mantiene. */}
+                      <Controller
+                        name="disponibilidad"
+                        control={control}
+                        render={({ field }) => {
+                          const current: string[] = Array.isArray(field.value)
+                            ? (field.value as unknown[]).map(String)
+                            : [];
+                          return (
+                            <>
+                              {disponibilidades?.map((d: any) => {
+                                const value = String(d.num1);
+                                return (
+                                  <label
+                                    className="flex items-center gap-2"
+                                    key={d.num1}
+                                  >
+                                    <Checkbox
+                                      checked={current.includes(value)}
+                                      onCheckedChange={(checked) =>
+                                        field.onChange(
+                                          checked === true
+                                            ? [...current, value]
+                                            : current.filter(
+                                                (v) => v !== value,
+                                              ),
+                                        )
+                                      }
+                                      onBlur={field.onBlur}
+                                      className="w-4 h-4"
+                                    />
+                                    <span>{d.string1}</span>
+                                  </label>
+                                );
+                              })}
+                            </>
+                          );
+                        }}
+                      />
 
                       {errors.disponibilidad && (
                         <p className="text-red-400 text-sm">
@@ -747,24 +792,28 @@ export const FormPostulante = () => {
                       >
                         País<span className="text-red-400">*</span>
                       </label>
-                      <select
-                        id="country"
-                        autoComplete="country"
-                        {...register("idPais", {
-                          valueAsNumber: true,
-                        })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none cursor-pointer dark:hover:bg-slate-700 dark:border-slate-700 dark:text-slate-200"
-                      >
-                        <option value={0}>Seleccione un país</option>
-                        {paises.map((pais: any) => (
-                          <option
-                            key={pais.idParametro}
-                            value={pais.num1}
-                          >
-                            {pais.string1}
-                          </option>
-                        ))}
-                      </select>
+                      <Controller
+                        name="idPais"
+                        control={control}
+                        render={({ field }) => (
+                          <AppSelect
+                            ref={field.ref}
+                            id="country"
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            value={field.value}
+                            onChange={(v) =>
+                              field.onChange(v === "" ? 0 : Number(v))
+                            }
+                            options={paises.map((pais: any) => ({
+                              value: pais.num1,
+                              label: pais.string1,
+                            }))}
+                            placeholder="Seleccione un país"
+                            className={`${selectClass} hover:bg-gray-100 dark:hover:bg-slate-700`}
+                          />
+                        )}
+                      />
                       {errors.idPais && (
                         <p className="text-red-400 text-sm">
                           {errors.idPais.message}
@@ -778,26 +827,28 @@ export const FormPostulante = () => {
                       >
                         Ciudad<span className="text-red-400">*</span>
                       </label>
-                      <select
-                        id="city"
-                        autoComplete="address-level2"
-                        {...register("idCiudad", {
-                          valueAsNumber: true,
-                        })}
-                        className="text-[#3f3f46] p-3 w-full border boder-gray-300 rounded-lg focus:outline-none cursor-pointer dark:border-slate-700 dark:text-slate-200"
-                      >
-                        <option value={0}>
-                          Seleccione una ciudad
-                        </option>
-                        {ciudadesFiltradas.map((ciudad: any) => (
-                          <option
-                            key={ciudad.idParametro}
-                            value={ciudad.num1}
-                          >
-                            {ciudad.string1}
-                          </option>
-                        ))}
-                      </select>
+                      <Controller
+                        name="idCiudad"
+                        control={control}
+                        render={({ field }) => (
+                          <AppSelect
+                            ref={field.ref}
+                            id="city"
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            value={field.value}
+                            onChange={(v) =>
+                              field.onChange(v === "" ? 0 : Number(v))
+                            }
+                            options={ciudadesFiltradas.map((ciudad: any) => ({
+                              value: ciudad.num1,
+                              label: ciudad.string1,
+                            }))}
+                            placeholder="Seleccione una ciudad"
+                            className={selectClass}
+                          />
+                        )}
+                      />
                       {errors.idCiudad && (
                         <p className="text-red-400 text-sm">
                           {errors.idCiudad.message}
@@ -857,11 +908,11 @@ export const FormPostulante = () => {
                       >
                         LinkedIn
                       </label>
-                      <input
+                      <Input
                         {...register("linkedin")}
                         id="linkedin"
                         type="text"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                        className={socialInputClass}
                       />
                       {errors.linkedin && (
                         <p className="text-red-400 text-sm">
@@ -876,11 +927,11 @@ export const FormPostulante = () => {
                       >
                         Github
                       </label>
-                      <input
+                      <Input
                         {...register("github")}
                         id="github"
                         type="text"
-                        className="h-12 p-3 border-gray-300 border rounded-lg focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                        className={socialInputClass}
                       />
                       {errors.github && (
                         <p className="text-red-400 text-sm">
@@ -895,34 +946,53 @@ export const FormPostulante = () => {
                     control={control}
                     render={({ field }) => (
                       <div className="flex flex-col gap-2 my-4">
-                        <label className="text-wrap max-w-[20rem]">
+                        <span
+                          id="postulante-equipo"
+                          className="text-wrap max-w-[20rem]"
+                        >
                           ¿Cuenta con equipo (Laptop)?{" "}
                           <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex items-center gap-6">
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                              checked={field.value === true}
-                              onChange={() => field.onChange(true)}
+                        </span>
+                        {/* RadioGroup sobre el booleano: "" mientras no se elija. */}
+                        <RadioGroup
+                          aria-labelledby="postulante-equipo"
+                          value={
+                            field.value === true
+                              ? "si"
+                              : field.value === false
+                                ? "no"
+                                : ""
+                          }
+                          onValueChange={(v) => field.onChange(v === "si")}
+                          className="flex items-center gap-6"
+                        >
+                          <div className="flex items-center">
+                            <RadioGroupItem
+                              id="postulante-equipo-si"
+                              value="si"
+                              className="h-4 w-4"
                             />
-                            <span className="ml-2 text-gray-700 dark:text-slate-200">
+                            <Label
+                              htmlFor="postulante-equipo-si"
+                              className="ml-2 cursor-pointer text-gray-700 dark:text-slate-200"
+                            >
                               Sí
-                            </span>
-                          </label>
-                          <label className="flex items-center cursor-pointer">
-                            <input
-                              type="radio"
-                              className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                              checked={field.value === false}
-                              onChange={() => field.onChange(false)}
+                            </Label>
+                          </div>
+                          <div className="flex items-center">
+                            <RadioGroupItem
+                              id="postulante-equipo-no"
+                              value="no"
+                              className="h-4 w-4"
                             />
-                            <span className="ml-2 text-gray-700 dark:text-slate-200">
+                            <Label
+                              htmlFor="postulante-equipo-no"
+                              className="ml-2 cursor-pointer text-gray-700 dark:text-slate-200"
+                            >
                               No
-                            </span>
-                          </label>
-                        </div>
+                            </Label>
+                          </div>
+                        </RadioGroup>
                         {errors.tieneEquipo && (
                           <p className="text-sm text-red-600 mt-2 dark:text-red-400">
                             {errors.tieneEquipo.message}
@@ -933,21 +1003,16 @@ export const FormPostulante = () => {
                   />
 
                   <div className="pt-4">
-                    <button
+                    <Button
                       type="submit"
+                      variant="blue"
                       disabled={
                         !isDirty || !isValid || registerRef.current
                       }
-                      className={`w-full py-3 px-4 rounded-md text-white font-medium transition-all duration-300
-                                        ${
-                                          !isValid ||
-                                          registerRef.current
-                                            ? "btn-disabled"
-                                            : "btn-blue"
-                                        }`}
+                      className="w-full rounded-md px-4 py-3 font-medium duration-300"
                     >
                       Registrarse
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </form>

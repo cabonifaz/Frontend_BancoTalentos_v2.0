@@ -3,7 +3,7 @@ import { AxiosResponse } from "axios";
 import {
   axiosInstance,
 } from "./axiosService";
-import { BaseResponse, UpdateUserParams, UserInfoResponse } from "../models";
+import { BaseResponse, UpdateUserParams, UserInfoResponse } from "@/core/models";
 
 export const getUserInfo = (_?: null): Promise<
   AxiosResponse<UserInfoResponse>

@@ -16,46 +16,52 @@ import {
   ReqListParams,
   RequerimientosResponse,
   RequirementItem,
-} from "../../../core/models";
-import { useParams } from "../../../core/context/ParamsContext";
+} from "@/core/models";
+import { useParams } from "@/core/context/ParamsContext";
 import {
   BaseOption,
   DateFilter,
   FilterDropDown,
   Loading,
   Pagination,
-} from "../../../core/components";
-import { useApi } from "../../../core/hooks/useApi";
+} from "@/core/components";
+import { useApi } from "@/core/hooks/useApi";
 import {
   handleError,
   handleResponse,
-} from "../../../core/utilities/errorHandler";
-import { ClientListResponse } from "../../../core/models/response/ClientsResponse";
-import { getClients } from "../../../core/services/clients.service";
-import { getRequirements } from "../../../core/services/requirements.service";
+} from "@/core/utilities/errorHandler";
+import { ClientListResponse } from "@/core/models/response/ClientsResponse";
+import { getClients } from "@/core/services/clients.service";
+import { getRequirements } from "@/core/services/requirements.service";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
-import { ModalCalculadoraRiesgo } from "../../../core/components/requerimientos/modals/ModalCalculadoraRiesgo";
-import { Dashboard } from "../Dashboard";
+import { ModalCalculadoraRiesgo } from "@/core/components/requerimientos/modals/ModalCalculadoraRiesgo";
+import { Dashboard } from "@/pages/private/Dashboard";
 import { useNavigate } from "react-router-dom";
 import {
   ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
-  ESTADO_CANCELADO,
-  ESTADO_EN_PRODUCCION,
-  ESTADO_EN_SELECCION,
-  ESTADO_PERDIDO,
-  ESTADO_REGISTRADO,
   ESTADO_RQ,
-  ESTADO_TERMINADO,
-} from "../../../core/utilities/constants";
-import { useModal } from "../../../core/context/ModalContext";
+} from "@/core/utilities/constants";
+import { useModal } from "@/core/context/ModalContext";
 import {
   MODAL_CREATE_RQ,
   MODAL_DETAILS_RQ,
-} from "../../../core/utilities/modalsIds";
-import { ModalRQDetails } from "../../../core/components/requerimientos/rq-details";
-import { ModalRQCreate } from "../../../core/components/requerimientos/rq-create";
+} from "@/core/utilities/modalsIds";
+import { ModalRQDetails } from "@/core/components/requerimientos/rq-details";
+import { ModalRQCreate } from "@/core/components/requerimientos/rq-create";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { EstadoBadge } from "@/core/components/requerimientos/EstadoBadge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface SearchProps {
   nPag: number | null;
@@ -68,40 +74,6 @@ interface SearchProps {
 /** El RQ está "cerrado" para asignación una vez asignado o atendido. */
 const isAsignacionBloqueada = (req: RequirementItem): boolean =>
   req.idEstado === ESTADO_ASIGNADO || req.idEstado === ESTADO_ATENDIDO;
-
-/**
- * Mismo lenguaje visual que el badge de estado de Entrevistas.
- *
- * Los ocho estados del maestro 24 agrupados por lo que significan:
- * azul = el RQ avanza y está cerrado en su ciclo, morado = está en curso,
- * rojo = terminó mal, verde = recién entra, gris = ya no pide acción.
- */
-const ESTADO_BADGE: Record<number, string> = {
-  [ESTADO_REGISTRADO]: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
-  [ESTADO_ASIGNADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_TERMINADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_EN_SELECCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_EN_PRODUCCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_PERDIDO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_CANCELADO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_ATENDIDO]: "bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300",
-};
-
-const EstadoBadge = ({
-  idEstado,
-  estado,
-}: {
-  idEstado: number;
-  estado: string;
-}) => (
-  <span
-    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${
-      ESTADO_BADGE[idEstado] || "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
-    }`}
-  >
-    {estado}
-  </span>
-);
 
 export const Requirements = () => {
   const navigate = useNavigate();
@@ -405,23 +377,24 @@ export const Requirements = () => {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-yellow mx-0 flex h-10 items-center gap-2"
-                onClick={() => setCalculadoraAbierta(true)}
-                title="Simular un escenario sin talento ni RQ: se escribe todo a mano"
-              >
-                <Calculator size={18} strokeWidth={2} />
-                Calculadora
-              </button>
-              <button
-                type="button"
-                className="btn btn-blue mx-0 flex h-10 items-center gap-2"
+              <Hint label="Simular un escenario sin talento ni RQ: se escribe todo a mano">
+                <Button
+                  variant="yellow"
+                  className="h-10"
+                  onClick={() => setCalculadoraAbierta(true)}
+                >
+                  <Calculator size={18} strokeWidth={2} />
+                  Calculadora
+                </Button>
+              </Hint>
+              <Button
+                variant="blue"
+                className="h-10"
                 onClick={() => openModal(MODAL_CREATE_RQ)}
               >
                 <Plus size={18} strokeWidth={2} />
                 Nuevo RQ
-              </button>
+              </Button>
             </div>
           </div>
           {/* filters */}
@@ -441,7 +414,7 @@ export const Requirements = () => {
                       size={18}
                       className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
                     />
-                    <input
+                    <Input
                       type="text"
                       name="requerimiento"
                       id="requerimiento"
@@ -451,18 +424,17 @@ export const Requirements = () => {
                       }
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                       placeholder="Ej: Analista de datos / RQ-0123"
-                      className="input h-10 w-full py-0 pl-10"
+                      className="h-10 py-0 pl-10"
                     />
                   </div>
                 </div>
-                <button
-                  type="button"
+                <Button
                   onClick={handleSearch}
-                  className="btn btn-primary mx-0 flex h-10 shrink-0 items-center justify-center gap-2 sm:w-32"
+                  className="h-10 shrink-0 sm:w-32"
                 >
                   <Search size={18} strokeWidth={2} />
                   Buscar
-                </button>
+                </Button>
               </div>
               <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-4 dark:border-slate-700">
                 <FilterDropDown
@@ -521,7 +493,7 @@ export const Requirements = () => {
           {/* Table */}
           <div className="table-container min-h-0 flex-1 rounded-xl border border-gray-100 shadow-sm dark:border-slate-700">
             <div className="table-wrapper h-full overflow-auto">
-              <table className="table table-fixed min-w-[1220px]">
+              <Table className="table table-fixed min-w-[1220px]">
                 <colgroup>
                   <col className="w-16" />
                   <col className="w-[16%]" />
@@ -533,172 +505,174 @@ export const Requirements = () => {
                   <col className="w-20" />
                   <col className="w-44" />
                 </colgroup>
-                <thead>
+                <TableHeader>
                   {/* La cabecera se fija en los th (no en el thead): con
                       border-collapse es lo único que sostiene el sticky. */}
-                  <tr className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50 dark:[&>th]:bg-slate-900">
-                    <th className="table-header-cell text-center">ID</th>
-                    <th className="table-header-cell text-center">Cliente</th>
-                    <th className="table-header-cell">Título</th>
-                    <th className="table-header-cell text-center">
+                  <TableRow className="table-header uppercase [&>th]:sticky [&>th]:top-0 [&>th]:z-10 [&>th]:bg-gray-50 dark:[&>th]:bg-slate-900">
+                    <TableHead className="table-header-cell text-center">ID</TableHead>
+                    <TableHead className="table-header-cell text-center">Cliente</TableHead>
+                    <TableHead className="table-header-cell">Título</TableHead>
+                    <TableHead className="table-header-cell text-center">
                       Requerimiento
-                    </th>
-                    <th className="table-header-cell text-center">
+                    </TableHead>
+                    <TableHead className="table-header-cell text-center">
                       Fecha Solicitud
-                    </th>
-                    <th className="table-header-cell text-center">Estado</th>
-                    <th className="table-header-cell text-center">
+                    </TableHead>
+                    <TableHead className="table-header-cell text-center">Estado</TableHead>
+                    <TableHead className="table-header-cell text-center">
                       Confirmados / Vacantes
-                    </th>
-                    <th className="table-header-cell text-center">Alerta</th>
-                    <th className="table-header-cell text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
+                    </TableHead>
+                    <TableHead className="table-header-cell text-center">Alerta</TableHead>
+                    <TableHead className="table-header-cell text-center">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="bg-white divide-y divide-gray-200 dark:bg-slate-800 dark:divide-slate-700">
                   {(ReqsResponse?.requerimientos || []).length <=
                   0 ? (
-                    <tr>
-                      <td colSpan={9} className="table-empty">
+                    <TableRow>
+                      <TableCell colSpan={9} className="table-empty">
                         <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-slate-500">
                           <ClipboardList size={32} strokeWidth={1.5} />
                           <p className="text-sm">
                             No hay requerimientos disponibles.
                           </p>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     ReqsResponse?.requerimientos?.map((req) => (
-                      <tr
+                      <TableRow
                         key={req.idRequerimiento}
                         className="table-row"
                       >
-                        <td className="table-cell text-center text-gray-500 tabular-nums dark:text-slate-400">
+                        <TableCell className="table-cell text-center text-gray-500 tabular-nums dark:text-slate-400">
                           {req.idRequerimiento}
-                        </td>
-                        <td
-                          className="table-cell truncate text-center"
-                          title={req.cliente}
-                        >
-                          {req.cliente}
-                        </td>
-                        <td
-                          className="table-cell truncate"
-                          title={req.titulo || ""}
-                        >
-                          <span className="font-medium text-gray-900 dark:text-slate-50">
-                            {req.titulo || ""}
-                          </span>
-                        </td>
-                        <td
-                          className="table-cell truncate text-center"
-                          title={req.codigoRQ}
-                        >
-                          {req.codigoRQ}
-                        </td>
-                        <td className="table-cell text-center tabular-nums">
+                        </TableCell>
+                        {/* El texto truncado se completa con un Tooltip en vez
+                            del title nativo. El Hint va dentro de la celda (no
+                            sobre el <td>) y es un bloque truncado. */}
+                        <TableCell className="table-cell text-center">
+                          <Hint label={req.cliente}>
+                            <span className="block truncate">{req.cliente}</span>
+                          </Hint>
+                        </TableCell>
+                        <TableCell className="table-cell">
+                          <Hint label={req.titulo || ""}>
+                            <span className="block truncate font-medium text-gray-900 dark:text-slate-50">
+                              {req.titulo || ""}
+                            </span>
+                          </Hint>
+                        </TableCell>
+                        <TableCell className="table-cell text-center">
+                          <Hint label={req.codigoRQ}>
+                            <span className="block truncate">{req.codigoRQ}</span>
+                          </Hint>
+                        </TableCell>
+                        <TableCell className="table-cell text-center tabular-nums">
                           {req.fechaSolicitud}
-                        </td>
-                        <td className="table-cell text-center">
+                        </TableCell>
+                        <TableCell className="table-cell text-center">
                           <EstadoBadge
                             idEstado={req.idEstado}
                             estado={req.estado}
                           />
-                        </td>
-                        <td className="table-cell text-center">
+                        </TableCell>
+                        <TableCell className="table-cell text-center">
                           <div className="min-w-full flex justify-center">
-                            <div className="w-fit relative group">
+                            {/* Tooltip de shadcn en lugar del globo pintado a
+                                mano con group-hover. */}
+                            <Hint
+                              side="left"
+                              label={
+                                req?.lstPerfiles?.length ? (
+                                  <div className="text-start">
+                                    {req.lstPerfiles.map((perfil, index) => (
+                                      <p key={index}>
+                                        {perfil.vacantesCubiertas} /{" "}
+                                        {perfil.vacantesTotales}{" "}
+                                        {perfil.perfil}
+                                      </p>
+                                    ))}
+                                  </div>
+                                ) : null
+                              }
+                            >
                               <p className=" px-2 py-1 rounded-lg bg-slate-100 w-fit dark:bg-slate-700">
                                 {req.vacantesCubiertas} /{" "}
                                 {req.vacantes}
                               </p>
-                              <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                {req?.lstPerfiles?.map(
-                                  (perfil, index) => (
-                                    <p
-                                      className="text-start"
-                                      key={index}
-                                    >
-                                      {perfil.vacantesCubiertas} /{" "}
-                                      {perfil.vacantesTotales}{" "}
-                                      {perfil.perfil}
-                                    </p>
-                                  )
-                                )}
-                                <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848] dark:border-slate-700"></div>
-                              </div>
-                            </div>
+                            </Hint>
                           </div>
-                        </td>
-                        <td className="table-cell text-center">
-                          <div className="relative inline-block group">
-                            {req?.idAlerta !== null && req?.idAlerta > 0 ? (
-                              getAlertIcon(req.idAlerta)
-                            ) : (
-                              // Estado neutro: la columna siempre dice algo, así
-                              // que un RQ sin alerta se lee como "revisado y sin
-                              // vencimiento", no como un dato que falta.
-                              <CircleDashed
-                                className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
-                                color="#a1a1aa"
-                              />
-                            )}
-                            <div className="absolute invisible group-hover:visible z-10 right-full top-1/2 transform -translate-y-1/2 mr-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                              {getAlertLabel(req)}
-                              <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-t-transparent border-b-transparent border-l-[#484848] dark:border-slate-700"></div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="table-cell">
-                          {/* mx-0 anula el margen que trae .btn: aquí separa el gap */}
+                        </TableCell>
+                        <TableCell className="table-cell text-center">
+                          <Hint label={getAlertLabel(req)} side="left">
+                            <span className="inline-block">
+                              {req?.idAlerta !== null && req?.idAlerta > 0 ? (
+                                getAlertIcon(req.idAlerta)
+                              ) : (
+                                // Estado neutro: la columna siempre dice algo, así
+                                // que un RQ sin alerta se lee como "revisado y sin
+                                // vencimiento", no como un dato que falta.
+                                <CircleDashed
+                                  className="w-5 h-5 cursor-pointer min-w-5 min-h-5"
+                                  color="#a1a1aa"
+                                />
+                              )}
+                            </span>
+                          </Hint>
+                        </TableCell>
+                        <TableCell className="table-cell">
                           <div className="flex items-center justify-center gap-2">
                             {(() => {
                               const bloqueado = isAsignacionBloqueada(req);
                               return (
-                                <div className="relative group">
-                                  <button
-                                    onClick={() =>
-                                      handleAsignarClick(
-                                        req.idRequerimiento
-                                      )
-                                    }
-                                    disabled={bloqueado}
-                                    title="Asignar talento"
-                                    className={`btn btn-actions mx-0 flex h-8 items-center gap-1.5 px-2.5 ${
-                                      bloqueado
-                                        ? "btn-disabled"
-                                        : "btn-blue"
-                                    }`}
-                                  >
-                                    <UserPlus size={14} strokeWidth={2} />
-                                    Asignar
-                                  </button>
-                                  {bloqueado && (
-                                    <div className="absolute invisible group-hover:visible z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                      {req.idEstado === ESTADO_ATENDIDO
+                                <Hint
+                                  label={
+                                    bloqueado
+                                      ? req.idEstado === ESTADO_ATENDIDO
                                         ? "Requerimiento atendido"
-                                        : "Requerimiento asignado — talentos completos"}
-                                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#484848] dark:border-slate-700"></div>
-                                    </div>
-                                  )}
-                                </div>
+                                        : "Requerimiento asignado — talentos completos"
+                                      : "Asignar talento"
+                                  }
+                                >
+                                  {/* Radix no recibe eventos de un botón
+                                      disabled: el span hace de disparador. */}
+                                  <span className="inline-flex">
+                                    <Button
+                                      variant="blue"
+                                      size="none"
+                                      onClick={() =>
+                                        handleAsignarClick(
+                                          req.idRequerimiento
+                                        )
+                                      }
+                                      disabled={bloqueado}
+                                      className="h-8 gap-1.5 rounded px-2.5 text-xs"
+                                    >
+                                      <UserPlus size={14} strokeWidth={2} />
+                                      Asignar
+                                    </Button>
+                                  </span>
+                                </Hint>
                               );
                             })()}
-                            <button
-                              onClick={() => openDetallesRQModal(req)}
-                              title="Ver detalles"
-                              className="btn btn-actions btn-primary mx-0 flex h-8 items-center gap-1.5 px-2.5"
-                            >
-                              <Eye size={14} strokeWidth={2} />
-                              Detalles
-                            </button>
+                            <Hint label="Ver detalles">
+                              <Button
+                                size="none"
+                                onClick={() => openDetallesRQModal(req)}
+                                className="h-8 gap-1.5 rounded px-2.5 text-xs"
+                              >
+                                <Eye size={14} strokeWidth={2} />
+                                Detalles
+                              </Button>
+                            </Hint>
                           </div>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
 

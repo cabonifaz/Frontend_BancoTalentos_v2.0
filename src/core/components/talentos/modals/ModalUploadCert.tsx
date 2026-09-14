@@ -1,20 +1,20 @@
 import { Upload } from "lucide-react";
 import { useRef, useState } from "react";
-import { Modal } from "../../modals/Modal";
+import { Modal } from "@/core/components/modals/Modal";
 import { enqueueSnackbar } from "notistack";
-import { describeS3Error, uploadFileToS3 } from "../../../services/s3.service";
-import { confirmTalentUpload, generateTalentUploadUrl } from "../../../services/talents.service";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
+import { confirmTalentUpload, generateTalentUploadUrl } from "@/core/services/talents.service";
 import {
     ARCHIVO_IMAGEN,
     ARCHIVO_PDF,
     DOCUMENTO_CERT_DIP,
     TALENT_ALLOWED_EXTENSIONS,
     TALENT_IMAGE_EXTENSIONS,
-} from "../../../utilities/constants";
-import { handleError } from "../../../utilities/errorHandler";
-import { Loading } from "../../ui/Loading";
-import { validateFile } from "../../../utilities/validation";
-import { useModal } from "../../../context/ModalContext";
+} from "@/core/utilities/constants";
+import { handleError } from "@/core/utilities/errorHandler";
+import { Loading } from "@/core/components/ui/Loading";
+import { validateFile } from "@/core/utilities/validation";
+import { useModal } from "@/core/context/ModalContext";
 
 interface Props {
     idTalento?: number

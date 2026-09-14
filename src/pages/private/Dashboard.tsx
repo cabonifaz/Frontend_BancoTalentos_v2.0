@@ -5,13 +5,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Utils } from "../../core/utilities/utils";
+import { Utils } from "@/core/utilities/utils";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { LogOut, Moon, Sun, X } from "lucide-react";
-import { DashboardContext } from "../../core/context/DashboardContext";
-import { getAllowedModules } from "../../core/config/navigation";
-import { useTheme } from "../../core/context/ThemeContext";
+import { DashboardContext } from "@/core/context/DashboardContext";
+import { getAllowedModules } from "@/core/config/navigation";
+import { useTheme } from "@/core/context/ThemeContext";
 
 interface Props {
   children: ReactNode;

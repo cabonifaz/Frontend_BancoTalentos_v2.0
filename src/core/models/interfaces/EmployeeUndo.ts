@@ -1,4 +1,4 @@
-import { BaseResponseFMI } from "../response/BaseResponse";
+import { BaseResponseFMI } from "@/core/models/response/BaseResponse";
 
 /**
  * Modelos para el módulo "Deshacer movimientos" (SUPERADMIN). Consumen la API de

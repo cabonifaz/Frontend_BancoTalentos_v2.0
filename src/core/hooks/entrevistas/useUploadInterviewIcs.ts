@@ -3,13 +3,13 @@ import {
   generateUploadUrl,
   uploadFileToS3,
   confirmUploadFile,
-} from "../../services/interviews.service";
-import { TIPO_ARCHIVO_ENTREVISTA_ICS } from "../../utilities/constants";
+} from "@/core/services/interviews.service";
+import { TIPO_ARCHIVO_ENTREVISTA_ICS } from "@/core/utilities/constants";
 import {
   IcsInterviewData,
   MIME_ICS,
   buildInterviewIcsFile,
-} from "../../utilities/ics.utils";
+} from "@/core/utilities/ics.utils";
 
 /**
  * Genera el ICS de una entrevista, lo sube a S3 (URL pre-firmada) y registra su

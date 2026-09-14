@@ -7,9 +7,9 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
-import { Experience } from "../../../../models";
-import { formatDateByLang, formatDateByLangOnlyYear } from "../../../../utilities/language.utils";
-import { TalentForFractalCV } from "../../../../models/interfaces/TalentDataForFractal";
+import { Experience } from "@/core/models";
+import { formatDateByLang, formatDateByLangOnlyYear } from "@/core/utilities/language.utils";
+import { TalentForFractalCV } from "@/core/models/interfaces/TalentDataForFractal";
 
 interface FractalCVTemplateProps {
   talent?: TalentForFractalCV;

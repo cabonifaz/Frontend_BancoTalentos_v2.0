@@ -1,6 +1,8 @@
 import { Control, Controller, FieldError } from "react-hook-form";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
 
 interface Props {
   name: string;
@@ -29,24 +31,25 @@ export const InputForm = ({
 
   return (
     <div className="mb-4">
-      <label htmlFor={name} className="block mb-1 font-medium">
+      <Label htmlFor={name} className="block mb-1 font-medium">
         {label}
-      </label>
+      </Label>
       <div className="relative">
         <Controller
           name={name}
           control={control}
           render={({ field }) => (
-            <input
+            <Input
               {...field}
               id={name}
               type={inputType}
+              aria-invalid={!!error}
               onChange={(e) =>
                 type === "number"
                   ? field.onChange(Number(e.target.value))
                   : field.onChange(e.target.value)
               }
-              className="input w-full pr-10"
+              className="pr-10"
             />
           )}
         />
@@ -54,12 +57,13 @@ export const InputForm = ({
           <button
             type="button"
             onClick={togglePasswordVisibility}
+            aria-label={passwordVisible ? "Ocultar contraseña" : "Mostrar contraseña"}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
           >
             {passwordVisible ? (
-              <Eye className="w-full h-full" aria-label="Mostrar contraseña" />
+              <Eye className="w-full h-full" aria-hidden="true" />
             ) : (
-              <EyeOff className="w-full h-full" aria-label="Ocultar contraseña" />
+              <EyeOff className="w-full h-full" aria-hidden="true" />
             )}
           </button>
         )}

@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Autocomplete } from "../../ui/AutoComplete";
+import { Autocomplete } from "@/core/components/ui/AutoComplete";
 import { enqueueSnackbar } from "notistack";
-import { AppError } from "../../../models";
-import { useCreateNewTechSkill } from "../../../hooks/requerimientos/useCreateNewTechSkill";
-import { Loading } from "../../ui/Loading";
+import { AppError } from "@/core/models";
+import { useCreateNewTechSkill } from "@/core/hooks/requerimientos/useCreateNewTechSkill";
+import { Loading } from "@/core/components/ui/Loading";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { Switch } from "@/core/components/ui/shadcn/switch";
+import { Hint } from "@/core/components/ui/Hint";
 
 export type BaseSkillProps = {
   id: number;
@@ -133,19 +139,24 @@ export const TechSkillsModal = ({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-4 w-full md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] overflow-hidden relative flex flex-col dark:bg-slate-800">
+    // Escape cierra como la X (handleOnClose); un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) handleOnClose(); }}>
+      <DialogContent
+        className="flex w-full max-w-none md:w-[90%] lg:w-[800px] min-h-[500px] max-h-[80vh] flex-col gap-0 overflow-hidden p-6"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {isCreating && <Loading opacity="opacity-60" />}
         <div
           className="flex-col flex-1 min-h-0"
           style={{ display: modalMode === "add" ? "none" : "flex" }}
         >
-          <h2 className="text-lg font-bold mb-4 shrink-0">
+          <DialogTitle className="text-lg font-bold mb-4 shrink-0">
             Agregar habilidades técnicas
-          </h2>
+          </DialogTitle>
 
           <button
             type="button"
+            aria-label="Cerrar"
             onClick={handleOnClose}
             className="absolute top-4 right-4 focus:outline-none"
           >
@@ -200,10 +211,14 @@ export const TechSkillsModal = ({
 
                       {/* Centro: Años de experiencia */}
                       <div className="flex items-center gap-2 mx-4">
-                        <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                        <Label
+                          htmlFor={`skill-years-${skill.id}`}
+                          className="text-sm font-medium text-gray-700 dark:text-slate-200"
+                        >
                           Años:
-                        </label>
-                        <input
+                        </Label>
+                        <Input
+                          id={`skill-years-${skill.id}`}
                           type="number"
                           min={0}
                           value={skill.years}
@@ -218,55 +233,35 @@ export const TechSkillsModal = ({
                               );
                           }}
                           onFocus={(e) => e.target.select()}
-                          className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 dark:border-slate-600"
+                          className="w-16 px-2 py-1 text-center text-sm"
                         />
                       </div>
 
-                      {/* Lado derecho: Switch opcional y botón eliminar */}
+                      {/* Lado derecho: interruptor opcional y botón eliminar */}
                       <div className="flex items-center gap-3">
-                        {/* Switch para cambiar estado opcional */}
                         <label className="inline-flex items-center cursor-pointer">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={skill.isOptional || false}
-                              onChange={(e) =>
-                                handleOptionalChange(
-                                  skill.id,
-                                  e.target.checked
-                                )
-                              }
-                              className="sr-only"
-                            />
-                            <div
-                              className={`block w-8 h-5 rounded-full transition-colors duration-200 ${
-                                skill.isOptional
-                                  ? "bg-blue-600"
-                                  : "bg-gray-300 dark:bg-slate-600"
-                              }`}
-                            >
-                              <div
-                                className={`dot absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-200 dark:bg-slate-800 ${
-                                  skill.isOptional
-                                    ? "transform translate-x-3"
-                                    : ""
-                                }`}
-                              ></div>
-                            </div>
-                          </div>
+                          <Switch
+                            checked={skill.isOptional || false}
+                            onCheckedChange={(checked) =>
+                              handleOptionalChange(skill.id, checked)
+                            }
+                          />
                           <span className="ml-2 text-xs font-medium text-gray-600 dark:text-slate-300">
                             Opcional
                           </span>
                         </label>
 
                         {/* Botón eliminar */}
-                        <button
-                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200 dark:hover:text-red-300 dark:hover:bg-red-500/10"
-                          title="Eliminar habilidad"
-                          onClick={() => handleRemoveSkill(skill.id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                        <Hint label="Eliminar habilidad">
+                          <button
+                            type="button"
+                            aria-label={`Eliminar habilidad ${skill.label}`}
+                            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors duration-200 dark:hover:text-red-300 dark:hover:bg-red-500/10"
+                            onClick={() => handleRemoveSkill(skill.id)}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </Hint>
                       </div>
                     </div>
                   ))}
@@ -295,26 +290,19 @@ export const TechSkillsModal = ({
               </button>
             </div>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleOnClose}
-                className="btn btn-secondary"
-              >
+              {/* Era `btn btn-secondary`, clase inexistente: ghost es lo más fiel. */}
+              <Button variant="ghost" onClick={handleOnClose} className="mx-1">
                 Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="btn btn-blue"
-              >
+              </Button>
+              <Button variant="blue" onClick={handleSave} className="mx-1">
                 Guardar
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {modalMode === "add" && (
-          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-8 flex flex-col h-[450px] shrink-0 dark:bg-slate-800">
+          <div className="relative max-w-lg mx-auto bg-white rounded-2xl p-6 flex flex-col h-[450px] shrink-0 dark:bg-slate-800">
             {/* Header */}
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">
@@ -329,13 +317,16 @@ export const TechSkillsModal = ({
             {/* Input en el centro */}
             <div className="flex-1 flex items-center justify-center">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-200">
+                <Label
+                  htmlFor="new-tech-skill"
+                  className="block text-sm font-medium text-gray-700 mb-2 dark:text-slate-200"
+                >
                   Habilidad:
-                </label>
-                <input
+                </Label>
+                <Input
+                  id="new-tech-skill"
                   type="text"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-700 shadow-sm 
-                   focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                  className="h-12 px-3 text-gray-700 shadow-sm"
                   value={newSkillName}
                   onChange={(e) =>
                     setNewSkillName(e.target.value.toUpperCase())
@@ -364,7 +355,7 @@ export const TechSkillsModal = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

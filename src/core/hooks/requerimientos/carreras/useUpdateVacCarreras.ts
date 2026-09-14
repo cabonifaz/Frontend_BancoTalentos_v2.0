@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { AppError, BaseResponseFMI } from "../../../models";
-import { VacanteCarrera } from "../../../models/interfaces/VacanteCarrera";
-import { axiosInstanceFMI } from "../../../services/axiosService";
+import { AppError, BaseResponseFMI } from "@/core/models";
+import { VacanteCarrera } from "@/core/models/interfaces/VacanteCarrera";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 export const useUpdateVacCarreras = () => {
   const [isUpdating, setIsUpdating] = useState(false);

@@ -9,23 +9,23 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useFetchClients } from "../../../../core/hooks/useFetchClients";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
 import {
   getSeleccionIngresos,
   LabelCount,
-} from "../../../../core/services/seleccion.service";
-import { FiltersBar } from "../components/FiltersBar";
-import { SERIES, topNWithOther } from "../components/chartTheme";
-import { useChartChrome } from "../components/useChartChrome";
-import { DonutChart } from "../components/DonutChart";
-import type { ChartView } from "../components/ui";
+} from "@/core/services/seleccion.service";
+import { FiltersBar } from "@/pages/private/seleccion/components/FiltersBar";
+import { SERIES, topNWithOther } from "@/pages/private/seleccion/components/chartTheme";
+import { useChartChrome } from "@/pages/private/seleccion/components/useChartChrome";
+import { DonutChart } from "@/pages/private/seleccion/components/DonutChart";
+import type { ChartView } from "@/pages/private/seleccion/components/ui";
 import {
   ChartCard,
   ChartViewToggle,
   KpiCard,
   SectionState,
-} from "../components/ui";
-import { useSelectionSection } from "../useSelectionSection";
+} from "@/pages/private/seleccion/components/ui";
+import { useSelectionSection } from "@/pages/private/seleccion/useSelectionSection";
 
 const INDIGO = SERIES[1];
 

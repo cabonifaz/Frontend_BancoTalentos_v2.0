@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { axiosInstanceFMI } from "../../../services/axiosService";
-import { VacTechSkillsResponse } from "../../../models/response/VacTechSkillsResponse";
-import { AppError } from "../../../models";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
+import { VacTechSkillsResponse } from "@/core/models/response/VacTechSkillsResponse";
+import { AppError } from "@/core/models";
 
 export const useFetchVacTechSkills = () => {
   const [isLoading, setIsLoading] = useState(false);

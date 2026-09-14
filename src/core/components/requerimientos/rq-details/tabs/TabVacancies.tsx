@@ -1,29 +1,40 @@
-import { GraduationCap, Pencil, Trash2, Wrench } from "lucide-react";
+import { GraduationCap, Info, Plus, Trash2, Wrench } from "lucide-react";
 import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
-import { Utils } from "../../../../utilities/utils";
-import { NumberInputFMIBase } from "../../NumberInputFMIBase";
-import { Tarifa } from "../../../../models/interfaces/Tarifa";
-import { showWarningSnack } from "../ui.helpers";
-import {
-  GRADO_ESTUDIO,
-  HABILIDADES_TECNICAS,
-} from "../../../../utilities/constants";
+import { UpdateBaseRQSchemaType } from "@/core/models/schemas/UpdateBaseRQSchema";
+import { Utils } from "@/core/utilities/utils";
+import { NumberInputFMIBase } from "@/core/components/requerimientos/NumberInputFMIBase";
+import { Tarifa } from "@/core/models/interfaces/Tarifa";
+import { showWarningSnack } from "@/core/components/requerimientos/rq-details/ui.helpers";
 import {
   MODAL_DETAILS_VAC_SKILLS,
   MODAL_UPDATE_CAREER,
-} from "../../../../utilities/modalsIds";
-import { ModalDetailsVacSkills } from "../../modals/ModalDetailVacSkills";
-import { useModal } from "../../../../context/ModalContext";
-import { useParams } from "../../../../context/ParamsContext";
+} from "@/core/utilities/modalsIds";
+import { ModalDetailsVacSkills } from "@/core/components/requerimientos/modals/ModalDetailVacSkills";
+import { useModal } from "@/core/context/ModalContext";
 import { enqueueSnackbar } from "notistack";
-import { ModalDetailsVacCarreras } from "../../modals/ModalUpdateCareer";
-import { ReqVacante } from "../../../../models";
+import { ModalDetailsVacCarreras } from "@/core/components/requerimientos/modals/ModalUpdateCareer";
+import { ReqVacante } from "@/core/models";
+import { SearchableSelect } from "@/core/components/ui/SearchableSelect";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Badge } from "@/core/components/ui/shadcn/badge";
 import {
-  SearchableSelect,
-  SearchableOption,
-} from "../../../ui/SearchableSelect";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { cn } from "@/core/lib/utils";
+import {
+  IconAction,
+  RequirementChip,
+  SectionHeader,
+  TabBody,
+  rqReadonly,
+  rqTable,
+} from "@/core/components/requerimientos/rq-ui";
 
 /** Validate rol */
 const isRecruiter = (): boolean => {
@@ -39,7 +50,6 @@ interface TabProps {
   availableTechSkills: { id: number; label: string }[];
   availableDegrees: { id: number; label: string }[];
   fetchRequirement: () => void;
-  toggleEdit: () => void;
   refetchParams: () => void;
 }
 
@@ -48,21 +58,20 @@ export const TabVacancies = ({
   vacancies,
   isEditing,
   fetchRequirement,
-  toggleEdit,
   availableDegrees,
   availableTechSkills,
   refetchParams,
 }: TabProps) => {
   // @marker base states
-  const [vacQuant, setVacQuant] = useState<string[]>([]);
-  const [originQuant, setOriginQuant] = useState<string[]>([]);
+  const [, setVacQuant] = useState<string[]>([]);
+  const [originQuant] = useState<string[]>([]);
   const { closeModal, isModalOpen, openModal } = useModal();
   const [idVac, setIdVac] = useState<number | undefined>();
 
   // @marker form handlers
   const {
     register,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setValue,
     getValues,
     clearErrors,
@@ -158,21 +167,8 @@ export const TabVacancies = ({
     }
   };
 
-  const getTotalCareersForVacancy = (vacancyId: number) => {
-    const vacancy = vacancies.find(
-      (v) => v.idRequerimientoVacante === vacancyId
-    );
-    if (!vacancy) return 0;
-    return vacancy.totalCarreras;
-  };
-
-  const getTotalSkillsForVacancy = (vacancyId: number) => {
-    const vacancy = vacancies.find(
-      (v) => v.idRequerimientoVacante === vacancyId
-    );
-    if (!vacancy) return 0;
-    return vacancy.totalHabilidades;
-  };
+  const findVacancy = (vacancyId: number) =>
+    vacancies.find((v) => v.idRequerimientoVacante === vacancyId);
 
   // @marker skills modal
   /**Modal Skills close */
@@ -214,6 +210,13 @@ export const TabVacancies = ({
     openModal(MODAL_UPDATE_CAREER);
   };
 
+  const recruiter = isRecruiter();
+  // Tarifa y Tipo de tarifa no se muestran al rol Reclutador.
+  const columnCount = recruiter ? 4 : 6;
+  const hasUnsaved = isEditing && cVacancies.some((v) => v.idEstado === 1);
+  const listError =
+    errors.lstVacantes?.message ?? errors.lstVacantes?.root?.message;
+
   return (
     <>
       {isModalOpen(MODAL_DETAILS_VAC_SKILLS) && (
@@ -233,78 +236,64 @@ export const TabVacancies = ({
           availableDegrees={availableDegrees}
         />
       )}
-      <div className="flex h-full min-h-0 flex-col">
-        <div className="flex items-center justify-between my-2">
-          <button
-            type="button"
-            onClick={toggleEdit}
-            className="focus:outline-none ms-2"
-          >
-            <Pencil className="w-7 h-7" />
-          </button>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={`focus:outline-none text-sm min-w-24 h-8 rounded-lg py-1 px-2 mx-1 ${
-                isEditing ? "btn-blue cursor-pointer" : "btn-disabled"
-              }`}
-              onClick={handleAddVacancy}
-              disabled={!isEditing}
-            >
-              Agregar
-            </button>
-          </div>
-        </div>
-        <div className="min-h-0 flex-1 overflow-visible">
-          <div className="table-container h-full">
-            <div className="table-wrapper h-full overflow-y-auto custom-scroll">
-              <table className="table">
-                <thead>
-                  <tr className="table-header">
-                    <th className="table-header-cell">
-                      Perfil profesional
-                    </th>
-                    <th className="table-header-cell">Cantidad</th>
+      <TabBody>
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title="Vacantes"
+            helper={
+              isEditing
+                ? "Cambia el perfil o la cantidad, agrega o quita vacantes y guarda los cambios."
+                : "Pulsa Editar para cambiar perfiles o cantidades. Carreras y habilidades se abren desde cada vacante."
+            }
+            actions={
+              isEditing && (
+                <Button
+                  variant="blue"
+                  onClick={handleAddVacancy}
+                  className="font-medium"
+                >
+                  <Plus className="h-4 w-4" aria-hidden />
+                  Agregar vacante
+                </Button>
+              )
+            }
+          />
 
-                    <th
-                      className="table-header-cell"
-                      style={{
-                        display: isRecruiter()
-                          ? "none"
-                          : "table-header-cell",
-                      }}
-                    >
-                      Tarifa
-                    </th>
-
-                    <th
-                      className="table-header-cell"
-                      style={{
-                        display: isRecruiter()
-                          ? "none"
-                          : "table-header-cell",
-                      }}
-                    >
-                      Tipo tarifa
-                    </th>
-                    <th className="table-header-cell text-center">
-                      Otros
-                    </th>
-                    <th className="table-header-cell"></th>
-                  </tr>
-                </thead>
-                <tbody>
+          <div className={rqTable.wrapper}>
+            <div className="overflow-x-auto">
+              <Table className={cn(rqTable.table, "min-w-[56rem]")}>
+                <TableHeader>
+                  <TableRow className={rqTable.headRow}>
+                    <TableHead className={rqTable.head}>Perfil profesional</TableHead>
+                    <TableHead className={cn(rqTable.head, "w-32")}>Cantidad</TableHead>
+                    {!recruiter && (
+                      <TableHead className={cn(rqTable.head, "w-36 text-right")}>
+                        Tarifa
+                      </TableHead>
+                    )}
+                    {!recruiter && (
+                      <TableHead className={cn(rqTable.head, "w-36")}>
+                        Tipo de tarifa
+                      </TableHead>
+                    )}
+                    <TableHead className={cn(rqTable.head, "w-72")}>Requisitos</TableHead>
+                    <TableHead className={cn(rqTable.head, "w-16")}>
+                      <span className="sr-only">Acciones</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {fields.length <= 0 ? (
-                    <tr>
-                      <td colSpan={4} className="table-empty">
+                    <TableRow>
+                      <TableCell colSpan={columnCount} className={rqTable.empty}>
                         No hay vacantes disponibles.
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
                     fields.map((field, index) => {
                       if (field.idEstado === 3) {
                         return (
-                          <tr
+                          <TableRow
                             key={`hidden-${field.id}-${index}`}
                             className="hidden"
                           >
@@ -339,62 +328,82 @@ export const TabVacancies = ({
                                 value={field.idRequerimientoVacante}
                               />
                             )}
-                          </tr>
+                          </TableRow>
                         );
                       }
 
                       const availableProfiles = getAvailableProfiles();
-                      const currentProfile =
-                        cVacancies[index]?.idPerfil;
+                      const currentProfile = cVacancies[index]?.idPerfil;
+                      const saved = findVacancy(field.idRequerimientoVacante);
+                      const isNew = field.idEstado === 1;
+
+                      // Opciones del tarifario; si el perfil guardado ya no
+                      // está en él, se añade para que el campo no salga vacío.
+                      const profileOptions = [
+                        { value: 0, label: "Seleccione un perfil" },
+                        ...availableProfiles.map((perfil) => ({
+                          value: perfil.idPerfil,
+                          label: perfil.perfil,
+                        })),
+                      ];
+                      if (
+                        currentProfile &&
+                        saved?.perfilProfesional &&
+                        !profileOptions.some((o) => o.value === currentProfile)
+                      ) {
+                        profileOptions.push({
+                          value: currentProfile,
+                          label: saved.perfilProfesional,
+                        });
+                      }
 
                       const tipoTarifa =
-                        tariff.find(
-                          (item) =>
-                            item.idPerfil ===
-                            getValues(`lstVacantes.${index}.idPerfil`)
-                        )?.tipoTarifa || "-";
+                        tariff.find((item) => item.idPerfil === currentProfile)
+                          ?.tipoTarifa || "—";
+
+                      const totalCareers = saved?.totalCarreras ?? 0;
+                      const totalSkills = saved?.totalHabilidades ?? 0;
+                      const profileError =
+                        errors.lstVacantes?.[index]?.idPerfil?.message;
+                      const quantityError =
+                        errors.lstVacantes?.[index]?.cantidad?.message;
+                      // Sin guardar no hay vacante a la que colgar requisitos.
+                      const canEditRequirements = field.idRequerimientoVacante > 0;
 
                       return (
-                        <tr key={index} className="table-row">
-                          <td className="table-cell">
-                            <SearchableSelect
-                              options={[
-                                {
-                                  value: 0,
-                                  label: "Seleccione un perfil",
-                                },
-                                ...availableProfiles.map((perfil) => ({
-                                  value: perfil.idPerfil,
-                                  label: perfil.perfil,
-                                })),
-                              ]}
-                              value={currentProfile || 0}
-                              onChange={(value) => {
-                                handleProfileChange(
-                                  index,
-                                  value.toString()
-                                );
-                                setValue(
-                                  `lstVacantes.${index}.idPerfil`,
-                                  Number(value)
-                                );
-                              }}
-                              placeholder="Seleccione un perfil"
-                              disabled={!isEditing}
-                            />
-                            {errors.lstVacantes?.[index]
-                              ?.idPerfil && (
-                              <p className="text-red-500 text-xs mt-1">
-                                {
-                                  errors.lstVacantes[index]?.idPerfil
-                                    ?.message
-                                }
+                        <TableRow key={field.id} className={rqTable.row}>
+                          <TableCell className={cn(rqTable.cell, "py-2.5")}>
+                            <div className="flex items-center gap-2">
+                              <div className="min-w-0 flex-1">
+                                <SearchableSelect
+                                  options={profileOptions}
+                                  value={currentProfile || 0}
+                                  onChange={(value) =>
+                                    handleProfileChange(index, value.toString())
+                                  }
+                                  placeholder="Seleccione un perfil"
+                                  disabled={!isEditing}
+                                  className={cn(
+                                    "h-12",
+                                    // Bloqueado se lee como un campo normal.
+                                    !isEditing &&
+                                      "cursor-not-allowed bg-gray-50 dark:bg-slate-800/60",
+                                    profileError && "border-red-500 dark:border-red-400"
+                                  )}
+                                />
+                              </div>
+                              {isEditing && isNew && (
+                                <Badge variant="green">Nueva</Badge>
+                              )}
+                            </div>
+                            {profileError && (
+                              <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                                {profileError}
                               </p>
                             )}
-                          </td>
-                          <td className="table-cell">
-                            <div className="flex">
-                              <div className="flex flex-col gap-1 relative">
+                          </TableCell>
+                          <TableCell className={cn(rqTable.cell, "py-2.5")}>
+                              <div className="flex w-20 flex-col gap-1">
                                 <NumberInputFMIBase<UpdateBaseRQSchemaType>
                                   register={register}
                                   control={control}
@@ -402,7 +411,6 @@ export const TabVacancies = ({
                                   defaultValue={Number(
                                     originQuant[index] || 1
                                   )}
-                                  disabled={!isEditing}
                                   onChange={(value) => {
                                     const numValue =
                                       Number(value) || 0;
@@ -429,143 +437,93 @@ export const TabVacancies = ({
                                       `lstVacantes.${index}.cantidad`
                                     );
                                   }}
-                                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+                                  disabled={!isEditing}
+                                  className={cn(
+                                    "h-12 w-full text-center",
+                                    rqReadonly
+                                  )}
                                 />
-                                {errors.lstVacantes?.[index]
-                                  ?.cantidad && (
-                                  <p className="text-red-500 text-xs mt-1 absolute -bottom-5">
-                                    {
-                                      errors.lstVacantes[index]
-                                        ?.cantidad?.message
-                                    }
+                                {quantityError && (
+                                  <p className="text-xs text-red-500 dark:text-red-400">
+                                    {quantityError}
                                   </p>
                                 )}
                               </div>
-                              <div className="ms-4 flex items-center">
-                                {field.idEstado === 1 ? (
-                                  <span className="text-sm w-fit px-2 py-1 rounded-lg bg-green-100 text-green-700 truncate mr-2 dark:bg-green-500/15 dark:text-green-300">
-                                    Nuevo
-                                  </span>
-                                ) : null}
-                              </div>
-                            </div>
-                          </td>
+                          </TableCell>
 
-                          <td
-                            className="table-cell"
-                            style={{
-                              display: isRecruiter()
-                                ? "none"
-                                : "table-cell",
-                            }}
-                          >
-                            <input
-                              {...register(
-                                `lstVacantes.${index}.tarifa`
-                              )}
-                              defaultValue={
-                                Utils.formatCoin(
-                                  Number(
-                                    getValues(
-                                      `lstVacantes.${index}.tarifa`
-                                    )
-                                  )
-                                )?.toString() || "-"
-                              }
-                              type="text"
-                              id="v-tarifa"
-                              className="input-readonly-text"
-                              readOnly
-                            />
-                          </td>
+                          {!recruiter && (
+                            <TableCell className={cn(rqTable.cell, "text-right tabular-nums")}>
+                              {cVacancies[index]?.tarifa || "—"}
+                            </TableCell>
+                          )}
 
-                          <td
-                            className="table-cell"
-                            style={{
-                              display: isRecruiter()
-                                ? "none"
-                                : "table-cell",
-                            }}
-                          >
-                            {tipoTarifa}
-                          </td>
+                          {!recruiter && (
+                            <TableCell className={rqTable.cell}>{tipoTarifa}</TableCell>
+                          )}
 
-                          <td className="table-cell text-center relative group">
-                            <div className="flex items-center gap-3 justify-center">
-                              <button
-                                type="button"
-                                className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                                title="Agregar carreras"
-                                onClick={() => {
-                                  const idVacante =
-                                    field.idRequerimientoVacante;
-                                  openModalCareers(idVacante);
-                                }}
-                              >
-                                <GraduationCap className="w-6 h-6" />
-                                <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalCareersForVacancy(
-                                    field.idRequerimientoVacante
-                                  )}
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                className="relative bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                                title="Agregar habilidades"
-                                onClick={() => {
-                                  const idVacante =
-                                    field.idRequerimientoVacante;
-                                  handleOpenModal(idVacante);
-                                }}
-                              >
-                                <Wrench className="w-6 h-6" />
-                                <span className="absolute -top-1 -right-1 bg-blue-700 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
-                                  {getTotalSkillsForVacancy(
-                                    field.idRequerimientoVacante
-                                  )}
-                                </span>
-                              </button>
-                            </div>
-                          </td>
-
-                          <td className="table-cell">
-                            {isEditing && (
-                              <button
-                                type="button"
-                                disabled={!isEditing}
-                                className="bg-white p-2 rounded rounded-full shadow-sm shadow-gray-400 dark:bg-slate-800"
-                                onClick={() =>
-                                  handleRemoveVacante(index)
+                          <TableCell className={rqTable.cell}>
+                            <div className="flex flex-wrap gap-2">
+                              <RequirementChip
+                                icon={GraduationCap}
+                                label="Carreras"
+                                count={totalCareers}
+                                hint={
+                                  canEditRequirements
+                                    ? "Ver o editar carreras"
+                                    : "Guarda la vacante para agregar carreras"
                                 }
-                              >
-                                <Trash2 className="w-6 h-6 text-red-500" />
-                              </button>
+                                muted={!canEditRequirements}
+                                onClick={() =>
+                                  openModalCareers(field.idRequerimientoVacante)
+                                }
+                              />
+                              <RequirementChip
+                                icon={Wrench}
+                                label="Habilidades"
+                                count={totalSkills}
+                                hint={
+                                  canEditRequirements
+                                    ? "Ver o editar habilidades"
+                                    : "Guarda la vacante para agregar habilidades"
+                                }
+                                muted={!canEditRequirements}
+                                onClick={() =>
+                                  handleOpenModal(field.idRequerimientoVacante)
+                                }
+                              />
+                            </div>
+                          </TableCell>
+
+                          <TableCell className={cn(rqTable.cell, "py-2")}>
+                            {isEditing && (
+                              <IconAction
+                                icon={Trash2}
+                                tone="red"
+                                label="Eliminar vacante"
+                                onClick={() => handleRemoveVacante(index)}
+                              />
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       );
                     })
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </div>
-        <div className="mt-2 self-end">
-          <button
-            type="submit"
-            disabled={!isEditing || isSubmitting}
-            className={`focus:outline-none text-sm min-w-24 h-8 rounded-lg py-1 px-2 mx-1 ${
-              isEditing && !isSubmitting
-                ? "btn-primary cursor-pointer"
-                : "btn-disabled"
-            }`}
-          >
-            {isSubmitting ? "Actualizando…" : "Actualizar"}
-          </button>
-        </div>
-      </div>
+
+          {listError && (
+            <p className="text-[13px] text-red-500 dark:text-red-400">{listError}</p>
+          )}
+          {hasUnsaved && (
+            <p className="flex items-center gap-2 text-[13px] text-gray-500 dark:text-slate-400">
+              <Info className="h-4 w-4 shrink-0" aria-hidden />
+              Guarda las vacantes nuevas para poder agregarles carreras y habilidades.
+            </p>
+          )}
+        </section>
+      </TabBody>
     </>
   );
 };

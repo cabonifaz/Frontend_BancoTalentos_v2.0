@@ -1,10 +1,27 @@
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { useFormContext } from "react-hook-form";
-import { UpdateBaseRQSchemaType } from "../../../../models/schemas/UpdateBaseRQSchema";
-import { Client } from "../../../../models/interfaces/Client";
-import { ReqContacto } from "../../../../models/interfaces/ReqContacto";
-import { ModalRQContactV2 } from "../../modals/ModalContactV2";
+import { UpdateBaseRQSchemaType } from "@/core/models/schemas/UpdateBaseRQSchema";
+import { Client } from "@/core/models/interfaces/Client";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
+import { ModalRQContactV2 } from "@/core/components/requerimientos/modals/ModalContactV2";
 import { useState } from "react";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Badge } from "@/core/components/ui/shadcn/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { cn } from "@/core/lib/utils";
+import {
+  IconAction,
+  SectionHeader,
+  TabBody,
+  rqTable,
+} from "@/core/components/requerimientos/rq-ui";
 
 interface TabProps {
   rqId: number;
@@ -20,10 +37,15 @@ export const TabClient = ({
   fetchRequirement,
 }: TabProps) => {
   const {
-    register,
     formState: { errors },
     getValues,
+    watch,
   } = useFormContext<UpdateBaseRQSchemaType>();
+
+  // El cliente no se cambia desde el detalle: se muestra en la cabecera del
+  // modal y aquí solo da nombre a la lista de contactos.
+  const idCliente = watch("idCliente");
+  const clientName = clients.find((c) => c.idCliente === idCliente)?.razonSocial;
 
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,7 +71,6 @@ export const TabClient = ({
   };
 
   const handleAddContact = () => {
-    console.log("Hola");
     setModalMode("add");
     setContactToEdit(null);
     setIsModalOpen(true);
@@ -69,149 +90,112 @@ export const TabClient = ({
           idCliente={getValues("idCliente")}
         />
       )}
-      <div className="flex h-full min-h-0 flex-col">
-        {/* Cliente */}
-        <div className="flex items-center">
-          <label className="text-sm font-medium text-gray-700 dark:text-slate-200">
-            Cliente:
-          </label>
-          <select
-            {...register("idCliente", {
-              valueAsNumber: true,
-            })}
-            disabled={true}
-            aria-readonly={true}
-            className="px-3 py-2 border-none outline-none appearance-none"
-          >
-            {clients.map((client) => (
-              <option key={client.idCliente} value={client.idCliente}>
-                {client.razonSocial}
-              </option>
-            ))}
-          </select>
-        </div>
-        {errors.idCliente && (
-          <p className="text-red-500 text-sm mt-1 ml-[33%]">
-            {errors.idCliente.message}
-          </p>
-        )}
+      <TabBody>
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title={clientName ? `Contactos de ${clientName}` : "Contactos del cliente"}
+            helper="Contactos asignados a este requerimiento."
+            actions={
+              <Button
+                variant="outline-blue"
+                onClick={handleAddContact}
+                disabled={!idCliente}
+                className="font-medium"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Añadir contacto
+              </Button>
+            }
+          />
+          {errors.idCliente && (
+            <p className="text-[13px] text-red-500 dark:text-red-400">
+              {errors.idCliente.message}
+            </p>
+          )}
 
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-700 dark:text-slate-200">
-            Lista de contactos
-          </h2>
-          <button
-            type="button"
-            onClick={handleAddContact}
-            disabled={getValues("idCliente") === 0}
-            className={`btn text-sm font-medium ${
-              getValues("idCliente") === 0
-                ? "btn-disabled"
-                : "btn-blue"
-            }`}
-          >
-            Añadir contacto
-          </button>
-        </div>
-
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto custom-scroll">
-          <div className="table-container">
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr className="table-header">
-                    <th scope="col" className="table-header-cell">
-                      ID
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Nombres
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Apellidos
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Celular
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Correo
-                    </th>
-                    <th scope="col" className="table-header-cell">
+          <div className={rqTable.wrapper}>
+            <div className="overflow-x-auto">
+              <Table className={cn(rqTable.table, "min-w-[48rem]")}>
+                <TableHeader>
+                  <TableRow className={rqTable.headRow}>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Nombre
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
                       Cargo
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Asignado
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Celular
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Correo
+                    </TableHead>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-36")}>
+                      Asignación
+                    </TableHead>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-16")}>
+                      <span className="sr-only">Acciones</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {(contacts || []).length <= 0 ? (
-                    <tr>
-                      <td colSpan={8} className="table-empty">
+                    <TableRow>
+                      <TableCell colSpan={6} className={rqTable.empty}>
                         No hay contactos disponibles.
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    contacts?.map((contact) => (
-                      <tr
-                        key={contact.idClienteContacto}
-                        className="table-row"
-                      >
-                        <td className="table-cell">
-                          {contact.idClienteContacto}
-                        </td>
-                        <td className="table-cell">
-                          {contact.nombre}
-                        </td>
-                        <td className="table-cell">
-                          {contact.apellidoPaterno +
-                            " " +
-                            contact.apellidoMaterno}
-                        </td>
-                        <td className="table-cell">
-                          {contact.telefono}
-                        </td>
-                        <td className="table-cell">
-                          {contact.correo}
-                        </td>
-                        <td className="table-cell">
-                          {contact.cargo}
-                        </td>
-                        <td className="table-cell">
-                          <input
-                            type="checkbox"
-                            name="contact-asig"
-                            id="contact-asig"
-                            checked={contact.asignado === 1}
-                            readOnly={true}
-                            className="input-checkbox-readonly"
-                          />
-                        </td>
-                        <td className="table-cell">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleEditContact(contact)
-                              }
-                              className="w-7 h-7"
-                            >
-                              <Pencil className="w-7 h-7" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    contacts.map((contact) => {
+                      const nombre = [
+                        contact.nombre,
+                        contact.apellidoPaterno,
+                        contact.apellidoMaterno,
+                      ]
+                        .filter(Boolean)
+                        .join(" ");
+                      return (
+                        <TableRow
+                          key={contact.idClienteContacto}
+                          className={rqTable.row}
+                        >
+                          <TableCell className={cn(rqTable.cell, "font-medium")}>
+                            {nombre}
+                          </TableCell>
+                          <TableCell className={rqTable.cell}>{contact.cargo}</TableCell>
+                          <TableCell className={cn(rqTable.cell, "tabular-nums")}>
+                            {contact.telefono}
+                          </TableCell>
+                          <TableCell className={rqTable.cell}>{contact.correo}</TableCell>
+                          <TableCell className={rqTable.cell}>
+                            {contact.asignado === 1 ? (
+                              <Badge variant="green">Asignado</Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="border-transparent bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300"
+                              >
+                                No asignado
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className={cn(rqTable.cell, "py-2")}>
+                            <IconAction
+                              icon={Pencil}
+                              label={`Editar a ${nombre}`}
+                              onClick={() => handleEditContact(contact)}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </TabBody>
     </>
   );
 };

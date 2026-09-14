@@ -1,12 +1,33 @@
-import { Pencil } from "lucide-react";
-import { useFormContext } from "react-hook-form";
-import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
-import { Client } from "../../../../models/interfaces/Client";
-import { useFetchClientContacts } from "../../../../hooks/useFetchClientContacts";
+import { Pencil, Plus } from "lucide-react";
+import { Controller, useFormContext } from "react-hook-form";
+import { newRQSchemaType } from "@/core/models/schemas/NewRQSchemaV1";
+import { Client } from "@/core/models/interfaces/Client";
+import { useFetchClientContacts } from "@/core/hooks/useFetchClientContacts";
 import { useEffect, useState } from "react";
-import { Loading } from "../../../ui/Loading";
-import { ReqContacto } from "../../../../models/interfaces/ReqContacto";
-import { ModalRQContactV2 } from "../../modals/ModalContactV2";
+import { Loading } from "@/core/components/ui/Loading";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
+import { ModalRQContactV2 } from "@/core/components/requerimientos/modals/ModalContactV2";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/core/components/ui/shadcn/table";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { cn } from "@/core/lib/utils";
+import {
+  Field,
+  GroupDivider,
+  IconAction,
+  SectionHeader,
+  TabBody,
+  rqControl,
+  rqTable,
+} from "@/core/components/requerimientos/rq-ui";
 
 interface TabProps {
   clients: Client[];
@@ -29,22 +50,22 @@ export const TabClients = ({ clients, fetchTarifario }: TabProps) => {
   } = useFetchClientContacts();
 
   const {
-    register,
+    control,
     formState: { errors },
     clearErrors,
     setValue,
     getValues,
+    watch,
   } = useFormContext<newRQSchemaType>();
+
+  const idCliente = watch("idCliente");
 
   // Sincronizar la lista de contactos con el Schema
   useEffect(() => {
     setValue("lstContactos", selContacts, { shouldValidate: true });
   }, [selContacts, setValue]);
 
-  const handleClienteChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedClienteId = Number(event.target.value);
+  const handleClienteChange = (selectedClienteId: number) => {
     setValue("idCliente", selectedClienteId);
     clearErrors();
 
@@ -108,146 +129,137 @@ export const TabClients = ({ clients, fetchTarifario }: TabProps) => {
           idCliente={getValues("idCliente")}
         />
       )}
-      <div className="flex h-full min-h-0 flex-col">
-        {/* Cliente */}
-        <div className="flex items-center">
-          <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-            Cliente:
-          </label>
-          <select
-            {...register("idCliente", {
-              valueAsNumber: true,
-            })}
-            onChange={handleClienteChange}
-            defaultValue={0}
-            className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+      <TabBody>
+          <Field
+            label="Cliente"
+            htmlFor="rq-create-cliente"
+            required
+            error={errors.idCliente?.message}
+            className="md:w-1/2"
           >
-            <option value={0} disabled>
-              Elija un cliente
-            </option>
-            {clients.map((c) => (
-              <option key={c.idCliente} value={c.idCliente}>
-                {c.razonSocial}
-              </option>
-            ))}
-          </select>
-        </div>
-        {errors.idCliente && (
-          <p className="text-red-500 text-sm mt-1 ml-[33%]">
-            {errors.idCliente.message}
-          </p>
-        )}
+            <Controller
+              name="idCliente"
+              control={control}
+              render={({ field }) => (
+                // La opción "Elija un cliente" era disabled: no se puede volver
+                // a ella, así que no hay opción vacía.
+                <AppSelect
+                  ref={field.ref}
+                  id="rq-create-cliente"
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  value={field.value}
+                  onChange={(v) => handleClienteChange(Number(v))}
+                  options={clients.map((c) => ({
+                    value: c.idCliente,
+                    label: c.razonSocial,
+                  }))}
+                  placeholder="Elija un cliente"
+                  emptyOption={false}
+                  aria-invalid={!!errors.idCliente}
+                  className={rqControl}
+                />
+              )}
+            />
+          </Field>
 
-        <div className="flex items-center justify-between my-4">
-          <h2 className="text-sm font-medium text-gray-700 dark:text-slate-200">
-            Lista de Contactos
-          </h2>
-          <button
-            type="button"
-            onClick={handleAddContact}
-            disabled={getValues("idCliente") === 0}
-            className={`btn text-sm font-medium ${
-              getValues("idCliente") === 0
-                ? "btn-disabled"
-                : "btn-blue"
-            }`}
-          >
-            Añadir contacto
-          </button>
-        </div>
+        <GroupDivider />
 
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="table-container">
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr className="table-header">
-                    <th scope="col" className="table-header-cell">
-                      ID
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Nombres
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Apellidos
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Celular
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Correo
-                    </th>
-                    <th scope="col" className="table-header-cell">
+        <section className="flex flex-col gap-4">
+          <SectionHeader
+            title="Contactos del cliente"
+            helper="Marca los contactos asignados a este requerimiento."
+            actions={
+              <Button
+                variant="outline-blue"
+                onClick={handleAddContact}
+                disabled={!idCliente}
+                className="font-medium"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Añadir contacto
+              </Button>
+            }
+          />
+
+          <div className={rqTable.wrapper}>
+            <div className="overflow-x-auto">
+              <Table className={cn(rqTable.table, "min-w-[48rem]")}>
+                <TableHeader>
+                  <TableRow className={rqTable.headRow}>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-24 text-center")}>
+                      Asignar
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Nombre
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
                       Cargo
-                    </th>
-                    <th scope="col" className="table-header-cell">
-                      Asignado
-                    </th>
-                    <th
-                      scope="col"
-                      className="table-header-cell"
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Celular
+                    </TableHead>
+                    <TableHead scope="col" className={rqTable.head}>
+                      Correo
+                    </TableHead>
+                    <TableHead scope="col" className={cn(rqTable.head, "w-16")}>
+                      <span className="sr-only">Acciones</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {contacts.length <= 0 ? (
-                    <tr>
-                      <td colSpan={8} className="table-empty">
-                        No hay contactos disponibles.
-                      </td>
-                    </tr>
+                    <TableRow>
+                      <TableCell colSpan={6} className={rqTable.empty}>
+                        {idCliente
+                          ? "Este cliente aún no tiene contactos."
+                          : "Elige un cliente para ver sus contactos."}
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    contacts?.map((c) => (
-                      <tr
-                        key={c.idClienteContacto}
-                        className="table-row"
-                      >
-                        <td className="table-cell">
-                          {c.idClienteContacto}
-                        </td>
-                        <td className="table-cell">{c.nombre}</td>
-                        <td className="table-cell">
-                          {c.apellidoPaterno +
-                            " " +
-                            c.apellidoMaterno}
-                        </td>
-                        <td className="table-cell">{c.telefono}</td>
-                        <td className="table-cell">{c.correo}</td>
-                        <td className="table-cell">{c.cargo}</td>
-                        <td className="table-cell">
-                          <input
-                            type="checkbox"
-                            className="input-checkbox"
-                            name={`contact-${c.idClienteContacto}`}
-                            id={`contact-${c.idClienteContacto}`}
-                            checked={selContacts.includes(
-                              c.idClienteContacto
-                            )}
-                            onChange={() =>
-                              handleContactToggle(c.idClienteContacto)
-                            }
-                          />
-                        </td>
-                        <td className="table-cell">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
+                    contacts.map((c) => {
+                      const nombre = [c.nombre, c.apellidoPaterno, c.apellidoMaterno]
+                        .filter(Boolean)
+                        .join(" ");
+                      return (
+                        <TableRow key={c.idClienteContacto} className={rqTable.row}>
+                          <TableCell className={rqTable.cell}>
+                            <div className="flex justify-center">
+                              <Checkbox
+                                id={`contact-${c.idClienteContacto}`}
+                                aria-label={`Asignar a ${nombre}`}
+                                checked={selContacts.includes(c.idClienteContacto)}
+                                onCheckedChange={() =>
+                                  handleContactToggle(c.idClienteContacto)
+                                }
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className={cn(rqTable.cell, "font-medium")}>
+                            {nombre}
+                          </TableCell>
+                          <TableCell className={rqTable.cell}>{c.cargo}</TableCell>
+                          <TableCell className={cn(rqTable.cell, "tabular-nums")}>
+                            {c.telefono}
+                          </TableCell>
+                          <TableCell className={rqTable.cell}>{c.correo}</TableCell>
+                          <TableCell className={cn(rqTable.cell, "py-2")}>
+                            <IconAction
+                              icon={Pencil}
+                              label={`Editar a ${nombre}`}
                               onClick={() => handleEditContact(c)}
-                              className="w-7 h-7"
-                            >
-                              <Pencil className="w-7 h-7" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </TabBody>
     </>
   );
 };

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { AxiosResponse } from "axios";
 import { useSnackbar } from "notistack";
 
-import { BaseResponseFMI } from "../models/response/BaseResponse";
-import { axiosInstanceFMI } from "../services/axiosService";
+import { BaseResponseFMI } from "@/core/models/response/BaseResponse";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 interface UseDeleteHookReturn {
   deleteData: (url: string) => Promise<BaseResponseFMI>;

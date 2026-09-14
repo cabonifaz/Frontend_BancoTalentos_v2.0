@@ -4,14 +4,20 @@ import {
   DropdownForm,
   InputForm,
   SalaryStructureForm,
-} from "../../forms";
-import { Tabs } from "../../ui/Tabs";
+} from "@/core/components/forms";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { LoadingOverlay } from "@/core/components/ui/LoadingOverlay";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   EntryFormSchema,
   EntryFormType,
-} from "../../../models/schemas/EntryFormSchema";
-import { useParams } from "../../../context/ParamsContext";
+} from "@/core/models/schemas/EntryFormSchema";
+import { useParams } from "@/core/context/ParamsContext";
 import {
   TIPO_MODALIDAD,
   UNIDAD,
@@ -22,12 +28,15 @@ import {
   GROUP_MODALIDAD_LOC_SERVICIOS,
   GROUP_MODALIDAD_PLANILLA,
   TIPO_MONEDA,
-} from "../../../utilities/constants";
-import { sedeSunatList } from "../../../models/interfaces/SedeSunat";
-import { useFetchClients } from "../../../hooks/useFetchClients";
-import { AsignarTalentoType } from "../../../models";
+} from "@/core/utilities/constants";
+import { sedeSunatList } from "@/core/models/interfaces/SedeSunat";
+import { useFetchClients } from "@/core/hooks/useFetchClients";
+import { AsignarTalentoType } from "@/core/models";
 import { useEffect, useMemo, useState } from "react";
-import { Utils } from "../../../utilities/utils";
+import { Utils } from "@/core/utilities/utils";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { RadioGroup, RadioGroupItem } from "@/core/components/ui/shadcn/radio-group";
 
 interface Props {
   onClose: () => void;
@@ -193,12 +202,19 @@ export const ModalIngreso = ({
   }, [watchedModalidad, modalityValues, setValue]);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[60]">
-      <div className="bg-white rounded-lg shadow-lg p-3 w-full md:w-[90%] lg:w-[1000px] min-h-[570px] overflow-y-auto dark:bg-slate-800">
+    // Escape cierra como la X; un clic fuera no (como antes).
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        className="block w-full max-w-none md:w-[90%] lg:w-[1000px] min-h-[570px] max-h-[calc(100vh-2rem)] overflow-y-auto p-3"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div className="flex items-center justify-between p-2">
-          <h3 className="text-lg font-medium">Datos de Ingreso</h3>
+          <DialogTitle asChild>
+            <h3 className="text-lg font-medium">Datos de Ingreso</h3>
+          </DialogTitle>
           <button
             type="button"
+            aria-label="Cerrar"
             onClick={onClose}
             className="focus:outline-none"
           >
@@ -210,12 +226,18 @@ export const ModalIngreso = ({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-between min-h-[500px]"
         >
-          <Tabs
-            isDataLoading={paramLoading || clientsLoading}
-            tabs={[
-              {
-                label: "General",
-                children: (
+          {(paramLoading || clientsLoading) && <LoadingOverlay />}
+          {/* forceMount en cada panel: el formulario está repartido entre
+              pestañas y sin él se perdería lo escrito al cambiar de una a
+              otra. TabsContent oculta las inactivas. */}
+          <Tabs defaultValue="general">
+            <TabsList>
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="ingreso">Ingreso</TabsTrigger>
+              <TabsTrigger value="contrato">Contrato</TabsTrigger>
+              <TabsTrigger value="salario">Salario - SUNAT</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <InputForm
                       name="nombres"
@@ -274,7 +296,7 @@ export const ModalIngreso = ({
                       control={control}
                       render={({ field }) => (
                         <div className="flex gap-4">
-                          <label className="text-wrap w-[11rem]">
+                          <div id="ingreso-tiene-equipo" className="text-wrap w-[11rem]">
                             ¿Cuenta con equipo?{" "}
                             <span className="text-red-500">*</span>
                             <div>
@@ -282,33 +304,33 @@ export const ModalIngreso = ({
                                 (Laptop)
                               </p>
                             </div>
-                          </label>
-                          <div className="flex items-center gap-6">
+                          </div>
+                          {/* El campo es booleano; el RadioGroup trabaja con strings. */}
+                          <RadioGroup
+                            aria-labelledby="ingreso-tiene-equipo"
+                            value={
+                              field.value === true
+                                ? "si"
+                                : field.value === false
+                                  ? "no"
+                                  : ""
+                            }
+                            onValueChange={(v) => field.onChange(v === "si")}
+                            className="flex items-center gap-6"
+                          >
                             <label className="flex items-center cursor-pointer">
-                              <input
-                                type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                                checked={field.value === true}
-                                onChange={() => field.onChange(true)}
-                                // disabled
-                              />
+                              <RadioGroupItem value="si" className="h-4 w-4" />
                               <span className="ml-2 text-gray-700 dark:text-slate-200">
                                 Sí
                               </span>
                             </label>
                             <label className="flex items-center cursor-pointer">
-                              <input
-                                type="radio"
-                                className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
-                                checked={field.value === false}
-                                onChange={() => field.onChange(false)}
-                                // disabled
-                              />
+                              <RadioGroupItem value="no" className="h-4 w-4" />
                               <span className="ml-2 text-gray-700 dark:text-slate-200">
                                 No
                               </span>
                             </label>
-                          </div>
+                          </RadioGroup>
                           {errors.tieneEquipo && (
                             <p className="text-sm text-red-600 mt-2 dark:text-red-400">
                               {errors.tieneEquipo.message}
@@ -318,11 +340,8 @@ export const ModalIngreso = ({
                       )}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Ingreso",
-                children: (
+            </TabsContent>
+            <TabsContent value="ingreso" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <DropdownForm
                       name="idModalidadContrato"
@@ -368,11 +387,8 @@ export const ModalIngreso = ({
                       required={true}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Contrato",
-                children: (
+            </TabsContent>
+            <TabsContent value="contrato" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <InputForm
                       name="fchInicioContrato"
@@ -407,12 +423,11 @@ export const ModalIngreso = ({
                       required={true}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Salario - SUNAT",
-                children: (
-                  <div className="flex flex-col gap-4 px-1 py-1">
+            </TabsContent>
+            <TabsContent value="salario" forceMount>
+                  {/* Mismo contenedor que las demás pestañas (antes 4 px y sin
+                      margen superior). */}
+                  <div className="flex flex-col gap-4 p-2 mt-4">
                     {/* SUNAT */}
                     <DropdownForm
                       name="declararSunat"
@@ -492,18 +507,16 @@ export const ModalIngreso = ({
                       />
                     </div>
                   </div>
-                ),
-              },
-            ]}
-          />
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end items-center p-2">
-            <button className="btn btn-blue" type="submit">
+            <Button variant="blue" type="submit" className="mx-1">
               Aceptar
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -6,7 +6,7 @@ import {
   trimLower,
 } from "./Validations";
 
-import { sanitizeText } from "../../utilities/textUtils";
+import { sanitizeText } from "@/core/utilities/textUtils";
 
 const salaryExpectationSchema = z
   .object({

@@ -1,11 +1,26 @@
-import { useFormContext } from "react-hook-form";
-import { newRQSchemaType } from "../../../../models/schemas/NewRQSchemaV1";
+import { Controller, useFormContext } from "react-hook-form";
+import { newRQSchemaType } from "@/core/models/schemas/NewRQSchemaV1";
 import { useEffect, useState } from "react";
-import { Param } from "../../../../models";
+import { Param } from "@/core/models";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Textarea } from "@/core/components/ui/shadcn/textarea";
+import { Checkbox } from "@/core/components/ui/shadcn/checkbox";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { DatePicker } from "@/core/components/ui/DatePicker";
+import { cn } from "@/core/lib/utils";
+import {
+  Field,
+  FormGroup,
+  TabBody,
+  rqControl,
+} from "@/core/components/requerimientos/rq-ui";
 
 interface TabProps {
   rqStates: Param[];
 }
+
+/** Límite de la descripción en el esquema (NewRQSchemaV1). */
+const DESCRIPCION_MAX = 255;
 
 export const TabData = ({ rqStates }: TabProps) => {
   // @marker base state
@@ -13,6 +28,7 @@ export const TabData = ({ rqStates }: TabProps) => {
 
   const {
     register,
+    control,
     formState: { errors },
     setValue,
     clearErrors,
@@ -22,6 +38,7 @@ export const TabData = ({ rqStates }: TabProps) => {
 
   const fchSol = watch("fechaSolicitud");
   const fchVenc = watch("fechaVencimiento");
+  const descripcion = watch("descripcion") ?? "";
 
   useEffect(() => {
     if (fchSol && fchVenc) {
@@ -45,141 +62,167 @@ export const TabData = ({ rqStates }: TabProps) => {
   }, [fchSol, fchVenc, setError, clearErrors]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto pr-2">
-        <div className="space-y-4 flex-1">
-          {/* Título RQ */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Título:
-            </label>
-            <input
+    <TabBody className="min-h-full">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3">
+          <Field
+            label="Título"
+            htmlFor="rq-create-titulo"
+            required
+            error={errors.titulo?.message}
+            className="md:col-span-2"
+          >
+            <Input
+              id="rq-create-titulo"
+              placeholder="Ej. Analista de datos senior"
+              aria-invalid={!!errors.titulo}
               {...register("titulo")}
-              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+              className={rqControl}
             />
-          </div>
-          {errors.titulo && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.titulo.message}
-            </p>
-          )}
-          {/* Código RQ */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Código RQ:
-            </label>
-            <input
+          </Field>
+
+          <Field
+            label="Código RQ"
+            htmlFor="rq-create-codigo"
+            required={!autogenRQ}
+            error={errors.codigoRQ?.message}
+            aside={
+              // Igual que el checkbox anterior (cuyo onChange pisaba al de
+              // register), solo gobierna el código: autogenRQ se queda con el
+              // false de defaultValues y el payload no cambia.
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                <Checkbox
+                  id="rq-create-autogen"
+                  checked={autogenRQ}
+                  onCheckedChange={(value) => {
+                    const checked = value === true;
+                    setAutogenRQ(checked);
+                    setValue("codigoRQ", checked ? "Autogenerado" : "");
+                    clearErrors("codigoRQ");
+                  }}
+                />
+                Autogenerar
+              </label>
+            }
+          >
+            <Input
+              id="rq-create-codigo"
+              placeholder="RQ-0000"
+              aria-invalid={!!errors.codigoRQ}
               {...register("codigoRQ")}
               disabled={autogenRQ}
-              className={`w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600 ${
-                autogenRQ ? "text-zinc-500 dark:text-slate-400" : ""
-              }`}
+              className={cn(
+                rqControl,
+                autogenRQ && "text-zinc-500 dark:text-slate-400"
+              )}
             />
-          </div>
-          {errors.codigoRQ && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.codigoRQ.message}
-            </p>
-          )}
-
-          {/* Auto Gen RQ */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Autogenerar RQ:
-            </label>
-            <input
-              {...register("autogenRQ")}
-              type="checkbox"
-              onChange={(e) => {
-                setAutogenRQ(e.target.checked);
-                setValue("codigoRQ", e.target.checked ? "Autogenerado" : "");
-                clearErrors("codigoRQ");
-              }}
-              className="input-checkbox"
+          </Field>
+          <Field
+            label="Estado"
+            htmlFor="rq-create-estado"
+            required
+            error={errors.idEstado?.message}
+          >
+            <Controller
+              name="idEstado"
+              control={control}
+              render={({ field }) => (
+                // valueAsNumber del <select> anterior: la opción vacía era 0.
+                <AppSelect
+                  ref={field.ref}
+                  id="rq-create-estado"
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  value={field.value}
+                  onChange={(v) => field.onChange(v === "" ? 0 : Number(v))}
+                  options={rqStates.map((option) => ({
+                    value: option.num1,
+                    label: option.string1,
+                  }))}
+                  placeholder="Seleccione un estado"
+                  aria-invalid={!!errors.idEstado}
+                  className={rqControl}
+                />
+              )}
             />
-          </div>
-          {errors.autogenRQ && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.autogenRQ.message}
-            </p>
-          )}
+          </Field>
 
-          {/* Fecha de Solicitud */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Fecha de Solicitud:
-            </label>
-            <input
-              type="date"
-              {...register("fechaSolicitud")}
-              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
+          <Field
+            label="Fecha de solicitud"
+            htmlFor="rq-create-fecha-solicitud"
+            required
+            error={errors.fechaSolicitud?.message}
+          >
+            <Controller
+              name="fechaSolicitud"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  ref={field.ref}
+                  id="rq-create-fecha-solicitud"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  aria-invalid={!!errors.fechaSolicitud}
+                  className={rqControl}
+                />
+              )}
             />
-          </div>
-          {errors.fechaSolicitud && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.fechaSolicitud.message}
-            </p>
-          )}
+          </Field>
 
-          {/* Descripción */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Descripción:
-            </label>
-            <textarea
-              {...register("descripcion")}
-              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] resize-none dark:border-slate-600"
+          <Field
+            label="Fecha de vencimiento"
+            htmlFor="rq-create-fecha-vencimiento"
+            required
+            error={errors.fechaVencimiento?.message}
+          >
+            <Controller
+              name="fechaVencimiento"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  ref={field.ref}
+                  id="rq-create-fecha-vencimiento"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  aria-invalid={!!errors.fechaVencimiento}
+                  className={rqControl}
+                />
+              )}
             />
-          </div>
-          {errors.descripcion && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.descripcion.message}
-            </p>
-          )}
-
-          {/* Estado */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Estado:
-            </label>
-            <select
-              {...register("idEstado", {
-                valueAsNumber: true,
-              })}
-              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-            >
-              <option value={0}>Seleccione un estado</option>
-              {rqStates.map((option) => (
-                <option key={option.num1} value={option.num1}>
-                  {option.string1}
-                </option>
-              ))}
-            </select>
-          </div>
-          {errors.idEstado && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.idEstado.message}
-            </p>
-          )}
-
-          {/* Fecha Vencimiento */}
-          <div className="flex items-center">
-            <label className="w-1/3 text-sm font-medium text-gray-700 dark:text-slate-200">
-              Fecha Vencimiento:
-            </label>
-            <input
-              type="date"
-              {...register("fechaVencimiento")}
-              className="w-2/3 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:border-[#4F46E5] dark:border-slate-600"
-            />
-          </div>
-          {errors.fechaVencimiento && (
-            <p className="text-red-500 text-sm mt-1 ml-[33%]">
-              {errors.fechaVencimiento.message}
-            </p>
-          )}
-        </div>
+          </Field>
       </div>
-    </div>
+
+      {/* Descripción ocupa el alto que queda: la pestaña no deja un hueco
+          vacío debajo (TabBody lleva min-h-full). */}
+      <FormGroup
+        className="min-h-0 flex-1"
+        title={
+          <>
+            Descripción<span className="text-red-500"> *</span>
+          </>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+          <Textarea
+            id="rq-create-descripcion"
+            aria-label="Descripción"
+            aria-invalid={!!errors.descripcion}
+            placeholder="Describe el perfil que se busca y el contexto del requerimiento"
+            maxLength={DESCRIPCION_MAX}
+            {...register("descripcion")}
+            className="min-h-[7rem] flex-1 resize-none"
+          />
+          <div className="flex justify-between gap-4 text-[13px]">
+            <span className="text-red-500 dark:text-red-400">
+              {errors.descripcion?.message}
+            </span>
+            <span className="tabular-nums text-gray-500 dark:text-slate-400">
+              {descripcion.length}/{DESCRIPCION_MAX}
+            </span>
+          </div>
+        </div>
+      </FormGroup>
+    </TabBody>
   );
 };

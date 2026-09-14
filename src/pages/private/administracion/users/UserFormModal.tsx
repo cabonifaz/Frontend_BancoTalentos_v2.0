@@ -1,22 +1,27 @@
 import { useMemo, useRef, useState } from "react";
 import { UploadCloud, X, Check } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
-import { useApi } from "../../../../core/hooks/useApi";
-import { useParams } from "../../../../core/context/ParamsContext";
-import { MAESTRO_ROLES, ROL_SUPERADMIN } from "../../../../core/utilities/constants";
-import { createUserAdmin, generateUserSignatureUploadUrl, updateUserAdmin } from "../../../../core/services/administration.service";
-import { describeS3Error, uploadFileToS3 } from "../../../../core/services/s3.service";
+import { useApi } from "@/core/hooks/useApi";
+import { useParams } from "@/core/context/ParamsContext";
+import { MAESTRO_ROLES, ROL_SUPERADMIN } from "@/core/utilities/constants";
+import { createUserAdmin, generateUserSignatureUploadUrl, updateUserAdmin } from "@/core/services/administration.service";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
 import {
   handleError,
   handleResponse,
-} from "../../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 import {
   BaseResponse,
   InsertUpdateResponse,
   UserAdmin,
   UserCreateParams,
   UserUpsertParams,
-} from "../../../../core/models";
+} from "@/core/models";
+import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Label } from "@/core/components/ui/shadcn/label";
+import { AppSelect } from "@/core/components/ui/AppSelect";
 
 interface Props {
   /** null/omitido = alta; con valor = edición. */
@@ -189,14 +194,16 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-      <div className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-2xl max-h-[90vh] flex flex-col dark:bg-slate-800 dark:border-slate-700">
+    // Como antes, un clic fuera cierra; ahora también Escape.
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        overlayClassName="bg-black/40"
+        className="flex w-[calc(100%-2rem)] max-w-2xl max-h-[90vh] flex-col gap-0 rounded-xl border border-gray-200 p-0 shadow-2xl dark:border-slate-700"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 rounded-t-xl flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
-          <h2 className="font-semibold text-gray-800 dark:text-slate-100">
+          <DialogTitle className="font-semibold text-gray-800 dark:text-slate-100">
             {isCreate ? "Nuevo usuario" : `Editar usuario · @${initial!.usuario}`}
-          </h2>
+          </DialogTitle>
           <button
             type="button"
             onClick={onClose}
@@ -210,26 +217,24 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
         <div className="px-6 py-5 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Nombres *">
-              <input className="input w-full" value={form.nombres} onChange={(e) => set("nombres")(e.target.value)} />
+              <Input value={form.nombres} onChange={(e) => set("nombres")(e.target.value)} />
             </Field>
             <Field label="Apellidos *">
-              <input className="input w-full" value={form.apellidos} onChange={(e) => set("apellidos")(e.target.value)} />
+              <Input value={form.apellidos} onChange={(e) => set("apellidos")(e.target.value)} />
             </Field>
 
             {isCreate && (
               <>
                 <Field label="Usuario *">
-                  <input
-                    className="input w-full"
+                  <Input
                     value={form.usuario}
                     onChange={(e) => set("usuario")(e.target.value.trim())}
                     autoComplete="off"
                   />
                 </Field>
                 <Field label={`Contraseña * (mín. ${CLAVE_MIN})`}>
-                  <input
+                  <Input
                     type="password"
-                    className="input w-full"
                     value={form.clave}
                     onChange={(e) => set("clave")(e.target.value)}
                     autoComplete="new-password"
@@ -240,9 +245,8 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
 
             {!isCreate && (
               <Field label={`Nueva contraseña (opcional, mín. ${CLAVE_MIN})`}>
-                <input
+                <Input
                   type="password"
-                  className="input w-full"
                   value={form.clave}
                   onChange={(e) => set("clave")(e.target.value)}
                   placeholder="Dejar en blanco para no cambiarla"
@@ -252,34 +256,27 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
             )}
 
             <Field label={isCreate ? "Email *" : "Email"}>
-              <input type="email" className="input w-full" value={form.email} onChange={(e) => set("email")(e.target.value)} />
+              <Input type="email" value={form.email} onChange={(e) => set("email")(e.target.value)} />
             </Field>
             <Field label={isCreate ? "Teléfono *" : "Teléfono"}>
-              <input
+              <Input
                 type="tel"
                 inputMode="numeric"
                 maxLength={9}
-                className="input w-full"
                 value={form.telefono}
                 onChange={(e) => set("telefono")(e.target.value.replace(/\D/g, "").slice(0, 9))}
               />
             </Field>
             <Field label="Cargo">
-              <input className="input w-full" value={form.cargo} onChange={(e) => set("cargo")(e.target.value)} />
+              <Input value={form.cargo} onChange={(e) => set("cargo")(e.target.value)} />
             </Field>
             <Field label="Rol *">
-              <select
-                className="input w-full"
+              <AppSelect
+                className="h-auto p-3"
                 value={form.idTipoRol}
-                onChange={(e) => set("idTipoRol")(e.target.value)}
-              >
-                <option value="">Seleccione…</option>
-                {roleOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+                onChange={set("idTipoRol")}
+                options={roleOptions}
+              />
             </Field>
           </div>
 
@@ -328,20 +325,16 @@ export const UserFormModal = ({ initial, onClose, onSaved }: Props) => {
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={saving || uploadingFirma}
-            className={`btn ${saving || uploadingFirma ? "btn-disabled" : "btn-primary"}`}
-          >
+          <Button onClick={onSubmit} disabled={saving || uploadingFirma} className="mx-1">
             {saving ? "Guardando…" : isCreate ? "Crear" : "Guardar"}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
+/** La etiqueta envuelve al control: queda asociada sin necesitar ids. */
 const Field = ({
   label,
   children,
@@ -349,10 +342,10 @@ const Field = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <div className="flex flex-col gap-1">
+  <Label className="flex flex-col gap-1">
     <span className="input-label">{label}</span>
     {children}
-  </div>
+  </Label>
 );
 
 export default UserFormModal;

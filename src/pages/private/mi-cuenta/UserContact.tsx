@@ -3,19 +3,22 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { enqueueSnackbar } from "notistack";
-import { Dashboard } from "../Dashboard";
-import { Loading } from "../../../core/components/ui/Loading";
-import { useApi } from "../../../core/hooks/useApi";
+import { Dashboard } from "@/pages/private/Dashboard";
+import { Loading } from "@/core/components/ui/Loading";
+import { useApi } from "@/core/hooks/useApi";
 import {
   BaseResponse,
   UpdateUserParams,
   UserInfoResponse,
-} from "../../../core/models";
-import { getUserInfo, updateUserInfo } from "../../../core/services/account.service";
+} from "@/core/models";
+import { getUserInfo, updateUserInfo } from "@/core/services/account.service";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { Hint } from "@/core/components/ui/Hint";
 import {
   handleError,
   handleResponse,
-} from "../../../core/utilities/errorHandler";
+} from "@/core/utilities/errorHandler";
 
 const schema = z.object({
   telefono: z
@@ -39,12 +42,11 @@ const ReadonlyField = ({
 }) => (
   <div className="flex flex-col gap-1 min-w-0">
     <span className="input-label">{label}</span>
-    <p
-      className="input bg-gray-50 text-gray-600 cursor-default min-h-[48px] flex items-center break-all min-w-0 dark:bg-slate-800 dark:text-slate-300"
-      title={value || undefined}
-    >
-      {value || <span className="text-gray-300 dark:text-slate-600">—</span>}
-    </p>
+    <Hint label={value}>
+      <p className="input bg-gray-50 text-gray-600 cursor-default min-h-[48px] flex items-center break-all min-w-0 dark:bg-slate-800 dark:text-slate-300">
+        {value || <span className="text-gray-300 dark:text-slate-600">—</span>}
+      </p>
+    </Hint>
   </div>
 );
 
@@ -165,7 +167,10 @@ export const UserContact = () => {
 
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="max-w-sm">
-                  <label className="input-label block mb-1">
+                  <label
+                    htmlFor="mi-cuenta-telefono"
+                    className="input-label block mb-1"
+                  >
                     Teléfono{" "}
                     <span className="text-red-400">*</span>
                   </label>
@@ -173,13 +178,14 @@ export const UserContact = () => {
                     name="telefono"
                     control={control}
                     render={({ field }) => (
-                      <input
+                      <Input
                         {...field}
+                        id="mi-cuenta-telefono"
                         type="tel"
                         inputMode="numeric"
                         maxLength={9}
                         placeholder="Ej. 987654321"
-                        className="input w-full"
+                        aria-invalid={!!errors.telefono}
                         onChange={(e) => {
                           const onlyDigits = e.target.value.replace(/\D/g, "").slice(0, 9);
                           field.onChange(onlyDigits);
@@ -195,17 +201,13 @@ export const UserContact = () => {
                 </div>
 
                 <div className="mt-5 flex justify-end">
-                  <button
+                  <Button
                     type="submit"
                     disabled={!isDirty || updateLoading}
-                    className={`btn ${
-                      isDirty && !updateLoading
-                        ? "btn-primary"
-                        : "btn-disabled"
-                    }`}
+                    className="mx-1"
                   >
                     Guardar cambios
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>

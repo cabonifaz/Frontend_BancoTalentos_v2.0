@@ -1,7 +1,7 @@
 import { enqueueSnackbar } from "notistack";
 import { useEffect, useRef } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { Utils } from "../core/utilities/utils";
+import { Utils } from "@/core/utilities/utils";
 
 export const PrivateRouteGuard = () => {
     const token = localStorage.getItem("token") || undefined;

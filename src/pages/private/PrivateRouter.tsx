@@ -1,10 +1,10 @@
 import { lazy } from "react";
 
 import { Navigate, Route } from "react-router-dom";
-import { RoutesWithNotFound } from "../../core/components";
-import { RouteGuard } from "../../guard/RouteGuard";
-import { getFirstAllowedPath } from "../../core/config/navigation";
-import { Utils } from "../../core/utilities/utils";
+import { RoutesWithNotFound } from "@/core/components";
+import { RouteGuard } from "@/guard/RouteGuard";
+import { getFirstAllowedPath } from "@/core/config/navigation";
+import { Utils } from "@/core/utilities/utils";
 
 const Talents = lazy(() =>
   import("./talentos/Talents").then((m) => ({ default: m.Talents })),

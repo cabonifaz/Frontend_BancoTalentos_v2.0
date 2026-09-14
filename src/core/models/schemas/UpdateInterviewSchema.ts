@@ -4,7 +4,7 @@ import {
   isPresencialType,
   isGoogleMapsUrl,
   DIRECCION_MAX_LENGTH,
-} from "../../utilities/interviewType";
+} from "@/core/utilities/interviewType";
 
 export const UpdateInterviewSchema = z.object({
   idTalento: z.number().min(1, "El talento es requerido"),

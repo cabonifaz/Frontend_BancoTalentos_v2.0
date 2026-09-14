@@ -1,16 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { RotateCcw, X } from "lucide-react";
-import { PanelRiesgo } from "../PanelRiesgo";
-import type { DatosRiesgo } from "../PanelRiesgo";
+import { PanelRiesgo } from "@/core/components/requerimientos/PanelRiesgo";
+import type { DatosRiesgo } from "@/core/components/requerimientos/PanelRiesgo";
 import {
   GRUPO_FACT_PLANILLA,
   GRUPO_FACT_RXH,
   MAESTRO_MODALIDAD_FACT,
   MONEDA_SOLES,
-} from "../../../utilities/riesgoTalento";
-import type { FilaBanda } from "../../../utilities/riesgoTalento";
-import { useParams } from "../../../context/ParamsContext";
+} from "@/core/utilities/riesgoTalento";
+import type { FilaBanda } from "@/core/utilities/riesgoTalento";
+import { useParams } from "@/core/context/ParamsContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
+import { Button } from "@/core/components/ui/shadcn/button";
+import { Input } from "@/core/components/ui/shadcn/input";
+import { AppSelect } from "@/core/components/ui/AppSelect";
+import { Hint } from "@/core/components/ui/Hint";
 
 interface Props {
   onClose: () => void;
@@ -142,14 +152,14 @@ const Importe = ({
   onChange: (v: string) => void;
   placeholder?: string;
 }) => (
-  <input
+  <Input
     type="number"
     min="0"
     step="0.01"
     value={valor}
     placeholder={placeholder}
     onChange={(e) => onChange(e.target.value)}
-    className="p-2 border border-gray-300 rounded-lg text-sm text-right outline-none focus:border-gray-400 w-full dark:border-slate-600 dark:focus:border-slate-500"
+    className="p-2 border-gray-300 text-sm text-right dark:border-slate-600"
   />
 );
 
@@ -164,18 +174,15 @@ const Selector = ({
   opciones: { valor: number; texto: string }[];
   vacio?: string;
 }) => (
-  <select
+  // Con `vacio`, la opción vacía vale 0 (Number("") === 0), como el <option value={0}>.
+  <AppSelect
     value={valor}
-    onChange={(e) => onChange(Number(e.target.value))}
-    className="p-2 border border-gray-300 rounded-lg text-sm outline-none focus:border-gray-400 cursor-pointer w-full dark:border-slate-600 dark:focus:border-slate-500"
-  >
-    {vacio && <option value={0}>{vacio}</option>}
-    {opciones.map((opcion) => (
-      <option key={opcion.valor} value={opcion.valor}>
-        {opcion.texto}
-      </option>
-    ))}
-  </select>
+    onChange={(v) => onChange(Number(v))}
+    options={opciones.map((o) => ({ value: o.valor, label: o.texto }))}
+    placeholder={vacio ?? "Seleccione…"}
+    emptyOption={vacio ?? false}
+    className="h-auto p-2 border-gray-300 text-sm dark:border-slate-600"
+  />
 );
 
 const TituloBloque = ({ children }: { children: ReactNode }) => (
@@ -286,31 +293,36 @@ export const ModalCalculadoraRiesgo = ({ onClose }: Props) => {
   );
 
   return (
-    // Mismo nivel que el resto de modales de la pantalla: por debajo del rail
-    // del sidebar (z-40) y del logo de Fractal (z-[42]).
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto dark:bg-slate-800">
+    // Escape cierra como la X; un clic fuera no: el borrador es largo y
+    // perderlo de un clic accidental obliga a reescribirlo.
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
+        aria-describedby="calc-riesgo-desc"
+        className="block w-[calc(100%-2rem)] max-w-3xl max-h-[90vh] overflow-y-auto p-0 shadow-none"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <div className="flex items-start justify-between p-6 pb-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-50">
+            <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-slate-50">
               Calculadora de riesgo
-            </h2>
-            <p className="text-sm text-gray-500 mt-1 dark:text-slate-400">
+            </DialogTitle>
+            <DialogDescription id="calc-riesgo-desc" className="text-gray-500 mt-1 dark:text-slate-400">
               Sin talento ni requerimiento: los datos se escriben a mano.
-            </p>
+            </DialogDescription>
           </div>
           <div className="flex items-center gap-1">
             {/* Repetido tambien en el pie: el formulario es largo y llegar al
                 boton de abajo obliga a recorrer todo el modal. */}
-            <button
-              type="button"
-              onClick={limpiar}
-              className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
-              title="Vaciar todos los campos"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Limpiar
-            </button>
+            <Hint label="Vaciar todos los campos">
+              <button
+                type="button"
+                onClick={limpiar}
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Limpiar
+              </button>
+            </Hint>
             <button
               type="button"
               onClick={onClose}
@@ -467,15 +479,11 @@ export const ModalCalculadoraRiesgo = ({ onClose }: Props) => {
             <RotateCcw className="w-4 h-4" />
             Limpiar
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline-gray mx-0"
-          >
+          <Button variant="outline" onClick={onClose} className="mx-0">
             Cerrar
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

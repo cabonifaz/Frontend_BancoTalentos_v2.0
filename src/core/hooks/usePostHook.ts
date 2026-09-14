@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { AxiosResponse } from "axios";
 import { useSnackbar } from "notistack";
-import { BaseResponse, BaseResponseFMI } from "../models/response/BaseResponse";
-import { axiosInstanceFMI } from "../services/axiosService";
+import { BaseResponse, BaseResponseFMI } from "@/core/models/response/BaseResponse";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 interface UsePostHookReturn {
   postData: (

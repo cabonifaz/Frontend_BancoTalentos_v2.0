@@ -1,6 +1,12 @@
 import { ReactNode } from "react";
 import { X } from "lucide-react";
-import { OutsideClickHandler } from "../ui/OutsideClickHandler";
+import { cn } from "@/core/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/core/components/ui/shadcn/popover";
+import { Button } from "@/core/components/ui/shadcn/button";
 
 interface Props {
   label: string;
@@ -12,6 +18,10 @@ interface Props {
   onClear?: () => void;
 }
 
+/**
+ * Filtro en píldora con panel libre (el contenido lo pone el padre), sobre el
+ * Popover de shadcn. Misma API: el padre controla `isOpen`/`onToggle`.
+ */
 export const CustomFilterDropDown = ({
   label,
   isOpen,
@@ -21,52 +31,46 @@ export const CustomFilterDropDown = ({
   active = false,
   onClear,
 }: Props) => {
+  const showClear = active && !!onClear;
+
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`filter ${
-          active ? "btn-filter-active" : "btn-filter"
-        }`}
-      >
-        <div className="flex items-center justify-between gap-2">
-          <span>{label}</span>
-
-          {active && onClear && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClear();
-              }}
-              className="flex items-center"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-      </button>
-
-      {isOpen && (
-        <OutsideClickHandler onOutsideClick={onToggle}>
-          <div
-            className={`
-              ${panelSize}
-              absolute
-              z-[43]
-              my-4
-              rounded-xl
-              bg-white
-              shadow-lg
-              border
-              border-gray-200
-              p-4 dark:bg-slate-800 dark:border-slate-700 `}
+    <Popover
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open !== isOpen) onToggle();
+      }}
+    >
+      {/* La X va fuera del botón que abre el panel: antes era un <button>
+          dentro de otro <button>, que no es HTML válido. */}
+      <div className="relative inline-flex">
+        <PopoverTrigger asChild>
+          <Button
+            variant={active ? "filter-active" : "filter"}
+            size="none"
+            className={cn("py-2 px-4", showClear && "pr-11")}
           >
-            {children}
-          </div>
-        </OutsideClickHandler>
-      )}
-    </div>
+            {label}
+          </Button>
+        </PopoverTrigger>
+        {showClear && (
+          <button
+            type="button"
+            aria-label={`Quitar filtro ${label}`}
+            onClick={onClear}
+            className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        className={cn(panelSize, "rounded-xl p-4 shadow-lg")}
+      >
+        {children}
+      </PopoverContent>
+    </Popover>
   );
 };

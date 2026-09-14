@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import axios from "axios";
-import { Param, ParamsResponse } from "../models";
-import { axiosInstanceNoToken } from "../services/axiosService";
+import { Param, ParamsResponse } from "@/core/models";
+import { axiosInstanceNoToken } from "@/core/services/axiosService";
 
 export const useFetchParams = () => {
   const [paramsByMaestro, setParamsByMaestro] = useState<

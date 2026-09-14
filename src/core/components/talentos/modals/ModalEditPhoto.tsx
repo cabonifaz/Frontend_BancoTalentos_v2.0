@@ -1,16 +1,16 @@
 import { FileCheck, Upload } from "lucide-react";
 import { useRef, useState } from "react";
-import { Modal } from "../../modals/Modal";
+import { Modal } from "@/core/components/modals/Modal";
 import { enqueueSnackbar } from "notistack";
-import { Talent } from "../../../models";
-import { describeS3Error, uploadFileToS3 } from "../../../services/s3.service";
-import { generateTalentPhotoUploadUrl, updateTalentProfilePhoto } from "../../../services/talents.service";
-import { handleError } from "../../../utilities/errorHandler";
-import { Utils } from "../../../utilities/utils";
-import { ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "../../../utilities/constants";
-import { Loading } from "../../ui/Loading";
-import { validateFile } from "../../../utilities/validation";
-import { useModal } from "../../../context/ModalContext";
+import { Talent } from "@/core/models";
+import { describeS3Error, uploadFileToS3 } from "@/core/services/s3.service";
+import { generateTalentPhotoUploadUrl, updateTalentProfilePhoto } from "@/core/services/talents.service";
+import { handleError } from "@/core/utilities/errorHandler";
+import { Utils } from "@/core/utilities/utils";
+import { ARCHIVO_IMAGEN, DOCUMENTO_FOTO_PERFIL } from "@/core/utilities/constants";
+import { Loading } from "@/core/components/ui/Loading";
+import { validateFile } from "@/core/utilities/validation";
+import { useModal } from "@/core/context/ModalContext";
 
 interface Props {
     idTalento?: number;

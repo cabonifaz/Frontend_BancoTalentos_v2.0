@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { enqueueSnackbar } from "notistack";
-import { ReqContacto } from "../models/interfaces/ReqContacto";
-import { ClientContactResponse } from "../models/response/ClientContactsResponse";
-import { axiosInstanceFMI } from "../services/axiosService";
+import { ReqContacto } from "@/core/models/interfaces/ReqContacto";
+import { ClientContactResponse } from "@/core/models/response/ClientContactsResponse";
+import { axiosInstanceFMI } from "@/core/services/axiosService";
 
 export const useFetchClientContacts = () => {
   const [contactos, setContactos] = useState<ReqContacto[]>([]);

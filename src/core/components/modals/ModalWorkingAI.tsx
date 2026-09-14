@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import Lottie from "lottie-react";
-import { Param } from "../../models";
+import { Param } from "@/core/models";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/core/components/ui/shadcn/dialog";
 
 interface Props {
   title?: string;
@@ -60,10 +65,23 @@ export const ModalWorkingAI = ({
   }, [frasesIA]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-2xl shadow-lg p-6 max-w-2xl w-full text-center dark:bg-slate-800">
+    // Solo se puede cerrar cuando `canClose` (con Escape o el botón Aceptar);
+    // mientras la IA trabaja, ni Escape ni un clic fuera lo cierran.
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && canClose) onClose?.();
+      }}
+    >
+      <DialogContent
+        className="block max-w-2xl rounded-2xl p-6 text-center"
+        onEscapeKeyDown={(e) => {
+          if (!canClose) e.preventDefault();
+        }}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         {/* Título */}
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <DialogTitle className="text-xl font-bold mb-4">{title}</DialogTitle>
         {/* Subtítulo */}
         <p className="text-gray-600 mb-4 dark:text-slate-300">{subtitle}</p>
 
@@ -103,7 +121,7 @@ export const ModalWorkingAI = ({
             Aceptar
           </button>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };

@@ -14,11 +14,23 @@
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
         "module": "esnext",
-        "moduleResolution": "bundler",
+        // Antes decía "bundler", que TypeScript 4.9 no admite: react-scripts
+        // reescribía el archivo al arrancar y por eso nunca dio la cara.
+        // "node" es la resolución que CRA aplicaba de hecho.
+        "moduleResolution": "node",
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
-        "jsx": "react-jsx"
+        "jsx": "react-jsx",
+        // Alias "@/…" → src/. Debe coincidir con resolve.alias de vite.config.ts:
+        // TypeScript lo usa para tipos e IDE; Vite, para resolver de verdad.
+        // Sin "baseUrl" a propósito: con él, TS aceptaría imports tipo
+        // "core/models" que Vite no sabe resolver (y está deprecado en TS 7).
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        }
     },
     "include": [
         "src"
