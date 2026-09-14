@@ -6,7 +6,12 @@ import {
   useWatch,
 } from "react-hook-form";
 import { CloseModalButton } from "@/core/components/ui/CloseModalButton";
-import { Tabs } from "@/core/components/ui/Tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
 import {
   newRQSchema,
   newRQSchemaType,
@@ -362,88 +367,83 @@ export const ModalRQCreate = ({
               onSubmit={methods.handleSubmit(onSubmit)}
               className="flex min-h-0 flex-1 flex-col"
             >
+              {/* forceMount en cada panel: el formulario está repartido entre
+                  pestañas y sin él se perdería lo escrito al cambiar de una a
+                  otra. TabsContent oculta las inactivas. */}
               <Tabs
-                isDataLoading={false}
-                listClassName="px-4"
-                contentClassName="mt-0"
-                tabs={[
-                  {
-                    label: (
-                      <CreateTabLabel
-                        label="Cliente"
-                        hasError={clientHasErrors()}
-                        done={clientDone}
-                      />
-                    ),
-                    children: (
-                      <TabClients
-                        clients={clients}
-                        fetchTarifario={fetchTarifario}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <CreateTabLabel
-                        label="Datos RQ"
-                        hasError={rqHasErrors()}
-                        done={dataDone}
-                      />
-                    ),
-                    children: <TabData rqStates={rqStates} />,
-                  },
+                defaultValue="cliente"
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <TabsList className="px-4">
+                  <TabsTrigger value="cliente">
+                    <CreateTabLabel
+                      label="Cliente"
+                      hasError={clientHasErrors()}
+                      done={clientDone}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="datos">
+                    <CreateTabLabel
+                      label="Datos RQ"
+                      hasError={rqHasErrors()}
+                      done={dataDone}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="vacantes">
+                    <CreateTabLabel
+                      label="Vacantes"
+                      hasError={vacantesHasErrors()}
+                      count={vacanciesCount}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="archivos">
+                    <CreateTabLabel
+                      label="Archivos"
+                      hasError={filesHasErrors()}
+                      count={filesCount}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="gestion">
+                    <CreateTabLabel
+                      label="Gestión"
+                      hasError={managementHasErrors()}
+                      done={managementDone}
+                    />
+                  </TabsTrigger>
+                </TabsList>
 
-                  {
-                    label: (
-                      <CreateTabLabel
-                        label="Vacantes"
-                        hasError={vacantesHasErrors()}
-                        count={vacanciesCount}
-                      />
-                    ),
-                    children: (
-                      <TabVacancies
-                        tarifario={tarifario}
-                        techSkills={techSkills}
-                        availableDegrees={availableDegrees}
-                        refetchParams={refetchParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <CreateTabLabel
-                        label="Archivos"
-                        hasError={filesHasErrors()}
-                        count={filesCount}
-                      />
-                    ),
-                    children: (
-                      <TabFiles
-                        fileOptions={fileOptions}
-                        filesParms={fileExtensionsParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <CreateTabLabel
-                        label="Gestión"
-                        hasError={managementHasErrors()}
-                        done={managementDone}
-                      />
-                    ),
-                    children: (
-                      <TabManagement
-                        rqDuration={rqDuration}
-                        rqModes={rqModes}
-                        factModes={factModes}
-                        currencyTypes={currencyOptions}
-                      />
-                    ),
-                  },
-                ]}
-              />
+                <TabsContent value="cliente" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabClients
+                    clients={clients}
+                    fetchTarifario={fetchTarifario}
+                  />
+                </TabsContent>
+                <TabsContent value="datos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabData rqStates={rqStates} />
+                </TabsContent>
+                <TabsContent value="vacantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabVacancies
+                    tarifario={tarifario}
+                    techSkills={techSkills}
+                    availableDegrees={availableDegrees}
+                    refetchParams={refetchParams}
+                  />
+                </TabsContent>
+                <TabsContent value="archivos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabFiles
+                    fileOptions={fileOptions}
+                    filesParms={fileExtensionsParams}
+                  />
+                </TabsContent>
+                <TabsContent value="gestion" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabManagement
+                    rqDuration={rqDuration}
+                    rqModes={rqModes}
+                    factModes={factModes}
+                    currencyTypes={currencyOptions}
+                  />
+                </TabsContent>
+              </Tabs>
               {/* Pie fijo: el mismo en todas las pestañas. */}
               <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-slate-700">
                 <Button variant="outline" onClick={onClose} className="font-medium">

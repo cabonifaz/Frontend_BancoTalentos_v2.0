@@ -62,7 +62,7 @@ export const TabData = ({ rqStates }: TabProps) => {
   }, [fchSol, fchVenc, setError, clearErrors]);
 
   return (
-    <TabBody>
+    <TabBody className="min-h-full">
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3">
           <Field
             label="Título"
@@ -193,14 +193,17 @@ export const TabData = ({ rqStates }: TabProps) => {
           </Field>
       </div>
 
+      {/* Descripción ocupa el alto que queda: la pestaña no deja un hueco
+          vacío debajo (TabBody lleva min-h-full). */}
       <FormGroup
+        className="min-h-0 flex-1"
         title={
           <>
             Descripción<span className="text-red-500"> *</span>
           </>
         }
       >
-        <div className="flex flex-col gap-1.5">
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5">
           <Textarea
             id="rq-create-descripcion"
             aria-label="Descripción"
@@ -208,7 +211,7 @@ export const TabData = ({ rqStates }: TabProps) => {
             placeholder="Describe el perfil que se busca y el contexto del requerimiento"
             maxLength={DESCRIPCION_MAX}
             {...register("descripcion")}
-            className="min-h-[7rem] resize-none"
+            className="min-h-[7rem] flex-1 resize-none"
           />
           <div className="flex justify-between gap-4 text-[13px]">
             <span className="text-red-500 dark:text-red-400">

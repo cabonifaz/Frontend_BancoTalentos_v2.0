@@ -5,7 +5,13 @@ import {
   InputForm,
   SalaryStructureForm,
 } from "@/core/components/forms";
-import { Tabs } from "@/core/components/ui/Tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { LoadingOverlay } from "@/core/components/ui/LoadingOverlay";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   EntryFormSchema,
@@ -220,12 +226,18 @@ export const ModalIngreso = ({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-between min-h-[500px]"
         >
-          <Tabs
-            isDataLoading={paramLoading || clientsLoading}
-            tabs={[
-              {
-                label: "General",
-                children: (
+          {(paramLoading || clientsLoading) && <LoadingOverlay />}
+          {/* forceMount en cada panel: el formulario está repartido entre
+              pestañas y sin él se perdería lo escrito al cambiar de una a
+              otra. TabsContent oculta las inactivas. */}
+          <Tabs defaultValue="general">
+            <TabsList>
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="ingreso">Ingreso</TabsTrigger>
+              <TabsTrigger value="contrato">Contrato</TabsTrigger>
+              <TabsTrigger value="salario">Salario - SUNAT</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <InputForm
                       name="nombres"
@@ -328,11 +340,8 @@ export const ModalIngreso = ({
                       )}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Ingreso",
-                children: (
+            </TabsContent>
+            <TabsContent value="ingreso" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <DropdownForm
                       name="idModalidadContrato"
@@ -378,11 +387,8 @@ export const ModalIngreso = ({
                       required={true}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Contrato",
-                children: (
+            </TabsContent>
+            <TabsContent value="contrato" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <InputForm
                       name="fchInicioContrato"
@@ -417,13 +423,10 @@ export const ModalIngreso = ({
                       required={true}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Salario - SUNAT",
-                children: (
-                  // Mismo contenedor que las demás pestañas (antes 4 px y sin
-                  // margen superior).
+            </TabsContent>
+            <TabsContent value="salario" forceMount>
+                  {/* Mismo contenedor que las demás pestañas (antes 4 px y sin
+                      margen superior). */}
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     {/* SUNAT */}
                     <DropdownForm
@@ -504,10 +507,8 @@ export const ModalIngreso = ({
                       />
                     </div>
                   </div>
-                ),
-              },
-            ]}
-          />
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end items-center p-2">
             <Button variant="blue" type="submit" className="mx-1">

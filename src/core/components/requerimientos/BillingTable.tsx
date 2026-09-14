@@ -9,7 +9,6 @@ import { rqReadonly } from "@/core/components/requerimientos/rq-ui";
 
 interface BillingTableProps {
   index: number;
-  title: string;
   modalidadId: number;
   isEditable?: boolean;
   currencyOptions: Param[];
@@ -41,14 +40,13 @@ const CONCEPTS: {
 ];
 
 /**
- * Banda salarial de una modalidad de contrato: la cabecera solo lleva el
- * nombre de la modalidad; el contenido, la moneda y una rejilla Mínimo/Máximo
- * por concepto. Sin `isEditable` (Detalle RQ sin pulsar Editar) los mismos
- * campos se muestran bloqueados.
+ * Banda salarial de una modalidad de contrato: es el cuerpo de su tarjeta
+ * (ModalityCard) en Gestión, así que no pinta borde ni cabecera propios.
+ * Moneda arriba y una rejilla Mínimo/Máximo por concepto. Sin `isEditable`
+ * (Detalle RQ sin pulsar Editar) los mismos campos se muestran bloqueados.
  */
 export const BillingTable = ({
   index,
-  title,
   modalidadId,
   isEditable = true,
   currencyOptions,
@@ -68,100 +66,91 @@ export const BillingTable = ({
     !!c.universal || modalidadId !== 1;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-      <div className="border-b border-gray-200 px-4 py-3 dark:border-slate-700">
-        <h4 className="text-[15px] font-semibold text-gray-800 dark:text-slate-100">
-          {title}
-        </h4>
+    <div className="flex flex-col gap-4 p-4">
+      {/* La etiqueta ocupa la misma columna que "Mínimo"/"Máximo", así el
+          select queda alineado con la columna Básico. */}
+      <div className="flex items-start gap-3">
+        <label
+          htmlFor={currencyName}
+          className="flex h-12 w-24 shrink-0 items-center text-sm font-medium text-gray-700 dark:text-slate-200"
+        >
+          Moneda
+          {isEditable && <span className="text-red-500">&nbsp;*</span>}
+        </label>
+        <div className="w-56">
+          <DropdownForm
+            name={currencyName}
+            control={control}
+            error={itemErrors?.currencyType}
+            required={false}
+            disabled={!isEditable}
+            flex={true}
+            clearErrors={clearErrors}
+            triggerClassName={rqReadonly}
+            options={currencyOptions.map((op) => ({
+              label: op.string1,
+              value: op.num1,
+            }))}
+          />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 p-4">
-        {/* Moneda: primer dato del contenido. La etiqueta ocupa la misma
-            columna que "Mínimo"/"Máximo", así el select queda alineado con
-            la columna Básico. */}
-        <div className="flex items-start gap-3">
-          <label
-            htmlFor={currencyName}
-            className="flex h-12 w-24 shrink-0 items-center text-sm font-medium text-gray-700 dark:text-slate-200"
-          >
-            Moneda
-            {isEditable && <span className="text-red-500">&nbsp;*</span>}
-          </label>
-          <div className="w-56">
-            <DropdownForm
-              name={currencyName}
-              control={control}
-              error={itemErrors?.currencyType}
-              required={false}
-              disabled={!isEditable}
-              flex={true}
-              clearErrors={clearErrors}
-              triggerClassName={rqReadonly}
-              options={currencyOptions.map((op) => ({
-                label: op.string1,
-                value: op.num1,
-              }))}
-            />
-          </div>
-        </div>
+      {/* Conceptos en columnas y Mínimo/Máximo en filas. En pantallas
+          estrechas la rejilla se desplaza en horizontal. */}
+      <div className="overflow-x-auto">
+        <div className="grid min-w-[44rem] grid-cols-[6rem_repeat(5,minmax(0,1fr))] items-start gap-x-3 gap-y-2.5">
+          <span />
+          {CONCEPTS.map((c) => (
+            <span
+              key={c.label}
+              className="text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400"
+            >
+              {isVisible(c) ? c.label : ""}
+            </span>
+          ))}
 
-        {/* Conceptos en columnas y Mínimo/Máximo en filas. En pantallas
-            estrechas la rejilla se desplaza en horizontal. */}
-        <div className="overflow-x-auto">
-          <div className="grid min-w-[44rem] grid-cols-[6rem_repeat(5,minmax(0,1fr))] items-start gap-x-3 gap-y-2.5">
-            <span />
-            {CONCEPTS.map((c) => (
-              <span
-                key={c.label}
-                className="text-right text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400"
-              >
-                {isVisible(c) ? c.label : ""}
+          {(["min", "max"] as const).map((kind) => (
+            <Fragment key={kind}>
+              <span className="flex h-10 items-center text-sm font-medium text-gray-700 dark:text-slate-200">
+                {kind === "min" ? "Mínimo" : "Máximo"}
               </span>
-            ))}
-
-            {(["min", "max"] as const).map((kind) => (
-              <Fragment key={kind}>
-                <span className="flex h-10 items-center text-sm font-medium text-gray-700 dark:text-slate-200">
-                  {kind === "min" ? "Mínimo" : "Máximo"}
-                </span>
-                {CONCEPTS.map((c) => {
-                  const name = c[kind];
-                  if (!isVisible(c)) return <span key={name} />;
-                  const error = itemErrors?.[name]?.message;
-                  return (
-                    <div key={name} className="flex min-w-0 flex-col gap-1">
-                      <Controller
-                        name={`lstFacturacion.${index}.${name}`}
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            aria-label={`${c.label} ${kind === "min" ? "mínimo" : "máximo"}`}
-                            aria-invalid={!!error}
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
-                            disabled={!isEditable}
-                            className={cn(
-                              "h-10 px-3 text-right tabular-nums",
-                              rqReadonly
-                            )}
-                          />
-                        )}
-                      />
-                      {error && (
-                        <span className="text-xs leading-tight text-red-500 dark:text-red-400">
-                          {error}
-                        </span>
+              {CONCEPTS.map((c) => {
+                const name = c[kind];
+                if (!isVisible(c)) return <span key={name} />;
+                const error = itemErrors?.[name]?.message;
+                return (
+                  <div key={name} className="flex min-w-0 flex-col gap-1">
+                    <Controller
+                      name={`lstFacturacion.${index}.${name}`}
+                      control={control}
+                      render={({ field }) => (
+                        <Input
+                          {...field}
+                          value={field.value ?? ""}
+                          aria-label={`${c.label} ${kind === "min" ? "mínimo" : "máximo"}`}
+                          aria-invalid={!!error}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          disabled={!isEditable}
+                          className={cn(
+                            "h-10 px-3 text-right tabular-nums",
+                            rqReadonly
+                          )}
+                        />
                       )}
-                    </div>
-                  );
-                })}
-              </Fragment>
-            ))}
-          </div>
+                    />
+                    {error && (
+                      <span className="text-xs leading-tight text-red-500 dark:text-red-400">
+                        {error}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </Fragment>
+          ))}
         </div>
       </div>
     </div>

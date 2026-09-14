@@ -53,7 +53,12 @@ import type {
   RangoPretension,
 } from "@/core/utilities/riesgoTalento";
 import { useParams } from "@/core/context/ParamsContext";
-import { Tabs } from "@/core/components/ui/Tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
 import { Input } from "@/core/components/ui/shadcn/input";
 import { Hint } from "@/core/components/ui/Hint";
 
@@ -1086,8 +1091,23 @@ export const PanelRiesgo = ({ datos }: Props) => {
         <div className="mt-4">
           <Tabs
             key={mostrarTolerancia ? "con-tolerancia" : "sin-tolerancia"}
-            tabs={pestanas}
-          />
+            defaultValue="0"
+          >
+            <TabsList>
+              {pestanas.map((pestana, i) => (
+                <TabsTrigger key={i} value={String(i)}>
+                  {pestana.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {/* forceMount: como antes, los paneles no se desmontan al
+                cambiar de pestaña (TabsContent oculta los inactivos). */}
+            {pestanas.map((pestana, i) => (
+              <TabsContent key={i} value={String(i)} forceMount>
+                {pestana.children}
+              </TabsContent>
+            ))}
+          </Tabs>
         </div>
       </div>
     </>

@@ -10,7 +10,9 @@ import { BillingTable } from "@/core/components/requerimientos/BillingTable";
 import { Param } from "@/core/models";
 import { Switch } from "@/core/components/ui/shadcn/switch";
 import {
-  ChoiceTile,
+  BandPanel,
+  BandSection,
+  CheckOption,
   EmptyControl,
   Field,
   FormGroup,
@@ -104,8 +106,21 @@ export const TabManagement = ({
     return mode ? mode.string1 : "Desconocida";
   };
 
+  // Modalidades de los parámetros y, por si acaso, las de alguna facturación
+  // cuya modalidad ya no esté en ellos.
+  const modes = [
+    ...factModes.map((mod) => ({ id: mod.num1, label: mod.string1 })),
+    ...fields
+      .filter((f) => !factModes.some((mod) => mod.num1 === f.idModalidad))
+      .map((f) => ({
+        id: f.idModalidad,
+        label: findLabelForMode(f.idModalidad),
+      })),
+  ];
+
   return (
-    <TabBody>
+    // min-h-full: el recuadro de bandas crece hasta el final de la pestaña.
+    <TabBody className="min-h-full">
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3">
           <Controller
             name="tieneDuracion"
@@ -205,24 +220,22 @@ export const TabManagement = ({
 
       <GroupDivider />
 
-      <FormGroup
-        title="Modalidad de contrato"
-        helper="Cada modalidad marcada agrega debajo su banda salarial."
-      >
-        {/* Una modalidad está marcada si tiene su tabla de facturación.
-            Como antes (el onChange propio pisaba al de register), no se
-            escribe idModalidadFact: el payload no cambia. */}
-        <div className="grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-          {factModes.map((mod) => (
-            <ChoiceTile
-              key={mod.num1}
-              checked={fields.some((f) => f.idModalidad === mod.num1)}
+      {/* Modalidades en casillas (hasta 3 por fila) y, debajo, el recuadro
+          con la banda de cada una marcada. Como antes, marcada = tiene su
+          tabla de facturación (no se escribe idModalidadFact: el payload no
+          cambia). */}
+      <FormGroup className="min-h-0 flex-1 gap-3" title="Modalidad de contrato">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+          {modes.map((mode) => (
+            <CheckOption
+              key={mode.id}
+              checked={fields.some((f) => f.idModalidad === mode.id)}
               onCheckedChange={(checked) =>
-                handleChangeContractMode(mod.num1, checked)
+                handleChangeContractMode(mode.id, checked)
               }
             >
-              {mod.string1}
-            </ChoiceTile>
+              {mode.label}
+            </CheckOption>
           ))}
         </div>
         {errors.idModalidadFact && (
@@ -231,20 +244,20 @@ export const TabManagement = ({
           </p>
         )}
 
-        {/* === Render dinámico de BillingTables === */}
-        {fields.length > 0 && (
-          <div className="flex flex-col gap-4">
-            {fields.map((field, index) => (
-              <BillingTable
-                key={field.id}
-                index={index}
-                modalidadId={field.idModalidad}
-                title={findLabelForMode(field.idModalidad)}
-                currencyOptions={currencyTypes}
-              />
-            ))}
-          </div>
-        )}
+        <BandPanel emptyText="Selecciona la modalidad para establecer la banda del RQ">
+          {modes.map((mode) => {
+            const index = fields.findIndex((f) => f.idModalidad === mode.id);
+            return index === -1 ? null : (
+              <BandSection key={fields[index].id} title={mode.label}>
+                <BillingTable
+                  index={index}
+                  modalidadId={mode.id}
+                  currencyOptions={currencyTypes}
+                />
+              </BandSection>
+            );
+          })}
+        </BandPanel>
       </FormGroup>
     </TabBody>
   );

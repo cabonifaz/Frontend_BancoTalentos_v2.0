@@ -11,7 +11,9 @@ import { BillingTable } from "@/core/components/requerimientos/BillingTable";
 import { Switch } from "@/core/components/ui/shadcn/switch";
 import { cn } from "@/core/lib/utils";
 import {
-  ChoiceTile,
+  BandPanel,
+  BandSection,
+  CheckOption,
   EmptyControl,
   Field,
   FormGroup,
@@ -119,8 +121,21 @@ export const TabManagment = ({
     }
   };
 
+  // Modalidades de los parámetros y, por si acaso, las de alguna facturación
+  // cuya modalidad ya no esté en ellos.
+  const modes = [
+    ...paymentModes.map((mode) => ({ id: mode.num1, label: mode.string1 })),
+    ...fields
+      .filter((f) => !paymentModes.some((mode) => mode.num1 === f.idModalidad))
+      .map((f) => ({
+        id: f.idModalidad,
+        label: findLabelForMode(f.idModalidad),
+      })),
+  ];
+
   return (
-    <TabBody>
+    // min-h-full: el recuadro de bandas crece hasta el final de la pestaña.
+    <TabBody className="min-h-full">
         <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3">
           <Controller
             name="tieneDuracion"
@@ -233,38 +248,38 @@ export const TabManagment = ({
 
       <GroupDivider />
 
-      <FormGroup
-        title="Modalidad de contrato"
-        helper={
-          isEditing
-            ? "Cada modalidad marcada agrega debajo su banda salarial."
-            : "Debajo, la banda salarial de cada modalidad marcada."
-        }
-      >
+      {/* Modalidades en casillas (hasta 3 por fila) y, debajo, el recuadro
+          con la banda de cada una marcada. */}
+      <FormGroup className="min-h-0 flex-1 gap-3" title="Modalidad de contrato">
         <Controller
           name="idModalidadFact"
           control={control}
           render={({ field }) => (
-            <div className="grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
-              {paymentModes.map((mode) => (
-                <ChoiceTile
-                  key={mode.num1}
-                  checked={field.value?.includes(mode.num1) || false}
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+              {modes.map((mode) => (
+                <CheckOption
+                  key={mode.id}
+                  // Con banda cargada también cuenta como marcada: nunca se ve
+                  // una banda con la casilla vacía.
+                  checked={
+                    field.value?.includes(mode.id) ||
+                    fields.some((f) => f.idModalidad === mode.id)
+                  }
                   disabled={locked}
                   onCheckedChange={(checked) => {
-                    handleChangeContractMode(mode.num1, checked);
+                    handleChangeContractMode(mode.id, checked);
 
                     if (checked) {
-                      field.onChange([...(field.value || []), mode.num1]);
+                      field.onChange([...(field.value || []), mode.id]);
                     } else {
                       field.onChange(
-                        field.value?.filter((v: number) => v !== mode.num1),
+                        field.value?.filter((v: number) => v !== mode.id),
                       );
                     }
                   }}
                 >
-                  {mode.string1}
-                </ChoiceTile>
+                  {mode.label}
+                </CheckOption>
               ))}
             </div>
           )}
@@ -275,21 +290,27 @@ export const TabManagment = ({
           </p>
         )}
 
-        {/* === Render dinámico de BillingTables === */}
-        {fields.length > 0 && (
-          <div className="flex flex-col gap-4">
-            {fields.map((field, index) => (
-              <BillingTable
-                key={field.id}
-                index={index}
-                modalidadId={field.idModalidad}
-                title={findLabelForMode(field.idModalidad)}
-                isEditable={isEditing}
-                currencyOptions={currencyOptions}
-              />
-            ))}
-          </div>
-        )}
+        <BandPanel
+          emptyText={
+            isEditing
+              ? "Selecciona la modalidad para establecer la banda del RQ"
+              : "Este RQ aún no tiene modalidad de contrato."
+          }
+        >
+          {modes.map((mode) => {
+            const index = fields.findIndex((f) => f.idModalidad === mode.id);
+            return index === -1 ? null : (
+              <BandSection key={fields[index].id} title={mode.label}>
+                <BillingTable
+                  index={index}
+                  modalidadId={mode.id}
+                  isEditable={isEditing}
+                  currencyOptions={currencyOptions}
+                />
+              </BandSection>
+            );
+          })}
+        </BandPanel>
       </FormGroup>
     </TabBody>
   );

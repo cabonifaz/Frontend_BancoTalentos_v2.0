@@ -18,7 +18,13 @@ import {
   UNIDAD,
 } from "@/core/utilities/constants";
 import { AsignarTalentoType } from "@/core/models/interfaces/TalentoFMI";
-import { Tabs } from "@/core/components/ui/Tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { LoadingOverlay } from "@/core/components/ui/LoadingOverlay";
 import { format } from "date-fns";
 
 const SI_NO = [
@@ -245,12 +251,17 @@ export const ModalSolicitudEquipo = ({
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-between min-h-[500px]"
         >
-          <Tabs
-            isDataLoading={paramLoading}
-            tabs={[
-              {
-                label: "General",
-                children: (
+          {paramLoading && <LoadingOverlay />}
+          {/* forceMount en cada panel: el formulario está repartido entre
+              pestañas y sin él se perdería lo escrito al cambiar de una a
+              otra. TabsContent oculta las inactivas. */}
+          <Tabs defaultValue="general">
+            <TabsList>
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="hardware">Hardware</TabsTrigger>
+              <TabsTrigger value="software">Software</TabsTrigger>
+            </TabsList>
+            <TabsContent value="general" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <InputForm
                       name="fechaSolicitud"
@@ -269,11 +280,8 @@ export const ModalSolicitudEquipo = ({
                       required={true}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Hardware",
-                children: (
+            </TabsContent>
+            <TabsContent value="hardware" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     <DropdownForm
                       name="tipoHardware"
@@ -366,11 +374,8 @@ export const ModalSolicitudEquipo = ({
                       required={false}
                     />
                   </div>
-                ),
-              },
-              {
-                label: "Software",
-                children: (
+            </TabsContent>
+            <TabsContent value="software" forceMount>
                   <div className="flex flex-col gap-4 p-2 mt-4">
                     {/* Tabla con scroll horizontal en móvil */}
                     <div className="min-w-[500px]">
@@ -452,10 +457,8 @@ export const ModalSolicitudEquipo = ({
                       </Button>
                     </div>
                   </div>
-                ),
-              },
-            ]}
-          />
+            </TabsContent>
+          </Tabs>
 
           <div className="flex justify-end items-center p-2">
             <Button variant="blue" type="submit" className="mx-1">

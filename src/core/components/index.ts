@@ -21,7 +21,6 @@ export * from "./talentos/sections/ExperienceSection";
 export * from "./talentos/sections/EducationSection";
 export * from "./talentos/sections/LanguageSection";
 export * from "./ui/DateFilter";
-export * from "./ui/Tabs";
 export * from "./talentos/modals/ModalsForTalentsPage";
 export * from "./ui/AutoComplete";
 export * from "./ui/YearPicker";

@@ -66,7 +66,7 @@ export const TabRQData = ({ rqStates, isEditing }: TabProps) => {
   }, [fchSolcitud, fchVencimiento]);
 
   return (
-    <TabBody>
+    <TabBody className="min-h-full">
       <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-3">
           <Field
             label="Título"
@@ -177,7 +177,10 @@ export const TabRQData = ({ rqStates, isEditing }: TabProps) => {
           </Field>
       </div>
 
+      {/* Descripción ocupa el alto que queda: la pestaña no deja un hueco
+          vacío debajo (TabBody lleva min-h-full). */}
       <FormGroup
+        className="min-h-0 flex-1"
         title={
           <>
             Descripción
@@ -185,7 +188,7 @@ export const TabRQData = ({ rqStates, isEditing }: TabProps) => {
           </>
         }
       >
-        <div className="flex flex-col gap-1.5">
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5">
           <Textarea
             id="rq-edit-descripcion"
             aria-label="Descripción"
@@ -193,7 +196,7 @@ export const TabRQData = ({ rqStates, isEditing }: TabProps) => {
             maxLength={DESCRIPCION_MAX}
             {...register("descripcion")}
             disabled={locked}
-            className={cn("min-h-[7rem] resize-none", rqReadonly)}
+            className={cn("min-h-[7rem] flex-1 resize-none", rqReadonly)}
           />
           {isEditing && (
             <div className="flex justify-between gap-4 text-[13px]">

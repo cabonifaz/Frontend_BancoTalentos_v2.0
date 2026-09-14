@@ -1,5 +1,5 @@
-import { ReactNode, useRef, useState } from "react";
-import { Check, FileText, Upload } from "lucide-react";
+import { Children, ReactNode, useRef, useState } from "react";
+import { Check, FileText, Upload, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { enqueueSnackbar } from "notistack";
 import { cn } from "@/core/lib/utils";
@@ -113,13 +113,16 @@ export const TabBody = ({
 export const FormGroup = ({
   title,
   helper,
+  className,
   children,
 }: {
   title: ReactNode;
   helper?: ReactNode;
+  /** P. ej. `flex-1` para que el bloque ocupe el alto que quede. */
+  className?: string;
   children: ReactNode;
 }) => (
-  <section className="flex flex-col gap-1.5">
+  <section className={cn("flex flex-col gap-1.5", className)}>
     <div className="flex min-h-6 flex-wrap items-baseline gap-x-3 gap-y-1">
       <h3 className="text-sm font-medium text-gray-700 dark:text-slate-200">
         {title}
@@ -128,7 +131,7 @@ export const FormGroup = ({
         <p className="text-[13px] text-gray-500 dark:text-slate-400">{helper}</p>
       )}
     </div>
-    <div className="flex flex-col gap-3.5">{children}</div>
+    <div className="flex min-h-0 flex-1 flex-col gap-3.5">{children}</div>
   </section>
 );
 
@@ -283,8 +286,8 @@ export const RequirementChip = ({
   </Hint>
 );
 
-/** Opción marcable con forma de tarjeta (modalidad de contrato). */
-export const ChoiceTile = ({
+/** Opción marcable simple (casilla + texto), como "Autogenerar" de Datos RQ. */
+export const CheckOption = ({
   checked,
   onCheckedChange,
   disabled,
@@ -297,12 +300,9 @@ export const ChoiceTile = ({
 }) => (
   <label
     className={cn(
-      "flex h-12 min-w-0 items-center gap-2.5 rounded-lg border px-3 text-sm text-gray-800 transition-colors dark:text-slate-100",
-      checked
-        ? "border-[var(--color-blue)] bg-sky-50 dark:border-sky-400 dark:bg-sky-400/10"
-        : "border-gray-200 bg-white dark:border-slate-600 dark:bg-slate-800",
+      "flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200",
       // Bloqueada se sigue leyendo (sin opacidad): solo deja de responder.
-      disabled ? "cursor-not-allowed" : "cursor-pointer hover:border-gray-300 dark:hover:border-slate-500"
+      disabled ? "cursor-not-allowed" : "cursor-pointer"
     )}
   >
     <Checkbox
@@ -311,8 +311,48 @@ export const ChoiceTile = ({
       className="disabled:cursor-not-allowed disabled:opacity-100"
       onCheckedChange={(value) => onCheckedChange(value === true)}
     />
-    <span className="truncate">{children}</span>
+    <span>{children}</span>
   </label>
+);
+
+/**
+ * Recuadro de bandas salariales de Gestión. Sin modalidades marcadas invita a
+ * elegir una y ocupa el alto que queda (no deja un hueco vacío); con ellas
+ * muestra una BandSection por modalidad, separadas por una línea.
+ */
+export const BandPanel = ({
+  emptyText,
+  children,
+}: {
+  emptyText: string;
+  children?: ReactNode;
+}) =>
+  // toArray descarta null/false: son las modalidades sin marcar.
+  Children.toArray(children).length > 0 ? (
+    <div className="flex flex-col divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+      {children}
+    </div>
+  ) : (
+    <div className="flex min-h-[10rem] flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center dark:border-slate-600 dark:bg-slate-800/60">
+      <Wallet className="h-6 w-6 text-gray-400 dark:text-slate-500" aria-hidden />
+      <p className="text-sm text-gray-500 dark:text-slate-400">{emptyText}</p>
+    </div>
+  );
+
+/** Banda de una modalidad dentro de BandPanel: su nombre y sus campos. */
+export const BandSection = ({
+  title,
+  children,
+}: {
+  title: ReactNode;
+  children: ReactNode;
+}) => (
+  <section>
+    <h4 className="px-4 pt-4 text-[15px] font-semibold text-gray-800 dark:text-slate-100">
+      {title}
+    </h4>
+    {children}
+  </section>
 );
 
 /** "PDF · 245 KB" a partir del nombre y el tamaño (0 = desconocido). */

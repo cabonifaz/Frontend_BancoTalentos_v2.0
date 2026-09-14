@@ -2,7 +2,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { CloseModalButton } from "@/core/components/ui/CloseModalButton";
-import { Tabs } from "@/core/components/ui/Tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/core/components/ui/shadcn/tabs";
+import { LoadingOverlay } from "@/core/components/ui/LoadingOverlay";
 import {
   UpdateBaseRQSchema,
   UpdateBaseRQSchemaType,
@@ -38,6 +44,16 @@ import { Dialog, DialogContent, DialogTitle } from "@/core/components/ui/shadcn/
 import { Button } from "@/core/components/ui/shadcn/button";
 import { EstadoBadge } from "@/core/components/requerimientos/EstadoBadge";
 import { RQTabLabel, displayDate } from "@/core/components/requerimientos/rq-ui";
+
+/** Pestañas en orden: `initialTab` es el índice de la que se abre. */
+const DETAIL_TABS = [
+  "cliente",
+  "datos",
+  "vacantes",
+  "archivos",
+  "postulantes",
+  "gestion",
+] as const;
 
 interface ModalProps {
   rqId: number;
@@ -497,108 +513,101 @@ export const ModalRQDetails = ({
               onSubmit={methods.handleSubmit(onSubmit)}
               className="flex min-h-0 flex-1 flex-col"
             >
+              {reqLoading && <LoadingOverlay />}
+              {/* forceMount en cada panel: Datos RQ, Vacantes y Gestión son un
+                  solo formulario y sin él se perdería lo editado al cambiar de
+                  pestaña. TabsContent oculta las inactivas. */}
               <Tabs
-                isDataLoading={reqLoading}
-                initialTab={initialTab}
-                listClassName="px-4"
-                contentClassName="mt-0"
-                tabs={[
-                  {
-                    label: <RQTabLabel label="Cliente" />,
-                    children: (
-                      <TabClient
-                        rqId={rqId}
-                        clients={clients}
-                        contacts={res?.requerimiento.lstRqContactos || []}
-                        fetchRequirement={fetchRequirement}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <RQTabLabel
-                        label="Datos RQ"
-                        hasError={isEditing && rqHasErrors}
-                      />
-                    ),
-                    children: (
-                      <TabRQData rqStates={rqStates} isEditing={isEditing} />
-                    ),
-                  },
+                defaultValue={DETAIL_TABS[initialTab] ?? DETAIL_TABS[0]}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <TabsList className="px-4">
+                  <TabsTrigger value="cliente">
+                    <RQTabLabel label="Cliente" />
+                  </TabsTrigger>
+                  <TabsTrigger value="datos">
+                    <RQTabLabel
+                      label="Datos RQ"
+                      hasError={isEditing && rqHasErrors}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="vacantes">
+                    <RQTabLabel
+                      label="Vacantes"
+                      count={totalVacs}
+                      hasError={isEditing && vacanciesHaveErrors}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="archivos">
+                    <RQTabLabel
+                      label="Archivos"
+                      count={req?.lstRqArchivo?.length}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="postulantes">
+                    <RQTabLabel
+                      label="Postulantes"
+                      count={req?.lstRqTalento?.length}
+                    />
+                  </TabsTrigger>
+                  <TabsTrigger value="gestion">
+                    <RQTabLabel
+                      label="Gestión"
+                      hasError={isEditing && managementHasErrors}
+                    />
+                  </TabsTrigger>
+                </TabsList>
 
-                  {
-                    label: (
-                      <RQTabLabel
-                        label="Vacantes"
-                        count={totalVacs}
-                        hasError={isEditing && vacanciesHaveErrors}
-                      />
-                    ),
-                    children: (
-                      <TabVacancies
-                        tariff={tarifario}
-                        isEditing={isEditing}
-                        availableDegrees={availableDegrees}
-                        availableTechSkills={availableTechSkills}
-                        refetchParams={refetchParams}
-                        vacancies={res?.requerimiento.lstRqVacantes || []}
-                        fetchRequirement={fetchRequirement}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <RQTabLabel
-                        label="Archivos"
-                        count={req?.lstRqArchivo?.length}
-                      />
-                    ),
-                    children: (
-                      <TabFiles
-                        rqId={rqId}
-                        fileOptions={fileTypes}
-                        initialFiles={initialFiles}
-                        fetchRequirement={fetchRequirement}
-                        extensionsParams={fileExtensionsParams}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <RQTabLabel
-                        label="Postulantes"
-                        count={req?.lstRqTalento?.length}
-                      />
-                    ),
-                    children: (
-                      <TabPostulant
-                        rqId={rqId}
-                        idCliente={res?.requerimiento.idCliente || 0}
-                        rqState={res?.requerimiento.idEstado || 0}
-                        handleAssign={handleAssingPost}
-                        talents={res?.requerimiento.lstRqTalento || []}
-                      />
-                    ),
-                  },
-                  {
-                    label: (
-                      <RQTabLabel
-                        label="Gestión"
-                        hasError={isEditing && managementHasErrors}
-                      />
-                    ),
-                    children: (
-                      <TabManagment
-                        isEditing={isEditing}
-                        rqDurationOptions={rqDurationOptions}
-                        paymentModes={paymentModes}
-                        rqMode={rqMode}
-                        currencyOptions={currencyOptions}
-                      />
-                    ),
-                  },
-                ]}
-              />
+                <TabsContent value="cliente" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabClient
+                    rqId={rqId}
+                    clients={clients}
+                    contacts={res?.requerimiento.lstRqContactos || []}
+                    fetchRequirement={fetchRequirement}
+                  />
+                </TabsContent>
+                <TabsContent value="datos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabRQData rqStates={rqStates} isEditing={isEditing} />
+                </TabsContent>
+                <TabsContent value="vacantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabVacancies
+                    tariff={tarifario}
+                    isEditing={isEditing}
+                    availableDegrees={availableDegrees}
+                    availableTechSkills={availableTechSkills}
+                    refetchParams={refetchParams}
+                    vacancies={res?.requerimiento.lstRqVacantes || []}
+                    fetchRequirement={fetchRequirement}
+                  />
+                </TabsContent>
+                <TabsContent value="archivos" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabFiles
+                    rqId={rqId}
+                    fileOptions={fileTypes}
+                    initialFiles={initialFiles}
+                    fetchRequirement={fetchRequirement}
+                    extensionsParams={fileExtensionsParams}
+                  />
+                </TabsContent>
+                <TabsContent value="postulantes" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabPostulant
+                    rqId={rqId}
+                    idCliente={res?.requerimiento.idCliente || 0}
+                    rqState={res?.requerimiento.idEstado || 0}
+                    handleAssign={handleAssingPost}
+                    talents={res?.requerimiento.lstRqTalento || []}
+                  />
+                </TabsContent>
+                <TabsContent value="gestion" forceMount className="mt-0 min-h-0 flex-1">
+                  <TabManagment
+                    isEditing={isEditing}
+                    rqDurationOptions={rqDurationOptions}
+                    paymentModes={paymentModes}
+                    rqMode={rqMode}
+                    currencyOptions={currencyOptions}
+                  />
+                </TabsContent>
+              </Tabs>
 
               {/* Pie solo en modo edición: guarda Datos RQ, Vacantes y Gestión. */}
               {isEditing && (
