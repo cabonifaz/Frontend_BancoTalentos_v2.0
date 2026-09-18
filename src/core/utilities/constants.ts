@@ -1,7 +1,5 @@
-export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-//export const BASE_URL = "http://localhost:8080";
-//export const BASE_URL_FMI = "http://localhost:8081";
+export const BASE_URL = "https://api-bdt.fractal.com.pe";
+export const BASE_URL_FMI = "https://api-autfmi.fractal.com.pe";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
@@ -120,6 +118,9 @@ export const ALL_PARAMS_IDS = "1,2,3,5,7,8,12,13,14,15,16,17,19,20,21,22,23,24,2
 export const MAESTRO_ROLES = 1;
 // El rol SUPERADMIN nunca es asignable desde el módulo de usuarios.
 export const ROL_SUPERADMIN = 5;
+// El RECLUTADOR es el único rol al que se le ocultan las tarifas de un perfil
+// en la sección Perfiles de los modales de RQ (Agregar y Detalle).
+export const ROL_RECLUTADOR = 4;
 
 // PROCEDENCIA DEL TALENTO — se maneja como texto (string), no como ID.
 // El valor seleccionado es exactamente el texto de la opción.
