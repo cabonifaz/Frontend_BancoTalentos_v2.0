@@ -167,7 +167,7 @@ export const ModalRQDetails = ({
           (item) => item.idPerfil === v.idPerfil,
         );
 
-        const tarifa = tariffFound ? tariffFound.tarifa.toFixed(2) : "-";
+        const tarifa = tariffFound?.tarifa?.toFixed(2) ?? "-";
 
         const moneda = tariffFound?.moneda || "S/.";
 
@@ -261,7 +261,7 @@ export const ModalRQDetails = ({
         (item) => item.idPerfil === v.idPerfil,
       );
 
-      const tarifa = tariffFound ? tariffFound.tarifa.toFixed(2) : "-";
+      const tarifa = tariffFound?.tarifa?.toFixed(2) ?? "-";
 
       const moneda = tariffFound?.moneda || "S/.";
 

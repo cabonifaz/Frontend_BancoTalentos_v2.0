@@ -13,7 +13,6 @@ export interface AddTalentParams {
   puesto?: string;
   idPais?: number;
   idCiudad?: number;
-  idModalidadFacturacion?: number;
   montoInicialPlanilla?: number;
   montoFinalPlanilla?: number;
   montoInicialRxH?: number;

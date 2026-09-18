@@ -824,19 +824,12 @@ export const Talents = () => {
                                     2,
                                   )}
                                 </p>
-                                {/* Sin este dato el cálculo de riesgo no puede
-                                    saber si aplicar cargas patronales, así que
-                                    su ausencia se muestra, no se esconde. */}
-                                <p
-                                  className={
-                                    modalidadFacturacionTalento
-                                      ? ""
-                                      : "text-amber-600"
-                                  }
-                                >
-                                  {modalidadFacturacionTalento ||
-                                    "Modalidad sin definir"}
-                                </p>
+                                {/* Sólo se pinta si el talento ya tiene
+                                    modalidad: el alta dejó de pedirla, así que
+                                    no tenerla es lo normal y no se anuncia. */}
+                                {modalidadFacturacionTalento && (
+                                  <p>{modalidadFacturacionTalento}</p>
+                                )}
                               </div>
                               <button
                                 type="button"

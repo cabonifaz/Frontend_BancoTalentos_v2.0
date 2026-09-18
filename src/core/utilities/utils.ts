@@ -2,6 +2,7 @@ import { format, isValid, parse } from "date-fns";
 import { createElement, ReactNode } from "react";
 import { Star } from "lucide-react";
 import { Param } from "../models";
+import { ROL_RECLUTADOR } from "./constants";
 
 type fileNameType = string | undefined | null;
 
@@ -95,6 +96,28 @@ export class Utils {
     const raw = decoded?.id_roles;
     if (!Array.isArray(raw)) return [];
     return raw.filter((r: unknown): r is number => typeof r === "number");
+  };
+
+  /**
+   * ¿El usuario es RECLUTADOR? Es el único rol que no ve las tarifas de un
+   * perfil: las columnas Tarifa y Tipo tarifa de la sección Perfiles, tanto en
+   * Agregar RQ como en Detalle RQ.
+   *
+   * Se resuelve por id de rol (`id_roles`) y no por nombre, porque el id no
+   * depende de cómo esté escrito el rol en la base. Si el token no trajera ids
+   * se cae al claim `roles`, que es lo que se miraba antes. Sin token se asume
+   * reclutador: ante la duda, la tarifa no se enseña.
+   */
+  static isRecruiter = (token?: string): boolean => {
+    if (!token) return true;
+    const idRoles = this.getUserRoleIds(token);
+    if (idRoles.length > 0) return idRoles.includes(ROL_RECLUTADOR);
+
+    const roles = this.decodeJwt(token)?.roles;
+    if (!Array.isArray(roles)) return true;
+    return roles.some(
+      (rol: unknown) => String(rol).trim().toUpperCase() === "RECLUTADOR",
+    );
   };
 
   static decodeJwt = (token: string): any => {
