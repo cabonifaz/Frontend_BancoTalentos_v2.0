@@ -9,6 +9,7 @@ import {
 } from "../../../utilities/riesgoTalento";
 import type { FilaBanda } from "../../../utilities/riesgoTalento";
 import { useParams } from "../../../context/ParamsContext";
+import { Utils } from "../../../utilities/utils";
 
 interface Props {
   talento: AsignarTalentoType | null;
@@ -37,6 +38,11 @@ export const ModalRiesgoTalento = ({
   onClose,
 }: Props) => {
   const { paramsByMaestro } = useParams();
+  // El reclutador no ve tarifas en ningún sitio, tampoco aquí: el backend le
+  // manda el perfil sin importe, así que `tarifa.tarifa` llega en null.
+  const esReclutador = Utils.isRecruiter(
+    localStorage.getItem("token") ?? undefined,
+  );
 
   if (!talento) return null;
 
@@ -59,7 +65,7 @@ export const ModalRiesgoTalento = ({
     idModalidadFacturacion: talento.idModalidadFacturacion,
     tarifa: tarifa?.tarifa,
     idMonedaTarifa: tarifa?.idMoneda,
-    monedaTarifa: tarifa?.moneda,
+    monedaTarifa: tarifa?.moneda ?? undefined,
     tipoCambioSugerido: tarifa?.tipoCambio,
     banda,
   };
@@ -98,14 +104,25 @@ export const ModalRiesgoTalento = ({
               Cargando el tarifario del cliente…
             </div>
           </div>
-        ) : !tarifa ? (
+        ) : !tarifa || tarifa.tarifa == null ? (
           <div className="px-6 pb-6">
             <div className="flex items-start gap-2 p-4 rounded-lg bg-gray-50 text-sm text-gray-600 dark:bg-slate-800 dark:text-slate-300">
               <Info className="w-5 h-5 min-w-5 text-gray-400 mt-0.5 dark:text-slate-500" />
               <span>
-                El perfil <strong>{talento.perfil || "seleccionado"}</strong> no
-                tiene tarifa configurada para este cliente. Sin tarifa no hay
-                contra qué comparar la pretensión del talento.
+                {esReclutador ? (
+                  <>
+                    Tu rol no tiene acceso a las tarifas de los perfiles, así
+                    que aquí no hay contra qué comparar la pretensión del
+                    talento.
+                  </>
+                ) : (
+                  <>
+                    El perfil{" "}
+                    <strong>{talento.perfil || "seleccionado"}</strong> no
+                    tiene tarifa configurada para este cliente. Sin tarifa no
+                    hay contra qué comparar la pretensión del talento.
+                  </>
+                )}
               </span>
             </div>
           </div>

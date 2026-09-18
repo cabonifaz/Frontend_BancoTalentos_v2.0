@@ -22,12 +22,9 @@ import {
   SearchableOption,
 } from "../../../ui/SearchableSelect";
 
-/** Validate rol */
-const isRecruiter = (): boolean => {
-  const token = localStorage.getItem("token");
-  const roles = Utils.decodeJwt(token ?? "").roles as any[];
-  return roles.includes("RECLUTADOR");
-};
+/** El reclutador es el único rol que no ve las tarifas del perfil. */
+const isRecruiter = (): boolean =>
+  Utils.isRecruiter(localStorage.getItem("token") ?? undefined);
 
 type SkillsPayload = BaseSkillProps & { tempVacancyId: string };
 
@@ -173,7 +170,7 @@ export const TabVacancies = ({
     const tarifa =
       tarifario
         .find((item) => item.idPerfil === idPerfil)
-        ?.tarifa.toFixed(2) || "-";
+        ?.tarifa?.toFixed(2) || "-";
     const moneda =
       tarifario.find((item) => item.idPerfil === idPerfil)?.moneda ||
       "S/.";

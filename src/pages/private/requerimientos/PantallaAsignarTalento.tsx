@@ -1282,6 +1282,8 @@ const TalentTable: React.FC = () => {
           onConfirm={handleOnConfirmModalIngreso}
           currentTalent={currentTalento}
           onClose={handleModalIngresoClose}
+          duracionContrato={requerimiento?.duracionContrato}
+          idDuracionContrato={requerimiento?.idDuracionContrato}
         />
       )}
       {showModalSolicitudEquipo && (

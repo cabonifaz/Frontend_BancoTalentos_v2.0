@@ -451,7 +451,7 @@ export const Requirements = () => {
                       }
                       onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                       placeholder="Ej: Analista de datos / RQ-0123"
-                      className="input h-10 w-full py-0 pl-10"
+                      className="input h-10 w-full !py-0 !pl-10"
                     />
                   </div>
                 </div>

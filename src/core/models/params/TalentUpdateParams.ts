@@ -33,11 +33,15 @@ export interface TalentSalaryParams
     | "montoInicialRxH"
     | "montoFinalRxH"
     | "idMoneda"
-    | "idModalidadFacturacion"
     | "idMonedaPlan"
     | "idMonedaRxh"
   > {
   idTalento: number;
+  /**
+   * Maestro 3 (NUM1). Ya no se pide al crear el talento: sólo el modal de
+   * expectativas salariales puede fijarla o corregirla.
+   */
+  idModalidadFacturacion?: number;
 }
 
 export interface TalentCertParams {

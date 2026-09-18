@@ -141,3 +141,53 @@ input[type=number] {
     -moz-appearance: textfield;
 
 }
+/*
+ * react-datepicker en modo oscuro.
+ *
+ * La librería trae sus colores fijos en su propio CSS (fondo blanco, texto
+ * negro), así que el calendario de los filtros —Requerimientos y Entrevistas—
+ * se quedaba en claro con el tema oscuro puesto. Aquí se repinta cuando <html>
+ * lleva la clase `dark`; los selectores repiten los de la librería para
+ * ganarles por especificidad, incluido el `:not([aria-disabled])` del hover.
+ */
+.dark .react-datepicker {
+    @apply border-slate-600 bg-slate-800 text-slate-100;
+}
+
+.dark .react-datepicker__header {
+    @apply border-slate-600 bg-slate-700;
+}
+
+.dark .react-datepicker__current-month,
+.dark .react-datepicker__day-name,
+.dark .react-datepicker__day,
+.dark .react-datepicker__time-name {
+    @apply text-slate-100;
+}
+
+.dark .react-datepicker__day:not([aria-disabled="true"]):hover {
+    @apply bg-slate-600;
+}
+
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+    @apply bg-[var(--color-blue)] text-white;
+}
+
+.dark .react-datepicker__day--selected:not([aria-disabled="true"]):hover,
+.dark .react-datepicker__day--keyboard-selected:not([aria-disabled="true"]):hover {
+    @apply bg-[var(--color-blue-hover)];
+}
+
+.dark .react-datepicker__day--disabled {
+    @apply text-slate-500;
+}
+
+.dark .react-datepicker__navigation-icon::before {
+    @apply border-slate-400;
+}
+
+.dark .react-datepicker__month-dropdown,
+.dark .react-datepicker__year-dropdown {
+    @apply border-slate-600 bg-slate-800 text-slate-100;
+}

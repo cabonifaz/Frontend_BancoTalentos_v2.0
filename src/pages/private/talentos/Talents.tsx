@@ -417,7 +417,7 @@ export const Talents = () => {
               </button>
               <p className="text-sm text-[#71717A] hidden xl:block whitespace-nowrap dark:text-slate-400">{`${
                 talentsData?.total || 0
-              } resultados encontrados`}</p>
+              } ${talentsData?.total === 1 ? "talento" : "talentos"}`}</p>
             </div>
             <div className="flex 2xl:flex-row flex-col-reverse items-center w-full flex-1 min-w-0 gap-4 2xl:gap-6">
               {/* Filters */}
@@ -824,19 +824,12 @@ export const Talents = () => {
                                     2,
                                   )}
                                 </p>
-                                {/* Sin este dato el cálculo de riesgo no puede
-                                    saber si aplicar cargas patronales, así que
-                                    su ausencia se muestra, no se esconde. */}
-                                <p
-                                  className={
-                                    modalidadFacturacionTalento
-                                      ? ""
-                                      : "text-amber-600"
-                                  }
-                                >
-                                  {modalidadFacturacionTalento ||
-                                    "Modalidad sin definir"}
-                                </p>
+                                {/* Sólo se pinta si el talento ya tiene
+                                    modalidad: el alta dejó de pedirla, así que
+                                    no tenerla es lo normal y no se anuncia. */}
+                                {modalidadFacturacionTalento && (
+                                  <p>{modalidadFacturacionTalento}</p>
+                                )}
                               </div>
                               <button
                                 type="button"
