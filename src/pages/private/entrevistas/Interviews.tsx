@@ -216,7 +216,7 @@ export default function InterviewsPage() {
                     onChange={(e) => setBuscar(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     placeholder="Ej: Juan Perez"
-                    className="input h-10 w-full py-0 pl-10"
+                    className="input h-10 w-full !py-0 !pl-10"
                   />
                 </div>
               </div>

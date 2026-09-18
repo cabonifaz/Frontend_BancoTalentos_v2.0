@@ -417,7 +417,7 @@ export const Talents = () => {
               </button>
               <p className="text-sm text-[#71717A] hidden xl:block whitespace-nowrap dark:text-slate-400">{`${
                 talentsData?.total || 0
-              } resultados encontrados`}</p>
+              } ${talentsData?.total === 1 ? "talento" : "talentos"}`}</p>
             </div>
             <div className="flex 2xl:flex-row flex-col-reverse items-center w-full flex-1 min-w-0 gap-4 2xl:gap-6">
               {/* Filters */}
