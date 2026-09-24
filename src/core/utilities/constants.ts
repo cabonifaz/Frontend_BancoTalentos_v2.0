@@ -96,6 +96,9 @@ export const DURACION_ENTREVISTA = "48";
 // normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
 export const TIPO_ENTREVISTA_PRESENCIAL_LABEL = "PRESENCIAL";
 export const TIPO_ENTREVISTA_VIRTUAL_LABEL = "VIRTUAL";
+// Telefónica (num1 = 3): no pide enlace, ubicación, dirección ni duración, el
+// perfil se escribe a mano y es la única que registra preguntas y respuestas.
+export const TIPO_ENTREVISTA_TELEFONICA_LABEL = "TELEFONICA";
 
 // Etapa de entrevista en la que los entrevistadores son opcionales.
 // En cualquier otra etapa se exige al menos un entrevistador.
@@ -114,7 +117,8 @@ export const FORM_STORAGE_KEY = "addTalentFormDraft";
 export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
-export const ALL_PARAMS_IDS = "1,2,3,5,7,8,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54";
+// El 9 (tipos de historial) lo usa el modal de Documentos del Expediente.
+export const ALL_PARAMS_IDS = "1,2,3,5,7,8,9,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54";
 
 // Catálogo de roles = PARAMETROS maestro 1 (num1 = ID_TIPO_ROL, string1 = nombre).
 export const MAESTRO_ROLES = 1;

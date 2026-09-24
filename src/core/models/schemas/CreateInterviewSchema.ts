@@ -3,6 +3,7 @@ import {
   isVirtualType,
   isPresencialType,
   isGoogleMapsUrl,
+  tipoRequiereRq,
   DIRECCION_MAX_LENGTH,
 } from "../../utilities/interviewType";
 
@@ -12,13 +13,11 @@ export const CreateInterviewSchema = z.object({
   hora: z.string().min(1, "La hora es requerida"),
   estado: z.coerce.number().min(1, "Seleccione un estado"),
   etapa: z.coerce.number().min(1, "Seleccione una etapa"), // stage ID must be >= 1
-  idsRqs: z
-    .array(z.number(), {
-      required_error: "Debe seleccionar al menos un requerimiento",
-    })
-    .min(1, "Debe seleccionar al menos un requerimiento"),
-  perfil: z.string().min(1, "Seleccione un perfil"),
-  // Tipo de entrevista (maestro 47): PRESENCIAL / VIRTUAL.
+  // La obligatoriedad depende del tipo: la telefónica puede no tener RQ, así
+  // que se valida en el superRefine y no aquí.
+  idsRqs: z.array(z.number()).optional().default([]),
+  perfil: z.string().min(1, "Indique el perfil"),
+  // Tipo de entrevista (maestro 47): PRESENCIAL / VIRTUAL / TELEFONICA.
   tipoEntrevista: z.string().min(1, "Seleccione el tipo de entrevista"),
   // Campos dependientes del tipo. La obligatoriedad real se valida de forma
   // condicional en el superRefine del factory según el tipo seleccionado.
@@ -44,6 +43,17 @@ export const CreateInterviewSchema = z.object({
       }
     })
   ).optional(),
+  // Preguntas telefónicas: la pregunta es obligatoria, la respuesta no (se
+  // registra durante o después de la llamada).
+  preguntas: z
+    .array(
+      z.object({
+        pregunta: z.string().min(1, "La pregunta es requerida"),
+        respuesta: z.string().optional().default(""),
+      }),
+    )
+    .optional()
+    .default([]),
 });
 
 export type CreateInterviewType = z.infer<typeof CreateInterviewSchema>;
@@ -67,7 +77,21 @@ export const createCreateInterviewSchema = (rsStageNum1: number | null) =>
       });
     }
 
-    // Validación condicional según el tipo de entrevista.
+    // El RQ sólo es obligatorio fuera de la telefónica, que está pensada para
+    // no depender de un requerimiento.
+    if (
+      tipoRequiereRq(data.tipoEntrevista) &&
+      (!data.idsRqs || data.idsRqs.length === 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debe seleccionar al menos un requerimiento",
+        path: ["idsRqs"],
+      });
+    }
+
+    // Validación condicional según el tipo de entrevista. La telefónica no
+    // valida nada aquí: no pide enlace, ubicación ni dirección.
     if (isVirtualType(data.tipoEntrevista)) {
       const enlace = (data.enlaceEntrevista || "").trim();
       if (!enlace) {

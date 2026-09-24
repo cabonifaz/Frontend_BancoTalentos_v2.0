@@ -32,11 +32,13 @@ import {
   DURACION_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
+  TIPO_ENTREVISTA_TELEFONICA_LABEL,
 } from "../../../core/utilities/constants";
 import { normalizeText } from "../../../core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
+  isTelefonicaType,
   deriveLocationEntries,
   deriveDireccionEntries,
   deriveUniqueClientNames,
@@ -50,9 +52,21 @@ import {
   ComboOption,
 } from "../../../core/components/entrevistas/InterviewComboField";
 import { useAsyncService } from "../../../core/hooks/useAsyncService";
-import { createInterview } from "../../../core/services/interviews.service";
+import {
+  createInterview,
+  saveInterviewQuestions,
+} from "../../../core/services/interviews.service";
 import { useUploadInterviewIcs } from "../../../core/hooks/entrevistas/useUploadInterviewIcs";
-import { Mail, Link as LinkIcon, MapPin, Video } from "lucide-react";
+import {
+  Mail,
+  Link as LinkIcon,
+  MapPin,
+  MessageSquareText,
+  Phone,
+  Plus,
+  Video,
+  X,
+} from "lucide-react";
 
 interface SelectedRQ {
   id: number;
@@ -71,6 +85,12 @@ interface PrefillState {
   idRequerimiento?: number;
   rqLabel?: string;
   cliente?: string;
+  /** Etiqueta exacta del maestro 47 (la manda quien abre la pantalla). */
+  tipoEntrevista?: string;
+  /** yyyy-MM-dd */
+  fecha?: string;
+  /** HH:mm */
+  hora?: string;
 }
 
 export default function InterviewCreatePage() {
@@ -208,6 +228,17 @@ export default function InterviewCreatePage() {
     name: "entrevistadores",
   });
 
+  // Preguntas telefónicas: mismas filas dinámicas que entrevistadores.
+  const {
+    fields: preguntaFields,
+    append: appendPregunta,
+    remove: removePregunta,
+    replace: replacePregunta,
+  } = useFieldArray({
+    control,
+    name: "preguntas",
+  });
+
   const formValues = watch();
 
   // Clientes únicos (deduplicados por idCliente) derivados de los RQ.
@@ -241,6 +272,7 @@ export default function InterviewCreatePage() {
   const direccionValue = watch("direccion");
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
+  const isTelefonica = isTelefonicaType(tipoValue);
 
   // Etiquetas reales de las dos posiciones del switch, tomadas del maestro 47
   // (sin hardcodear el texto). Fallback a las constantes por si el maestro aún
@@ -251,6 +283,28 @@ export default function InterviewCreatePage() {
   const presencialLabel =
     interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
     TIPO_ENTREVISTA_PRESENCIAL_LABEL;
+  const telefonicaLabel =
+    interviewTypes.find((t) => isTelefonicaType(t.string1))?.string1 ??
+    TIPO_ENTREVISTA_TELEFONICA_LABEL;
+
+  /**
+   * Opciones del selector de tipo. Salen del maestro 47, no de una lista fija:
+   * al agregarse TELEFÓNICA el switch de dos posiciones dejó de alcanzar.
+   */
+  const tipoOptions = (
+    interviewTypes.length > 0
+      ? interviewTypes.map((t) => t.string1)
+      : [virtualLabel, presencialLabel, telefonicaLabel]
+  ).map((label) => ({
+    label,
+    icon: isVirtualType(label)
+      ? Video
+      : isPresencialType(label)
+        ? MapPin
+        : isTelefonicaType(label)
+          ? Phone
+          : Video,
+  }));
 
   useEffect(() => {
     register("idsRqs", { value: [] });
@@ -269,6 +323,17 @@ export default function InterviewCreatePage() {
       setValue("direccion", "", { shouldValidate: true });
     } else if (isPresencialType(value)) {
       setValue("enlaceEntrevista", "", { shouldValidate: true });
+    } else if (isTelefonicaType(value)) {
+      // La telefónica no pide ninguno de los tres.
+      setValue("enlaceEntrevista", "", { shouldValidate: true });
+      setValue("ubicacion", "", { shouldValidate: true });
+      setValue("direccion", "", { shouldValidate: true });
+    }
+
+    // Las preguntas sólo existen en la telefónica: al salir de ese tipo se
+    // descartan para no mandar filas que nadie ve.
+    if (!isTelefonicaType(value)) {
+      replacePregunta([]);
     }
   };
 
@@ -310,6 +375,19 @@ export default function InterviewCreatePage() {
     if (prefill.idTalento) {
       setTalentSearchValue(prefill.talentName || "");
       setValue("idTalento", prefill.idTalento, { shouldValidate: true });
+    }
+
+    // Atajo "Entrevista telefónica" del detalle del talento: llega con el tipo
+    // y el momento ya resueltos. Se fija antes de que el efecto del tipo por
+    // defecto ponga VIRTUAL, que sólo actúa si el campo está vacío.
+    if (prefill.tipoEntrevista) {
+      handleTipoChange(prefill.tipoEntrevista);
+    }
+    if (prefill.fecha) {
+      setValue("fecha", prefill.fecha, { shouldValidate: true });
+    }
+    if (prefill.hora) {
+      setValue("hora", prefill.hora, { shouldValidate: true });
     }
     if (prefill.idRequerimiento) {
       const rq: SelectedRQ = {
@@ -387,6 +465,37 @@ export default function InterviewCreatePage() {
         // ICS: el ICS se sube en segundo plano (sin await) y, si falla, solo avisa
         // con un snackbar. El fallo del ICS nunca revierte ni bloquea la creación.
         const newId = result.data;
+
+        // Las preguntas se guardan aquí y no en el create: necesitan el id de
+        // la entrevista, igual que el ICS. Si fallan, la entrevista igual queda
+        // creada y se avisa; no se revierte nada.
+        const preguntas = (data.preguntas || [])
+          .filter((p) => (p.pregunta || "").trim() !== "")
+          .map((p, index) => ({
+            pregunta: p.pregunta.trim(),
+            respuesta: (p.respuesta || "").trim() || null,
+            orden: index + 1,
+          }));
+
+        if (newId && isTelefonica && preguntas.length > 0) {
+          saveInterviewQuestions(newId, preguntas)
+            .then(({ data: rs }) => {
+              if (rs?.idTipoMensaje !== 2) {
+                enqueueSnackbar(
+                  rs?.mensaje ||
+                    "La entrevista se creó, pero no se pudieron guardar las preguntas.",
+                  { variant: "warning" },
+                );
+              }
+            })
+            .catch(() =>
+              enqueueSnackbar(
+                "La entrevista se creó, pero no se pudieron guardar las preguntas.",
+                { variant: "warning" },
+              ),
+            );
+        }
+
         if (newId) {
           const etapaLabel =
             interviewStages.find((s) => s.num1 === Number(data.etapa))?.string1 ||
@@ -715,6 +824,11 @@ export default function InterviewCreatePage() {
               <div className="flex flex-col gap-1 relative">
                 <label className="input-label font-medium">
                   Requerimientos (RQ)
+                  {isTelefonica && (
+                    <span className="ml-1 text-xs font-normal text-gray-400 dark:text-slate-500">
+                      (opcional)
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
@@ -846,50 +960,51 @@ export default function InterviewCreatePage() {
 
               {/* Row: Tipo de Entrevista, Fecha, Hora, Duración */}
               <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Tipo de Entrevista (switch Virtual / Presencial) rebuild*/}
+                {/* Tipo de Entrevista (maestro 47) */}
                 <div className="flex flex-col gap-1">
                   <label className="input-label font-medium mb-1">
                     Tipo de Entrevista <span className="text-red-500">*</span>
                   </label>
-                  <label
-                    className={`flex items-center justify-center gap-2 cursor-pointer select-none h-[46px] px-2 rounded-lg border bg-white transition-colors hover:border-gray-300 dark:bg-slate-800 dark:hover:border-slate-600 ${
+                  <div
+                    role="radiogroup"
+                    aria-label="Tipo de entrevista"
+                    className={`flex h-[46px] items-center gap-1 rounded-lg border bg-gray-50 p-1 transition-colors dark:bg-slate-900/40 ${
                       errors.tipoEntrevista
                         ? "border-red-500"
                         : "border-gray-200 dark:border-slate-700"
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isPresencial}
-                      onChange={(e) =>
-                        handleTipoChange(
-                          e.target.checked ? presencialLabel : virtualLabel,
-                        )
-                      }
-                      className="sr-only peer"
-                    />
-                    <span
-                      className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                        isVirtual
-                          ? "text-[var(--color-blue)] font-semibold"
-                          : "text-gray-400 dark:text-slate-500"
-                      }`}
-                    >
-                      <Video className="w-4 h-4 shrink-0" />
-                      Virtual
-                    </span>
-                    <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 dark:bg-slate-700" />
-                    <span
-                      className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                        isPresencial
-                          ? "text-[var(--color-blue)] font-semibold"
-                          : "text-gray-400 dark:text-slate-500"
-                      }`}
-                    >
-                      <MapPin className="w-4 h-4 shrink-0" />
-                      Presencial
-                    </span>
-                  </label>
+                    {tipoOptions.map(({ label, icon: Icono }) => {
+                      const seleccionado =
+                        normalizeText(label) === normalizeText(tipoValue || "");
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          role="radio"
+                          aria-checked={seleccionado}
+                          onClick={() => handleTipoChange(label)}
+                          title={label}
+                          className={`group flex h-full flex-1 items-center justify-center gap-1.5 rounded-md px-1.5 text-xs font-semibold transition-all ${
+                            seleccionado
+                              ? "bg-white text-[var(--color-blue)] shadow-sm ring-1 ring-[var(--color-blue)]/20 dark:bg-slate-800"
+                              : "text-gray-500 hover:bg-white/70 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
+                          }`}
+                        >
+                          <Icono
+                            className={`w-4 h-4 shrink-0 transition-colors ${
+                              seleccionado
+                                ? "text-[var(--color-blue)]"
+                                : "text-gray-400 group-hover:text-gray-500 dark:text-slate-500"
+                            }`}
+                          />
+                          <span className="truncate capitalize">
+                            {label.toLowerCase()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                   {errors.tipoEntrevista && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.tipoEntrevista.message}
@@ -927,8 +1042,10 @@ export default function InterviewCreatePage() {
                   )}
                 </div>
 
-                {/* Duración (solo para la invitación de calendario) */}
-                <div className="flex flex-col gap-1">
+                {/* Duración (solo para la invitación de calendario). La
+                    telefónica no la pide: no genera bloque de agenda con hora
+                    de fin. */}
+                <div className={`flex flex-col gap-1 ${isTelefonica ? "hidden" : ""}`}>
                   <label className="input-label font-medium mb-1">Duración</label>
                   <select
                     value={durationMinutes}
@@ -946,11 +1063,12 @@ export default function InterviewCreatePage() {
 
               {/* Campos dependientes del tipo de entrevista */}
               <div className="md:col-span-2">
-                {!isVirtual && !isPresencial && (
+                {!isVirtual && !isPresencial && !isTelefonica && (
                   <p className="text-sm text-gray-400 italic dark:text-slate-500">
                     Selecciona el tipo de entrevista para completar sus datos.
                   </p>
                 )}
+
 
                 {/* VIRTUAL → Enlace de la entrevista */}
                 {isVirtual && (
@@ -1071,17 +1189,27 @@ export default function InterviewCreatePage() {
                   <label className="input-label font-medium">
                     Perfil / Puesto <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    {...register("perfil")}
-                    className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
-                  >
-                    <option value="">Seleccione un perfil</option>
-                    {profileOptions.map((opt, i) => (
-                      <option key={i} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  {/* En la telefónica el perfil no sale de un RQ: se escribe. */}
+                  {isTelefonica ? (
+                    <input
+                      {...register("perfil")}
+                      type="text"
+                      placeholder="Ej: Desarrollador Backend"
+                      className={`input w-full ${errors.perfil ? "border-red-500" : ""}`}
+                    />
+                  ) : (
+                    <select
+                      {...register("perfil")}
+                      className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                    >
+                      <option value="">Seleccione un perfil</option>
+                      {profileOptions.map((opt, i) => (
+                        <option key={i} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   {errors.perfil && (
                     <p className="text-red-500 text-xs mt-1">
                       {errors.perfil.message}
@@ -1249,6 +1377,81 @@ export default function InterviewCreatePage() {
                 ))}
               </div>
             </div>
+
+            {/* Preguntas telefónicas: sólo en la entrevista telefónica */}
+            {isTelefonica && (
+              <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+                    <MessageSquareText className="w-5 h-5 text-[var(--color-blue)]" />
+                    Preguntas telefónicas (Opcional)
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => appendPregunta({ pregunta: "", respuesta: "" })}
+                    className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                  >
+                    <Plus size={14} />
+                    Agregar Pregunta
+                  </button>
+                </div>
+
+                {preguntaFields.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic dark:text-slate-500">
+                    Puedes dejar preparadas las preguntas de la llamada; las
+                    respuestas se registran durante o después de la entrevista.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {preguntaFields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
+                            Pregunta <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            {...register(`preguntas.${index}.pregunta`)}
+                            placeholder="Ej: ¿Cuál es su disponibilidad para iniciar?"
+                            className={`input w-full bg-white dark:bg-slate-800 ${
+                              errors.preguntas?.[index]?.pregunta
+                                ? "border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {errors.preguntas?.[index]?.pregunta && (
+                            <p className="text-red-500 text-xs mt-1">
+                              {errors.preguntas[index]?.pregunta?.message}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
+                            Respuesta (Opcional)
+                          </label>
+                          <input
+                            {...register(`preguntas.${index}.respuesta`)}
+                            placeholder="Se puede completar después de la llamada"
+                            className="input w-full bg-white dark:bg-slate-800"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removePregunta(index)}
+                          className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
+                          title="Eliminar pregunta"
+                          aria-label="Eliminar pregunta"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </form>
       </div>

@@ -2,7 +2,6 @@ import {
   ArrowLeft,
   Github,
   Linkedin,
-  MapPin,
   Pencil,
   Phone,
   Plus,
@@ -17,7 +16,7 @@ import { Dashboard } from "../Dashboard";
 import { Utils } from "../../../core/utilities/utils";
 import React, { useEffect, useRef, useState } from "react";
 import { useModal } from "../../../core/context/ModalContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getTalent, getTalents } from "../../../core/services/talents.service";
 import { useSnackbar } from "notistack";
 import {
@@ -54,8 +53,6 @@ import {
 import { CustomFilterDropDown } from "../../../core/components/talentos/CustomFilterDropDown";
 import { SearchableSelect } from "../../../core/components/ui/SearchableSelect";
 import { useParams } from "../../../core/context/ParamsContext";
-import { TIPO_MODALIDAD } from "../../../core/utilities/constants";
-import { nombreModalidad } from "../../../core/utilities/riesgoTalento";
 import { useFavouritesContext } from "../../../core/context/FavouritesContext";
 import {
   MODAL_FRACTAL_CV,
@@ -68,6 +65,7 @@ import {
   MODAL_ADD_TO_BLACKLIST,
 } from "../../../core/components/lista-negra/ModalAddToBlacklist";
 import { useTalentBlacklistStatus } from "../../../core/hooks/lista-negra/useTalentBlacklistStatus";
+import { BotonEntrevistaTelefonica } from "../../../core/components/talentos/BotonEntrevistaTelefonica";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -88,6 +86,17 @@ export const Talents = () => {
   >(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Alta recién hecha: Nuevo Talento manda aquí el id y el nombre para abrir
+  // ese talento en vez de dejar al usuario buscándolo en la lista.
+  const location = useLocation();
+  const talentoRecienCreado = (location.state ?? null) as {
+    talentId?: number;
+    talentName?: string;
+  } | null;
+  const pendienteDeAbrir = useRef<number | undefined>(
+    talentoRecienCreado?.talentId,
+  );
   const experienceRef = useRef<Experience | null>(null);
   const educationRef = useRef<Education | null>(null);
   const languageRef = useRef<Language | null>(null);
@@ -106,13 +115,6 @@ export const Talents = () => {
   const skillOptions = paramsByMaestro[19] || [];
   const englishLevels = paramsByMaestro[16] || [];
   const academicGrades = paramsByMaestro[38] || [];
-  // Maestro 3: como se le factura al talento. Se resuelve a su nombre para la
-  // ficha; se edita en el modal de banda salarial, que es donde se registra.
-  const modalidadFacturacionTalento = nombreModalidad(
-    talent?.idModalidadFacturacion,
-    paramsByMaestro[TIPO_MODALIDAD] || [],
-  );
-
   const { favourites: favouritesData, fetchFavourites } =
     useFavouritesContext();
   const [cvLang, setCvLang] = useState<"ES" | "EN">("ES");
@@ -378,9 +380,36 @@ export const Talents = () => {
   };
 
   useEffect(() => {
-    Promise.all([fetchFavourites(), fetchTalents({ nPag: 1 })]);
+    // Con un talento recién creado se entra con la lista ya filtrada por su
+    // nombre: así aparece aunque el listado esté paginado y no venga en la
+    // primera página.
+    const nombre = talentoRecienCreado?.talentName?.trim();
+    if (nombre && searchInputRef.current) {
+      searchInputRef.current.value = nombre;
+    }
+
+    Promise.all([
+      fetchFavourites(),
+      fetchTalents({ nPag: 1, search: nombre || undefined }),
+    ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cuando llega la lista, se abre el talento recién creado una sola vez y se
+  // limpia el state de navegación para que un refresh no lo vuelva a forzar.
+  useEffect(() => {
+    const idPendiente = pendienteDeAbrir.current;
+    if (!idPendiente || !talentsData?.talents?.length) return;
+
+    const creado = talentsData.talents.find(
+      (item) => item.idTalento === idPendiente,
+    );
+    if (!creado) return;
+
+    pendienteDeAbrir.current = undefined;
+    setTalent(creado);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [talentsData, navigate, location.pathname]);
 
   return (
     <div className="relative">
@@ -668,7 +697,7 @@ export const Talents = () => {
                       </button>
                       {/* Talent main info */}
                       <div className="flex flex-col sm:flex-row items-center sm:items-start w-full justify-between">
-                        <div className="flex gap-10 sm:h-28">
+                        <div className="flex gap-10">
                           <div className="flex flex-col items-center gap-2">
                             <div className="relative">
                             {talentDets?.photoUrl ||
@@ -788,57 +817,71 @@ export const Talents = () => {
                                 </div>
                               )}
                             </div>
-                            <p className="text-sm text-[#71717A] flex items-end my-1 w-fit dark:text-slate-400">
-                              <MapPin className="h-5 w-5" />
-                              {`${talent.pais}, ${talent.ciudad}`}
+                            {/* Mismo formato "Etiqueta: valor" que Procedencia. */}
+                            <p className="text-sm text-[#71717A] my-1 w-fit dark:text-slate-400">
+                              Residencia:{" "}
+                              <span className="font-medium text-[#3f3f46] dark:text-slate-200">
+                                {[talent.pais, talent.ciudad]
+                                  .filter(Boolean)
+                                  .join(", ") || "—"}
+                              </span>
                             </p>
                             <p className="text-sm text-[#71717A] my-1 w-fit dark:text-slate-400">
                               Procedencia:{" "}
-                              <span className="text-[#3f3f46] dark:text-slate-200">
+                              <span className="font-medium text-[#3f3f46] dark:text-slate-200">
                                 {talentDets?.procedencia || "—"}
                               </span>
                             </p>
-                            <div className="text-sm text-[#71717A] flex items-center gap-2 my-2 xl:m-0 dark:text-slate-400">
-                              <div className="flex flex-col xl:flex-row xl:flex-wrap xl:gap-1 w-fit">
-                                <p>
-                                  {`RxH ${
-                                    Utils.formatCoinByNum1(
-                                      talent.idMonedaRxh,
-                                    ).string3
-                                  } `}
-                                  {talent.montoInicialRxH.toFixed(2)}{" "}
-                                  -{" "}
-                                  {talent.montoInicialRxH.toFixed(2)}
-                                </p>
-                                <p>
-                                  {`Planilla ${
-                                    Utils.formatCoinByNum1(
-                                      talent.idMonedaPlan,
-                                    ).string3
-                                  } `}
-                                  {talent.montoInicialPlanilla.toFixed(
-                                    2,
-                                  )}{" "}
-                                  -{" "}
-                                  {talent.montoFinalPlanilla.toFixed(
-                                    2,
-                                  )}
-                                </p>
-                                {/* Sólo se pinta si el talento ya tiene
-                                    modalidad: el alta dejó de pedirla, así que
-                                    no tenerla es lo normal y no se anuncia. */}
-                                {modalidadFacturacionTalento && (
-                                  <p>{modalidadFacturacionTalento}</p>
-                                )}
-                              </div>
+                            {/* Expectativa salarial: una pastilla por régimen
+                                con su rango. La modalidad de facturación ya no
+                                se muestra. */}
+                            <div className="my-1.5 flex flex-wrap items-center gap-2 text-sm">
+                              <span className="text-[#71717A] dark:text-slate-400">
+                                Expectativa salarial:
+                              </span>
+                              {[
+                                {
+                                  label: "RxH",
+                                  currency: Utils.formatCoinByNum1(talent.idMonedaRxh)
+                                    .string3,
+                                  min: talent.montoInicialRxH,
+                                  // Antes repetía el monto inicial como final.
+                                  max: talent.montoFinalRxH,
+                                },
+                                {
+                                  label: "Planilla",
+                                  currency: Utils.formatCoinByNum1(talent.idMonedaPlan)
+                                    .string3,
+                                  min: talent.montoInicialPlanilla,
+                                  max: talent.montoFinalPlanilla,
+                                },
+                              ].map(({ label, currency, min, max }) => (
+                                <span
+                                  key={label}
+                                  className="inline-flex items-baseline gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1 dark:border-slate-600 dark:bg-slate-700/60"
+                                >
+                                  <span className="text-xs font-semibold uppercase tracking-wide text-[#71717A] dark:text-slate-400">
+                                    {label}
+                                  </span>
+                                  <span className="font-medium tabular-nums text-[#3f3f46] dark:text-slate-100">
+                                    {`${currency} ${[min, max]
+                                      .map((n) =>
+                                        Number(n || 0).toLocaleString("es-PE", {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        }),
+                                      )
+                                      .join(" – ")}`}
+                                  </span>
+                                </span>
+                              ))}
                               <button
                                 type="button"
-                                onClick={() =>
-                                  openModal("modalSalary")
-                                }
-                                className="hover:rounded-full hover:shadow-inner px-2 flex-shrink-0"
+                                title="Editar expectativa salarial"
+                                onClick={() => openModal("modalSalary")}
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
                               >
-                                <Pencil className="h-4 w-4 mb-1 opacity-40 hover:opacity-80" />
+                                <Pencil className="h-4 w-4" />
                               </button>
                             </div>
                             <div className="flex flex-col xl:flex-row xl:gap-2 xl:items-center">
@@ -854,128 +897,116 @@ export const Talents = () => {
                           </div>
                         </div>
 
-                        <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end my-4 sm:my-0">
-                          {/* CV */}
-                          <OptionsButton
-                            options={[
-                              "CV",
-                              "CV Fractal ESP",
-                              "CV Fractal ENG",
-                            ]}
-                            onSelect={(value) => {
-                              if (value === "CV") {
-                                openModal("modalCv");
-                              } else if (value === "CV Fractal ESP") {
-                                openFractalCVModal("ES");
-                              } else {
-                                openFractalCVModal("EN");
-                              }
-                            }}
-                            buttonLabel="Ver CVs"
-                            buttonStyle="btn btn-text w-50"
-                          />
-
-                          {/* Contact */}
-                          <div className="flex flex-col gap-4">
-                            {/* Social networks */}
-                            <div className="flex gap-4 justify-center items-end">
-                              <div
-                                className={`${
-                                  !talentDets?.linkedin
-                                    ? "pointer-events-none opacity-50"
-                                    : ""
-                                }`}
-                              >
-                                <a
-                                  href={
-                                    formatUrl(
-                                      talentDets?.linkedin || "",
-                                    ) || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) =>
-                                    !talentDets?.linkedin &&
-                                    e.preventDefault()
-                                  }
-                                >
-                                  <Linkedin className="h-7 w-7 opacity-40 hover:opacity-80" />
-                                </a>
-                              </div>
-
-                              <div
-                                className={`${
-                                  !talentDets?.github
-                                    ? "pointer-events-none opacity-50"
-                                    : ""
-                                }`}
-                              >
-                                <a
-                                  href={
-                                    formatUrl(
-                                      talentDets?.github || "",
-                                    ) || "#"
-                                  }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) =>
-                                    !talentDets?.github &&
-                                    e.preventDefault()
-                                  }
-                                >
-                                  <Github className="h-5 w-5 mb-1 opacity-40 hover:opacity-80" />
-                                </a>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openModal("modalSocialMedia")
-                                }
-                              >
-                                <Pencil className="h-5 w-5 mb-1 opacity-40 hover:opacity-80" />
-                              </button>
-                            </div>
-
-                            {/* Contactar */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal("modalContact")
-                              }
-                              className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
+                        {/* Redes, arriba a la derecha: son datos del perfil,
+                            no acciones. */}
+                        <div className="mt-3 flex shrink-0 items-center gap-1 sm:mt-0">
+                          {[
+                            {
+                              label: "LinkedIn",
+                              url: talentDets?.linkedin,
+                              Icon: Linkedin,
+                            },
+                            { label: "GitHub", url: talentDets?.github, Icon: Github },
+                          ].map(({ label, url, Icon }) => (
+                            <a
+                              key={label}
+                              title={url ? `Abrir ${label}` : `Sin ${label} registrado`}
+                              aria-label={label}
+                              href={formatUrl(url || "") || "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={(e) => !url && e.preventDefault()}
+                              className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+                                url
+                                  ? "text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                                  : "cursor-default text-gray-300 dark:text-slate-600"
+                              }`}
                             >
-                              <Phone className="h-5 w-5" />
-                              Contactar
-                            </button>
-
-                            {/* Actualizar Talento con IA */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal(MODAL_UPDATE_WITH_CV)
-                              }
-                              className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
-                            >
-                              <Sparkles className="h-5 w-5" />
-                              Actualizar Talento con IA
-                            </button>
-
-                            {/* Sube un archivo del talento */}
-                            <button
-                              type="button"
-                              onClick={() => openModal("modalUploadCert")}
-                              className="flex items-center justify-center w-36 text-center rounded-lg focus:outline-none text-[var(--color-blue)] bg-gray-50 hover:bg-gray-100 px-4 py-2 gap-2 dark:bg-slate-800 dark:hover:bg-slate-700"
-                            >
-                              <Upload className="h-5 w-5 shrink-0" />
-                              Sube un archivo del talento
-                            </button>
-                          </div>
+                              <Icon className="h-5 w-5" />
+                            </a>
+                          ))}
+                          <button
+                            type="button"
+                            title="Editar redes"
+                            aria-label="Editar medios sociales"
+                            onClick={() => openModal("modalSocialMedia")}
+                            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
+                      {/* Acciones del talento: barra propia bajo la cabecera,
+                          ordenadas por importancia y todas del mismo alto.
+                          Antes iban apiladas junto a la foto. */}
+                      <div className="mb-6 mt-5 flex flex-wrap items-center gap-3 border-y border-gray-200 py-4 dark:border-slate-700">
+                        {/* Contactar */}
+                        <button
+                          type="button"
+                          onClick={() => openModal("modalContact")}
+                          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#009695] px-4 text-sm font-medium text-white hover:bg-[#2d8d8d] focus:outline-none"
+                        >
+                          <Phone className="h-4 w-4 shrink-0" />
+                          Contactar
+                        </button>
+
+                        {/* Entrevista telefónica: atajo sin pasar por un RQ */}
+                        <BotonEntrevistaTelefonica
+                          idTalento={talent?.idTalento}
+                          nombreCompleto={[
+                            talent?.nombres,
+                            talent?.apellidoPaterno,
+                            talent?.apellidoMaterno,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")
+                            .trim()}
+                        />
+
+                        {/* Actualizar Talento con IA */}
+                        <button
+                          type="button"
+                          onClick={() => openModal(MODAL_UPDATE_WITH_CV)}
+                          title="Sube un CV y la IA propone solo lo nuevo o mejorado"
+                          className="inline-flex h-10 items-center gap-2 rounded-lg bg-gradient-to-r from-teal-500 to-cyan-600 px-4 text-sm font-medium text-white transition-all duration-200 hover:from-teal-600 hover:to-cyan-700 focus:outline-none"
+                        >
+                          <Sparkles className="h-4 w-4 shrink-0" />
+                          Actualizar con IA
+                        </button>
+
+                        {/* CV */}
+                        <OptionsButton
+                          options={["CV", "CV Fractal ESP", "CV Fractal ENG"]}
+                          onSelect={(value) => {
+                            if (value === "CV") {
+                              openModal("modalCv");
+                            } else if (value === "CV Fractal ESP") {
+                              openFractalCVModal("ES");
+                            } else {
+                              openFractalCVModal("EN");
+                            }
+                          }}
+                          buttonLabel="Ver CVs"
+                          buttonStyle={"inline-flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#52525b] hover:bg-gray-50 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" + " [&>svg]:h-4 [&>svg]:w-4"}
+                        />
+
+                        {/* Sube un archivo del talento */}
+                        <button
+                          type="button"
+                          onClick={() => openModal("modalUploadCert")}
+                          className="inline-flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-[#52525b] hover:bg-gray-50 focus:outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                        >
+                          <Upload className="h-4 w-4 shrink-0" />
+                          Subir archivo
+                        </button>
+                      </div>
                       {/* Skills */}
-                      <div className="flex flex-col sm:flex-row w-full">
+                      {/* Técnicas y blandas una debajo de otra, cada una a
+                          todo el ancho: las listas largas ya no se comprimen
+                          en media columna. */}
+                      <div className="flex flex-col gap-6 w-full">
                         {/* Technical */}
-                        <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
+                        <div className="flex flex-col gap-4 w-full">
                           <div className="flex items-center gap-4 h-6">
                             <p className="text-[#52525B] font-semibold dark:text-slate-300">
                               Habilidades Técnicas
@@ -1027,7 +1058,7 @@ export const Talents = () => {
                           </div>
                         </div>
                         {/* Soft */}
-                        <div className="flex flex-col gap-4 sm:w-1/2 my-2 sm:my-0">
+                        <div className="flex flex-col gap-4 w-full">
                           <div className="flex items-center gap-4 h-6">
                             <p className="text-[#52525B] font-semibold dark:text-slate-300">
                               Habilidades Blandas

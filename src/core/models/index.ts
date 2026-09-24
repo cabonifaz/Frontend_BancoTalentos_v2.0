@@ -16,6 +16,7 @@ export * from "./interfaces/RequirementItem";
 export * from "./interfaces/TalentoFMI";
 export * from "./interfaces/TalentoDetailFMI";
 export * from "./interfaces/ReqVacante";
+export * from "./interfaces/Expediente";
 export * from "./interfaces/TalentFilePresigned";
 export * from "./interfaces/RqFilePresigned";
 export * from "./interfaces/PostulantFilePresigned";
