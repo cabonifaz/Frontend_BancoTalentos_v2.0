@@ -267,3 +267,94 @@ export const deleteInterviewFile = async (
     },
   );
 };
+
+// ─── Preguntas y respuestas (entrevista telefónica) ────────────────────────
+
+export interface InterviewQuestion {
+  idPregunta?: number;
+  idEntrevista?: number;
+  pregunta: string;
+  respuesta?: string | null;
+  orden?: number;
+}
+
+/**
+ * Alta en bloque de las preguntas de una entrevista. Se llama con el id ya
+ * creado, igual que la subida del ICS: al crear la entrevista todavía no existe
+ * el id al que colgarlas.
+ */
+export const saveInterviewQuestions = async (
+  idEntrevista: number,
+  preguntas: InterviewQuestion[],
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/questions",
+    { idEntrevista, preguntas },
+    config,
+  );
+};
+
+/** Edición de una pregunta; en la práctica, registrar su respuesta. */
+export const updateInterviewQuestion = async (
+  data: { idPregunta: number; pregunta: string; respuesta?: string | null },
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/questions/update",
+    data,
+    config,
+  );
+};
+
+/** Baja lógica de una pregunta. */
+export const deleteInterviewQuestion = async (
+  idPregunta: number,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.post<BaseResponseFMI>(
+    "fmi/interviews/questions/remove",
+    null,
+    { ...config, params: { idPregunta } },
+  );
+};
+
+/** Preguntas vigentes de una entrevista, en su orden. */
+export const listInterviewQuestions = async (
+  idEntrevista: number,
+  config?: ApiConfig,
+) => {
+  return axiosInstanceFMI.get<OperationResult<InterviewQuestion[]>>(
+    `fmi/interviews/questions/${idEntrevista}`,
+    config,
+  );
+};
+
+// ─── Entrevistas de un talento ─────────────────────────────────────────────
+
+export interface InterviewByTalent {
+  idEntrevista: number;
+  idTipoEntrevista?: number | null;
+  /** dd/MM/yyyy */
+  fecha?: string;
+  /** HH:mm */
+  hora?: string;
+}
+
+/**
+ * Entrevistas de un talento, opcionalmente de un solo tipo, de la más reciente
+ * a la más antigua. El listado general no sirve para esto: no filtra por
+ * talento ni devuelve el tipo de entrevista.
+ */
+export const listInterviewsByTalent = async (
+  idTalento: number,
+  idTipoEntrevista?: number | null,
+  config?: ApiConfig,
+) => {
+  const tipo =
+    idTipoEntrevista != null ? `&idTipoEntrevista=${idTipoEntrevista}` : "";
+  return axiosInstanceFMI.get<OperationResult<InterviewByTalent[]>>(
+    `fmi/interviews/by-talent?idTalento=${idTalento}${tipo}`,
+    config,
+  );
+};

@@ -155,6 +155,15 @@ export default function InterviewsPage() {
     }
   };
 
+  /**
+   * RQ y cliente pueden venir vacíos: la entrevista telefónica no depende de un
+   * requerimiento. En vez de dejar la celda en blanco se marca como sin definir.
+   */
+  const sinDefinir = (valor?: string | null) => {
+    const texto = (valor || "").trim();
+    return texto !== "" && texto !== "-" ? texto : null;
+  };
+
   const isToday = (fechaEntrevista: string) => {
     const [fecha] = fechaEntrevista.split(" "); // 01/06/2026
     const [dia, mes, anio] = fecha.split("/").map(Number);
@@ -329,11 +338,25 @@ export default function InterviewsPage() {
                           {item.talento}
                         </span>
                       </td>
-                      <td className="table-cell truncate" title={item.tituloRq}>
-                        {item.tituloRq}
+                      <td
+                        className="table-cell truncate"
+                        title={sinDefinir(item.tituloRq) || "Sin definir"}
+                      >
+                        {sinDefinir(item.tituloRq) ?? (
+                          <span className="italic text-gray-400 dark:text-slate-500">
+                            Sin definir
+                          </span>
+                        )}
                       </td>
-                      <td className="table-cell truncate text-center" title={item.cliente}>
-                        {item.cliente}
+                      <td
+                        className="table-cell truncate text-center"
+                        title={sinDefinir(item.cliente) || "Sin definir"}
+                      >
+                        {sinDefinir(item.cliente) ?? (
+                          <span className="italic text-gray-400 dark:text-slate-500">
+                            Sin definir
+                          </span>
+                        )}
                       </td>
                       <td className="table-cell">
                         <div className="flex flex-col items-center gap-1">

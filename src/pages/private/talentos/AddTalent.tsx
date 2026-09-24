@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 import { Dashboard } from "../Dashboard";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -12,7 +13,7 @@ import {
 } from "../../../core/components";
 import {
   AddTalentParams,
-  BaseResponse,
+  InsertUpdateResponse,
   initialFormValues,
 } from "../../../core/models";
 import {
@@ -50,6 +51,7 @@ import { useAutoCompletTalForm } from "../../../core/hooks/talentos/useAutoCompl
 import { useModal } from "../../../core/context/ModalContext";
 import { MODAL_AI_WORKING } from "../../../core/utilities/modalsIds";
 import { ModalWorkingAI } from "../../../core/components/modals/ModalWorkingAI";
+import { ModalQuickTalent } from "../../../core/components/talentos/modals/ModalQuickTalent";
 import { processText } from "../../../core/utilities/textUtils";
 import { useFormPersistence } from "../../../core/hooks/talentos/useFormPersistence";
 import { FORM_STORAGE_KEY } from "../../../core/utilities/constants";
@@ -61,6 +63,11 @@ export const AddTalent = () => {
 
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [cargaRapidaAbierta, setCargaRapidaAbierta] = useState(false);
+  // El nombre se captura al enviar porque el callback de éxito no recibe el
+  // formulario, y la pantalla de talentos lo necesita para encontrar al recién
+  // creado en la lista.
+  const nombreCreadoRef = useRef("");
   const [cvFileErrors, setCvFileErrors] = useState("");
   const [fotoFileErrors, setFotoFileErrors] = useState("");
 
@@ -75,7 +82,7 @@ export const AddTalent = () => {
   const frasesIa = paramsByMaestro[FRASES_IA_MAESTRO] || [];
 
   const { loading: loadingAddTalent, fetch: postTalent } = useApi<
-    BaseResponse,
+    InsertUpdateResponse,
     AddTalentParams
   >(addTalent, {
     onError: (error) => handleError(error, enqueueSnackbar),
@@ -93,16 +100,33 @@ export const AddTalent = () => {
         setCvFile(null);
         setFotoFile(null);
 
-        //para limpiar el storage
-        clearStorage();
-
         // refrescar parametros para futuros registros
         refetchParams();
+
+        irAlTalentoCreado(
+          response.data.idNuevo,
+          nombreCreadoRef.current,
+        );
       }
     },
   });
 
   const onGoBackClick = () => navigate(-1);
+
+  /**
+   * Tras crear un talento —por el formulario completo o por la carga rápida— se
+   * va al listado con ese talento ya abierto, en vez de dejar la pantalla en
+   * blanco sin saber si se guardó.
+   */
+  const irAlTalentoCreado = (
+    idTalento?: number,
+    nombreCompleto?: string,
+  ) => {
+    clearStorage();
+    navigate("/dashboard/talentos", {
+      state: { talentId: idTalento, talentName: nombreCompleto },
+    });
+  };
 
   const methods = useForm<AddTalentType>({
     resolver: zodResolver(AddTalentSchema),
@@ -271,6 +295,12 @@ export const AddTalent = () => {
           : undefined,
       };
 
+      nombreCreadoRef.current = `${data.nombres} ${data.apellidoPaterno} ${
+        data.apellidoMaterno ?? ""
+      }`
+        .replace(/\s+/g, " ")
+        .trim();
+
       postTalent(cleanData);
     } catch (error) {
       enqueueSnackbar("error al cargar archivos", {
@@ -376,6 +406,12 @@ export const AddTalent = () => {
             }}
           />
         )}
+        {cargaRapidaAbierta && (
+          <ModalQuickTalent
+            onClose={() => setCargaRapidaAbierta(false)}
+            onCreated={irAlTalentoCreado}
+          />
+        )}
         {/* main container */}
         <div className="flex h-full justify-center overflow-hidden">
           {/* form container */}
@@ -394,6 +430,14 @@ export const AddTalent = () => {
                   <h3 className="text-sm">
                     Ingresa datos del talento.
                   </h3>
+                  <button
+                    type="button"
+                    onClick={() => setCargaRapidaAbierta(true)}
+                    className="mt-1 flex w-fit items-center gap-1.5 text-sm font-semibold text-[#0b85c3] hover:underline dark:text-sky-400"
+                  >
+                    <Sparkles size={15} strokeWidth={2} />
+                    Carga rápida con CV
+                  </button>
                 </div>
                 <div className="flex justify-end gap-3 *:py-3 *:px-4 *:h-fit w-1/2">
                   <button

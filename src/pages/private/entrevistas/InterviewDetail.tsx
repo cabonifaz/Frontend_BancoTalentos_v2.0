@@ -18,6 +18,11 @@ import { useAsyncService } from "../../../core/hooks/useAsyncService";
 import {
   getInterviewDetail,
   updateInterview,
+  InterviewQuestion,
+  listInterviewQuestions,
+  saveInterviewQuestions,
+  updateInterviewQuestion,
+  deleteInterviewQuestion,
   UpdateInterviewPayload,
   deleteInterviewFile,
   InterviewDetailDTO,
@@ -48,7 +53,10 @@ import {
   Link as LinkIcon,
   Mail,
   MapPin,
+  MessageSquareText,
+  Phone,
   Video,
+  Clapperboard,
 } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
@@ -62,11 +70,14 @@ import {
   DURACION_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
+  TIPO_ENTREVISTA_TELEFONICA_LABEL,
 } from "../../../core/utilities/constants";
 import { normalizeText } from "../../../core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
+  isTelefonicaType,
+  tipoTieneGrabaciones,
   deriveLocationEntries,
   deriveDireccionEntries,
   deriveUniqueClientNames,
@@ -335,6 +346,10 @@ export default function InterviewDetailPage() {
   const direccionValue = watch("direccion");
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
+  const isTelefonica = isTelefonicaType(tipoValue);
+  // Sólo la virtual deja grabación: la presencial ocurre en sitio y la
+  // telefónica se documenta con sus preguntas y respuestas.
+  const muestraGrabaciones = tipoTieneGrabaciones(tipoValue);
 
   // Etiquetas reales de las dos posiciones del switch, tomadas del maestro 47
   // (sin hardcodear el texto). Fallback a las constantes por si el maestro aún
@@ -345,6 +360,35 @@ export default function InterviewDetailPage() {
   const presencialLabel =
     interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
     TIPO_ENTREVISTA_PRESENCIAL_LABEL;
+  const telefonicaLabel =
+    interviewTypes.find((t) => isTelefonicaType(t.string1))?.string1 ??
+    TIPO_ENTREVISTA_TELEFONICA_LABEL;
+
+  /** Opciones del selector de tipo, tomadas del maestro 47 (ver Crear). */
+  const tipoOptions = (
+    interviewTypes.length > 0
+      ? interviewTypes.map((t) => t.string1)
+      : [virtualLabel, presencialLabel, telefonicaLabel]
+  ).map((label) => ({
+    label,
+    icon: isVirtualType(label)
+      ? Video
+      : isPresencialType(label)
+        ? MapPin
+        : isTelefonicaType(label)
+          ? Phone
+          : Video,
+  }));
+
+  /**
+   * Preguntas telefónicas.
+   *
+   * No van en el formulario como las grabaciones: viven en su propia tabla y
+   * tienen sus propios SP, así que se cargan aparte y se concilian al guardar
+   * (alta de las nuevas, edición de las cambiadas, baja de las quitadas).
+   */
+  const [preguntas, setPreguntas] = useState<InterviewQuestion[]>([]);
+  const preguntasOriginalesRef = useRef<InterviewQuestion[]>([]);
 
   // ID_TIPO_ENTREVISTA recibido del backend pendiente de resolver a texto cuando
   // los parámetros (maestro 47) todavía no están cargados.
@@ -359,6 +403,16 @@ export default function InterviewDetailPage() {
       setValue("direccion", "", { shouldValidate: true });
     } else if (isPresencialType(value)) {
       setValue("enlaceEntrevista", "", { shouldValidate: true });
+    } else if (isTelefonicaType(value)) {
+      setValue("enlaceEntrevista", "", { shouldValidate: true });
+      setValue("ubicacion", "", { shouldValidate: true });
+      setValue("direccion", "", { shouldValidate: true });
+    }
+
+    // Sin grabaciones fuera de la virtual: se descartan para no guardar filas
+    // que la pantalla ya no muestra.
+    if (!tipoTieneGrabaciones(value)) {
+      replaceGrabacion([]);
     }
   };
 
@@ -610,6 +664,97 @@ export default function InterviewDetailPage() {
   }, [detailResult, setValue]);
 
 
+  // Las preguntas se piden aparte del detalle: son su propia tabla.
+  useEffect(() => {
+    if (!id || !isTelefonica) return;
+
+    let cancelado = false;
+    listInterviewQuestions(Number(id))
+      .then(({ data: rs }) => {
+        if (cancelado) return;
+        const filas = rs?.data ?? [];
+        setPreguntas(filas);
+        preguntasOriginalesRef.current = filas;
+      })
+      .catch(() => {
+        /* sin preguntas cargadas: la sección queda vacía */
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [id, isTelefonica]);
+
+  const setPregunta = (
+    index: number,
+    campo: "pregunta" | "respuesta",
+    valor: string,
+  ) => {
+    setPreguntas((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, [campo]: valor } : p)),
+    );
+  };
+
+  /**
+   * Concilia la tabla contra lo que había al abrir: da de alta las nuevas,
+   * actualiza las que cambiaron y da de baja las que se quitaron. Se llama tras
+   * guardar la entrevista; si algo falla sólo avisa, nunca revierte el guardado.
+   */
+  const guardarPreguntas = async (idEntrevista: number) => {
+    const originales = preguntasOriginalesRef.current;
+    const vigentes = preguntas.filter((p) => (p.pregunta || "").trim() !== "");
+
+    const nuevas = vigentes
+      .filter((p) => !p.idPregunta)
+      .map((p, index) => ({
+        pregunta: p.pregunta.trim(),
+        respuesta: (p.respuesta || "").trim() || null,
+        orden: index + 1,
+      }));
+
+    const editadas = vigentes.filter((p) => {
+      if (!p.idPregunta) return false;
+      const original = originales.find((o) => o.idPregunta === p.idPregunta);
+      if (!original) return false;
+      return (
+        (original.pregunta || "") !== (p.pregunta || "") ||
+        (original.respuesta || "") !== (p.respuesta || "")
+      );
+    });
+
+    const eliminadas = originales.filter(
+      (o) =>
+        o.idPregunta &&
+        !preguntas.some((p) => p.idPregunta === o.idPregunta),
+    );
+
+    try {
+      if (nuevas.length > 0) {
+        await saveInterviewQuestions(idEntrevista, nuevas);
+      }
+      for (const p of editadas) {
+        await updateInterviewQuestion({
+          idPregunta: p.idPregunta as number,
+          pregunta: (p.pregunta || "").trim(),
+          respuesta: (p.respuesta || "").trim() || null,
+        });
+      }
+      for (const p of eliminadas) {
+        await deleteInterviewQuestion(p.idPregunta as number);
+      }
+
+      const { data: rs } = await listInterviewQuestions(idEntrevista);
+      const filas = rs?.data ?? [];
+      setPreguntas(filas);
+      preguntasOriginalesRef.current = filas;
+    } catch {
+      enqueueSnackbar(
+        "La entrevista se guardó, pero no se pudieron guardar todas las preguntas.",
+        { variant: "warning" },
+      );
+    }
+  };
+
   const handleSave = async (data: UpdateInterviewType) => {
     if (!id || saveLockRef.current) return;
     saveLockRef.current = true;
@@ -667,6 +812,10 @@ export default function InterviewDetailPage() {
             variant: "success",
           },
         );
+
+        if (isTelefonica) {
+          await guardarPreguntas(Number(id));
+        }
 
         // Regenera el ICS con los datos actualizados y reemplaza el activo previo.
         // El correo de actualización solo se envía si cambió fecha u hora.
@@ -1135,50 +1284,51 @@ const confirmUpload = async () => {
 
                   {/* Row: Tipo de Entrevista, Fecha, Hora, Duración */}
                   <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
-                    {/* Tipo de Entrevista (switch Virtual / Presencial) */}
+                    {/* Tipo de Entrevista (maestro 47) */}
                     <div className="flex flex-col gap-1">
                       <label className="input-label font-medium mb-1">
                         Tipo de Entrevista <span className="text-red-500">*</span>
                       </label>
-                      <label
-                        className={`flex items-center justify-center gap-2 cursor-pointer select-none h-[46px] px-2 rounded-lg border bg-white transition-colors hover:border-gray-300 dark:bg-slate-800 dark:hover:border-slate-600 ${
+                      <div
+                        role="radiogroup"
+                        aria-label="Tipo de entrevista"
+                        className={`flex h-[46px] items-center gap-1 rounded-lg border bg-gray-50 p-1 transition-colors dark:bg-slate-900/40 ${
                           errors.tipoEntrevista
                             ? "border-red-500"
                             : "border-gray-200 dark:border-slate-700"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isPresencial}
-                          onChange={(e) =>
-                            handleTipoChange(
-                              e.target.checked ? presencialLabel : virtualLabel,
-                            )
-                          }
-                          className="sr-only peer"
-                        />
-                        <span
-                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                            isVirtual
-                              ? "text-[var(--color-blue)] font-semibold"
-                              : "text-gray-400 dark:text-slate-500"
-                          }`}
-                        >
-                          <Video className="w-4 h-4 shrink-0" />
-                          Virtual
-                        </span>
-                        <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 dark:bg-slate-700" />
-                        <span
-                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                            isPresencial
-                              ? "text-[var(--color-blue)] font-semibold"
-                              : "text-gray-400 dark:text-slate-500"
-                          }`}
-                        >
-                          <MapPin className="w-4 h-4 shrink-0" />
-                          Presencial
-                        </span>
-                      </label>
+                        {tipoOptions.map(({ label, icon: Icono }) => {
+                          const seleccionado =
+                            normalizeText(label) === normalizeText(tipoValue || "");
+                          return (
+                            <button
+                              key={label}
+                              type="button"
+                              role="radio"
+                              aria-checked={seleccionado}
+                              onClick={() => handleTipoChange(label)}
+                              title={label}
+                              className={`group flex h-full flex-1 items-center justify-center gap-1.5 rounded-md px-1.5 text-xs font-semibold transition-all ${
+                                seleccionado
+                                  ? "bg-white text-[var(--color-blue)] shadow-sm ring-1 ring-[var(--color-blue)]/20 dark:bg-slate-800"
+                                  : "text-gray-500 hover:bg-white/70 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
+                              }`}
+                            >
+                              <Icono
+                                className={`w-4 h-4 shrink-0 transition-colors ${
+                                  seleccionado
+                                    ? "text-[var(--color-blue)]"
+                                    : "text-gray-400 group-hover:text-gray-500 dark:text-slate-500"
+                                }`}
+                              />
+                              <span className="truncate capitalize">
+                                {label.toLowerCase()}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                       {errors.tipoEntrevista && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.tipoEntrevista.message}
@@ -1216,8 +1366,9 @@ const confirmUpload = async () => {
                       )}
                     </div>
 
-                    {/* Duración (solo para la invitación de calendario) */}
-                    <div className="flex flex-col gap-1">
+                    {/* Duración (solo para la invitación de calendario). La
+                        telefónica no la pide. */}
+                    <div className={`flex flex-col gap-1 ${isTelefonica ? "hidden" : ""}`}>
                       <label className="input-label block mb-1">Duración</label>
                       <select
                         value={durationMinutes}
@@ -1371,22 +1522,32 @@ const confirmUpload = async () => {
                     <label className="input-label font-medium mb-1">
                       Perfil / Puesto <span className="text-red-500">*</span>
                     </label>
+                    {/* En la telefónica el perfil no sale de un RQ: se escribe. */}
                     <Controller
                       name="perfil"
                       control={control}
-                      render={({ field }) => (
-                        <select
-                          {...field}
-                          className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
-                        >
-                          <option value="">Seleccione un perfil</option>
-                          {profileOptions.map((opt, i) => (
-                            <option key={i} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                      render={({ field }) =>
+                        isTelefonica ? (
+                          <input
+                            {...field}
+                            type="text"
+                            placeholder="Ej: Desarrollador Backend"
+                            className={`input w-full ${errors.perfil ? "border-red-500" : ""}`}
+                          />
+                        ) : (
+                          <select
+                            {...field}
+                            className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                          >
+                            <option value="">Seleccione un perfil</option>
+                            {profileOptions.map((opt, i) => (
+                              <option key={i} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        )
+                      }
                     />
                     {errors.perfil && (
                       <p className="text-red-500 text-xs mt-1 font-medium">
@@ -1420,11 +1581,99 @@ const confirmUpload = async () => {
                   })()
                 }  
 
-                {/* Agregar grabaciones de reuniones */}
+                {/* Preguntas telefónicas: sólo en la entrevista telefónica */}
+                {isTelefonica && (
+                  <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+                        <MessageSquareText className="w-5 h-5 text-[var(--color-blue)]" />
+                        Preguntas telefónicas
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPreguntas((prev) => [
+                            ...prev,
+                            { pregunta: "", respuesta: "" },
+                          ])
+                        }
+                        className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                      >
+                        <Plus size={14} />
+                        Agregar Pregunta
+                      </button>
+                    </div>
 
-                <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-700">
+                    {preguntas.length === 0 ? (
+                      <p className="text-sm text-gray-400 italic dark:text-slate-500">
+                        Sin preguntas registradas. Las respuestas se pueden
+                        completar después de la llamada.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {preguntas.map((pregunta, index) => (
+                          <div
+                            key={pregunta.idPregunta ?? `nueva-${index}`}
+                            className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
+                                Pregunta <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                value={pregunta.pregunta || ""}
+                                onChange={(e) =>
+                                  setPregunta(index, "pregunta", e.target.value)
+                                }
+                                placeholder="Ej: ¿Cuál es su disponibilidad para iniciar?"
+                                className="input w-full bg-white dark:bg-slate-800"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
+                                Respuesta (Opcional)
+                              </label>
+                              <input
+                                value={pregunta.respuesta || ""}
+                                onChange={(e) =>
+                                  setPregunta(index, "respuesta", e.target.value)
+                                }
+                                placeholder="Se puede completar después de la llamada"
+                                className="input w-full bg-white dark:bg-slate-800"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPreguntas((prev) =>
+                                  prev.filter((_, i) => i !== index),
+                                )
+                              }
+                              className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
+                              title="Eliminar pregunta"
+                              aria-label="Eliminar pregunta"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Grabaciones de reuniones: sólo en la entrevista virtual.
+                    La presencial ocurre en sitio y la telefónica se documenta
+                    con sus preguntas y respuestas. */}
+
+                <div
+                  className={`mt-8 pt-8 border-t border-gray-100 dark:border-slate-700 ${
+                    muestraGrabaciones ? "" : "hidden"
+                  }`}
+                >
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+                      <Clapperboard className="w-5 h-5 text-[var(--color-blue)]" />
                       Grabaciones de reuniones
                     </h3>
                     <button
@@ -1482,7 +1731,10 @@ const confirmUpload = async () => {
                           </div>
                         
                         </div>
-                        {grabacionFields.length > 1 && (
+                        {/* Se puede quitar aunque sea la única: antes exigía
+                            dos o más y dejaba una fila vacía imposible de
+                            borrar. */}
+                        {grabacionFields.length > 0 && (
                           <button
                             type="button"
                             onClick={() => removeGrabacion(index)}

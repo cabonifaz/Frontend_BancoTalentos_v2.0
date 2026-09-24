@@ -1,7 +1,7 @@
-export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
-export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
-//export const BASE_URL = "http://localhost:8080";
-//export const BASE_URL_FMI = "http://localhost:8081";
+//export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net";
+//export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
+export const BASE_URL = "http://localhost:8080";
+export const BASE_URL_FMI = "http://localhost:8081";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
@@ -96,6 +96,9 @@ export const DURACION_ENTREVISTA = "48";
 // normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
 export const TIPO_ENTREVISTA_PRESENCIAL_LABEL = "PRESENCIAL";
 export const TIPO_ENTREVISTA_VIRTUAL_LABEL = "VIRTUAL";
+// Telefónica (num1 = 3): no pide enlace, ubicación, dirección ni duración, el
+// perfil se escribe a mano y es la única que registra preguntas y respuestas.
+export const TIPO_ENTREVISTA_TELEFONICA_LABEL = "TELEFONICA";
 
 // Etapa de entrevista en la que los entrevistadores son opcionales.
 // En cualquier otra etapa se exige al menos un entrevistador.

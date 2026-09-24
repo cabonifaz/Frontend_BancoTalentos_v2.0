@@ -13,6 +13,8 @@ export interface AddTalentParams {
   puesto?: string;
   idPais?: number;
   idCiudad?: number;
+  /** El SP lo escribe siempre; la carga rápida lo manda en false. */
+  tieneEquipo?: boolean;
   montoInicialPlanilla?: number;
   montoFinalPlanilla?: number;
   montoInicialRxH?: number;

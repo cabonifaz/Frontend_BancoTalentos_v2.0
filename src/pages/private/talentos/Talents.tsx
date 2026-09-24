@@ -17,7 +17,7 @@ import { Dashboard } from "../Dashboard";
 import { Utils } from "../../../core/utilities/utils";
 import React, { useEffect, useRef, useState } from "react";
 import { useModal } from "../../../core/context/ModalContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getTalent, getTalents } from "../../../core/services/talents.service";
 import { useSnackbar } from "notistack";
 import {
@@ -68,6 +68,7 @@ import {
   MODAL_ADD_TO_BLACKLIST,
 } from "../../../core/components/lista-negra/ModalAddToBlacklist";
 import { useTalentBlacklistStatus } from "../../../core/hooks/lista-negra/useTalentBlacklistStatus";
+import { BotonEntrevistaTelefonica } from "../../../core/components/talentos/BotonEntrevistaTelefonica";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -88,6 +89,17 @@ export const Talents = () => {
   >(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Alta recién hecha: Nuevo Talento manda aquí el id y el nombre para abrir
+  // ese talento en vez de dejar al usuario buscándolo en la lista.
+  const location = useLocation();
+  const talentoRecienCreado = (location.state ?? null) as {
+    talentId?: number;
+    talentName?: string;
+  } | null;
+  const pendienteDeAbrir = useRef<number | undefined>(
+    talentoRecienCreado?.talentId,
+  );
   const experienceRef = useRef<Experience | null>(null);
   const educationRef = useRef<Education | null>(null);
   const languageRef = useRef<Language | null>(null);
@@ -378,9 +390,36 @@ export const Talents = () => {
   };
 
   useEffect(() => {
-    Promise.all([fetchFavourites(), fetchTalents({ nPag: 1 })]);
+    // Con un talento recién creado se entra con la lista ya filtrada por su
+    // nombre: así aparece aunque el listado esté paginado y no venga en la
+    // primera página.
+    const nombre = talentoRecienCreado?.talentName?.trim();
+    if (nombre && searchInputRef.current) {
+      searchInputRef.current.value = nombre;
+    }
+
+    Promise.all([
+      fetchFavourites(),
+      fetchTalents({ nPag: 1, search: nombre || undefined }),
+    ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cuando llega la lista, se abre el talento recién creado una sola vez y se
+  // limpia el state de navegación para que un refresh no lo vuelva a forzar.
+  useEffect(() => {
+    const idPendiente = pendienteDeAbrir.current;
+    if (!idPendiente || !talentsData?.talents?.length) return;
+
+    const creado = talentsData.talents.find(
+      (item) => item.idTalento === idPendiente,
+    );
+    if (!creado) return;
+
+    pendienteDeAbrir.current = undefined;
+    setTalent(creado);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [talentsData, navigate, location.pathname]);
 
   return (
     <div className="relative">
@@ -854,7 +893,7 @@ export const Talents = () => {
                           </div>
                         </div>
 
-                        <div className="flex flex-row sm:flex-col xl:flex-row gap-24 sm:gap-2 xl:gap-10 justify-self-end my-4 sm:my-0">
+                        <div className="flex flex-row sm:flex-col xl:flex-row gap-6 sm:gap-3 xl:gap-6 justify-self-end my-4 sm:my-0">
                           {/* CV */}
                           <OptionsButton
                             options={[
@@ -876,7 +915,7 @@ export const Talents = () => {
                           />
 
                           {/* Contact */}
-                          <div className="flex flex-col gap-4">
+                          <div className="flex flex-col gap-3">
                             {/* Social networks */}
                             <div className="flex gap-4 justify-center items-end">
                               <div
@@ -936,39 +975,53 @@ export const Talents = () => {
                               </button>
                             </div>
 
-                            {/* Contactar */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal("modalContact")
-                              }
-                              className="flex items-center w-36 bg-[#009695] hover:bg-[#2d8d8d] rounded-lg focus:outline-none text-white px-4 py-2 gap-2"
-                            >
-                              <Phone className="h-5 w-5" />
-                              Contactar
-                            </button>
+                            {/* Acciones del talento: dos columnas para que no
+                                queden cuatro botones apilados dejando un hueco
+                                enorme a su derecha. */}
+                            <div className="grid w-full grid-cols-2 gap-2 sm:w-64">
+                              {/* Contactar */}
+                              <button
+                                type="button"
+                                onClick={() => openModal("modalContact")}
+                                className="flex items-center justify-center gap-2 rounded-lg bg-[#009695] px-3 py-2 text-sm leading-tight text-white hover:bg-[#2d8d8d] focus:outline-none"
+                              >
+                                <Phone className="h-4 w-4 shrink-0" />
+                                Contactar
+                              </button>
 
-                            {/* Actualizar Talento con IA */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openModal(MODAL_UPDATE_WITH_CV)
-                              }
-                              className="flex items-center justify-center w-36 rounded-lg focus:outline-none text-white px-4 py-2 gap-2 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 transition-all duration-200"
-                            >
-                              <Sparkles className="h-5 w-5" />
-                              Actualizar Talento con IA
-                            </button>
+                              {/* Entrevista telefónica: atajo sin pasar por un RQ */}
+                              <BotonEntrevistaTelefonica
+                                idTalento={talent?.idTalento}
+                                nombreCompleto={[
+                                  talent?.nombres,
+                                  talent?.apellidoPaterno,
+                                  talent?.apellidoMaterno,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")
+                                  .trim()}
+                              />
 
-                            {/* Sube un archivo del talento */}
-                            <button
-                              type="button"
-                              onClick={() => openModal("modalUploadCert")}
-                              className="flex items-center justify-center w-36 text-center rounded-lg focus:outline-none text-[var(--color-blue)] bg-gray-50 hover:bg-gray-100 px-4 py-2 gap-2 dark:bg-slate-800 dark:hover:bg-slate-700"
-                            >
-                              <Upload className="h-5 w-5 shrink-0" />
-                              Sube un archivo del talento
-                            </button>
+                              {/* Actualizar Talento con IA */}
+                              <button
+                                type="button"
+                                onClick={() => openModal(MODAL_UPDATE_WITH_CV)}
+                                className="flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-teal-500 to-cyan-600 px-3 py-2 text-sm leading-tight text-white transition-all duration-200 hover:from-teal-600 hover:to-cyan-700 focus:outline-none"
+                              >
+                                <Sparkles className="h-4 w-4 shrink-0" />
+                                Actualizar con IA
+                              </button>
+
+                              {/* Sube un archivo del talento */}
+                              <button
+                                type="button"
+                                onClick={() => openModal("modalUploadCert")}
+                                className="flex items-center justify-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm leading-tight text-[var(--color-blue)] hover:bg-gray-100 focus:outline-none dark:bg-slate-800 dark:hover:bg-slate-700"
+                              >
+                                <Upload className="h-4 w-4 shrink-0" />
+                                Subir archivo
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
