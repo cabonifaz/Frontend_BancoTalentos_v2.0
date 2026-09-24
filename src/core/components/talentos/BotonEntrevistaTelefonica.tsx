@@ -118,7 +118,7 @@ export const BotonEntrevistaTelefonica = ({
         onClick={handleClick}
         disabled={!idTalento || cargando}
         title="Agendar una entrevista telefónica"
-        className="flex items-center justify-center gap-2 rounded-lg bg-[#0b85c3] px-3 py-2 text-sm leading-tight text-white hover:bg-[#0B6E99] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0b85c3] px-4 text-sm font-medium text-white hover:bg-[#0B6E99] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
         <PhoneCall className="h-4 w-4 shrink-0" />
         Ent. telefónica
