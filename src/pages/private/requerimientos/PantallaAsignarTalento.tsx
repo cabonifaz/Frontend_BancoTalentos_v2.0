@@ -6,7 +6,6 @@ import BackButton from "../../../core/components/ui/BackButton";
 import Toast from "../../../core/components/ui/Toast";
 import { Dashboard } from "../Dashboard";
 import {
-  ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
   ESTADO_CONFIRMADO,
   ESTADO_DATOS_COMPLETOS,
@@ -1242,11 +1241,10 @@ const TalentTable: React.FC = () => {
   // Navegación
   const goBack = () => navigate("/dashboard/requerimientos");
 
-  // Validaciones: una vez ASIGNADO (o ATENDIDO) la pantalla queda de solo lectura,
-  // incluido "Finalizar", aunque se vuelva por el botón atrás del navegador.
-  const buttonsDisabled =
-    requerimiento?.idEstado === ESTADO_ASIGNADO ||
-    requerimiento?.idEstado === ESTADO_ATENDIDO;
+  // Validaciones: sólo un RQ ATENDIDO (vacantes cubiertas, ver §7.2 del doc)
+  // deja la pantalla de solo lectura, incluido "Finalizar", aunque se vuelva por
+  // el botón atrás del navegador. ASIGNADO no bloquea: el RQ sigue asignable.
+  const buttonsDisabled = requerimiento?.idEstado === ESTADO_ATENDIDO;
 
   const handleModalIngresoClose = () => {
     setShowModalIngreso(false);
