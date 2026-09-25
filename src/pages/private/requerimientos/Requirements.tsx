@@ -65,9 +65,13 @@ interface SearchProps {
   fechaSolicitud: string | null;
 }
 
-/** El RQ está "cerrado" para asignación una vez asignado o atendido. */
+/**
+ * El RQ está "cerrado" para asignación sólo cuando está ATENDIDO, es decir
+ * cuando sus vacantes quedaron cubiertas. ASIGNADO ya no bloquea: debe poder
+ * entrarse a la pantalla, que es la misma regla de `buttonsDisabled` allí.
+ */
 const isAsignacionBloqueada = (req: RequirementItem): boolean =>
-  req.idEstado === ESTADO_ASIGNADO || req.idEstado === ESTADO_ATENDIDO;
+  req.idEstado === ESTADO_ATENDIDO;
 
 /**
  * Mismo lenguaje visual que el badge de estado de Entrevistas.
@@ -675,9 +679,7 @@ export const Requirements = () => {
                                   </button>
                                   {bloqueado && (
                                     <div className="absolute invisible group-hover:visible z-10 left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 text-xs bg-[#484848] text-white rounded whitespace-nowrap">
-                                      {req.idEstado === ESTADO_ATENDIDO
-                                        ? "Requerimiento atendido"
-                                        : "Requerimiento asignado — talentos completos"}
+                                      Requerimiento atendido — vacantes cubiertas
                                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#484848] dark:border-slate-700"></div>
                                     </div>
                                   )}
