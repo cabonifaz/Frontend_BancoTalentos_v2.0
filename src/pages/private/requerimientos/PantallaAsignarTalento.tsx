@@ -686,6 +686,17 @@ const TalentTable: React.FC = () => {
     return entries.length > 0 && entries.every((e) => e.confirmed >= e.required);
   }, [coverageByPerfil]);
 
+  // Quiénes se ingresan en esta tanda: los marcados que todavía no ingresaron.
+  // Es la misma condición del SP (`CONFIRMADO = 1` + `INGRESO = 0`), y por eso
+  // se puede finalizar varias veces sin duplicar contratos ni formularios.
+  const talentosAIngresar = useMemo(
+    () =>
+      localTalents.filter(
+        (t) => t.confirmado && t.idEstadoRegistro !== 0 && t.ingreso !== 1
+      ),
+    [localTalents]
+  );
+
   // Mostrar y ocultar Toast
   const showToast = (
     message: string,
@@ -1060,21 +1071,56 @@ const TalentTable: React.FC = () => {
     });
   };
 
-  // Verificar confirmación: solo se puede finalizar cuando TODAS las vacantes
-  // (por perfil) están cubiertas por talentos confirmados.
-  const handleConfirmOpen = () => {
-    if (!isFullyCovered) {
-      showToast(
-        perfilesFaltantes.length > 0
-          ? `Aún faltan vacantes por cubrir: ${perfilesFaltantes.join(
-              ", "
-            )}. Debe cubrirlas todas para finalizar.`
-          : "Debe cubrir todas las vacantes del requerimiento para finalizar.",
-        "error"
-      );
-      return;
+  const nombreDeTalento = (talento: AsignarTalentoType) =>
+    `${talento.nombres || ""} ${
+      talento.apellidos ||
+      `${talento.apellidoPaterno || ""} ${talento.apellidoMaterno || ""}`.trim()
+    }`.trim();
+
+  /**
+   * Qué dice el modal de Finalizar.
+   *
+   * Finalizar ya no exige cubrir todas las vacantes: ingresa a los confirmados
+   * de esta tanda y, si queda algún perfil sin cubrir, el RQ sigue abierto
+   * (el SP sólo lo pasa a Asignado con la cobertura completa). Por eso el
+   * mensaje dice a cuántos se va a contratar y qué queda pendiente.
+   */
+  const mensajeDeFinalizar = useMemo(() => {
+    const total = talentosAIngresar.length;
+    if (total === 0) {
+      return "No hay talentos confirmados pendientes de ingreso. ¿Desea guardar de todas formas?";
     }
 
+    const quienes =
+      total === 1
+        ? `Se registrará el ingreso de ${nombreDeTalento(talentosAIngresar[0])}`
+        : `Se registrará el ingreso de ${total} talentos`;
+
+    const pendiente = isFullyCovered
+      ? " Con esto se cubren todas las vacantes y el requerimiento pasará a Atendido."
+      : perfilesFaltantes.length > 0
+        ? ` Quedan vacantes por cubrir (${perfilesFaltantes.join(
+            ", "
+          )}): el requerimiento seguirá abierto para completarlas después.`
+        : " El requerimiento seguirá abierto.";
+
+    // Aviso del gap cross-session: si el talento se confirmó en otra sesión, sus
+    // datos de ingreso ya no están en memoria y el formulario saldría incompleto.
+    const sinDatos = talentosAIngresar
+      .filter((t) => !confirmedByTalento.current[t.idTalento])
+      .map(nombreDeTalento);
+
+    const advertencia =
+      sinDatos.length > 0
+        ? ` Atención: ${sinDatos.join(
+            ", "
+          )} se confirmó en otra sesión, así que su formulario puede salir incompleto.`
+        : "";
+
+    return `${quienes}, con sus formularios y correos.${pendiente}${advertencia} ¿Desea continuar?`;
+  }, [talentosAIngresar, isFullyCovered, perfilesFaltantes]);
+
+  const handleConfirmOpen = () => {
     setIsConfirmModalOpen(true);
   };
 
@@ -1425,7 +1471,7 @@ const TalentTable: React.FC = () => {
           isOpen={isConfirmModalOpen}
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={() => handleFinalize({ flagCorreo: true, finalizar: true })}
-          message="¿Está seguro que desea finalizar y guardar los talentos confirmados?"
+          message={mensajeDeFinalizar}
         />
 
         <BlacklistWarningModal

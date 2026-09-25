@@ -1,6 +1,7 @@
 import {
   Building2,
   CalendarDays,
+  Phone,
   ChevronLeft,
   Clock,
   FolderOpen,
@@ -72,6 +73,9 @@ const Chip = ({
 export const FichaTalento = ({ detalle, onVolver, onDocumentos }: Props) => {
   const nombre = nombreCompleto(detalle) || "Talento";
   const vigente = contratoVigente(detalle?.contracts);
+  // La antigüedad se cuenta desde el contrato más reciente, haya terminado o
+  // no: si sólo mirara el vigente, un talento cesado no tendría antigüedad.
+  const ultimo = vigente ?? detalle?.contracts?.[0];
   const estado = estadoTalento(detalle?.contracts);
 
   return (
@@ -107,6 +111,9 @@ export const FichaTalento = ({ detalle, onVolver, onDocumentos }: Props) => {
                   texto={`DNI ${detalle?.documentNumber || "—"}`}
                 />
                 {detalle?.email && <Chip icono={Mail} texto={detalle.email} />}
+                {detalle?.celular && (
+                  <Chip icono={Phone} texto={detalle.celular} />
+                )}
               </div>
             </div>
           </div>
@@ -117,7 +124,7 @@ export const FichaTalento = ({ detalle, onVolver, onDocumentos }: Props) => {
             className="btn btn-outline-blue mx-0 flex h-10 items-center gap-2"
           >
             <FolderOpen size={17} strokeWidth={1.8} />
-            Documentos
+            Formularios
           </button>
         </div>
 
@@ -135,8 +142,8 @@ export const FichaTalento = ({ detalle, onVolver, onDocumentos }: Props) => {
           />
           <Dato
             icono={Clock}
-            label="Antigüedad"
-            valor={vigente ? antiguedad(vigente.startDate) : "—"}
+            label="Antigüedad (último contrato)"
+            valor={ultimo ? antiguedad(ultimo.startDate) : "—"}
           />
         </div>
       </div>

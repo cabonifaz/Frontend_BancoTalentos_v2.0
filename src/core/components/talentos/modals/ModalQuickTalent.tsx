@@ -2,12 +2,14 @@ import { useRef, useState } from "react";
 import { enqueueSnackbar } from "notistack";
 import { FileText, Sparkles, Upload, X } from "lucide-react";
 import { createPortal } from "react-dom";
-import {
-  QuickCVData,
-  useQuickCVData,
-} from "../../../hooks/talentos/useQuickCVData";
+import { useFetchCVData } from "../../../hooks/talentos/useFetchCVData";
 import { addTalent } from "../../../services/talents.service";
 import { AddTalentParams } from "../../../models";
+import {
+  DatosCV,
+  datosDelCV,
+  resumenDelCV,
+} from "../../../utilities/quickCV";
 import { ARCHIVO_PDF, DOCUMENTO_CV } from "../../../utilities/constants";
 import { Utils } from "../../../utilities/utils";
 import { handleError } from "../../../utilities/errorHandler";
@@ -42,6 +44,10 @@ const FORM_VACIO: FormularioRapido = {
 
 /** PARAMETROS maestro 12: num1 = país, string1 = nombre, string3 = prefijo. */
 const MAESTRO_PAISES = 12;
+/** Maestros que hacen falta para guardar lo que el modal no enseña. */
+const MAESTRO_CIUDADES = 13;
+const MAESTRO_HAB_TECNICAS = 19;
+const MAESTRO_HAB_BLANDAS = 20;
 
 /** Largo del número local en Perú; lo que sobre por delante es el prefijo. */
 const LARGO_NUMERO_LOCAL = 9;
@@ -108,12 +114,13 @@ const Campo = ({
 /**
  * Carga rápida de un talento desde su CV.
  *
- * Tres pasos en un solo modal: subir el PDF, revisar lo que la IA leyó (todo
- * editable) y crear. El talento nace sólo con identidad, contacto y su CV; el
- * resto de la ficha se completa después desde su detalle.
+ * Tres pasos en un solo modal: subir el PDF, revisar lo que la IA leyó y crear.
+ * Sólo se piden identidad y contacto —lo que conviene revisar a ojo— pero el CV
+ * se analiza entero: experiencia, estudios, habilidades, idiomas, presentación
+ * y redes se guardan igual que en el alta larga, sin mostrarlos aquí.
  */
 export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
-  const { fetchQuickCVData } = useQuickCVData();
+  const { fetchCVDetails } = useFetchCVData();
   const { paramsByMaestro } = useParams();
   const paises = paramsByMaestro[MAESTRO_PAISES] || [];
   const inputArchivoRef = useRef<HTMLInputElement>(null);
@@ -123,6 +130,9 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
   const [creando, setCreando] = useState(false);
   const [datosLeidos, setDatosLeidos] = useState(false);
   const [form, setForm] = useState<FormularioRapido>(FORM_VACIO);
+  /** Todo lo que la IA leyó y no se enseña, ya listo para el alta. */
+  const [extra, setExtra] = useState<Partial<AddTalentParams>>({});
+  const [resumen, setResumen] = useState<string[]>([]);
   const [errores, setErrores] = useState<ErroresRapido>({});
   /** Campos que el CV no traía: se marcan para que el usuario los complete. */
   const [faltantes, setFaltantes] = useState<string[]>([]);
@@ -150,10 +160,17 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
     }
     setCvFile(archivo);
     setDatosLeidos(false);
+    setExtra({});
+    setResumen([]);
   };
 
-  const volcarDatos = (datos: QuickCVData) => {
-    const { prefijo, numero } = partirCelular(datos.celular);
+  const volcarDatos = (datos: DatosCV) => {
+    // El análisis completo separa el código del número, pero no siempre trae el
+    // código: cuando falta se intenta deducir del propio número.
+    const partido = partirCelular(datos.contacto?.celularNum);
+    const prefijo =
+      soloDigitos(datos.contacto?.celularCod) || partido.prefijo;
+    const numero = partido.numero;
     // El prefijo leído del CV se cruza con el maestro para dejar el país ya
     // elegido; si no coincide con ninguno, el combo queda vacío.
     const paisDetectado = prefijo
@@ -166,14 +183,23 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
       apellidoMaterno: datos.apellidoMaterno?.trim() ?? "",
       idPais: paisDetectado ?? 0,
       celular: numero,
-      email: datos.email?.trim() ?? "",
+      email: datos.contacto?.email?.trim() ?? "",
     });
+
+    const resto = datosDelCV(datos, {
+      paises,
+      ciudades: paramsByMaestro[MAESTRO_CIUDADES] || [],
+      habilidadesTecnicas: paramsByMaestro[MAESTRO_HAB_TECNICAS] || [],
+      habilidadesBlandas: paramsByMaestro[MAESTRO_HAB_BLANDAS] || [],
+    });
+    setExtra(resto);
+    setResumen(resumenDelCV(resto));
 
     const sinDato: string[] = [];
     if (!datos.nombres) sinDato.push("nombres");
     if (!datos.apellidoPaterno) sinDato.push("apellidos");
-    if (!datos.celular) sinDato.push("celular");
-    if (!datos.email) sinDato.push("correo");
+    if (!numero) sinDato.push("celular");
+    if (!datos.contacto?.email) sinDato.push("correo");
     setFaltantes(sinDato);
   };
 
@@ -181,7 +207,8 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
     if (!cvFile) return;
     setAnalizando(true);
     try {
-      volcarDatos(await fetchQuickCVData(cvFile));
+      const { data } = await fetchCVDetails(cvFile);
+      volcarDatos(data);
       setDatosLeidos(true);
     } catch (error) {
       enqueueSnackbar(
@@ -217,9 +244,13 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
     try {
       const cvBase64 = await Utils.fileToBase64(cvFile);
 
-      // Alta mínima: lo que no se pidió va fuera del payload, no en cero.
+      // Lo leído del CV va primero: identidad y contacto los pisa lo que el
+      // usuario acaba de revisar, que es lo único que se le enseñó.
       const params: AddTalentParams = {
-        dni: null,
+        ...extra,
+        dni: extra.dni ?? null,
+        // Si el CV no decía de dónde es, queda el país del teléfono.
+        idPais: extra.idPais ?? form.idPais,
         nombres: form.nombres.trim(),
         apellidoPaterno: form.apellidoPaterno.trim(),
         apellidoMaterno: form.apellidoMaterno.trim() || null,
@@ -273,8 +304,9 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
               Carga rápida con CV
             </h3>
             <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
-              Se crea el talento con nombres, apellidos, celular y correo. El
-              resto de la ficha se completa después.
+              Sólo revisas nombres, apellidos, celular y correo. Lo demás que
+              traiga el CV (experiencia, estudios, habilidades e idiomas) se
+              guarda igual.
             </p>
           </div>
           <button
@@ -328,13 +360,19 @@ export const ModalQuickTalent = ({ onClose, onCreated }: Props) => {
               className="btn btn-primary mx-0 flex h-11 items-center justify-center gap-2"
             >
               <Sparkles size={18} strokeWidth={2} />
-              {analizando ? "Leyendo el CV…" : "Analizar CV"}
+              {analizando ? "Analizando el CV…" : "Analizar CV"}
             </button>
           )}
 
           {/* Paso 2: lo que leyó la IA, editable */}
           {datosLeidos && (
             <>
+              {resumen.length > 0 && (
+                <p className="rounded-lg bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:bg-sky-400/10 dark:text-sky-300">
+                  Del CV también se guardarán {resumen.join(", ")}.
+                </p>
+              )}
+
               {faltantes.length > 0 && (
                 <p className="rounded-lg bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-400/10 dark:text-yellow-300">
                   El CV no traía {faltantes.join(", ")}. Complétalo abajo antes

@@ -4,7 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { ArrowRight, PhoneCall, Plus, X } from "lucide-react";
 import { useParams } from "../../context/ParamsContext";
-import { TIPO_ENTREVISTA } from "../../utilities/constants";
+import {
+  ETAPA_ENTREVISTA_FILTRO_TELEFONICO,
+  TIPO_ENTREVISTA,
+} from "../../utilities/constants";
 import { isTelefonicaType } from "../../utilities/interviewType";
 import {
   InterviewByTalent,
@@ -68,6 +71,8 @@ export const BotonEntrevistaTelefonica = ({
         // El tipo se manda con la etiqueta exacta del maestro para que el
         // formulario lo marque sin depender de tildes ni mayúsculas.
         tipoEntrevista: tipoTelefonica?.string1,
+        // Esta vía siempre es el filtro telefónico de R&S (maestro 44, num1 8).
+        etapa: ETAPA_ENTREVISTA_FILTRO_TELEFONICO,
         fecha: hoyISO(),
         hora: horaSugerida(),
       },

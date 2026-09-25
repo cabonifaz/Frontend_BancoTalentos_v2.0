@@ -141,13 +141,9 @@ export default function ExpedientePage() {
             <ExpedienteTabs tabs={tabs} activa={seccion} onChange={setSeccion} />
 
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-1">
-              {seccion === "resumen" && (
-                <TabResumen
-                  detalle={detalle}
-                  onVerHistorial={handleVerHistorial}
-                  onVerEquipo={handleVerEquipo}
-                />
-              )}
+              {/* El resumen es sólo lectura: los PDF se descargan desde su
+                  pestaña (o desde Formularios), no desde la línea de tiempo. */}
+              {seccion === "resumen" && <TabResumen detalle={detalle} />}
               {seccion === "contratos" && (
                 <TabContratos contratos={detalle?.contracts} />
               )}
