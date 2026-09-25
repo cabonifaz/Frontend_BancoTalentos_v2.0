@@ -1,7 +1,9 @@
 import {
   Briefcase,
   DoorOpen,
+  FileSignature,
   History,
+  LogIn,
   Monitor,
   Repeat2,
 } from "lucide-react";
@@ -12,16 +14,15 @@ import {
   contratoVigente,
   lineaDeTiempo,
 } from "../../utilities/expediente";
-import { BotonPdf } from "./TablaExpediente";
 
 interface Props {
   detalle?: ExpedienteDetalle;
-  onVerHistorial: (tipoHistorial: number, idHistorial: number) => void;
-  onVerEquipo: (idSolicitud: number) => void;
 }
 
+/** Un icono por tipo de hito: el contrato no es lo mismo que el ingreso. */
 const ICONO_HITO: Record<TipoHito, typeof Briefcase> = {
-  ingreso: Briefcase,
+  contrato: FileSignature,
+  ingreso: LogIn,
   movimiento: Repeat2,
   equipo: Monitor,
   cese: DoorOpen,
@@ -67,18 +68,11 @@ const TarjetaLateral = ({
 const Hito = ({
   hito,
   ultimo,
-  onVerHistorial,
-  onVerEquipo,
 }: {
   hito: HitoExpediente;
   ultimo: boolean;
-  onVerHistorial: (tipoHistorial: number, idHistorial: number) => void;
-  onVerEquipo: (idSolicitud: number) => void;
 }) => {
   const Icono = ICONO_HITO[hito.tipo];
-  const pdfHistorial =
-    hito.pdf?.tipoHistorial !== undefined && hito.pdf?.idHistorial !== undefined;
-  const pdfEquipo = hito.pdf?.idSolicitud !== undefined;
 
   return (
     <li className="flex gap-3">
@@ -109,16 +103,6 @@ const Hito = ({
             </span>
           )}
         </div>
-        {pdfHistorial && (
-          <BotonPdf
-            onClick={() =>
-              onVerHistorial(hito.pdf!.tipoHistorial!, hito.pdf!.idHistorial!)
-            }
-          />
-        )}
-        {pdfEquipo && (
-          <BotonPdf onClick={() => onVerEquipo(hito.pdf!.idSolicitud!)} />
-        )}
       </div>
     </li>
   );
@@ -129,7 +113,7 @@ const Hito = ({
  * vigente y el último equipo. Es la vista que no existe en FMI, donde hay que
  * ir abriendo las cinco pestañas para reconstruirla.
  */
-export const TabResumen = ({ detalle, onVerHistorial, onVerEquipo }: Props) => {
+export const TabResumen = ({ detalle }: Props) => {
   const hitos = lineaDeTiempo(detalle);
   const vigente = contratoVigente(detalle?.contracts);
   const equipo = detalle?.equipmentRequests?.[0];
@@ -158,8 +142,6 @@ export const TabResumen = ({ detalle, onVerHistorial, onVerEquipo }: Props) => {
                 key={`${hito.tipo}-${hito.fecha}-${indice}`}
                 hito={hito}
                 ultimo={indice === hitos.length - 1}
-                onVerHistorial={onVerHistorial}
-                onVerEquipo={onVerEquipo}
               />
             ))}
           </ul>
@@ -185,7 +167,7 @@ export const TabResumen = ({ detalle, onVerHistorial, onVerEquipo }: Props) => {
           }
         />
         <TarjetaLateral
-          titulo="Último equipo"
+          titulo="Última solicitud de equipo"
           icono={Monitor}
           vacio="Sin solicitudes de equipo."
           filas={

@@ -86,6 +86,8 @@ export interface ExpedienteDetalle {
   surname?: string;
   /** Correo personal de BT_TALENTO (el corporativo no viaja en este SP). */
   email?: string;
+  /** BT_TALENTO.CELULAR, con el prefijo tal como se guardó ("+51 987654321"). */
+  celular?: string;
   documentNumber?: string;
   description?: string;
   contracts?: ExpedienteContrato[];

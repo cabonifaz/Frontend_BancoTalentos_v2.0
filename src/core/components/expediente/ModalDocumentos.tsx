@@ -47,7 +47,8 @@ const Opcion = ({
 );
 
 /**
- * Los últimos formularios del talento, como el modal "Documentos" de FMI.
+ * Los últimos formularios del talento (en FMI esta misma pantalla se llama
+ * "Documentos").
  *
  * Es la única vía para el PDF de ingreso: el detalle del expediente no devuelve
  * el `ID_HISTORIAL` de cada contrato, sólo `lastHistory` sabe cuál fue el
@@ -65,7 +66,7 @@ export const ModalDocumentos = ({
   return (
     <Modal
       id={MODAL_DOCUMENTOS_EXPEDIENTE}
-      title="Documentos del talento"
+      title="Formularios del talento"
       showButtonOptions={false}
       width="small"
       busy={busy}

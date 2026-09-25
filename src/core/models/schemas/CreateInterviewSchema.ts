@@ -43,12 +43,14 @@ export const CreateInterviewSchema = z.object({
       }
     })
   ).optional(),
-  // Preguntas telefónicas: la pregunta es obligatoria, la respuesta no (se
-  // registra durante o después de la llamada).
+  // Preguntas telefónicas: salen del maestro 55, así que lo obligatorio es
+  // elegir una; la respuesta no (se registra durante o después de la llamada).
   preguntas: z
     .array(
       z.object({
-        pregunta: z.string().min(1, "La pregunta es requerida"),
+        idPregunta: z.coerce
+          .number({ invalid_type_error: "Seleccione una pregunta" })
+          .min(1, "Seleccione una pregunta"),
         respuesta: z.string().optional().default(""),
       }),
     )

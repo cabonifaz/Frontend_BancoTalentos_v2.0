@@ -271,15 +271,18 @@ export const deleteInterviewFile = async (
 // ─── Preguntas y respuestas (entrevista telefónica) ────────────────────────
 
 export interface InterviewQuestion {
-  idPregunta?: number;
+  /** PK de ENTREVISTAS_RESPUESTAS; sólo existe en lo ya guardado. */
+  idRespuesta?: number;
   idEntrevista?: number;
-  pregunta: string;
+  /** Pregunta del maestro 55 (num1). Es lo que se guarda. */
+  idPregunta: number;
+  /** Texto de la pregunta (string1 del maestro 55): sólo llega al listar. */
+  pregunta?: string;
   respuesta?: string | null;
-  orden?: number;
 }
 
 /**
- * Alta en bloque de las preguntas de una entrevista. Se llama con el id ya
+ * Alta en bloque de las respuestas de una entrevista. Se llama con el id ya
  * creado, igual que la subida del ICS: al crear la entrevista todavía no existe
  * el id al que colgarlas.
  */
@@ -295,9 +298,9 @@ export const saveInterviewQuestions = async (
   );
 };
 
-/** Edición de una pregunta; en la práctica, registrar su respuesta. */
+/** Edición de una respuesta ya registrada. */
 export const updateInterviewQuestion = async (
-  data: { idPregunta: number; pregunta: string; respuesta?: string | null },
+  data: { idRespuesta: number; idPregunta: number; respuesta?: string | null },
   config?: ApiConfig,
 ) => {
   return axiosInstanceFMI.post<BaseResponseFMI>(
@@ -307,19 +310,19 @@ export const updateInterviewQuestion = async (
   );
 };
 
-/** Baja lógica de una pregunta. */
+/** Baja lógica de una respuesta. */
 export const deleteInterviewQuestion = async (
-  idPregunta: number,
+  idRespuesta: number,
   config?: ApiConfig,
 ) => {
   return axiosInstanceFMI.post<BaseResponseFMI>(
     "fmi/interviews/questions/remove",
     null,
-    { ...config, params: { idPregunta } },
+    { ...config, params: { idRespuesta } },
   );
 };
 
-/** Preguntas vigentes de una entrevista, en su orden. */
+/** Respuestas vigentes de una entrevista; el orden lo pone el maestro 55. */
 export const listInterviewQuestions = async (
   idEntrevista: number,
   config?: ApiConfig,

@@ -98,7 +98,17 @@ export const antiguedad = (desde?: string): string => {
   return partes.length > 0 ? partes.join(" ") : "menos de un mes";
 };
 
-export type TipoHito = "ingreso" | "movimiento" | "equipo" | "cese";
+/**
+ * Qué es cada hito. Se distingue el CONTRATO (fila de TALENTO_CONTRATO) del
+ * INGRESO (fila de HISTORIAL tipo 1): son dos registros distintos y el
+ * formulario de ingreso cuelga del contrato, no del movimiento.
+ */
+export type TipoHito =
+  | "contrato"
+  | "ingreso"
+  | "movimiento"
+  | "equipo"
+  | "cese";
 
 export interface HitoExpediente {
   tipo: TipoHito;
@@ -106,8 +116,6 @@ export interface HitoExpediente {
   orden: number;
   titulo: string;
   detalle: string;
-  /** Datos para pedir el PDF; sin ellos el hito se pinta sin botón. */
-  pdf?: { tipoHistorial?: number; idHistorial?: number; idSolicitud?: number };
 }
 
 const orden = (fecha?: string): number => parseFecha(fecha)?.getTime() ?? 0;
@@ -116,9 +124,10 @@ const orden = (fecha?: string): number => parseFecha(fecha)?.getTime() ?? 0;
  * Un solo hilo con todo el expediente. En FMI esto hay que reconstruirlo
  * abriendo las cinco pestañas.
  *
- * El ingreso no lleva PDF por fila: el detalle no devuelve el `ID_HISTORIAL`
- * del ingreso de cada contrato, sólo se puede pedir el último (ver
- * `ModalDocumentos`).
+ * Es sólo lectura: ningún hito descarga su PDF. El formulario de ingreso
+ * pertenece al contrato, no al movimiento de tipo ingreso, y mezclarlos aquí
+ * invitaba a bajarlo desde el sitio equivocado. Cada pestaña mantiene su
+ * descarga, y el modal de Formularios da los últimos de cada tipo.
  */
 export const lineaDeTiempo = (detalle?: ExpedienteDetalle): HitoExpediente[] => {
   if (!detalle) return [];
@@ -127,34 +136,58 @@ export const lineaDeTiempo = (detalle?: ExpedienteDetalle): HitoExpediente[] => 
 
   (detalle.contracts ?? []).forEach((contrato: ExpedienteContrato) => {
     hitos.push({
-      tipo: "ingreso",
+      tipo: "contrato",
       fecha: contrato.startDate,
       orden: orden(contrato.startDate),
-      titulo: `Ingreso — ${contrato.client || "Sin cliente"}`,
+      titulo: `Contrato ${contrato.contractId} — ${contrato.client || "Sin cliente"}`,
       detalle: [
+        contrato.contractType,
         contrato.rqCode,
         contrato.rqTitle,
-        `Contrato ${contrato.contractId}`,
-        contrato.contractType,
+        contrato.endDate ? `hasta el ${contrato.endDate}` : null,
       ]
         .filter(Boolean)
         .join(" · "),
     });
   });
 
+  // El SP devuelve como "movimientos" todo el HISTORIAL salvo los ceses, así
+  // que aquí vienen mezclados los ingresos (tipo 1) con los movimientos de
+  // verdad (tipo 2). Se separan por su tipo para no rotular un ingreso como
+  // "Movimiento — Ingreso".
   (detalle.movements ?? []).forEach((mov: ExpedienteMovimiento) => {
+    const detalleMov = [mov.reason, mov.previousArea, mov.position]
+      .filter((valor) => !!valor && valor !== "-")
+      .join(" · ");
+
+    if (mov.movementTypeId === HISTORIAL_INGRESO) {
+      hitos.push({
+        tipo: "ingreso",
+        fecha: mov.movementDate,
+        orden: orden(mov.movementDate),
+        titulo: "Ingreso",
+        detalle: detalleMov,
+      });
+      return;
+    }
+
+    if (mov.movementTypeId === HISTORIAL_CESE) {
+      hitos.push({
+        tipo: "cese",
+        fecha: mov.movementDate,
+        orden: orden(mov.movementDate),
+        titulo: "Cese",
+        detalle: detalleMov,
+      });
+      return;
+    }
+
     hitos.push({
       tipo: "movimiento",
       fecha: mov.movementDate,
       orden: orden(mov.movementDate),
       titulo: `Movimiento — ${mov.movementType || "Sin tipo"}`,
-      detalle: [mov.reason, mov.previousArea, mov.position]
-        .filter((valor) => !!valor && valor !== "-")
-        .join(" · "),
-      pdf: {
-        tipoHistorial: mov.movementTypeId ?? HISTORIAL_MOVIMIENTO,
-        idHistorial: mov.movementId,
-      },
+      detalle: detalleMov,
     });
   });
 
@@ -171,7 +204,6 @@ export const lineaDeTiempo = (detalle?: ExpedienteDetalle): HitoExpediente[] => 
       ]
         .filter(Boolean)
         .join(" · "),
-      pdf: { idSolicitud: equipo.requestId },
     });
   });
 
@@ -184,7 +216,6 @@ export const lineaDeTiempo = (detalle?: ExpedienteDetalle): HitoExpediente[] => 
       detalle: [cese.client, cese.requirementCode, cese.requirementTitle]
         .filter((valor) => !!valor && valor !== "-")
         .join(" · "),
-      pdf: { tipoHistorial: HISTORIAL_CESE, idHistorial: cese.terminationId },
     });
   });
 
