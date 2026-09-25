@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { enqueueSnackbar } from "notistack";
 import { Utils } from "../core/utilities/utils";
-import { getFirstAllowedPath, isRouteAllowed } from "../core/config/navigation";
+import { getLandingPath, isRouteAllowed } from "../core/config/navigation";
 
 /**
  * Guard de autorización por ruta. Asume que la sesión ya fue validada aguas arriba
@@ -32,6 +32,5 @@ export const RouteGuard = () => {
 
   if (permitted) return <Outlet />;
 
-  const fallback = getFirstAllowedPath(routes);
-  return <Navigate to={fallback ?? "/dashboard/no-autorizado"} replace />;
+  return <Navigate to={getLandingPath(token)} replace />;
 };

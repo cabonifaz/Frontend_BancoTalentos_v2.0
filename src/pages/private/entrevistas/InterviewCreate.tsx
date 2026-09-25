@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Dashboard } from "../Dashboard";
 import { getRequirements, getRequirementById } from "../../../core/services/requirements.service";
 import { getTalents } from "../../../core/services/talents.service";
+import { getUserInfo } from "../../../core/services/account.service";
 import { useApi } from "../../../core/hooks/useApi";
 import {
   RequirementItem,
@@ -30,6 +31,7 @@ import {
   ETAPA_ENTREVISTA_CLIENTE_LABEL,
   TIPO_ENTREVISTA,
   DURACION_ENTREVISTA,
+  PREGUNTA_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
   TIPO_ENTREVISTA_TELEFONICA_LABEL,
@@ -63,9 +65,7 @@ import {
   MapPin,
   MessageSquareText,
   Phone,
-  Plus,
   Video,
-  X,
 } from "lucide-react";
 
 interface SelectedRQ {
@@ -87,6 +87,8 @@ interface PrefillState {
   cliente?: string;
   /** Etiqueta exacta del maestro 47 (la manda quien abre la pantalla). */
   tipoEntrevista?: string;
+  /** num1 de la etapa (maestro 44) que debe quedar marcada. */
+  etapa?: number;
   /** yyyy-MM-dd */
   fecha?: string;
   /** HH:mm */
@@ -127,6 +129,8 @@ export default function InterviewCreatePage() {
   const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
   // Duraciones desde el maestro 48 (NUM2 = minutos, string1 = etiqueta).
   const durationOptions = paramsByMaestro[DURACION_ENTREVISTA] || [];
+  // Preguntas telefónicas: ya no se escriben, se eligen del maestro 55.
+  const questionOptions = paramsByMaestro[PREGUNTA_ENTREVISTA] || [];
 
   // num1 de la etapa "Entrevista con el equipo de R&S" (entrevistadores opcionales).
   // En el resto de etapas se exige al menos un entrevistador.
@@ -214,6 +218,7 @@ export default function InterviewCreatePage() {
     register,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     control,
     formState: { errors },
@@ -223,23 +228,25 @@ export default function InterviewCreatePage() {
     fields: interviewerFields,
     append: appendInterviewer,
     remove: removeInterviewer,
+    replace: replaceInterviewer,
   } = useFieldArray({
     control,
     name: "entrevistadores",
   });
 
-  // Preguntas telefónicas: mismas filas dinámicas que entrevistadores.
-  const {
-    fields: preguntaFields,
-    append: appendPregunta,
-    remove: removePregunta,
-    replace: replacePregunta,
-  } = useFieldArray({
+  // Preguntas telefónicas: el cuestionario es fijo (maestro 55), así que las
+  // filas no se agregan ni se quitan, sólo se llenan sus respuestas.
+  const { fields: preguntaFields, replace: replacePregunta } = useFieldArray({
     control,
     name: "preguntas",
   });
 
   const formValues = watch();
+
+  /** Texto de una pregunta del maestro 55. */
+  const textoPregunta = (idPregunta: number) =>
+    questionOptions.find((opcion) => opcion.num1 === Number(idPregunta))
+      ?.string1 || "Pregunta";
 
   // Clientes únicos (deduplicados por idCliente) derivados de los RQ.
   const clientNames = deriveUniqueClientNames(selectedRQs).join(", ");
@@ -273,6 +280,72 @@ export default function InterviewCreatePage() {
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
   const isTelefonica = isTelefonicaType(tipoValue);
+
+  /**
+   * En la telefónica el entrevistador es quien la agenda: se precarga con su
+   * nombre y su correo. Sólo se pisa la lista si está vacía o sin escribir,
+   * para no borrar lo que el usuario ya haya puesto.
+   */
+  const [usuarioActual, setUsuarioActual] = useState<{
+    fullname: string;
+    email: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    getUserInfo()
+      .then(({ data }) => {
+        if (cancelado) return;
+        setUsuarioActual({
+          fullname: `${data?.nombres || ""} ${data?.apellidos || ""}`.trim(),
+          email: data?.email || "",
+        });
+      })
+      .catch(() => {
+        /* sin datos del usuario: la fila se queda vacía, como antes */
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  /**
+   * El cuestionario telefónico se carga entero desde el maestro 55: todas las
+   * preguntas vigentes, en su orden, listas para responder. Al salir del tipo
+   * telefónico las filas se descartan (ver `handleTipoChange`).
+   */
+  useEffect(() => {
+    if (!isTelefonica || questionOptions.length === 0) return;
+    if (preguntaFields.length > 0) return;
+
+    replacePregunta(
+      questionOptions.map((opcion) => ({
+        idPregunta: opcion.num1,
+        respuesta: "",
+      })),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTelefonica, questionOptions.length, preguntaFields.length]);
+
+  useEffect(() => {
+    if (!isTelefonica || !usuarioActual?.fullname) return;
+
+    const filas = getValues("entrevistadores") || [];
+    const sinEscribir = filas.every(
+      (fila) => !(fila?.fullname || "").trim() && !(fila?.email || "").trim(),
+    );
+    if (filas.length === 0 || sinEscribir) {
+      replaceInterviewer([
+        {
+          fullname: usuarioActual.fullname,
+          email: usuarioActual.email,
+          notificacion: false,
+        },
+      ]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTelefonica, usuarioActual]);
 
   // Etiquetas reales de las dos posiciones del switch, tomadas del maestro 47
   // (sin hardcodear el texto). Fallback a las constantes por si el maestro aún
@@ -383,6 +456,9 @@ export default function InterviewCreatePage() {
     if (prefill.tipoEntrevista) {
       handleTipoChange(prefill.tipoEntrevista);
     }
+    if (prefill.etapa) {
+      setValue("etapa", prefill.etapa, { shouldValidate: true });
+    }
     if (prefill.fecha) {
       setValue("fecha", prefill.fecha, { shouldValidate: true });
     }
@@ -469,13 +545,14 @@ export default function InterviewCreatePage() {
         // Las preguntas se guardan aquí y no en el create: necesitan el id de
         // la entrevista, igual que el ICS. Si fallan, la entrevista igual queda
         // creada y se avisa; no se revierte nada.
+        // Sólo se guardan las que tienen respuesta: las demás siguen
+        // apareciendo en el detalle porque salen del maestro, no de la tabla.
         const preguntas = (data.preguntas || [])
-          .filter((p) => (p.pregunta || "").trim() !== "")
-          .map((p, index) => ({
-            pregunta: p.pregunta.trim(),
-            respuesta: (p.respuesta || "").trim() || null,
-            orden: index + 1,
-          }));
+          .map((p) => ({
+            idPregunta: Number(p.idPregunta),
+            respuesta: (p.respuesta || "").trim(),
+          }))
+          .filter((p) => p.idPregunta > 0 && p.respuesta !== "");
 
         if (newId && isTelefonica && preguntas.length > 0) {
           saveInterviewQuestions(newId, preguntas)
@@ -516,7 +593,9 @@ export default function InterviewCreatePage() {
               enlaceEntrevista: typeFields.enlaceEntrevista || undefined,
               requerimientos: selectedRQs.map((r) => r.label),
             },
-            true,
+            // La telefónica no manda correo al candidato: se coordina por
+            // teléfono. El ICS igual se genera y queda adjunto a la entrevista.
+            !isTelefonica,
             "Nueva Entrevista",
           ).then((icsOk) => {
             if (!icsOk) {
@@ -1354,7 +1433,9 @@ export default function InterviewCreatePage() {
                       )}
                     </div>
 
-                    {/* Email notification footer */}
+                    {/* Email notification footer. La telefónica no manda
+                        correo de invitación, así que no se ofrece. */}
+                    {!isTelefonica && (
                     <div className="flex items-center px-4 py-2.5 bg-white border-t border-gray-100 dark:bg-slate-800 dark:border-slate-700">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -1373,6 +1454,7 @@ export default function InterviewCreatePage() {
                         <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 dark:bg-slate-700" />
                       </label>
                     </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1384,68 +1466,34 @@ export default function InterviewCreatePage() {
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
                     <MessageSquareText className="w-5 h-5 text-[var(--color-blue)]" />
-                    Preguntas telefónicas (Opcional)
+                    Preguntas telefónicas
                   </h3>
-                  <button
-                    type="button"
-                    onClick={() => appendPregunta({ pregunta: "", respuesta: "" })}
-                    className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
-                  >
-                    <Plus size={14} />
-                    Agregar Pregunta
-                  </button>
+                  <span className="text-xs text-gray-400 dark:text-slate-500">
+                    Responder es opcional: se puede completar después de la
+                    llamada
+                  </span>
                 </div>
 
                 {preguntaFields.length === 0 ? (
                   <p className="text-sm text-gray-400 italic dark:text-slate-500">
-                    Puedes dejar preparadas las preguntas de la llamada; las
-                    respuestas se registran durante o después de la entrevista.
+                    No hay preguntas configuradas. Se registran desde
+                    Administración → Parámetros.
                   </p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {preguntaFields.map((field, index) => (
                       <div
                         key={field.id}
-                        className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
+                        className="bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
                       >
-                        <div className="flex flex-col gap-1">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
-                            Pregunta <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            {...register(`preguntas.${index}.pregunta`)}
-                            placeholder="Ej: ¿Cuál es su disponibilidad para iniciar?"
-                            className={`input w-full bg-white dark:bg-slate-800 ${
-                              errors.preguntas?.[index]?.pregunta
-                                ? "border-red-500"
-                                : ""
-                            }`}
-                          />
-                          {errors.preguntas?.[index]?.pregunta && (
-                            <p className="text-red-500 text-xs mt-1">
-                              {errors.preguntas[index]?.pregunta?.message}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
-                            Respuesta (Opcional)
-                          </label>
-                          <input
-                            {...register(`preguntas.${index}.respuesta`)}
-                            placeholder="Se puede completar después de la llamada"
-                            className="input w-full bg-white dark:bg-slate-800"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removePregunta(index)}
-                          className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
-                          title="Eliminar pregunta"
-                          aria-label="Eliminar pregunta"
-                        >
-                          <X size={16} />
-                        </button>
+                        <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                          {index + 1}. {textoPregunta(field.idPregunta)}
+                        </p>
+                        <input
+                          {...register(`preguntas.${index}.respuesta`)}
+                          placeholder="Respuesta"
+                          className="input w-full mt-2 bg-white dark:bg-slate-800"
+                        />
                       </div>
                     ))}
                   </div>

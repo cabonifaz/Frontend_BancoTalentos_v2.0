@@ -91,6 +91,9 @@ export const TIPO_ENTREVISTA = "47";
 // Duración de entrevista (maestro 48): NUM2 = minutos, string1 = etiqueta.
 // Solo se usa en el frontend para calcular el DTEND del ICS (no se persiste).
 export const DURACION_ENTREVISTA = "48";
+// Preguntas de la entrevista telefónica (maestro 55): NUM1 = ID_PREGUNTA,
+// string1 = texto de la pregunta. Se guardan en ENTREVISTAS_RESPUESTAS por id.
+export const PREGUNTA_ENTREVISTA = "55";
 
 // Tipos de entrevista (valores en string1 del maestro 47). Se comparan de forma
 // normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
@@ -99,6 +102,10 @@ export const TIPO_ENTREVISTA_VIRTUAL_LABEL = "VIRTUAL";
 // Telefónica (num1 = 3): no pide enlace, ubicación, dirección ni duración, el
 // perfil se escribe a mano y es la única que registra preguntas y respuestas.
 export const TIPO_ENTREVISTA_TELEFONICA_LABEL = "TELEFONICA";
+
+// Etapa (maestro 44, num1 = 8) "Entrevista filtro telefónico R&S": es la que
+// queda marcada al agendar una telefónica desde el detalle del talento.
+export const ETAPA_ENTREVISTA_FILTRO_TELEFONICO = 8;
 
 // Etapa de entrevista en la que los entrevistadores son opcionales.
 // En cualquier otra etapa se exige al menos un entrevistador.
@@ -118,7 +125,7 @@ export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
 // El 9 (tipos de historial) lo usa el modal de Documentos del Expediente.
-export const ALL_PARAMS_IDS = "1,2,3,5,7,8,9,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54";
+export const ALL_PARAMS_IDS = "1,2,3,5,7,8,9,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54,55";
 
 // Catálogo de roles = PARAMETROS maestro 1 (num1 = ID_TIPO_ROL, string1 = nombre).
 export const MAESTRO_ROLES = 1;

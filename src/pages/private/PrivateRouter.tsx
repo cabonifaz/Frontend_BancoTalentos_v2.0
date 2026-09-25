@@ -3,8 +3,7 @@ import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 import { RoutesWithNotFound } from "../../core/components";
 import { RouteGuard } from "../../guard/RouteGuard";
-import { getFirstAllowedPath } from "../../core/config/navigation";
-import { Utils } from "../../core/utilities/utils";
+import { getLandingPath } from "../../core/config/navigation";
 
 const Talents = lazy(() =>
   import("./talentos/Talents").then((m) => ({ default: m.Talents })),
@@ -41,8 +40,7 @@ const NoAuthorized = lazy(() =>
 );
 
 export const PrivateRouter = () => {
-  const routes = Utils.getUserRoutes(localStorage.getItem("token") || undefined);
-  const home = getFirstAllowedPath(routes) ?? "/dashboard/no-autorizado";
+  const home = getLandingPath(localStorage.getItem("token") || undefined);
 
   return (
     <RoutesWithNotFound>

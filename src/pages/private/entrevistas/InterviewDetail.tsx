@@ -68,6 +68,7 @@ import {
   ESTADO_RQ,
   TIPO_ENTREVISTA,
   DURACION_ENTREVISTA,
+  PREGUNTA_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
   TIPO_ENTREVISTA_TELEFONICA_LABEL,
@@ -240,6 +241,8 @@ export default function InterviewDetailPage() {
   const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
   // Duraciones desde el maestro 48 (NUM2 = minutos, string1 = etiqueta).
   const durationOptions = paramsByMaestro[DURACION_ENTREVISTA] || [];
+  // Preguntas telefónicas: ya no se escriben, se eligen del maestro 55.
+  const questionOptions = paramsByMaestro[PREGUNTA_ENTREVISTA] || [];
   const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
   // El ICS es generado por el sistema: se excluye de la subida manual.
   const uploadableFileTypes = interviewFileTypes.filter(
@@ -664,69 +667,92 @@ export default function InterviewDetailPage() {
   }, [detailResult, setValue]);
 
 
-  // Las preguntas se piden aparte del detalle: son su propia tabla.
+  /**
+   * El cuestionario es el maestro 55 completo; de la tabla sólo vienen las
+   * respuestas ya registradas, que se cruzan por `idPregunta`. Una respuesta
+   * de una pregunta retirada del maestro se conserva al final para no
+   * esconderla.
+   */
+  const combinarPreguntas = (
+    guardadas: InterviewQuestion[],
+  ): InterviewQuestion[] => {
+    const delMaestro = questionOptions.map((opcion) => {
+      const guardada = guardadas.find(
+        (fila) => Number(fila.idPregunta) === opcion.num1,
+      );
+      return {
+        idRespuesta: guardada?.idRespuesta,
+        idPregunta: opcion.num1,
+        pregunta: opcion.string1,
+        respuesta: guardada?.respuesta ?? "",
+      };
+    });
+
+    const retiradas = guardadas.filter(
+      (fila) =>
+        !questionOptions.some(
+          (opcion) => opcion.num1 === Number(fila.idPregunta),
+        ),
+    );
+
+    return [...delMaestro, ...retiradas];
+  };
+
+  // Las respuestas se piden aparte del detalle: son su propia tabla.
   useEffect(() => {
-    if (!id || !isTelefonica) return;
+    if (!id || !isTelefonica || questionOptions.length === 0) return;
 
     let cancelado = false;
     listInterviewQuestions(Number(id))
       .then(({ data: rs }) => {
         if (cancelado) return;
         const filas = rs?.data ?? [];
-        setPreguntas(filas);
         preguntasOriginalesRef.current = filas;
+        setPreguntas(combinarPreguntas(filas));
       })
       .catch(() => {
-        /* sin preguntas cargadas: la sección queda vacía */
+        /* sin respuestas cargadas: el cuestionario se muestra en blanco */
       });
 
     return () => {
       cancelado = true;
     };
-  }, [id, isTelefonica]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isTelefonica, questionOptions.length]);
 
-  const setPregunta = (
-    index: number,
-    campo: "pregunta" | "respuesta",
-    valor: string,
-  ) => {
+  const setRespuesta = (index: number, valor: string) => {
     setPreguntas((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, [campo]: valor } : p)),
+      prev.map((p, i) => (i === index ? { ...p, respuesta: valor } : p)),
     );
   };
 
   /**
-   * Concilia la tabla contra lo que había al abrir: da de alta las nuevas,
-   * actualiza las que cambiaron y da de baja las que se quitaron. Se llama tras
+   * Sólo se guarda lo respondido: la pregunta sin respuesta no ocupa fila en la
+   * tabla, y borrar el texto de una ya guardada la da de baja. Se llama tras
    * guardar la entrevista; si algo falla sólo avisa, nunca revierte el guardado.
    */
   const guardarPreguntas = async (idEntrevista: number) => {
     const originales = preguntasOriginalesRef.current;
-    const vigentes = preguntas.filter((p) => (p.pregunta || "").trim() !== "");
+    const filas = preguntas.map((p) => ({
+      ...p,
+      texto: (p.respuesta || "").trim(),
+    }));
 
-    const nuevas = vigentes
-      .filter((p) => !p.idPregunta)
-      .map((p, index) => ({
-        pregunta: p.pregunta.trim(),
-        respuesta: (p.respuesta || "").trim() || null,
-        orden: index + 1,
+    const nuevas = filas
+      .filter((p) => !p.idRespuesta && p.texto !== "" && Number(p.idPregunta) > 0)
+      .map((p) => ({
+        idPregunta: Number(p.idPregunta),
+        respuesta: p.texto,
       }));
 
-    const editadas = vigentes.filter((p) => {
-      if (!p.idPregunta) return false;
-      const original = originales.find((o) => o.idPregunta === p.idPregunta);
-      if (!original) return false;
-      return (
-        (original.pregunta || "") !== (p.pregunta || "") ||
-        (original.respuesta || "") !== (p.respuesta || "")
-      );
+    const editadas = filas.filter((p) => {
+      if (!p.idRespuesta || p.texto === "") return false;
+      const original = originales.find((o) => o.idRespuesta === p.idRespuesta);
+      return !!original && (original.respuesta || "").trim() !== p.texto;
     });
 
-    const eliminadas = originales.filter(
-      (o) =>
-        o.idPregunta &&
-        !preguntas.some((p) => p.idPregunta === o.idPregunta),
-    );
+    // Respuesta borrada: se da de baja la fila que la tenía.
+    const eliminadas = filas.filter((p) => p.idRespuesta && p.texto === "");
 
     try {
       if (nuevas.length > 0) {
@@ -734,22 +760,22 @@ export default function InterviewDetailPage() {
       }
       for (const p of editadas) {
         await updateInterviewQuestion({
-          idPregunta: p.idPregunta as number,
-          pregunta: (p.pregunta || "").trim(),
-          respuesta: (p.respuesta || "").trim() || null,
+          idRespuesta: p.idRespuesta as number,
+          idPregunta: Number(p.idPregunta),
+          respuesta: p.texto,
         });
       }
       for (const p of eliminadas) {
-        await deleteInterviewQuestion(p.idPregunta as number);
+        await deleteInterviewQuestion(p.idRespuesta as number);
       }
 
       const { data: rs } = await listInterviewQuestions(idEntrevista);
-      const filas = rs?.data ?? [];
-      setPreguntas(filas);
-      preguntasOriginalesRef.current = filas;
+      const guardadas = rs?.data ?? [];
+      preguntasOriginalesRef.current = guardadas;
+      setPreguntas(combinarPreguntas(guardadas));
     } catch {
       enqueueSnackbar(
-        "La entrevista se guardó, pero no se pudieron guardar todas las preguntas.",
+        "La entrevista se guardó, pero no se pudieron guardar todas las respuestas.",
         { variant: "warning" },
       );
     }
@@ -841,7 +867,8 @@ export default function InterviewDetailPage() {
             enlaceEntrevista: typeFields.enlaceEntrevista || undefined,
             requerimientos: selectedRQs.map((r) => r.label),
           },
-          dateTimeChanged,
+          // La telefónica no manda correo al candidato aunque cambie la fecha.
+          dateTimeChanged && !isTelefonica,
           "Actualización de Entrevista",
         ).then((icsOk) => {
           if (!icsOk) {
@@ -1589,72 +1616,39 @@ const confirmUpload = async () => {
                         <MessageSquareText className="w-5 h-5 text-[var(--color-blue)]" />
                         Preguntas telefónicas
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setPreguntas((prev) => [
-                            ...prev,
-                            { pregunta: "", respuesta: "" },
-                          ])
-                        }
-                        className="text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
-                      >
-                        <Plus size={14} />
-                        Agregar Pregunta
-                      </button>
+                      <span className="text-xs text-gray-400 dark:text-slate-500">
+                        Sólo se guardan las que tengan respuesta
+                      </span>
                     </div>
 
                     {preguntas.length === 0 ? (
                       <p className="text-sm text-gray-400 italic dark:text-slate-500">
-                        Sin preguntas registradas. Las respuestas se pueden
-                        completar después de la llamada.
+                        No hay preguntas configuradas. Se registran desde
+                        Administración → Parámetros.
                       </p>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {preguntas.map((pregunta, index) => (
                           <div
-                            key={pregunta.idPregunta ?? `nueva-${index}`}
-                            className="grid grid-cols-1 md:grid-cols-[1fr_1fr_40px] gap-4 items-start bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
+                            key={
+                              pregunta.idPregunta ||
+                              pregunta.idRespuesta ||
+                              index
+                            }
+                            className="bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
                           >
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
-                                Pregunta <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                value={pregunta.pregunta || ""}
-                                onChange={(e) =>
-                                  setPregunta(index, "pregunta", e.target.value)
-                                }
-                                placeholder="Ej: ¿Cuál es su disponibilidad para iniciar?"
-                                className="input w-full bg-white dark:bg-slate-800"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 dark:text-slate-500">
-                                Respuesta (Opcional)
-                              </label>
-                              <input
-                                value={pregunta.respuesta || ""}
-                                onChange={(e) =>
-                                  setPregunta(index, "respuesta", e.target.value)
-                                }
-                                placeholder="Se puede completar después de la llamada"
-                                className="input w-full bg-white dark:bg-slate-800"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPreguntas((prev) =>
-                                  prev.filter((_, i) => i !== index),
-                                )
+                            <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                              {index + 1}.{" "}
+                              {pregunta.pregunta || "Pregunta retirada"}
+                            </p>
+                            <input
+                              value={pregunta.respuesta || ""}
+                              onChange={(e) =>
+                                setRespuesta(index, e.target.value)
                               }
-                              className="mt-6 p-2 text-gray-400 hover:text-red-500 transition-colors dark:text-slate-500"
-                              title="Eliminar pregunta"
-                              aria-label="Eliminar pregunta"
-                            >
-                              <X size={16} />
-                            </button>
+                              placeholder="Respuesta"
+                              className="input w-full mt-2 bg-white dark:bg-slate-800"
+                            />
                           </div>
                         ))}
                       </div>
@@ -1865,7 +1859,9 @@ const confirmUpload = async () => {
                           )}
                         </div>
 
-                        {/* Email notification footer */}
+                        {/* Email notification footer. La telefónica no manda
+                            correo de invitación, así que no se ofrece. */}
+                        {!isTelefonica && (
                         <div className="flex items-center px-4 py-2.5 bg-white border-t border-gray-100 dark:bg-slate-800 dark:border-slate-700">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1884,6 +1880,7 @@ const confirmUpload = async () => {
                             <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 dark:bg-slate-700" />
                           </label>
                         </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1891,70 +1888,20 @@ const confirmUpload = async () => {
               </SectionCard>
 
               {/* Notas */}
-              <SectionCard
-                icon={IconPencil}
-                title="Notas de la Entrevista"
-                iconColor="text-[var(--color-primary)]"
-              >
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <label className="input-label block m-0">
-                        Notas Personales
-                      </label>
-                      <Controller
-                        name="calificacionPersonal"
-                        control={control}
-                        render={({ field }) => (
-                          <StarRating
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                            size="w-5 h-5"
-                            gap="gap-0.5"
-                          />
-                        )}
-                      />
-                    </div>
-                    <textarea
-                      {...register("notasPersonales")}
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Impresiones generales sobre la personalidad y actitud..."
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <label className="input-label block m-0">
-                        Notas Experiencia Laboral
-                      </label>
-                      <Controller
-                        name="calificacionExperiencia"
-                        control={control}
-                        render={({ field }) => (
-                          <StarRating
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                            size="w-5 h-5"
-                            gap="gap-0.5"
-                          />
-                        )}
-                      />
-                    </div>
-                    <textarea
-                      {...register("notasExperiencia")}
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Detalles relevantes sobre roles previos y logros..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!isTelefonica && (
+                <SectionCard
+                  icon={IconPencil}
+                  title="Notas de la Entrevista"
+                  iconColor="text-[var(--color-primary)]"
+                >
+                  <div className="flex flex-col gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <label className="input-label block m-0">
-                          Notas Idiomas
+                          Notas Personales
                         </label>
                         <Controller
-                          name="calificacionIdiomas"
+                          name="calificacionPersonal"
                           control={control}
                           render={({ field }) => (
                             <StarRating
@@ -1967,19 +1914,19 @@ const confirmUpload = async () => {
                         />
                       </div>
                       <textarea
-                        {...register("notasIdiomas")}
+                        {...register("notasPersonales")}
                         rows={3}
                         className="input w-full resize-none"
-                        placeholder="Nivel de fluidez y vocabulario técnico..."
+                        placeholder="Impresiones generales sobre la personalidad y actitud..."
                       />
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <label className="input-label block m-0">
-                          Notas Educación
+                          Notas Experiencia Laboral
                         </label>
                         <Controller
-                          name="calificacionEducacion"
+                          name="calificacionExperiencia"
                           control={control}
                           render={({ field }) => (
                             <StarRating
@@ -1992,15 +1939,67 @@ const confirmUpload = async () => {
                         />
                       </div>
                       <textarea
-                        {...register("notasEducacion")}
+                        {...register("notasExperiencia")}
                         rows={3}
                         className="input w-full resize-none"
-                        placeholder="Formación académica y certificaciones..."
+                        placeholder="Detalles relevantes sobre roles previos y logros..."
                       />
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <label className="input-label block m-0">
+                            Notas Idiomas
+                          </label>
+                          <Controller
+                            name="calificacionIdiomas"
+                            control={control}
+                            render={({ field }) => (
+                              <StarRating
+                                value={field.value || 0}
+                                onChange={field.onChange}
+                                size="w-5 h-5"
+                                gap="gap-0.5"
+                              />
+                            )}
+                          />
+                        </div>
+                        <textarea
+                          {...register("notasIdiomas")}
+                          rows={3}
+                          className="input w-full resize-none"
+                          placeholder="Nivel de fluidez y vocabulario técnico..."
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <label className="input-label block m-0">
+                            Notas Educación
+                          </label>
+                          <Controller
+                            name="calificacionEducacion"
+                            control={control}
+                            render={({ field }) => (
+                              <StarRating
+                                value={field.value || 0}
+                                onChange={field.onChange}
+                                size="w-5 h-5"
+                                gap="gap-0.5"
+                              />
+                            )}
+                          />
+                        </div>
+                        <textarea
+                          {...register("notasEducacion")}
+                          rows={3}
+                          className="input w-full resize-none"
+                          placeholder="Formación académica y certificaciones..."
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </SectionCard>
+                </SectionCard>
+              )}
             </div>
 
             {/* ── Right column ── */}
@@ -2045,83 +2044,85 @@ const confirmUpload = async () => {
 
         {/* ── Files section (Outside form) ── */}
         <div className="mt-4 pb-6">
-          <SectionCard icon={IconFolder} title="Archivos Subidos">
-            {/* header action */}
-            <div className="flex items-center justify-between -mt-5 mb-4">
-              <span /> {/* spacer – title already in SectionCard */}
-              <button
-                type="button"
-                className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Plus size={14} />
-                Agregar
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </div>
-
-            {/* File list */}
-            <div className="flex flex-col gap-1 mb-3">
-              {files.map((f) => (
-                <div
-                  key={f.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group dark:hover:bg-slate-700"
+          {!isTelefonica && (
+            <SectionCard icon={IconFolder} title="Archivos Subidos">
+              {/* header action */}
+              <div className="flex items-center justify-between -mt-5 mb-4">
+                <span /> {/* spacer – title already in SectionCard */}
+                <button
+                  type="button"
+                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <FileIcon type={f.type} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                  <Plus size={14} />
+                  Agregar
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </div>
+
+              {/* File list */}
+              <div className="flex flex-col gap-1 mb-3">
+                {files.map((f) => (
+                  <div
+                    key={f.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group dark:hover:bg-slate-700"
+                  >
+                    <FileIcon type={f.type} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(f.id)}
+                          className="text-xs font-medium text-blue-600 truncate hover:underline dark:text-blue-400"
+                        >
+                          {f.name}
+                        </button>
+                        <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase dark:bg-slate-700 dark:text-slate-400">
+                          {f.fileType}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{f.date}</p>
+                    </div>
+                    {/* El ICS es generado por el sistema: no se puede eliminar. */}
+                    {f.idFileType !== TIPO_ARCHIVO_ENTREVISTA_ICS && (
                       <button
                         type="button"
-                        onClick={() => handleDownload(f.id)}
-                        className="text-xs font-medium text-blue-600 truncate hover:underline dark:text-blue-400"
+                        onClick={() => removeFile(f.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded dark:text-slate-500"
                       >
-                        {f.name}
+                        <X size={14} />
                       </button>
-                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase dark:bg-slate-700 dark:text-slate-400">
-                        {f.fileType}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 dark:text-slate-500">{f.date}</p>
+                    )}
                   </div>
-                  {/* El ICS es generado por el sistema: no se puede eliminar. */}
-                  {f.idFileType !== TIPO_ARCHIVO_ENTREVISTA_ICS && (
-                    <button
-                      type="button"
-                      onClick={() => removeFile(f.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded dark:text-slate-500"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {/* Drop zone */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleFileDrop}
-              className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full dark:border-slate-700 ${
-                isDragging
-                  ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
-                  : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] dark:border-slate-700 dark:text-slate-500"
-              }`}
-            >
-              <CloudUpload size={28} strokeWidth={1.5} />
-              <span className="text-xs text-center leading-relaxed px-2">
-                {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
-              </span>
-            </button>
-          </SectionCard>
+              {/* Drop zone */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+                className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full dark:border-slate-700 ${
+                  isDragging
+                    ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
+                    : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] dark:border-slate-700 dark:text-slate-500"
+                }`}
+              >
+                <CloudUpload size={28} strokeWidth={1.5} />
+                <span className="text-xs text-center leading-relaxed px-2">
+                  {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
+                </span>
+              </button>
+            </SectionCard>
+          )}
           {/* ── File Upload Modal ── */}
           {isUploadModalOpen && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
