@@ -7,6 +7,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { loginApp } from "../../core/services/auth.service";
 import { Loading, InputForm } from "../../core/components";
 import { handleError, handleResponse } from "../../core/utilities/errorHandler";
+import { getLandingPath } from "../../core/config/navigation";
 import {
   LoginFormSchema,
   LoginFormType,
@@ -51,7 +52,14 @@ export const Login = () => {
     await fetch(formData);
   };
 
-  if (redirect) return <Navigate to={"/dashboard/talentos"} />;
+  // El destino depende del usuario: el SUPERADMIN entra a Administración y el
+  // resto a su primer módulo autorizado. Antes iba todo el mundo a Talentos,
+  // que además podía no estar entre sus rutas.
+  if (redirect) {
+    return (
+      <Navigate to={getLandingPath(localStorage.getItem("token") || undefined)} />
+    );
+  }
   if (loading) return <Loading />;
 
   return (

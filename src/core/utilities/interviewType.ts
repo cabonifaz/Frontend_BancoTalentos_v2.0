@@ -1,6 +1,7 @@
 import { normalizeText } from "./textUtils";
 import {
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
+  TIPO_ENTREVISTA_TELEFONICA_LABEL,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
 } from "./constants";
 
@@ -17,6 +18,25 @@ export const isVirtualType = (tipo?: string | null): boolean =>
 
 export const isPresencialType = (tipo?: string | null): boolean =>
   normalizeText(tipo) === normalizeText(TIPO_ENTREVISTA_PRESENCIAL_LABEL);
+
+/**
+ * Telefónica: pensada para no depender de un RQ. No pide enlace, ubicación,
+ * dirección ni duración, el perfil se escribe a mano y es la única que registra
+ * preguntas y respuestas.
+ */
+export const isTelefonicaType = (tipo?: string | null): boolean =>
+  normalizeText(tipo) === normalizeText(TIPO_ENTREVISTA_TELEFONICA_LABEL);
+
+/**
+ * Sólo la entrevista virtual deja grabación: la presencial ocurre en sitio y la
+ * telefónica se documenta con sus preguntas y respuestas.
+ */
+export const tipoTieneGrabaciones = (tipo?: string | null): boolean =>
+  isVirtualType(tipo);
+
+/** El RQ deja de ser obligatorio en la telefónica. */
+export const tipoRequiereRq = (tipo?: string | null): boolean =>
+  !isTelefonicaType(tipo);
 
 /** Parámetro del maestro 47 (solo los campos que necesitamos). */
 interface TipoEntrevistaParam {
@@ -221,7 +241,9 @@ export const buildInterviewTypeFields = (data: {
       direccion: (data.direccion || "").trim(),
     };
   }
-  // Tipo no seleccionado o desconocido: todo en NULL menos el propio tipo.
+  // Telefónica y cualquier tipo no reconocido: todo en NULL menos el propio
+  // tipo. En la telefónica es intencional, no un descarte: no hay enlace,
+  // ubicación ni dirección que guardar.
   return {
     tipoEntrevista: data.tipoEntrevista || "",
     enlaceEntrevista: null,

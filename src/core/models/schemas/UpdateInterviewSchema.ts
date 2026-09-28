@@ -3,6 +3,7 @@ import {
   isVirtualType,
   isPresencialType,
   isGoogleMapsUrl,
+  tipoRequiereRq,
   DIRECCION_MAX_LENGTH,
 } from "../../utilities/interviewType";
 
@@ -12,13 +13,10 @@ export const UpdateInterviewSchema = z.object({
   hora: z.string().min(1, "La hora es requerida"),
   estado: z.coerce.number().min(1, "Seleccione un estado"),
   etapa: z.coerce.number().min(1, "Seleccione una etapa"),
-  idsRqs: z
-    .array(z.number(), {
-      required_error: "Debe seleccionar al menos un requerimiento",
-    })
-    .min(1, "Debe seleccionar al menos un requerimiento"),
-  perfil: z.string().min(1, "Seleccione un perfil"),
-  // Tipo de entrevista (maestro 47): PRESENCIAL / VIRTUAL.
+  // La obligatoriedad depende del tipo: la telefónica puede no tener RQ.
+  idsRqs: z.array(z.number()).optional().default([]),
+  perfil: z.string().min(1, "Indique el perfil"),
+  // Tipo de entrevista (maestro 47): PRESENCIAL / VIRTUAL / TELEFONICA.
   tipoEntrevista: z.string().min(1, "Seleccione el tipo de entrevista"),
   // Campos dependientes del tipo; obligatoriedad condicional en el superRefine.
   enlaceEntrevista: z.string().optional().default(""),
@@ -85,6 +83,17 @@ export const createUpdateInterviewSchema = (rsStageNum1: number | null) =>
     }
 
     // Validación condicional según el tipo de entrevista.
+    if (
+      tipoRequiereRq(data.tipoEntrevista) &&
+      (!data.idsRqs || data.idsRqs.length === 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Debe seleccionar al menos un requerimiento",
+        path: ["idsRqs"],
+      });
+    }
+
     if (isVirtualType(data.tipoEntrevista)) {
       const enlace = (data.enlaceEntrevista || "").trim();
       if (!enlace) {

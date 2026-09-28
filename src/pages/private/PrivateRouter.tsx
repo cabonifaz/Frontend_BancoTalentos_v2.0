@@ -3,8 +3,7 @@ import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 import { RoutesWithNotFound } from "../../core/components";
 import { RouteGuard } from "../../guard/RouteGuard";
-import { getFirstAllowedPath } from "../../core/config/navigation";
-import { Utils } from "../../core/utilities/utils";
+import { getLandingPath } from "../../core/config/navigation";
 
 const Talents = lazy(() =>
   import("./talentos/Talents").then((m) => ({ default: m.Talents })),
@@ -35,13 +34,13 @@ const AdministrationPage = lazy(
   () => import("./administracion/AdministrationPage"),
 );
 const SeleccionPage = lazy(() => import("./seleccion/SeleccionPage"));
+const ExpedientePage = lazy(() => import("./expediente/ExpedientePage"));
 const NoAuthorized = lazy(() =>
   import("./NoAuthorized").then((m) => ({ default: m.NoAuthorized })),
 );
 
 export const PrivateRouter = () => {
-  const routes = Utils.getUserRoutes(localStorage.getItem("token") || undefined);
-  const home = getFirstAllowedPath(routes) ?? "/dashboard/no-autorizado";
+  const home = getLandingPath(localStorage.getItem("token") || undefined);
 
   return (
     <RoutesWithNotFound>
@@ -68,6 +67,8 @@ export const PrivateRouter = () => {
         />
         <Route path="/mi-cuenta" element={<UserContact />} />
         <Route path="/seleccion" element={<SeleccionPage />} />
+        <Route path="/expediente" element={<ExpedientePage />} />
+        <Route path="/expediente/:idTalento" element={<ExpedientePage />} />
         <Route path="/administracion" element={<AdministrationPage />} />
       </Route>
     </RoutesWithNotFound>

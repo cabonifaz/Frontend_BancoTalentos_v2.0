@@ -18,6 +18,11 @@ import { useAsyncService } from "../../../core/hooks/useAsyncService";
 import {
   getInterviewDetail,
   updateInterview,
+  InterviewQuestion,
+  listInterviewQuestions,
+  saveInterviewQuestions,
+  updateInterviewQuestion,
+  deleteInterviewQuestion,
   UpdateInterviewPayload,
   deleteInterviewFile,
   InterviewDetailDTO,
@@ -48,7 +53,10 @@ import {
   Link as LinkIcon,
   Mail,
   MapPin,
+  MessageSquareText,
+  Phone,
   Video,
+  Clapperboard,
 } from "lucide-react";
 import {
   ESTADO_ENTREVISTA,
@@ -60,13 +68,17 @@ import {
   ESTADO_RQ,
   TIPO_ENTREVISTA,
   DURACION_ENTREVISTA,
+  PREGUNTA_ENTREVISTA,
   TIPO_ENTREVISTA_VIRTUAL_LABEL,
   TIPO_ENTREVISTA_PRESENCIAL_LABEL,
+  TIPO_ENTREVISTA_TELEFONICA_LABEL,
 } from "../../../core/utilities/constants";
 import { normalizeText } from "../../../core/utilities/textUtils";
 import {
   isVirtualType,
   isPresencialType,
+  isTelefonicaType,
+  tipoTieneGrabaciones,
   deriveLocationEntries,
   deriveDireccionEntries,
   deriveUniqueClientNames,
@@ -229,6 +241,8 @@ export default function InterviewDetailPage() {
   const interviewTypes = paramsByMaestro[TIPO_ENTREVISTA] || [];
   // Duraciones desde el maestro 48 (NUM2 = minutos, string1 = etiqueta).
   const durationOptions = paramsByMaestro[DURACION_ENTREVISTA] || [];
+  // Preguntas telefónicas: ya no se escriben, se eligen del maestro 55.
+  const questionOptions = paramsByMaestro[PREGUNTA_ENTREVISTA] || [];
   const interviewFileTypes = paramsByMaestro[TIPO_ARCHIVO_ENTREVISTA] || [];
   // El ICS es generado por el sistema: se excluye de la subida manual.
   const uploadableFileTypes = interviewFileTypes.filter(
@@ -335,6 +349,10 @@ export default function InterviewDetailPage() {
   const direccionValue = watch("direccion");
   const isVirtual = isVirtualType(tipoValue);
   const isPresencial = isPresencialType(tipoValue);
+  const isTelefonica = isTelefonicaType(tipoValue);
+  // Sólo la virtual deja grabación: la presencial ocurre en sitio y la
+  // telefónica se documenta con sus preguntas y respuestas.
+  const muestraGrabaciones = tipoTieneGrabaciones(tipoValue);
 
   // Etiquetas reales de las dos posiciones del switch, tomadas del maestro 47
   // (sin hardcodear el texto). Fallback a las constantes por si el maestro aún
@@ -345,6 +363,35 @@ export default function InterviewDetailPage() {
   const presencialLabel =
     interviewTypes.find((t) => isPresencialType(t.string1))?.string1 ??
     TIPO_ENTREVISTA_PRESENCIAL_LABEL;
+  const telefonicaLabel =
+    interviewTypes.find((t) => isTelefonicaType(t.string1))?.string1 ??
+    TIPO_ENTREVISTA_TELEFONICA_LABEL;
+
+  /** Opciones del selector de tipo, tomadas del maestro 47 (ver Crear). */
+  const tipoOptions = (
+    interviewTypes.length > 0
+      ? interviewTypes.map((t) => t.string1)
+      : [virtualLabel, presencialLabel, telefonicaLabel]
+  ).map((label) => ({
+    label,
+    icon: isVirtualType(label)
+      ? Video
+      : isPresencialType(label)
+        ? MapPin
+        : isTelefonicaType(label)
+          ? Phone
+          : Video,
+  }));
+
+  /**
+   * Preguntas telefónicas.
+   *
+   * No van en el formulario como las grabaciones: viven en su propia tabla y
+   * tienen sus propios SP, así que se cargan aparte y se concilian al guardar
+   * (alta de las nuevas, edición de las cambiadas, baja de las quitadas).
+   */
+  const [preguntas, setPreguntas] = useState<InterviewQuestion[]>([]);
+  const preguntasOriginalesRef = useRef<InterviewQuestion[]>([]);
 
   // ID_TIPO_ENTREVISTA recibido del backend pendiente de resolver a texto cuando
   // los parámetros (maestro 47) todavía no están cargados.
@@ -359,6 +406,16 @@ export default function InterviewDetailPage() {
       setValue("direccion", "", { shouldValidate: true });
     } else if (isPresencialType(value)) {
       setValue("enlaceEntrevista", "", { shouldValidate: true });
+    } else if (isTelefonicaType(value)) {
+      setValue("enlaceEntrevista", "", { shouldValidate: true });
+      setValue("ubicacion", "", { shouldValidate: true });
+      setValue("direccion", "", { shouldValidate: true });
+    }
+
+    // Sin grabaciones fuera de la virtual: se descartan para no guardar filas
+    // que la pantalla ya no muestra.
+    if (!tipoTieneGrabaciones(value)) {
+      replaceGrabacion([]);
     }
   };
 
@@ -610,6 +667,120 @@ export default function InterviewDetailPage() {
   }, [detailResult, setValue]);
 
 
+  /**
+   * El cuestionario es el maestro 55 completo; de la tabla sólo vienen las
+   * respuestas ya registradas, que se cruzan por `idPregunta`. Una respuesta
+   * de una pregunta retirada del maestro se conserva al final para no
+   * esconderla.
+   */
+  const combinarPreguntas = (
+    guardadas: InterviewQuestion[],
+  ): InterviewQuestion[] => {
+    const delMaestro = questionOptions.map((opcion) => {
+      const guardada = guardadas.find(
+        (fila) => Number(fila.idPregunta) === opcion.num1,
+      );
+      return {
+        idRespuesta: guardada?.idRespuesta,
+        idPregunta: opcion.num1,
+        pregunta: opcion.string1,
+        respuesta: guardada?.respuesta ?? "",
+      };
+    });
+
+    const retiradas = guardadas.filter(
+      (fila) =>
+        !questionOptions.some(
+          (opcion) => opcion.num1 === Number(fila.idPregunta),
+        ),
+    );
+
+    return [...delMaestro, ...retiradas];
+  };
+
+  // Las respuestas se piden aparte del detalle: son su propia tabla.
+  useEffect(() => {
+    if (!id || !isTelefonica || questionOptions.length === 0) return;
+
+    let cancelado = false;
+    listInterviewQuestions(Number(id))
+      .then(({ data: rs }) => {
+        if (cancelado) return;
+        const filas = rs?.data ?? [];
+        preguntasOriginalesRef.current = filas;
+        setPreguntas(combinarPreguntas(filas));
+      })
+      .catch(() => {
+        /* sin respuestas cargadas: el cuestionario se muestra en blanco */
+      });
+
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isTelefonica, questionOptions.length]);
+
+  const setRespuesta = (index: number, valor: string) => {
+    setPreguntas((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, respuesta: valor } : p)),
+    );
+  };
+
+  /**
+   * Sólo se guarda lo respondido: la pregunta sin respuesta no ocupa fila en la
+   * tabla, y borrar el texto de una ya guardada la da de baja. Se llama tras
+   * guardar la entrevista; si algo falla sólo avisa, nunca revierte el guardado.
+   */
+  const guardarPreguntas = async (idEntrevista: number) => {
+    const originales = preguntasOriginalesRef.current;
+    const filas = preguntas.map((p) => ({
+      ...p,
+      texto: (p.respuesta || "").trim(),
+    }));
+
+    const nuevas = filas
+      .filter((p) => !p.idRespuesta && p.texto !== "" && Number(p.idPregunta) > 0)
+      .map((p) => ({
+        idPregunta: Number(p.idPregunta),
+        respuesta: p.texto,
+      }));
+
+    const editadas = filas.filter((p) => {
+      if (!p.idRespuesta || p.texto === "") return false;
+      const original = originales.find((o) => o.idRespuesta === p.idRespuesta);
+      return !!original && (original.respuesta || "").trim() !== p.texto;
+    });
+
+    // Respuesta borrada: se da de baja la fila que la tenía.
+    const eliminadas = filas.filter((p) => p.idRespuesta && p.texto === "");
+
+    try {
+      if (nuevas.length > 0) {
+        await saveInterviewQuestions(idEntrevista, nuevas);
+      }
+      for (const p of editadas) {
+        await updateInterviewQuestion({
+          idRespuesta: p.idRespuesta as number,
+          idPregunta: Number(p.idPregunta),
+          respuesta: p.texto,
+        });
+      }
+      for (const p of eliminadas) {
+        await deleteInterviewQuestion(p.idRespuesta as number);
+      }
+
+      const { data: rs } = await listInterviewQuestions(idEntrevista);
+      const guardadas = rs?.data ?? [];
+      preguntasOriginalesRef.current = guardadas;
+      setPreguntas(combinarPreguntas(guardadas));
+    } catch {
+      enqueueSnackbar(
+        "La entrevista se guardó, pero no se pudieron guardar todas las respuestas.",
+        { variant: "warning" },
+      );
+    }
+  };
+
   const handleSave = async (data: UpdateInterviewType) => {
     if (!id || saveLockRef.current) return;
     saveLockRef.current = true;
@@ -668,6 +839,10 @@ export default function InterviewDetailPage() {
           },
         );
 
+        if (isTelefonica) {
+          await guardarPreguntas(Number(id));
+        }
+
         // Regenera el ICS con los datos actualizados y reemplaza el activo previo.
         // El correo de actualización solo se envía si cambió fecha u hora.
         const dateTimeChanged = data.fecha !== prevFecha || data.hora !== prevHora;
@@ -692,7 +867,8 @@ export default function InterviewDetailPage() {
             enlaceEntrevista: typeFields.enlaceEntrevista || undefined,
             requerimientos: selectedRQs.map((r) => r.label),
           },
-          dateTimeChanged,
+          // La telefónica no manda correo al candidato aunque cambie la fecha.
+          dateTimeChanged && !isTelefonica,
           "Actualización de Entrevista",
         ).then((icsOk) => {
           if (!icsOk) {
@@ -1135,50 +1311,51 @@ const confirmUpload = async () => {
 
                   {/* Row: Tipo de Entrevista, Fecha, Hora, Duración */}
                   <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
-                    {/* Tipo de Entrevista (switch Virtual / Presencial) */}
+                    {/* Tipo de Entrevista (maestro 47) */}
                     <div className="flex flex-col gap-1">
                       <label className="input-label font-medium mb-1">
                         Tipo de Entrevista <span className="text-red-500">*</span>
                       </label>
-                      <label
-                        className={`flex items-center justify-center gap-2 cursor-pointer select-none h-[46px] px-2 rounded-lg border bg-white transition-colors hover:border-gray-300 dark:bg-slate-800 dark:hover:border-slate-600 ${
+                      <div
+                        role="radiogroup"
+                        aria-label="Tipo de entrevista"
+                        className={`flex h-[46px] items-center gap-1 rounded-lg border bg-gray-50 p-1 transition-colors dark:bg-slate-900/40 ${
                           errors.tipoEntrevista
                             ? "border-red-500"
                             : "border-gray-200 dark:border-slate-700"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isPresencial}
-                          onChange={(e) =>
-                            handleTipoChange(
-                              e.target.checked ? presencialLabel : virtualLabel,
-                            )
-                          }
-                          className="sr-only peer"
-                        />
-                        <span
-                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                            isVirtual
-                              ? "text-[var(--color-blue)] font-semibold"
-                              : "text-gray-400 dark:text-slate-500"
-                          }`}
-                        >
-                          <Video className="w-4 h-4 shrink-0" />
-                          Virtual
-                        </span>
-                        <div className="relative shrink-0 w-11 h-6 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5 dark:bg-slate-700" />
-                        <span
-                          className={`flex items-center gap-1 text-sm shrink-0 whitespace-nowrap transition-colors ${
-                            isPresencial
-                              ? "text-[var(--color-blue)] font-semibold"
-                              : "text-gray-400 dark:text-slate-500"
-                          }`}
-                        >
-                          <MapPin className="w-4 h-4 shrink-0" />
-                          Presencial
-                        </span>
-                      </label>
+                        {tipoOptions.map(({ label, icon: Icono }) => {
+                          const seleccionado =
+                            normalizeText(label) === normalizeText(tipoValue || "");
+                          return (
+                            <button
+                              key={label}
+                              type="button"
+                              role="radio"
+                              aria-checked={seleccionado}
+                              onClick={() => handleTipoChange(label)}
+                              title={label}
+                              className={`group flex h-full flex-1 items-center justify-center gap-1.5 rounded-md px-1.5 text-xs font-semibold transition-all ${
+                                seleccionado
+                                  ? "bg-white text-[var(--color-blue)] shadow-sm ring-1 ring-[var(--color-blue)]/20 dark:bg-slate-800"
+                                  : "text-gray-500 hover:bg-white/70 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200"
+                              }`}
+                            >
+                              <Icono
+                                className={`w-4 h-4 shrink-0 transition-colors ${
+                                  seleccionado
+                                    ? "text-[var(--color-blue)]"
+                                    : "text-gray-400 group-hover:text-gray-500 dark:text-slate-500"
+                                }`}
+                              />
+                              <span className="truncate capitalize">
+                                {label.toLowerCase()}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                       {errors.tipoEntrevista && (
                         <p className="text-red-500 text-xs mt-1">
                           {errors.tipoEntrevista.message}
@@ -1216,8 +1393,9 @@ const confirmUpload = async () => {
                       )}
                     </div>
 
-                    {/* Duración (solo para la invitación de calendario) */}
-                    <div className="flex flex-col gap-1">
+                    {/* Duración (solo para la invitación de calendario). La
+                        telefónica no la pide. */}
+                    <div className={`flex flex-col gap-1 ${isTelefonica ? "hidden" : ""}`}>
                       <label className="input-label block mb-1">Duración</label>
                       <select
                         value={durationMinutes}
@@ -1371,22 +1549,32 @@ const confirmUpload = async () => {
                     <label className="input-label font-medium mb-1">
                       Perfil / Puesto <span className="text-red-500">*</span>
                     </label>
+                    {/* En la telefónica el perfil no sale de un RQ: se escribe. */}
                     <Controller
                       name="perfil"
                       control={control}
-                      render={({ field }) => (
-                        <select
-                          {...field}
-                          className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
-                        >
-                          <option value="">Seleccione un perfil</option>
-                          {profileOptions.map((opt, i) => (
-                            <option key={i} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                      render={({ field }) =>
+                        isTelefonica ? (
+                          <input
+                            {...field}
+                            type="text"
+                            placeholder="Ej: Desarrollador Backend"
+                            className={`input w-full ${errors.perfil ? "border-red-500" : ""}`}
+                          />
+                        ) : (
+                          <select
+                            {...field}
+                            className={`dropdown ${errors.perfil ? "border-red-500" : ""}`}
+                          >
+                            <option value="">Seleccione un perfil</option>
+                            {profileOptions.map((opt, i) => (
+                              <option key={i} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        )
+                      }
                     />
                     {errors.perfil && (
                       <p className="text-red-500 text-xs mt-1 font-medium">
@@ -1420,11 +1608,66 @@ const confirmUpload = async () => {
                   })()
                 }  
 
-                {/* Agregar grabaciones de reuniones */}
+                {/* Preguntas telefónicas: sólo en la entrevista telefónica */}
+                {isTelefonica && (
+                  <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+                        <MessageSquareText className="w-5 h-5 text-[var(--color-blue)]" />
+                        Preguntas telefónicas
+                      </h3>
+                      <span className="text-xs text-gray-400 dark:text-slate-500">
+                        Sólo se guardan las que tengan respuesta
+                      </span>
+                    </div>
 
-                <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-700">
+                    {preguntas.length === 0 ? (
+                      <p className="text-sm text-gray-400 italic dark:text-slate-500">
+                        No hay preguntas configuradas. Se registran desde
+                        Administración → Parámetros.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {preguntas.map((pregunta, index) => (
+                          <div
+                            key={
+                              pregunta.idPregunta ||
+                              pregunta.idRespuesta ||
+                              index
+                            }
+                            className="bg-gray-50 p-4 rounded-lg dark:bg-slate-800"
+                          >
+                            <p className="text-sm font-medium text-gray-700 dark:text-slate-200">
+                              {index + 1}.{" "}
+                              {pregunta.pregunta || "Pregunta retirada"}
+                            </p>
+                            <input
+                              value={pregunta.respuesta || ""}
+                              onChange={(e) =>
+                                setRespuesta(index, e.target.value)
+                              }
+                              placeholder="Respuesta"
+                              className="input w-full mt-2 bg-white dark:bg-slate-800"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Grabaciones de reuniones: sólo en la entrevista virtual.
+                    La presencial ocurre en sitio y la telefónica se documenta
+                    con sus preguntas y respuestas. */}
+
+                <div
+                  className={`mt-8 pt-8 border-t border-gray-100 dark:border-slate-700 ${
+                    muestraGrabaciones ? "" : "hidden"
+                  }`}
+                >
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+                      <Clapperboard className="w-5 h-5 text-[var(--color-blue)]" />
                       Grabaciones de reuniones
                     </h3>
                     <button
@@ -1482,7 +1725,10 @@ const confirmUpload = async () => {
                           </div>
                         
                         </div>
-                        {grabacionFields.length > 1 && (
+                        {/* Se puede quitar aunque sea la única: antes exigía
+                            dos o más y dejaba una fila vacía imposible de
+                            borrar. */}
+                        {grabacionFields.length > 0 && (
                           <button
                             type="button"
                             onClick={() => removeGrabacion(index)}
@@ -1613,7 +1859,9 @@ const confirmUpload = async () => {
                           )}
                         </div>
 
-                        {/* Email notification footer */}
+                        {/* Email notification footer. La telefónica no manda
+                            correo de invitación, así que no se ofrece. */}
+                        {!isTelefonica && (
                         <div className="flex items-center px-4 py-2.5 bg-white border-t border-gray-100 dark:bg-slate-800 dark:border-slate-700">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1632,6 +1880,7 @@ const confirmUpload = async () => {
                             <div className="relative w-9 h-5 bg-gray-200 rounded-full transition-colors peer-checked:bg-[var(--color-blue)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4 dark:bg-slate-700" />
                           </label>
                         </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1639,70 +1888,20 @@ const confirmUpload = async () => {
               </SectionCard>
 
               {/* Notas */}
-              <SectionCard
-                icon={IconPencil}
-                title="Notas de la Entrevista"
-                iconColor="text-[var(--color-primary)]"
-              >
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <label className="input-label block m-0">
-                        Notas Personales
-                      </label>
-                      <Controller
-                        name="calificacionPersonal"
-                        control={control}
-                        render={({ field }) => (
-                          <StarRating
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                            size="w-5 h-5"
-                            gap="gap-0.5"
-                          />
-                        )}
-                      />
-                    </div>
-                    <textarea
-                      {...register("notasPersonales")}
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Impresiones generales sobre la personalidad y actitud..."
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <label className="input-label block m-0">
-                        Notas Experiencia Laboral
-                      </label>
-                      <Controller
-                        name="calificacionExperiencia"
-                        control={control}
-                        render={({ field }) => (
-                          <StarRating
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                            size="w-5 h-5"
-                            gap="gap-0.5"
-                          />
-                        )}
-                      />
-                    </div>
-                    <textarea
-                      {...register("notasExperiencia")}
-                      rows={3}
-                      className="input w-full resize-none"
-                      placeholder="Detalles relevantes sobre roles previos y logros..."
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!isTelefonica && (
+                <SectionCard
+                  icon={IconPencil}
+                  title="Notas de la Entrevista"
+                  iconColor="text-[var(--color-primary)]"
+                >
+                  <div className="flex flex-col gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <label className="input-label block m-0">
-                          Notas Idiomas
+                          Notas Personales
                         </label>
                         <Controller
-                          name="calificacionIdiomas"
+                          name="calificacionPersonal"
                           control={control}
                           render={({ field }) => (
                             <StarRating
@@ -1715,19 +1914,19 @@ const confirmUpload = async () => {
                         />
                       </div>
                       <textarea
-                        {...register("notasIdiomas")}
+                        {...register("notasPersonales")}
                         rows={3}
                         className="input w-full resize-none"
-                        placeholder="Nivel de fluidez y vocabulario técnico..."
+                        placeholder="Impresiones generales sobre la personalidad y actitud..."
                       />
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <label className="input-label block m-0">
-                          Notas Educación
+                          Notas Experiencia Laboral
                         </label>
                         <Controller
-                          name="calificacionEducacion"
+                          name="calificacionExperiencia"
                           control={control}
                           render={({ field }) => (
                             <StarRating
@@ -1740,15 +1939,67 @@ const confirmUpload = async () => {
                         />
                       </div>
                       <textarea
-                        {...register("notasEducacion")}
+                        {...register("notasExperiencia")}
                         rows={3}
                         className="input w-full resize-none"
-                        placeholder="Formación académica y certificaciones..."
+                        placeholder="Detalles relevantes sobre roles previos y logros..."
                       />
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <label className="input-label block m-0">
+                            Notas Idiomas
+                          </label>
+                          <Controller
+                            name="calificacionIdiomas"
+                            control={control}
+                            render={({ field }) => (
+                              <StarRating
+                                value={field.value || 0}
+                                onChange={field.onChange}
+                                size="w-5 h-5"
+                                gap="gap-0.5"
+                              />
+                            )}
+                          />
+                        </div>
+                        <textarea
+                          {...register("notasIdiomas")}
+                          rows={3}
+                          className="input w-full resize-none"
+                          placeholder="Nivel de fluidez y vocabulario técnico..."
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <label className="input-label block m-0">
+                            Notas Educación
+                          </label>
+                          <Controller
+                            name="calificacionEducacion"
+                            control={control}
+                            render={({ field }) => (
+                              <StarRating
+                                value={field.value || 0}
+                                onChange={field.onChange}
+                                size="w-5 h-5"
+                                gap="gap-0.5"
+                              />
+                            )}
+                          />
+                        </div>
+                        <textarea
+                          {...register("notasEducacion")}
+                          rows={3}
+                          className="input w-full resize-none"
+                          placeholder="Formación académica y certificaciones..."
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </SectionCard>
+                </SectionCard>
+              )}
             </div>
 
             {/* ── Right column ── */}
@@ -1793,83 +2044,85 @@ const confirmUpload = async () => {
 
         {/* ── Files section (Outside form) ── */}
         <div className="mt-4 pb-6">
-          <SectionCard icon={IconFolder} title="Archivos Subidos">
-            {/* header action */}
-            <div className="flex items-center justify-between -mt-5 mb-4">
-              <span /> {/* spacer – title already in SectionCard */}
-              <button
-                type="button"
-                className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Plus size={14} />
-                Agregar
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileUpload}
-              />
-            </div>
-
-            {/* File list */}
-            <div className="flex flex-col gap-1 mb-3">
-              {files.map((f) => (
-                <div
-                  key={f.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group dark:hover:bg-slate-700"
+          {!isTelefonica && (
+            <SectionCard icon={IconFolder} title="Archivos Subidos">
+              {/* header action */}
+              <div className="flex items-center justify-between -mt-5 mb-4">
+                <span /> {/* spacer – title already in SectionCard */}
+                <button
+                  type="button"
+                  className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1 font-medium"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <FileIcon type={f.type} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                  <Plus size={14} />
+                  Agregar
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </div>
+
+              {/* File list */}
+              <div className="flex flex-col gap-1 mb-3">
+                {files.map((f) => (
+                  <div
+                    key={f.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group dark:hover:bg-slate-700"
+                  >
+                    <FileIcon type={f.type} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(f.id)}
+                          className="text-xs font-medium text-blue-600 truncate hover:underline dark:text-blue-400"
+                        >
+                          {f.name}
+                        </button>
+                        <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase dark:bg-slate-700 dark:text-slate-400">
+                          {f.fileType}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 dark:text-slate-500">{f.date}</p>
+                    </div>
+                    {/* El ICS es generado por el sistema: no se puede eliminar. */}
+                    {f.idFileType !== TIPO_ARCHIVO_ENTREVISTA_ICS && (
                       <button
                         type="button"
-                        onClick={() => handleDownload(f.id)}
-                        className="text-xs font-medium text-blue-600 truncate hover:underline dark:text-blue-400"
+                        onClick={() => removeFile(f.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded dark:text-slate-500"
                       >
-                        {f.name}
+                        <X size={14} />
                       </button>
-                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-bold text-gray-500 uppercase dark:bg-slate-700 dark:text-slate-400">
-                        {f.fileType}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 dark:text-slate-500">{f.date}</p>
+                    )}
                   </div>
-                  {/* El ICS es generado por el sistema: no se puede eliminar. */}
-                  {f.idFileType !== TIPO_ARCHIVO_ENTREVISTA_ICS && (
-                    <button
-                      type="button"
-                      onClick={() => removeFile(f.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 p-1 rounded dark:text-slate-500"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {/* Drop zone */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleFileDrop}
-              className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full dark:border-slate-700 ${
-                isDragging
-                  ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
-                  : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] dark:border-slate-700 dark:text-slate-500"
-              }`}
-            >
-              <CloudUpload size={28} strokeWidth={1.5} />
-              <span className="text-xs text-center leading-relaxed px-2">
-                {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
-              </span>
-            </button>
-          </SectionCard>
+              {/* Drop zone */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+                className={`border-2 border-dashed rounded-xl py-5 flex flex-col items-center justify-center gap-2 transition-colors w-full dark:border-slate-700 ${
+                  isDragging
+                    ? "border-[var(--color-primary)] bg-[var(--color-blue-10)] text-[var(--color-primary)]"
+                    : "border-gray-200 text-gray-400 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] dark:border-slate-700 dark:text-slate-500"
+                }`}
+              >
+                <CloudUpload size={28} strokeWidth={1.5} />
+                <span className="text-xs text-center leading-relaxed px-2">
+                  {isDragging ? "Suelta el archivo aquí" : "Arrastra archivos aquí o haz clic para subir"}
+                </span>
+              </button>
+            </SectionCard>
+          )}
           {/* ── File Upload Modal ── */}
           {isUploadModalOpen && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

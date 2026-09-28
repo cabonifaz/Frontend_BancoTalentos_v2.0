@@ -13,6 +13,8 @@ export interface AddTalentParams {
   puesto?: string;
   idPais?: number;
   idCiudad?: number;
+  /** El SP lo escribe siempre; la carga rápida lo manda en false. */
+  tieneEquipo?: boolean;
   montoInicialPlanilla?: number;
   montoFinalPlanilla?: number;
   montoInicialRxH?: number;
@@ -20,10 +22,14 @@ export interface AddTalentParams {
   idMoneda?: number | null;
   habilidadesTecnicas?: {
     idHabilidad: number;
+    /** Nombre de la habilidad: con `idHabilidad` en 0 el SP la da de alta. */
+    habilidad?: string;
     anios?: number | null;
   }[];
   habilidadesBlandas?: {
     idHabilidad: number;
+    /** Nombre de la habilidad: con `idHabilidad` en 0 el SP la da de alta. */
+    habilidad?: string;
   }[];
   experiencias?: {
     empresa: string;

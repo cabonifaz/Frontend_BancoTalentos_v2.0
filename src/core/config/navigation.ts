@@ -1,5 +1,7 @@
-import { Home, FileText, Angry, Users, Link2, User, Settings, BarChart3 } from "lucide-react";
+import { Home, FileText, Angry, Users, Link2, User, Settings, BarChart3, FolderOpen } from "lucide-react";
 import { NavModule } from "../models/interfaces/NavModule";
+import { Utils } from "../utilities/utils";
+import { ROL_SUPERADMIN } from "../utilities/constants";
 
 /**
  * Catálogo de módulos del Banco de Talentos. El acceso NO se decide aquí:
@@ -12,6 +14,7 @@ export const NAV_MODULES: NavModule[] = [
   { key: "lista-negra",    icon: Angry,    label: "Lista Negra",    path: "/dashboard/lista-negra" },
   { key: "entrevistas",    icon: Users,    label: "Entrevistas",    path: "/dashboard/entrevistas" },
   { key: "seleccion",      icon: BarChart3, label: "Selección",     path: "/dashboard/seleccion" },
+  { key: "expediente",     icon: FolderOpen, label: "Expediente",    path: "/dashboard/expediente" },
   { key: "generar-enlace", icon: Link2,    label: "Generar enlace", path: "/dashboard/generarEnlaceRequerimiento" },
   { key: "mi-cuenta",      icon: User,     label: "Mi cuenta",      path: "/dashboard/mi-cuenta" },
   { key: "administration", icon: Settings, label: "Administración", path: "/dashboard/administracion" },
@@ -55,3 +58,28 @@ export const getAllowedModules = (allowedRoutes: string[]): NavModule[] =>
 /** Primera ruta accesible del usuario (destino de redirección), o null si ninguna. */
 export const getFirstAllowedPath = (allowedRoutes: string[]): string | null =>
   getAllowedModules(allowedRoutes)[0]?.path ?? null;
+
+/** Módulo de Administración: el lugar de trabajo del SUPERADMIN. */
+const RUTA_ADMINISTRACION = "/dashboard/administracion";
+
+/** Sin ninguna ruta autorizada. */
+const RUTA_SIN_ACCESO = "/dashboard/no-autorizado";
+
+/**
+ * A dónde entra el usuario al iniciar sesión (y a dónde se le devuelve si cae
+ * en una ruta que no le corresponde).
+ *
+ * El SUPERADMIN va directo a Administración, que es donde trabaja; el resto,
+ * al primer módulo que tenga autorizado. El rol sale del claim `id_roles` del
+ * token, igual que las rutas salen de `routes`: nada se decide en duro aquí.
+ */
+export const getLandingPath = (token?: string): string => {
+  const routes = Utils.getUserRoutes(token);
+
+  const esSuperadmin = Utils.getUserRoleIds(token).includes(ROL_SUPERADMIN);
+  if (esSuperadmin && isRouteAllowed(RUTA_ADMINISTRACION, routes)) {
+    return RUTA_ADMINISTRACION;
+  }
+
+  return getFirstAllowedPath(routes) ?? RUTA_SIN_ACCESO;
+};
