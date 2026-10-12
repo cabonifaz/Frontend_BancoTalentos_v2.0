@@ -215,6 +215,11 @@ export const newRQSchema = z
     // Tiene duración
     tieneDuracion: z.boolean(),
 
+    // Requisitos de ingreso (se envían como 0/1)
+    emo: z.boolean(),
+    sctr: z.boolean(),
+    asignacionLaptop: z.boolean(),
+
     // Array de facturación por modalidades seleccionadas
     lstFacturacion: z.array(rqFacturacionSchema).optional(),
 

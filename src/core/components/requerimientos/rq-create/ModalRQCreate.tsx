@@ -118,6 +118,9 @@ export const ModalRQCreate = ({
         idDuration: 0,
       },
       tieneDuracion: true,
+      emo: false,
+      sctr: false,
+      asignacionLaptop: false,
       lstFacturacion: [],
     },
   });
@@ -180,6 +183,10 @@ export const ModalRQCreate = ({
         lstCarreras: lstCareers,
         duracionContrato: duration,
         idDuracionContrato: idDuration,
+        // Requisitos de ingreso: 0 = No requiere, 1 = Requiere
+        emo: data.emo ? 1 : 0,
+        sctr: data.sctr ? 1 : 0,
+        asignacionLaptop: data.asignacionLaptop ? 1 : 0,
       };
 
       /* if (true) {
