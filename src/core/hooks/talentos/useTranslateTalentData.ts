@@ -4,21 +4,51 @@ import { TalentForFractalCV } from "../../models/interfaces/TalentDataForFractal
 import { TalentDataTranslatedResponse } from "../../models/response/TalentDataTranslatedResponse";
 
 /**
- * Traducción de los datos de un talento para el CV Fractal, usando Amazon Translate
- * (backend `/translate`) en vez de la IA.
+ * Traducción de los datos de un talento para el CV Fractal con GPT (backend
+ * `/ia/prompt`, gpt-4.1-mini).
  *
  * Solo se traducen los CAMPOS DE TEXTO que el CV pinta y que cambian entre idiomas
  * (descripción, puesto/funciones, carreras, habilidades blandas, idioma/nivel). El
  * resto (ids, fechas, nombres de empresa/institución, skills técnicas, etc.) se
- * conserva. Los textos se aplanan a un `string[]` con orden determinista, se
- * traducen por batch y se reintegran por índice recorriendo la misma estructura.
+ * conserva. Los textos se aplanan a un `string[]` con orden determinista, GPT
+ * devuelve un arreglo con la misma cantidad y orden, y se reintegran por índice
+ * recorriendo la misma estructura. Así el modelo nunca toca la estructura del
+ * talento (claves, ids, fechas).
  */
 
-interface TranslateApiResponse {
+interface TranslatePromptResponse {
   idMensaje: number;
   mensaje: string;
-  translations: string[] | null;
+  promptResponse?: { traducciones?: string[] } | null;
 }
+
+/** Salida estricta: { traducciones: string[] }. */
+const TRANSLATION_SCHEMA = {
+  type: "object",
+  properties: {
+    traducciones: {
+      type: "array",
+      items: { type: "string" },
+    },
+  },
+  required: ["traducciones"],
+  additionalProperties: false,
+};
+
+/** Instrucciones de sistema para GPT. */
+const buildInstructions = (idioma: string): string => `
+Eres un traductor profesional de currículums (CV) de perfiles de tecnología.
+Recibirás un JSON con "idioma_destino" y un arreglo "textos". Traduce cada texto al ${idioma}.
+
+Reglas:
+1. Devuelve en "traducciones" exactamente UN elemento por cada texto de entrada, en el MISMO orden. Nunca unas, separes, omitas ni reordenes textos.
+2. Si un texto ya está en ${idioma}, devuélvelo tal cual.
+3. Si un texto está vacío, devuelve una cadena vacía.
+4. NO traduzcas: nombres de tecnologías, lenguajes, frameworks, herramientas, plataformas, metodologías ni certificaciones (por ejemplo Java, Spring Boot, AWS, Azure, SQL Server, Power BI, Scrum, ITIL), siglas, nombres propios ni nombres de empresas o productos.
+5. Conserva los saltos de línea, viñetas, numeración y puntuación del texto original.
+6. Usa un tono profesional y natural de CV. Traduce los cargos a su equivalente habitual en ${idioma} (por ejemplo "Analista Programador" -> "Programmer Analyst").
+7. No agregues, resumas ni expliques nada: solo la traducción.
+`.trim();
 
 /**
  * Aplana los textos traducibles del talento a un array ordenado.
@@ -111,20 +141,26 @@ export const useTranslateTalentData = () => {
   ): Promise<TalentDataTranslatedResponse> => {
     setIsLoading(true);
     try {
-      // En inglés solo se traducen las 5 experiencias más recientes (las primeras
-      // del arreglo); en español se traducen todas.
-      const maxExperiences = lang === "EN" ? 5 : undefined;
+      // Se traducen TODAS las experiencias: la plantilla del CV las pinta todas, y
+      // limitar a 5 en inglés dejaba de la sexta en adelante en español.
+      const maxExperiences = undefined;
       const texts = flatten(talentData, maxExperiences);
-      const target = lang === "ES" ? "es" : "en";
+      const idioma = lang === "ES" ? "español" : "inglés";
 
-      const { data } = await axiosInstance.post<TranslateApiResponse>(
-        "bdt/translate",
-        { texts, source: "auto", target },
+      // GPT (backend /ia/prompt) traduce la lista de textos. El esquema estricto
+      // obliga a devolver un arreglo de strings; la cantidad se valida abajo.
+      const { data } = await axiosInstance.post<TranslatePromptResponse>(
+        "bdt/ia/prompt",
+        {
+          instructions: buildInstructions(idioma),
+          prompt: JSON.stringify({ idioma_destino: idioma, textos: texts }),
+          schema: TRANSLATION_SCHEMA,
+        },
       );
 
-      const translations = data?.translations;
-      // Si algo no cuadra (longitud distinta o error), se usa el original sin
-      // traducir. No se recurre a la IA.
+      const translations = data?.promptResponse?.traducciones;
+      // Si algo no cuadra (error o cantidad distinta), se usa el original sin
+      // traducir.
       if (
         data?.idMensaje !== 2 ||
         !Array.isArray(translations) ||
