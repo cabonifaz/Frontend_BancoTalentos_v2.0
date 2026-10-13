@@ -2,10 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { AppError, Talent, TalentResponse } from "../../../../models";
 import { MODAL_FRACTAL_CV } from "../../../../utilities/modalsIds";
 import { Modal } from "../../../modals/Modal";
-import {
-  detectLanguage,
-  getTextForDetection,
-} from "../../../../utilities/language.utils";
 import { enqueueSnackbar } from "notistack";
 import { Utils } from "../../../../utilities/utils";
 import { usePDFFromReact } from "../../../../hooks/talentos/usePDFFromTemplate";
@@ -33,6 +29,9 @@ const notifySuccess = (message: string) =>
 
 const notifyError = (message: string) =>
   enqueueSnackbar({ message, variant: "error" });
+
+const notifyWarning = (message: string) =>
+  enqueueSnackbar({ message, variant: "warning" });
 
 // Convierte el PDF generado (base64 crudo) en un File para subirlo a S3.
 const base64ToPdfFile = (base64: string, fileName: string): File => {
@@ -158,23 +157,19 @@ export const ModalFractalCV = ({
     if (!talentForCV || !talentDet || !talent) return;
 
     try {
-      // Detectar idioma
-      const textForDetection = getTextForDetection(talentForCV);
-      const langDetected = detectLanguage(textForDetection);
+      // Se traduce SIEMPRE al idioma elegido. Antes se detectaba el idioma de
+      // todo el talento (nombres, empresas, skills técnicas en inglés, fechas...)
+      // y solo se traducía si salía exactamente ES/EN y distinto al elegido: con
+      // texto mezclado la detección fallaba y el CV salía sin traducir. La IA
+      // deja tal cual los textos que ya están en el idioma destino.
+      const translated = await translateTalentData(talentForCV, language);
+      const cvData = translated.promptResponse;
+      setTalentForCV(cvData);
 
-      let cvData = talentForCV;
-
-      // Traducir solo si es necesario
-      if (
-        langDetected !== language &&
-        (langDetected === "ES" || langDetected === "EN")
-      ) {
-        const translated = await translateTalentData(
-          talentForCV,
-          language,
+      if (translated.mensaje === "Sin traducción") {
+        notifyWarning(
+          "No se pudo traducir el CV; se generó con el texto original.",
         );
-        cvData = translated.promptResponse;
-        setTalentForCV(cvData);
       }
 
       // Generar PDF en base64
