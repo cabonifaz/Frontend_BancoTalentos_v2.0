@@ -538,6 +538,8 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   message: string;
+  title?: string;
+  confirmLabel?: string;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -545,20 +547,22 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onClose,
   onConfirm,
   message,
+  title = "Confirmación",
+  confirmLabel = "Confirmar",
 }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
       <div className="bg-white rounded-lg w-full max-w-md p-6 dark:bg-slate-800">
-        <h2 className="text-xl font-semibold mb-4">Confirmación</h2>
-        <p className="mb-6">{message}</p>
+        <h2 className="text-xl font-semibold mb-4">{title}</h2>
+        <p className="mb-6 whitespace-pre-line">{message}</p>
         <div className="flex justify-end gap-4">
           <button onClick={onClose} className="btn btn-outline-gray">
             Cancelar
           </button>
           <button onClick={onConfirm} className="btn btn-blue">
-            Confirmar
+            {confirmLabel}
           </button>
         </div>
       </div>
@@ -592,6 +596,9 @@ const TalentTable: React.FC = () => {
   const [requerimiento, setRequerimiento] =
     useState<RequerimientoType | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  // Talentos confirmados cuyos datos de ingreso no están en este navegador (ver
+  // handleConfirmOpen). Con elementos, se muestra el aviso para desmarcarlos.
+  const [talentosSinDatos, setTalentosSinDatos] = useState<AsignarTalentoType[]>([]);
   const [dateFormatted, setDateFormatted] = useState("");
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -1103,24 +1110,52 @@ const TalentTable: React.FC = () => {
           )}): el requerimiento seguirá abierto para completarlas después.`
         : " El requerimiento seguirá abierto.";
 
-    // Aviso del gap cross-session: si el talento se confirmó en otra sesión, sus
-    // datos de ingreso ya no están en memoria y el formulario saldría incompleto.
-    const sinDatos = talentosAIngresar
-      .filter((t) => !confirmedByTalento.current[t.idTalento])
-      .map(nombreDeTalento);
-
-    const advertencia =
-      sinDatos.length > 0
-        ? ` Atención: ${sinDatos.join(
-            ", "
-          )} se confirmó en otra sesión, así que su formulario puede salir incompleto.`
-        : "";
-
-    return `${quienes}, con sus formularios y correos.${pendiente}${advertencia} ¿Desea continuar?`;
+    return `${quienes}, con sus formularios y correos.${pendiente} ¿Desea continuar?`;
   }, [talentosAIngresar, isFullyCovered, perfilesFaltantes]);
 
+  /**
+   * Gap cross-session: los datos de ingreso (cargo, fechas, montos, equipo...)
+   * solo viven en la memoria de este navegador (`confirmedByTalento`) hasta
+   * Finalizar. Un talento confirmado en otro navegador, por otro usuario o antes
+   * de recargar la página llega marcado pero sin esos datos, y su formulario
+   * saldría incompleto. Antes de finalizar se piden desmarcar para volver a
+   * confirmarlos (y llenar de nuevo su ingreso).
+   */
   const handleConfirmOpen = () => {
+    const sinDatos = talentosAIngresar.filter(
+      (t) => !confirmedByTalento.current[t.idTalento]
+    );
+    if (sinDatos.length > 0) {
+      setTalentosSinDatos(sinDatos);
+      return;
+    }
     setIsConfirmModalOpen(true);
+  };
+
+  const mensajeTalentosSinDatos = useMemo(() => {
+    const nombres = talentosSinDatos.map((t) => `• ${nombreDeTalento(t)}`).join("\n");
+    return (
+      "Los datos de ingreso de estos talentos se completaron en otro navegador o en una visita anterior a esta pantalla (por ejemplo, los confirmó otro usuario o se recargó la página), por lo que ya no están disponibles:\n\n" +
+      `${nombres}\n\n` +
+      "Para no enviar formularios incompletos, se desmarcarán. Vuelve a confirmarlos para llenar sus datos de ingreso y luego pulsa Finalizar."
+    );
+  }, [talentosSinDatos]);
+
+  /** Desmarca y persiste (sin ingresar) a los talentos sin datos de ingreso. */
+  const handleDesmarcarSinDatos = async () => {
+    const ids = new Set(talentosSinDatos.map((t) => t.idTalento));
+    const nextTalents = localTalents.map((talent) =>
+      ids.has(talent.idTalento)
+        ? { ...talent, confirmado: false, isFromAPI: false, ingreso: 0 }
+        : talent
+    );
+    setTalentosSinDatos([]);
+    setLocalTalents(nextTalents);
+    await handleFinalize({ talents: nextTalents, flagCorreo: false, finalizar: false });
+    showToast(
+      `Se desmarcaron ${ids.size} talento(s). Vuelve a confirmarlos para completar sus datos de ingreso.`,
+      "warning"
+    );
   };
 
   // Finalizar selección
@@ -1470,6 +1505,15 @@ const TalentTable: React.FC = () => {
           onClose={() => setIsConfirmModalOpen(false)}
           onConfirm={() => handleFinalize({ flagCorreo: true, finalizar: true })}
           message={mensajeDeFinalizar}
+        />
+
+        <ConfirmationModal
+          isOpen={talentosSinDatos.length > 0}
+          onClose={() => setTalentosSinDatos([])}
+          onConfirm={handleDesmarcarSinDatos}
+          message={mensajeTalentosSinDatos}
+          title="Datos de ingreso no disponibles"
+          confirmLabel="Desmarcar talentos"
         />
 
         <BlacklistWarningModal
