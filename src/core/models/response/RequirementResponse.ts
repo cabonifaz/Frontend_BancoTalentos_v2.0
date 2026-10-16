@@ -30,5 +30,9 @@ export interface RequirementResponse {
     idDuracionContrato?: number;
     duracionContrato?: number;
     lstRqFacturacion: RQFacturacion[];
+    // Requisitos de ingreso: 0 = No requiere, 1 = Requiere
+    emo?: number;
+    sctr?: number;
+    asignacionLaptop?: number;
   };
 }
