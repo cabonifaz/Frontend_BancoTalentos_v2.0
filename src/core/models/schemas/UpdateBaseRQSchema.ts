@@ -139,6 +139,10 @@ export const UpdateBaseRQSchema = z
     idEstadoRQ: z.number().min(1, "El estado es obligatorio"),
     autogenRQ: z.boolean().optional(),
     tieneDuracion: z.boolean(),
+    // Requisitos de ingreso (se envían como 0/1)
+    emo: z.boolean().optional(),
+    sctr: z.boolean().optional(),
+    asignacionLaptop: z.boolean().optional(),
     duracion: z.coerce
       .number({
         required_error: "La duración es obligatoria",

@@ -238,6 +238,10 @@ export const ModalRQDetails = ({
           duration: duracionContrato,
         },
         lstFacturacion: mapFacturacion(res),
+        // Requisitos de ingreso (0/1 -> checkbox)
+        emo: req.emo === 1,
+        sctr: req.sctr === 1,
+        asignacionLaptop: req.asignacionLaptop === 1,
       });
     }
   }, [res, reset]);
@@ -331,6 +335,10 @@ export const ModalRQDetails = ({
         duration: duracionContrato,
       },
       lstFacturacion: mapFacturacion(res),
+      // Requisitos de ingreso (0/1 -> checkbox)
+      emo: req.emo === 1,
+      sctr: req.sctr === 1,
+      asignacionLaptop: req.asignacionLaptop === 1,
     });
     setIsEditing(!isEditing);
   };
@@ -375,6 +383,10 @@ export const ModalRQDetails = ({
         idDuracionContrato: idDuracionContrato,
         duracionContrato: duracionContrato,
         lstFacturacion: data.lstFacturacion,
+        // Requisitos de ingreso: 0 = No requiere, 1 = Requiere
+        emo: data.emo ? 1 : 0,
+        sctr: data.sctr ? 1 : 0,
+        asignacionLaptop: data.asignacionLaptop ? 1 : 0,
       };
 
       const response = await postData("/fmi/requirement/update", payload);
