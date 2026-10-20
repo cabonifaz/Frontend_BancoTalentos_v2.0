@@ -178,6 +178,31 @@ export const TabData = ({ rqStates }: TabProps) => {
               {errors.fechaVencimiento.message}
             </p>
           )}
+
+          {/* Requisitos de ingreso */}
+          <div className="flex items-start">
+            <label className="w-1/3 text-sm font-medium text-gray-700 pt-1 dark:text-slate-200">
+              Requisitos de ingreso:
+            </label>
+            <div className="w-2/3 flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                <input {...register("emo")} type="checkbox" className="input-checkbox" />
+                Requiere EMO
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                <input {...register("sctr")} type="checkbox" className="input-checkbox" />
+                Requiere SCTR
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-slate-200">
+                <input
+                  {...register("asignacionLaptop")}
+                  type="checkbox"
+                  className="input-checkbox"
+                />
+                Requiere asignación de laptop
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

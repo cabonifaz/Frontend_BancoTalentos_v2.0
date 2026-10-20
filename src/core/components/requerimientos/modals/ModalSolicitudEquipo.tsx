@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import { DropdownForm, InputForm } from "../../forms";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "../../../context/ParamsContext";
 import CheckboxForm from "../../forms/CheckboxForm";
 import {
@@ -24,6 +24,11 @@ interface Props {
   onConfirm: (talento: AsignarTalentoType) => void;
   onCancel: (talento: AsignarTalentoType) => void;
   currentTalent?: AsignarTalentoType | null;
+  /**
+   * El RQ requiere asignación de laptop: el tipo de equipo se preselecciona en
+   * "Laptop" al abrir. Sigue siendo editable.
+   */
+  preseleccionarLaptop?: boolean;
 }
 
 export const ModalSolicitudEquipo = ({
@@ -31,6 +36,7 @@ export const ModalSolicitudEquipo = ({
   onConfirm,
   onCancel,
   currentTalent,
+  preseleccionarLaptop = false,
 }: Props) => {
   const [defaultSoftwareIds, setDefaultSoftwareIds] = useState<string[]>([]);
   const { paramsByMaestro, loading: paramLoading } = useParams();
@@ -104,6 +110,20 @@ export const ModalSolicitudEquipo = ({
       clearErrors("fechaEntrega");
     }
   }, [fechaSolicitud, fechaEntrega, clearErrors, trigger]);
+
+  // RQ con asignación de laptop: preseleccionar "Laptop" una sola vez, cuando
+  // llegan los tipos de equipo (el usuario puede cambiarlo después).
+  const laptopPreseleccionada = useRef(false);
+  useEffect(() => {
+    if (!preseleccionarLaptop || laptopPreseleccionada.current) return;
+    const laptop = tipoHardwareParams.find((p) =>
+      /laptop/i.test(p.string1 ?? ""),
+    );
+    if (laptop) {
+      setValue("tipoHardware", laptop.num1, { shouldValidate: true });
+      laptopPreseleccionada.current = true;
+    }
+  }, [preseleccionarLaptop, tipoHardwareParams, setValue]);
 
   const tipoHardware = watch("tipoHardware");
   const isPcOrLaptop = Number(tipoHardware) === 1 || Number(tipoHardware) === 2;

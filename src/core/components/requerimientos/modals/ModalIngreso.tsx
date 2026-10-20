@@ -42,6 +42,11 @@ interface Props {
   duracionContrato?: number;
   /** Unidad de esa duración (PARAMETROS, maestro 28). */
   idDuracionContrato?: number;
+  /**
+   * El RQ requiere asignación de laptop: "¿Cuenta con equipo?" queda fijo en No
+   * para que, al confirmar, se pidan siempre las especificaciones del equipo.
+   */
+  requiereLaptop?: boolean;
 }
 
 export const ModalIngreso = ({
@@ -50,6 +55,7 @@ export const ModalIngreso = ({
   onConfirm,
   duracionContrato,
   idDuracionContrato,
+  requiereLaptop = false,
 }: Props) => {
   const { paramsByMaestro, loading: paramLoading } = useParams();
   const { clientes, loading: clientsLoading } = useFetchClients();
@@ -120,7 +126,7 @@ export const ModalIngreso = ({
       proyectoServicio: proyectoServicio || "",
       objetoContrato: objetoContrato || "",
       declararSunat: currentTalent?.declararSunat || 0,
-      tieneEquipo: currentTalent?.tieneEquipo === 1,
+      tieneEquipo: requiereLaptop ? false : currentTalent?.tieneEquipo === 1,
       ubicacion: currentTalent?.ubicacion || "",
       tipoMoneda: currentTalent?.idMoneda || 0,
       idSedeDeclarar:
@@ -330,7 +336,7 @@ export const ModalIngreso = ({
                                 className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === true}
                                 onChange={() => field.onChange(true)}
-                                // disabled
+                                disabled={requiereLaptop}
                               />
                               <span className="ml-2 text-gray-700 dark:text-slate-200">
                                 Sí
@@ -342,13 +348,19 @@ export const ModalIngreso = ({
                                 className="form-radio h-4 w-4 text-[#0B85C3] focus:ring-[#0B85C3] cursor-pointer"
                                 checked={field.value === false}
                                 onChange={() => field.onChange(false)}
-                                // disabled
+                                disabled={requiereLaptop}
                               />
                               <span className="ml-2 text-gray-700 dark:text-slate-200">
                                 No
                               </span>
                             </label>
                           </div>
+                          {requiereLaptop && (
+                            <p className="text-sm text-amber-600 self-center dark:text-amber-400">
+                              El RQ requiere asignación de laptop: al aceptar
+                              se pedirán las especificaciones del equipo.
+                            </p>
+                          )}
                           {errors.tieneEquipo && (
                             <p className="text-sm text-red-600 mt-2 dark:text-red-400">
                               {errors.tieneEquipo.message}
