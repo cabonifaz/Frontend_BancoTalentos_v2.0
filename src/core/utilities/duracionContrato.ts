@@ -1,4 +1,4 @@
-import { addDays, addMonths, format, isValid, parse } from "date-fns";
+import { addDays, addMonths, format, isValid, parse, subDays } from "date-fns";
 import { Param } from "../models";
 
 /**
@@ -43,12 +43,19 @@ const resolverUnidad = (
   return idUnidad ? UNIDAD_POR_ID[idUnidad] ?? null : null;
 };
 
+/**
+ * Días que se descuentan al fin de un contrato pactado en meses: el día de
+ * inicio ya cuenta como trabajado, así que 1 mes desde el 18/09 acaba el 17/10.
+ */
+export const DIAS_DESCUENTO_FIN_MESES = 1;
+
 /** Fecha de hoy en el formato que usan los inputs de tipo date. */
 export const hoyISO = (): string => format(new Date(), "yyyy-MM-dd");
 
 /**
- * Fin del contrato = inicio + duración, sumada tal cual: un contrato de 1 mes
- * que empieza el 18/09 termina el 18/10.
+ * Fin del contrato = inicio + duración. En meses se resta un día porque el día
+ * de inicio ya cuenta (inicio + N meses − 1 día): un contrato de 1 mes que
+ * empieza el 18/09 termina el 17/10. Días, semanas y años se suman tal cual.
  *
  * Devuelve `""` cuando el RQ no tiene duración de contrato configurada o la
  * unidad no se reconoce: mejor dejar el campo vacío que autocompletar una fecha
@@ -85,7 +92,10 @@ export const finDeContrato = (
       fin = addDays(inicio, Math.round(duracion * 7));
       break;
     case "meses":
-      fin = addDays(addMonths(inicio, enteros), Math.round(resto * 30));
+      fin = subDays(
+        addDays(addMonths(inicio, enteros), Math.round(resto * 30)),
+        DIAS_DESCUENTO_FIN_MESES,
+      );
       break;
     case "anios":
       fin = addDays(addMonths(inicio, enteros * 12), Math.round(resto * 365));
