@@ -37,18 +37,12 @@ import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
 import { ModalCalculadoraRiesgo } from "../../../core/components/requerimientos/modals/ModalCalculadoraRiesgo";
 import { Dashboard } from "../Dashboard";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
-  ESTADO_CANCELADO,
-  ESTADO_EN_PRODUCCION,
-  ESTADO_EN_SELECCION,
-  ESTADO_PERDIDO,
-  ESTADO_REGISTRADO,
   ESTADO_RQ,
-  ESTADO_TERMINADO,
 } from "../../../core/utilities/constants";
+import { EstadoRqBadge } from "../../../core/components/requerimientos/EstadoRqBadge";
 import { useModal } from "../../../core/context/ModalContext";
 import {
   MODAL_CREATE_RQ,
@@ -73,42 +67,9 @@ interface SearchProps {
 const isAsignacionBloqueada = (req: RequirementItem): boolean =>
   req.idEstado === ESTADO_ATENDIDO;
 
-/**
- * Mismo lenguaje visual que el badge de estado de Entrevistas.
- *
- * Los ocho estados del maestro 24 agrupados por lo que significan:
- * azul = el RQ avanza y está cerrado en su ciclo, morado = está en curso,
- * rojo = terminó mal, verde = recién entra, gris = ya no pide acción.
- */
-const ESTADO_BADGE: Record<number, string> = {
-  [ESTADO_REGISTRADO]: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
-  [ESTADO_ASIGNADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_TERMINADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_EN_SELECCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_EN_PRODUCCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_PERDIDO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_CANCELADO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_ATENDIDO]: "bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300",
-};
-
-const EstadoBadge = ({
-  idEstado,
-  estado,
-}: {
-  idEstado: number;
-  estado: string;
-}) => (
-  <span
-    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${
-      ESTADO_BADGE[idEstado] || "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
-    }`}
-  >
-    {estado}
-  </span>
-);
-
 export const Requirements = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const RequerimientoRef = useRef<HTMLInputElement>(null);
   const hasFetchedClients = useRef(false);
   const hasFetchedReqs = useRef(false);
@@ -127,8 +88,7 @@ export const Requirements = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(
     null
   );
-  const [selectedRQ, setSelectedRQ] =
-    useState<RequirementItem | null>(null);
+  const [selectedRqId, setSelectedRqId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasSearchText, setHasSearchText] = useState(false);
 
@@ -295,9 +255,24 @@ export const Requirements = () => {
   };
 
   const openDetallesRQModal = (req: RequirementItem) => {
-    setSelectedRQ(req);
+    setSelectedRqId(req.idRequerimiento);
     openModal(MODAL_DETAILS_RQ);
   };
+
+  // Llegada desde Postulaciones del detalle del talento: abre el detalle de
+  // ese RQ una sola vez por navegación. openModal cambia de identidad en cada
+  // render del ModalProvider, así que sin este guard el efecto reabría el
+  // modal al cerrarlo. También se limpia el state para que recargar no lo reabra.
+  const idRqDesdeFuera = (location.state as { idRequerimiento?: number } | null)
+    ?.idRequerimiento;
+  const navegacionAtendida = useRef<string | null>(null);
+  useEffect(() => {
+    if (!idRqDesdeFuera || navegacionAtendida.current === location.key) return;
+    navegacionAtendida.current = location.key;
+    setSelectedRqId(idRqDesdeFuera);
+    openModal(MODAL_DETAILS_RQ);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [idRqDesdeFuera, openModal, navigate, location.pathname, location.key]);
 
   const updateRQData = () => {
     executeSearch();
@@ -378,7 +353,7 @@ export const Requirements = () => {
       {/**Modal Details V3 */}
       {isModalOpen(MODAL_DETAILS_RQ) && (
         <ModalRQDetails
-          rqId={selectedRQ?.idRequerimiento || 0}
+          rqId={selectedRqId || 0}
           rqStates={rqState}
           onClose={() => closeModal(MODAL_DETAILS_RQ)}
           clients={clientesResponse?.clientes || []}
@@ -604,7 +579,7 @@ export const Requirements = () => {
                           {req.fechaSolicitud}
                         </td>
                         <td className="table-cell text-center">
-                          <EstadoBadge
+                          <EstadoRqBadge
                             idEstado={req.idEstado}
                             estado={req.estado}
                           />

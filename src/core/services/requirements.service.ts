@@ -4,13 +4,63 @@ import {
   axiosInstanceFMI,
 } from "./axiosService";
 import { Utils } from "../utilities/utils";
-import { AddReqFilesParams, BaseResponse, BaseResponseFMI, PostulantConfirmUploadRequest, PostulantDownloadUrlRequest, PostulantFileListResponse, PostulantUploadUrlRequest, ReqListParams, RequerimientosResponse, RequirementResponse, RqConfirmUploadRequest, RqPresignedUrlResponse, RqUploadUrlRequest, UpdateReqParams } from "../models";
+import { AddReqFilesParams, BaseResponse, BaseResponseFMI, OperationResult, PostulantConfirmUploadRequest, PostulantDownloadUrlRequest, PostulantFileListResponse, PostulantUploadUrlRequest, ReqListParams, RequerimientosResponse, RequirementResponse, RqConfirmUploadRequest, RqPresignedUrlResponse, RqUploadUrlRequest, UpdateReqParams } from "../models";
 
 export const getRequirements = (
   params: ReqListParams
 ): Promise<AxiosResponse<RequerimientosResponse>> => {
   return axiosInstanceFMI.get(
     `/fmi/requirement/list?${Utils.buildQueryString(params)}`
+  );
+};
+
+/** Un RQ al que fue asignado el talento (SP_TALENTO_POSTULACIONES_LST). */
+export interface TalentApplication {
+  idRequerimiento: number;
+  codigo: string;
+  titulo: string;
+  cliente: string;
+  /** dd/MM/yyyy */
+  fechaSolicitud: string | null;
+  /** Estado del RQ (maestro 24). */
+  idEstado: number;
+  estado: string;
+  /** Estado del talento en ese RQ (maestro 25). */
+  idEstadoTalento: number;
+  estadoTalento: string;
+  /** Ingresó a la empresa por este RQ. */
+  ingreso: boolean;
+  /** Vacante a la que postuló: perfil profesional (maestro 14). */
+  idPerfil: number | null;
+  vacante: string;
+  postulantes: number;
+}
+
+export interface TalentApplications {
+  postulaciones: TalentApplication[];
+  totalElementos: number;
+  totalPaginas: number;
+  /** Filas por página (PARAMETROS maestro 11); null = sin paginar. */
+  tamanioPagina: number | null;
+  /** Todas las postulaciones del talento, sin filtros. */
+  totalPostulaciones: number;
+  /** Cantidad por estado del RQ, aplicando sólo la búsqueda. */
+  estados: { idEstado: number; estado: string; cantidad: number }[];
+}
+
+export interface TalentApplicationsParams {
+  idTalento: number;
+  buscar?: string | null;
+  estado?: number | null;
+  nPag?: number | null;
+}
+
+/** Postulaciones de un talento, para el modal del detalle del talento. */
+export const getTalentApplications = (
+  params: TalentApplicationsParams
+): Promise<AxiosResponse<OperationResult<TalentApplications | null>>> => {
+  return axiosInstanceFMI.get(
+    `/fmi/requirement/by-talent?${Utils.buildQueryString(params)}`
   );
 };
 
