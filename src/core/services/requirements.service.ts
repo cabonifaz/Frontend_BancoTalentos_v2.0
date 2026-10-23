@@ -14,6 +14,42 @@ export const getRequirements = (
   );
 };
 
+/** Opción de un filtro de Requerimientos que se busca en el servidor. */
+export interface FilterOption {
+  id: number;
+  nombre: string;
+  /** Cargo del contacto o documento del talento; vacío en perfiles. */
+  detalle: string;
+  /** RQ vigentes relacionados con la opción. */
+  cantidad: number;
+}
+
+export interface FilterOptions {
+  opciones: FilterOption[];
+  /** Opciones que coinciden, antes del límite. */
+  total: number;
+}
+
+type FilterOptionsResponse = Promise<AxiosResponse<OperationResult<FilterOptions | null>>>;
+
+/** Filtro Contacto: contactos de un cliente. */
+export const getContactFilterOptions = (idCliente: number): FilterOptionsResponse =>
+  axiosInstanceFMI.get(
+    `/fmi/requirement/filters/contacts?${Utils.buildQueryString({ idCliente })}`
+  );
+
+/** Filtro Perfil: perfiles usados en RQ vigentes; sin búsqueda, los más usados. */
+export const getProfileFilterOptions = (buscar: string, top = 8): FilterOptionsResponse =>
+  axiosInstanceFMI.get(
+    `/fmi/requirement/filters/profiles?${Utils.buildQueryString({ buscar, top })}`
+  );
+
+/** Filtro Postulante: talentos asignados a algún RQ; exige búsqueda. */
+export const getTalentFilterOptions = (buscar: string, top = 8): FilterOptionsResponse =>
+  axiosInstanceFMI.get(
+    `/fmi/requirement/filters/talents?${Utils.buildQueryString({ buscar, top })}`
+  );
+
 /** Un RQ al que fue asignado el talento (SP_TALENTO_POSTULACIONES_LST). */
 export interface TalentApplication {
   idRequerimiento: number;

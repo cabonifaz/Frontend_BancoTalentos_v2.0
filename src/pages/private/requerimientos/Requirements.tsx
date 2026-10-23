@@ -32,7 +32,17 @@ import {
 } from "../../../core/utilities/errorHandler";
 import { ClientListResponse } from "../../../core/models/response/ClientsResponse";
 import { getClients } from "../../../core/services/clients.service";
-import { getRequirements } from "../../../core/services/requirements.service";
+import {
+  getProfileFilterOptions,
+  getRequirements,
+  getTalentFilterOptions,
+} from "../../../core/services/requirements.service";
+import {
+  ContactFilter,
+  ContactSelection,
+  FilterSelection,
+  LookupFilter,
+} from "../../../core/components/requerimientos/RqFilters";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
 import { ModalCalculadoraRiesgo } from "../../../core/components/requerimientos/modals/ModalCalculadoraRiesgo";
@@ -57,7 +67,12 @@ interface SearchProps {
   buscar: string | null;
   estado: number | null;
   fechaSolicitud: string | null;
+  idContactos: number[];
+  idPerfiles: number[];
+  idTalentos: number[];
 }
+
+const ids = (values: FilterSelection[]) => values.map((v) => v.id);
 
 /**
  * El RQ está "cerrado" para asignación sólo cuando está ATENDIDO, es decir
@@ -89,6 +104,10 @@ export const Requirements = () => {
     null
   );
   const [selectedRqId, setSelectedRqId] = useState<number | null>(null);
+  // Filtros buscados en el servidor: guardan id (para el SP) y texto (para el chip).
+  const [selectedContactos, setSelectedContactos] = useState<ContactSelection[]>([]);
+  const [selectedPerfiles, setSelectedPerfiles] = useState<FilterSelection[]>([]);
+  const [selectedTalentos, setSelectedTalentos] = useState<FilterSelection[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasSearchText, setHasSearchText] = useState(false);
 
@@ -146,6 +165,9 @@ export const Requirements = () => {
     buscar,
     estado,
     fechaSolicitud,
+    idContactos,
+    idPerfiles,
+    idTalentos,
   }: SearchProps) => {
     fetchRequerimientos({
       nPag: nPag || 1,
@@ -153,6 +175,9 @@ export const Requirements = () => {
       buscar: buscar,
       estado: estado,
       fechaSolicitud: fechaSolicitud,
+      idContactos,
+      idPerfiles,
+      idTalentos,
     });
   };
 
@@ -175,12 +200,47 @@ export const Requirements = () => {
       : null;
     setSelectedCliente(newValue);
     setCurrentPage(1);
+    // Cliente y contacto no pueden contradecirse: al elegir un cliente se
+    // sueltan los contactos de otros clientes (quitar el cliente, no).
+    const contactosDelCliente =
+      newValue === null
+        ? selectedContactos
+        : selectedContactos.filter((c) => c.idCliente === newValue);
+    const sueltaContactos = contactosDelCliente.length !== selectedContactos.length;
+    if (sueltaContactos) setSelectedContactos(contactosDelCliente);
     executeSearch({
       nPag: 1,
       estado: selectedEstado,
       fechaSolicitud: selectedDate ? selectedDate : null,
       idCliente: newValue,
+      ...(sueltaContactos ? { idContactos: ids(contactosDelCliente) } : {}),
     });
+  };
+
+  const handleContactosChange = (values: ContactSelection[]) => {
+    setSelectedContactos(values);
+    setCurrentPage(1);
+    // Un contacto de otro cliente suelta el filtro Cliente.
+    const sueltaCliente =
+      selectedCliente !== null && values.some((v) => v.idCliente !== selectedCliente);
+    if (sueltaCliente) setSelectedCliente(null);
+    executeSearch({
+      nPag: 1,
+      idContactos: ids(values),
+      ...(sueltaCliente ? { idCliente: null } : {}),
+    });
+  };
+
+  const handlePerfilesChange = (values: FilterSelection[]) => {
+    setSelectedPerfiles(values);
+    setCurrentPage(1);
+    executeSearch({ nPag: 1, idPerfiles: ids(values) });
+  };
+
+  const handleTalentosChange = (values: FilterSelection[]) => {
+    setSelectedTalentos(values);
+    setCurrentPage(1);
+    executeSearch({ nPag: 1, idTalentos: ids(values) });
   };
 
   const handleDateSelected = (date: Date | null) => {
@@ -205,6 +265,9 @@ export const Requirements = () => {
         estado?: number | null;
         fechaSolicitud?: string | null;
         idCliente?: number | null;
+        idContactos?: number[];
+        idPerfiles?: number[];
+        idTalentos?: number[];
       } = {}
     ) => {
       if (!loadingReqs) {
@@ -214,6 +277,9 @@ export const Requirements = () => {
             overrides.idCliente !== undefined
               ? overrides.idCliente
               : selectedCliente,
+          idContactos: overrides.idContactos ?? ids(selectedContactos),
+          idPerfiles: overrides.idPerfiles ?? ids(selectedPerfiles),
+          idTalentos: overrides.idTalentos ?? ids(selectedTalentos),
           buscar: RequerimientoRef.current?.value || null,
           estado:
             overrides.estado !== undefined
@@ -234,6 +300,9 @@ export const Requirements = () => {
       selectedCliente,
       selectedDate,
       selectedEstado,
+      selectedContactos,
+      selectedPerfiles,
+      selectedTalentos,
     ]
   );
 
@@ -320,7 +389,10 @@ export const Requirements = () => {
     hasSearchText ||
     selectedCliente !== null ||
     selectedEstado !== null ||
-    selectedDate !== null;
+    selectedDate !== null ||
+    selectedContactos.length > 0 ||
+    selectedPerfiles.length > 0 ||
+    selectedTalentos.length > 0;
 
   const handleClearFilters = () => {
     if (RequerimientoRef.current) RequerimientoRef.current.value = "";
@@ -328,6 +400,9 @@ export const Requirements = () => {
     setSelectedCliente(null);
     setSelectedEstado(null);
     setSelectedDate(null);
+    setSelectedContactos([]);
+    setSelectedPerfiles([]);
+    setSelectedTalentos([]);
     setOpenDropdown(null);
     setCurrentPage(1);
     // Los overrides van explícitos: el estado de React todavía no se ha aplicado
@@ -337,6 +412,9 @@ export const Requirements = () => {
       estado: null,
       fechaSolicitud: null,
       idCliente: null,
+      idContactos: [],
+      idPerfiles: [],
+      idTalentos: [],
     });
   };
 
@@ -461,6 +539,45 @@ export const Requirements = () => {
                       : []
                   }
                   onChange={handleClienteChangeFilter}
+                />
+                <ContactFilter
+                  values={selectedContactos}
+                  onChange={handleContactosChange}
+                  isOpen={openDropdown === 2}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 2 ? null : 2)
+                  }
+                  clients={clientOptions}
+                  selectedClientId={selectedCliente}
+                />
+                <LookupFilter
+                  name="perfil"
+                  label="Perfil"
+                  values={selectedPerfiles}
+                  onChange={handlePerfilesChange}
+                  isOpen={openDropdown === 3}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 3 ? null : 3)
+                  }
+                  fetchOptions={getProfileFilterOptions}
+                  minChars={0}
+                  placeholder="Buscar perfil…"
+                  hint=""
+                />
+                <LookupFilter
+                  name="postulante"
+                  label="Postulante"
+                  values={selectedTalentos}
+                  onChange={handleTalentosChange}
+                  isOpen={openDropdown === 4}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 4 ? null : 4)
+                  }
+                  fetchOptions={getTalentFilterOptions}
+                  minChars={2}
+                  placeholder="Nombre o Doc. identidad…"
+                  hint="Escribe al menos 2 letras o números del documento."
+                  persona
                 />
                 <FilterDropDown
                   name="estado"
