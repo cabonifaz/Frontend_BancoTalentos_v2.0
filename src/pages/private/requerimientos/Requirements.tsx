@@ -32,23 +32,27 @@ import {
 } from "../../../core/utilities/errorHandler";
 import { ClientListResponse } from "../../../core/models/response/ClientsResponse";
 import { getClients } from "../../../core/services/clients.service";
-import { getRequirements } from "../../../core/services/requirements.service";
+import {
+  getProfileFilterOptions,
+  getRequirements,
+  getTalentFilterOptions,
+} from "../../../core/services/requirements.service";
+import {
+  ContactFilter,
+  ContactSelection,
+  FilterSelection,
+  LookupFilter,
+} from "../../../core/components/requerimientos/RqFilters";
 import { enqueueSnackbar } from "notistack";
 import { format } from "date-fns";
 import { ModalCalculadoraRiesgo } from "../../../core/components/requerimientos/modals/ModalCalculadoraRiesgo";
 import { Dashboard } from "../Dashboard";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  ESTADO_ASIGNADO,
   ESTADO_ATENDIDO,
-  ESTADO_CANCELADO,
-  ESTADO_EN_PRODUCCION,
-  ESTADO_EN_SELECCION,
-  ESTADO_PERDIDO,
-  ESTADO_REGISTRADO,
   ESTADO_RQ,
-  ESTADO_TERMINADO,
 } from "../../../core/utilities/constants";
+import { EstadoRqBadge } from "../../../core/components/requerimientos/EstadoRqBadge";
 import { useModal } from "../../../core/context/ModalContext";
 import {
   MODAL_CREATE_RQ,
@@ -63,7 +67,12 @@ interface SearchProps {
   buscar: string | null;
   estado: number | null;
   fechaSolicitud: string | null;
+  idContactos: number[];
+  idPerfiles: number[];
+  idTalentos: number[];
 }
+
+const ids = (values: FilterSelection[]) => values.map((v) => v.id);
 
 /**
  * El RQ está "cerrado" para asignación sólo cuando está ATENDIDO, es decir
@@ -73,42 +82,9 @@ interface SearchProps {
 const isAsignacionBloqueada = (req: RequirementItem): boolean =>
   req.idEstado === ESTADO_ATENDIDO;
 
-/**
- * Mismo lenguaje visual que el badge de estado de Entrevistas.
- *
- * Los ocho estados del maestro 24 agrupados por lo que significan:
- * azul = el RQ avanza y está cerrado en su ciclo, morado = está en curso,
- * rojo = terminó mal, verde = recién entra, gris = ya no pide acción.
- */
-const ESTADO_BADGE: Record<number, string> = {
-  [ESTADO_REGISTRADO]: "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
-  [ESTADO_ASIGNADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_TERMINADO]: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-  [ESTADO_EN_SELECCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_EN_PRODUCCION]: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
-  [ESTADO_PERDIDO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_CANCELADO]: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
-  [ESTADO_ATENDIDO]: "bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300",
-};
-
-const EstadoBadge = ({
-  idEstado,
-  estado,
-}: {
-  idEstado: number;
-  estado: string;
-}) => (
-  <span
-    className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${
-      ESTADO_BADGE[idEstado] || "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-200"
-    }`}
-  >
-    {estado}
-  </span>
-);
-
 export const Requirements = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const RequerimientoRef = useRef<HTMLInputElement>(null);
   const hasFetchedClients = useRef(false);
   const hasFetchedReqs = useRef(false);
@@ -127,8 +103,11 @@ export const Requirements = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(
     null
   );
-  const [selectedRQ, setSelectedRQ] =
-    useState<RequirementItem | null>(null);
+  const [selectedRqId, setSelectedRqId] = useState<number | null>(null);
+  // Filtros buscados en el servidor: guardan id (para el SP) y texto (para el chip).
+  const [selectedContactos, setSelectedContactos] = useState<ContactSelection[]>([]);
+  const [selectedPerfiles, setSelectedPerfiles] = useState<FilterSelection[]>([]);
+  const [selectedTalentos, setSelectedTalentos] = useState<FilterSelection[]>([]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [hasSearchText, setHasSearchText] = useState(false);
 
@@ -186,6 +165,9 @@ export const Requirements = () => {
     buscar,
     estado,
     fechaSolicitud,
+    idContactos,
+    idPerfiles,
+    idTalentos,
   }: SearchProps) => {
     fetchRequerimientos({
       nPag: nPag || 1,
@@ -193,6 +175,9 @@ export const Requirements = () => {
       buscar: buscar,
       estado: estado,
       fechaSolicitud: fechaSolicitud,
+      idContactos,
+      idPerfiles,
+      idTalentos,
     });
   };
 
@@ -215,12 +200,47 @@ export const Requirements = () => {
       : null;
     setSelectedCliente(newValue);
     setCurrentPage(1);
+    // Cliente y contacto no pueden contradecirse: al elegir un cliente se
+    // sueltan los contactos de otros clientes (quitar el cliente, no).
+    const contactosDelCliente =
+      newValue === null
+        ? selectedContactos
+        : selectedContactos.filter((c) => c.idCliente === newValue);
+    const sueltaContactos = contactosDelCliente.length !== selectedContactos.length;
+    if (sueltaContactos) setSelectedContactos(contactosDelCliente);
     executeSearch({
       nPag: 1,
       estado: selectedEstado,
       fechaSolicitud: selectedDate ? selectedDate : null,
       idCliente: newValue,
+      ...(sueltaContactos ? { idContactos: ids(contactosDelCliente) } : {}),
     });
+  };
+
+  const handleContactosChange = (values: ContactSelection[]) => {
+    setSelectedContactos(values);
+    setCurrentPage(1);
+    // Un contacto de otro cliente suelta el filtro Cliente.
+    const sueltaCliente =
+      selectedCliente !== null && values.some((v) => v.idCliente !== selectedCliente);
+    if (sueltaCliente) setSelectedCliente(null);
+    executeSearch({
+      nPag: 1,
+      idContactos: ids(values),
+      ...(sueltaCliente ? { idCliente: null } : {}),
+    });
+  };
+
+  const handlePerfilesChange = (values: FilterSelection[]) => {
+    setSelectedPerfiles(values);
+    setCurrentPage(1);
+    executeSearch({ nPag: 1, idPerfiles: ids(values) });
+  };
+
+  const handleTalentosChange = (values: FilterSelection[]) => {
+    setSelectedTalentos(values);
+    setCurrentPage(1);
+    executeSearch({ nPag: 1, idTalentos: ids(values) });
   };
 
   const handleDateSelected = (date: Date | null) => {
@@ -245,6 +265,9 @@ export const Requirements = () => {
         estado?: number | null;
         fechaSolicitud?: string | null;
         idCliente?: number | null;
+        idContactos?: number[];
+        idPerfiles?: number[];
+        idTalentos?: number[];
       } = {}
     ) => {
       if (!loadingReqs) {
@@ -254,6 +277,9 @@ export const Requirements = () => {
             overrides.idCliente !== undefined
               ? overrides.idCliente
               : selectedCliente,
+          idContactos: overrides.idContactos ?? ids(selectedContactos),
+          idPerfiles: overrides.idPerfiles ?? ids(selectedPerfiles),
+          idTalentos: overrides.idTalentos ?? ids(selectedTalentos),
           buscar: RequerimientoRef.current?.value || null,
           estado:
             overrides.estado !== undefined
@@ -274,6 +300,9 @@ export const Requirements = () => {
       selectedCliente,
       selectedDate,
       selectedEstado,
+      selectedContactos,
+      selectedPerfiles,
+      selectedTalentos,
     ]
   );
 
@@ -295,9 +324,24 @@ export const Requirements = () => {
   };
 
   const openDetallesRQModal = (req: RequirementItem) => {
-    setSelectedRQ(req);
+    setSelectedRqId(req.idRequerimiento);
     openModal(MODAL_DETAILS_RQ);
   };
+
+  // Llegada desde Postulaciones del detalle del talento: abre el detalle de
+  // ese RQ una sola vez por navegación. openModal cambia de identidad en cada
+  // render del ModalProvider, así que sin este guard el efecto reabría el
+  // modal al cerrarlo. También se limpia el state para que recargar no lo reabra.
+  const idRqDesdeFuera = (location.state as { idRequerimiento?: number } | null)
+    ?.idRequerimiento;
+  const navegacionAtendida = useRef<string | null>(null);
+  useEffect(() => {
+    if (!idRqDesdeFuera || navegacionAtendida.current === location.key) return;
+    navegacionAtendida.current = location.key;
+    setSelectedRqId(idRqDesdeFuera);
+    openModal(MODAL_DETAILS_RQ);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [idRqDesdeFuera, openModal, navigate, location.pathname, location.key]);
 
   const updateRQData = () => {
     executeSearch();
@@ -345,7 +389,10 @@ export const Requirements = () => {
     hasSearchText ||
     selectedCliente !== null ||
     selectedEstado !== null ||
-    selectedDate !== null;
+    selectedDate !== null ||
+    selectedContactos.length > 0 ||
+    selectedPerfiles.length > 0 ||
+    selectedTalentos.length > 0;
 
   const handleClearFilters = () => {
     if (RequerimientoRef.current) RequerimientoRef.current.value = "";
@@ -353,6 +400,9 @@ export const Requirements = () => {
     setSelectedCliente(null);
     setSelectedEstado(null);
     setSelectedDate(null);
+    setSelectedContactos([]);
+    setSelectedPerfiles([]);
+    setSelectedTalentos([]);
     setOpenDropdown(null);
     setCurrentPage(1);
     // Los overrides van explícitos: el estado de React todavía no se ha aplicado
@@ -362,6 +412,9 @@ export const Requirements = () => {
       estado: null,
       fechaSolicitud: null,
       idCliente: null,
+      idContactos: [],
+      idPerfiles: [],
+      idTalentos: [],
     });
   };
 
@@ -378,7 +431,7 @@ export const Requirements = () => {
       {/**Modal Details V3 */}
       {isModalOpen(MODAL_DETAILS_RQ) && (
         <ModalRQDetails
-          rqId={selectedRQ?.idRequerimiento || 0}
+          rqId={selectedRqId || 0}
           rqStates={rqState}
           onClose={() => closeModal(MODAL_DETAILS_RQ)}
           clients={clientesResponse?.clientes || []}
@@ -486,6 +539,45 @@ export const Requirements = () => {
                       : []
                   }
                   onChange={handleClienteChangeFilter}
+                />
+                <ContactFilter
+                  values={selectedContactos}
+                  onChange={handleContactosChange}
+                  isOpen={openDropdown === 2}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 2 ? null : 2)
+                  }
+                  clients={clientOptions}
+                  selectedClientId={selectedCliente}
+                />
+                <LookupFilter
+                  name="perfil"
+                  label="Perfil"
+                  values={selectedPerfiles}
+                  onChange={handlePerfilesChange}
+                  isOpen={openDropdown === 3}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 3 ? null : 3)
+                  }
+                  fetchOptions={getProfileFilterOptions}
+                  minChars={0}
+                  placeholder="Buscar perfil…"
+                  hint=""
+                />
+                <LookupFilter
+                  name="postulante"
+                  label="Postulante"
+                  values={selectedTalentos}
+                  onChange={handleTalentosChange}
+                  isOpen={openDropdown === 4}
+                  onToggle={() =>
+                    setOpenDropdown(openDropdown === 4 ? null : 4)
+                  }
+                  fetchOptions={getTalentFilterOptions}
+                  minChars={2}
+                  placeholder="Nombre o Doc. identidad…"
+                  hint="Escribe al menos 2 letras o números del documento."
+                  persona
                 />
                 <FilterDropDown
                   name="estado"
@@ -604,7 +696,7 @@ export const Requirements = () => {
                           {req.fechaSolicitud}
                         </td>
                         <td className="table-cell text-center">
-                          <EstadoBadge
+                          <EstadoRqBadge
                             idEstado={req.idEstado}
                             estado={req.estado}
                           />
