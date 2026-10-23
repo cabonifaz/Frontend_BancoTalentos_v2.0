@@ -4,12 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Loading } from "../../../core/components";
 import BackButton from "../../../core/components/ui/BackButton";
-import {
-  DropdownForm,
-  FormRow,
-  InputForm,
-} from "../../../core/components/forms";
-import { useParams } from "../../../core/context/ParamsContext";
+import { InputForm } from "../../../core/components/forms";
 import { useApi } from "../../../core/hooks/useApi";
 import {
   BaseResponseFMI,
@@ -25,17 +20,19 @@ import {
 import { enqueueSnackbar } from "notistack";
 import { saveTalentFMI } from "../../../core/services/talents.service";
 import useFetchTalento from "../../../core/hooks/talentos/useFetchTalento";
-import { format } from "date-fns";
 import { Dashboard } from "../Dashboard";
 
+/**
+ * Datos personales del talento observado en AsignarTalento. Los datos de
+ * colaborador (contrato, remuneración, modalidad, ubicación) no se piden aquí:
+ * se completan en el modal de confirmación.
+ */
 const PantallaDatos = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { talento } =
     (location.state as { talento: TalentoFMI }) || {};
 
-  const { paramsByMaestro, loading: loadingParams } =
-    useParams();
   const { talentoDetails, loading } = useFetchTalento(
     talento.idTalento
   ); // fmi
@@ -55,14 +52,10 @@ const PantallaDatos = () => {
 
   const goBack = () => navigate(-1);
 
-  const timeValues = paramsByMaestro[5] || [];
-  const currencyValues = paramsByMaestro[2] || [];
-  const modalityValues = paramsByMaestro[3] || [];
-
   const {
     control,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { errors },
     reset,
   } = useForm<DataFormType>({
     resolver: zodResolver(DataFormSchema),
@@ -74,13 +67,6 @@ const PantallaDatos = () => {
       telefono: "",
       dni: "",
       email: "",
-      tiempoContrato: 0,
-      idTiempoContrato: 0,
-      fechaInicioLabores: "",
-      // cargo: "",
-      remuneracion: 0,
-      idMoneda: 0,
-      idModalidad: 0,
       ubicacion: "",
     },
   });
@@ -94,18 +80,6 @@ const PantallaDatos = () => {
         telefono: talentoDetails?.celular || "",
         dni: talentoDetails?.dni || "",
         email: talentoDetails?.email || "",
-        tiempoContrato: talentoDetails?.tiempoContrato || 0,
-        idTiempoContrato: talentoDetails?.idTiempoContrato || 0,
-        fechaInicioLabores: talentoDetails?.fechaInicioLabores
-          ? format(
-              new Date(talentoDetails.fechaInicioLabores),
-              "yyyy-MM-dd"
-            )
-          : format(new Date(), "yyyy-MM-dd"),
-        // cargo: talentoDetails?.cargo || "",
-        remuneracion: talentoDetails?.remuneracion || 0,
-        idMoneda: talentoDetails?.idMoneda || 0,
-        idModalidad: talentoDetails?.idModalidad || 0,
         ubicacion: talentoDetails?.ubicacion || "",
       });
     }
@@ -118,7 +92,6 @@ const PantallaDatos = () => {
       idTalento: talento.idTalento,
       APELLIDO_PATERNO: talento.apellidoPaterno,
       apellidoMaterno: apellidoMaterno || "",
-      cargo: data?.cargo || "",
       ...cleanData,
     };
 
@@ -131,7 +104,6 @@ const PantallaDatos = () => {
 
   return (
     <Dashboard>
-      {loadingParams && <Loading opacity="opacity-60" />}
       {loading && <Loading opacity="opacity-60" />}
       {loadingSaveTalent && <Loading opacity="opacity-60" />}
       <div>
@@ -188,80 +160,6 @@ const PantallaDatos = () => {
             label="Correo personal"
             error={errors.email}
           />
-
-          <FormRow>
-            <InputForm
-              required={true}
-              name="tiempoContrato"
-              regex={/^\d*$/}
-              control={control}
-              label="Tiempo contrato"
-              type="number"
-              error={errors.tiempoContrato}
-            />
-            <DropdownForm
-              required={true}
-              name="idTiempoContrato"
-              control={control}
-              error={errors.idTiempoContrato}
-              options={
-                timeValues?.map((time) => ({
-                  value: time.num1,
-                  label: time.string1,
-                })) || []
-              }
-              flex={true}
-            />
-          </FormRow>
-
-          <InputForm
-            required={true}
-            name="fechaInicioLabores"
-            control={control}
-            label="Inicio de labores"
-            type="date"
-            error={errors.fechaInicioLabores}
-          />
-          {/*<InputForm required={true} name="cargo" control={control} label="Cargo" type="text" error={errors.cargo} />*/}
-
-          <FormRow>
-            <InputForm
-              required={true}
-              name="remuneracion"
-              regex={/^\d*(\.\d{0,2})?$/}
-              control={control}
-              label="Remuneración"
-              type="number"
-              error={errors.remuneracion}
-            />
-            <DropdownForm
-              required={true}
-              name="idMoneda"
-              control={control}
-              error={errors.idMoneda}
-              options={
-                currencyValues?.map((currency) => ({
-                  value: currency.num1,
-                  label: currency.string1,
-                })) || []
-              }
-              flex={true}
-            />
-          </FormRow>
-
-          <DropdownForm
-            required={true}
-            name="idModalidad"
-            control={control}
-            label="Modalidad"
-            error={errors.idModalidad}
-            options={
-              modalityValues?.map((modality) => ({
-                value: modality.num1,
-                label: modality.string1,
-              })) || []
-            }
-          />
           <InputForm
             required={true}
             name="ubicacion"
@@ -279,13 +177,9 @@ const PantallaDatos = () => {
             >
               Cancelar
             </button>
-            <button
-              type="submit"
-              className={`btn ${
-                isDirty ? "btn-primary" : "btn-disabled"
-              }`}
-              disabled={!isDirty}
-            >
+            {/* Sin exigir cambios: un talento con datos personales completos que
+                estaba Observado solo por los de colaborador pasa a Datos Completos al guardar */}
+            <button type="submit" className="btn btn-primary">
               Guardar
             </button>
           </div>

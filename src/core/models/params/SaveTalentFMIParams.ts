@@ -7,12 +7,5 @@ export interface SaveTalentFMIParams {
     telefono: string;
     dni: string;
     email: string;
-    tiempoContrato: number | null;
-    idTiempoContrato: number;
-    fechaInicioLabores: string;
-    cargo: string;
-    remuneracion: number | null;
-    idMoneda: number;
-    idModalidad: number;
     ubicacion: string;
 }
