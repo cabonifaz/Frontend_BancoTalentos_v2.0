@@ -66,6 +66,7 @@ import {
 } from "../../../core/components/lista-negra/ModalAddToBlacklist";
 import { useTalentBlacklistStatus } from "../../../core/hooks/lista-negra/useTalentBlacklistStatus";
 import { BotonEntrevistaTelefonica } from "../../../core/components/talentos/BotonEntrevistaTelefonica";
+import { BotonPostulaciones } from "../../../core/components/talentos/BotonPostulaciones";
 
 export const Talents = () => {
   const navigate = useNavigate();
@@ -952,6 +953,19 @@ export const Talents = () => {
 
                         {/* Entrevista telefónica: atajo sin pasar por un RQ */}
                         <BotonEntrevistaTelefonica
+                          idTalento={talent?.idTalento}
+                          nombreCompleto={[
+                            talent?.nombres,
+                            talent?.apellidoPaterno,
+                            talent?.apellidoMaterno,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")
+                            .trim()}
+                        />
+
+                        {/* Postulaciones: RQs a los que fue asignado */}
+                        <BotonPostulaciones
                           idTalento={talent?.idTalento}
                           nombreCompleto={[
                             talent?.nombres,
