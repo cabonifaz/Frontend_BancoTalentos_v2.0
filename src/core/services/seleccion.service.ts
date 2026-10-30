@@ -1,6 +1,6 @@
 import { ApiConfig } from "../hooks/useAsyncService";
 import { OperationResult } from "../models/response/BaseResponse";
-import { axiosInstanceFMI } from "./axiosService";
+import { axiosInstance } from "./axiosService";
 
 /** Filtros comunes de las estadísticas de Selección. Fechas en yyyy-MM-dd. */
 export interface SelectionFilter {
@@ -54,8 +54,8 @@ export const getSeleccionResumen = async (
   data: SelectionFilter,
   config?: ApiConfig,
 ) =>
-  axiosInstanceFMI.post<OperationResult<SelectionSummary>>(
-    "fmi/seleccion/resumen",
+  axiosInstance.post<OperationResult<SelectionSummary>>(
+    "bdt/seleccion/resumen",
     data,
     config,
   );
@@ -64,8 +64,8 @@ export const getSeleccionEntrevistas = async (
   data: SelectionFilter,
   config?: ApiConfig,
 ) =>
-  axiosInstanceFMI.post<OperationResult<SelectionInterviews>>(
-    "fmi/seleccion/entrevistas",
+  axiosInstance.post<OperationResult<SelectionInterviews>>(
+    "bdt/seleccion/entrevistas",
     data,
     config,
   );
@@ -74,8 +74,8 @@ export const getSeleccionIngresos = async (
   data: SelectionFilter,
   config?: ApiConfig,
 ) =>
-  axiosInstanceFMI.post<OperationResult<LabelCount[]>>(
-    "fmi/seleccion/ingresos",
+  axiosInstance.post<OperationResult<LabelCount[]>>(
+    "bdt/seleccion/ingresos",
     data,
     config,
   );
@@ -84,15 +84,15 @@ export const getSeleccionRendimiento = async (
   data: SelectionFilter,
   config?: ApiConfig,
 ) =>
-  axiosInstanceFMI.post<OperationResult<PerformanceRow[]>>(
-    "fmi/seleccion/rendimiento",
+  axiosInstance.post<OperationResult<PerformanceRow[]>>(
+    "bdt/seleccion/rendimiento",
     data,
     config,
   );
 
 /** Buscador de usuarios de selección (solo Admin, funcionalidad 2050). */
 export const getSeleccionUsuarios = async (filtro: string, config?: ApiConfig) =>
-  axiosInstanceFMI.get<OperationResult<SelectionUser[]>>(
-    "fmi/seleccion/usuarios",
+  axiosInstance.get<OperationResult<SelectionUser[]>>(
+    "bdt/seleccion/usuarios",
     { ...config, params: filtro ? { filtro } : undefined },
   );
