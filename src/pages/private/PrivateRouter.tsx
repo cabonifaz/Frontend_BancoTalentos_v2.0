@@ -32,6 +32,7 @@ const UserContact = lazy(() =>
 );
 const SeleccionPage = lazy(() => import("./seleccion/SeleccionPage"));
 const ExpedientePage = lazy(() => import("./expediente/ExpedientePage"));
+const AsistentePage = lazy(() => import("./asistente/AsistentePage"));
 const NoAuthorized = lazy(() =>
   import("./NoAuthorized").then((m) => ({ default: m.NoAuthorized })),
 );
@@ -64,6 +65,7 @@ export const PrivateRouter = () => {
         />
         <Route path="/mi-cuenta" element={<UserContact />} />
         <Route path="/seleccion" element={<SeleccionPage />} />
+        <Route path="/asistente" element={<AsistentePage />} />
         <Route path="/expediente" element={<ExpedientePage />} />
         <Route path="/expediente/:idTalento" element={<ExpedientePage />} />
       </Route>
