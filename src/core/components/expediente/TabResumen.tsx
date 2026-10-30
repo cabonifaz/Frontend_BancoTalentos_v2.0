@@ -162,6 +162,8 @@ export const TabResumen = ({ detalle }: Props) => {
                   { label: "Fin", valor: vigente.endDate },
                   { label: "Monto base", valor: vigente.baseAmount },
                   { label: "Modalidad", valor: vigente.contractType },
+                  { label: "Solicitud SCTR", valor: vigente.sctr === 1 ? "Sí" : vigente.sctr === 0 ? "No" : "Sin información" },
+                  { label: "Solicitud EMO", valor: vigente.emo === 1 ? "Sí" : vigente.emo === 0 ? "No" : "Sin información" },
                 ]
               : []
           }

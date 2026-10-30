@@ -34,6 +34,8 @@ export interface ExpedienteContrato {
   client?: string;
   rqCode?: string;
   rqTitle?: string;
+  sctr?: number | null;
+  emo?: number | null;
   /** dd/MM/yyyy */
   startDate?: string;
   /** dd/MM/yyyy */
