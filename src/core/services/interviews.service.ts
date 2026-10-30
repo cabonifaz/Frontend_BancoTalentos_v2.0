@@ -1,6 +1,6 @@
 import { ApiConfig } from "../hooks/useAsyncService";
 import { BaseResponseFMI, OperationResult } from "../models";
-import { axiosInstanceFMI } from "./axiosService";
+import { axiosInstance } from "./axiosService";
 
 export interface CreateInterviewType {
   idTalento: number;
@@ -22,8 +22,8 @@ export const createInterview = async (
   config?: ApiConfig,
 ) => {
   // Devuelve el id de la entrevista creada (data) para poder generar/subir el ICS.
-  return axiosInstanceFMI.post<OperationResult<number>>(
-    "fmi/interviews/create",
+  return axiosInstance.post<OperationResult<number>>(
+    "bdt/interviews/create",
     data,
     config,
   );
@@ -87,22 +87,22 @@ export const listInterviews = async (
   data: InterviewListRequest,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<
+  return axiosInstance.post<
     OperationResult<{
       items: InterviewResponseDTO[];
       totalElements: number;
       totalPages: number;
       currentPage: number;
     }>
-  >("fmi/interviews/list", data, config);
+  >("bdt/interviews/list", data, config);
 };
 
 // end List Interviews
 
 // Get Interview Detail
 export const getInterviewDetail = async (id: number, config?: ApiConfig) => {
-  return axiosInstanceFMI.get<OperationResult<InterviewDetailDTO>>(
-    `fmi/interviews/detail/${id}`,
+  return axiosInstance.get<OperationResult<InterviewDetailDTO>>(
+    `bdt/interviews/detail/${id}`,
     config,
   );
 };
@@ -138,8 +138,8 @@ export const updateInterview = async (
   data: UpdateInterviewPayload,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/update",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/update",
     data,
     config,
   );
@@ -160,8 +160,8 @@ export const uploadInterviewFile = async (
   formData.append("idFileType", data.idFileType.toString());
   formData.append("file", data.file);
 
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/file/upload",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/file/upload",
     formData,
     config,
   );
@@ -194,8 +194,8 @@ export const generateUploadUrl = async (
   data: GenerateUploadUrlPayload,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<GenerateUploadUrlResponse>(
-    "fmi/interviews/file/upload-url",
+  return axiosInstance.post<GenerateUploadUrlResponse>(
+    "bdt/interviews/file/upload-url",
     data,
     config,
   );
@@ -230,16 +230,16 @@ export const confirmUploadFile = async (
   data: ConfirmUploadPayload,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/file/confirm-upload",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/file/confirm-upload",
     data,
     config,
   );
 };
 
 export const downloadInterviewFile = async (fileId:number) => {
-  return axiosInstanceFMI.get(
-    `fmi/interviews/file/download/${fileId}`
+  return axiosInstance.get(
+    `bdt/interviews/file/download/${fileId}`
   );
 };
 
@@ -247,8 +247,8 @@ export const generateDownloadUrl = async (
   idFile: number,
   config?: ApiConfig,
 ): Promise<{ data: GenerateDownloadUrlResponse }> => {
-  return axiosInstanceFMI.post(
-    "fmi/interviews/file/download-url",
+  return axiosInstance.post(
+    "bdt/interviews/file/download-url",
     { idFile },
     { signal: config?.signal },
   );
@@ -258,8 +258,8 @@ export const deleteInterviewFile = async (
   fileId: number,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/file/remove",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/file/remove",
     null,
     {
       ...config,
@@ -291,8 +291,8 @@ export const saveInterviewQuestions = async (
   preguntas: InterviewQuestion[],
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/questions",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/questions",
     { idEntrevista, preguntas },
     config,
   );
@@ -303,8 +303,8 @@ export const updateInterviewQuestion = async (
   data: { idRespuesta: number; idPregunta: number; respuesta?: string | null },
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/questions/update",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/questions/update",
     data,
     config,
   );
@@ -315,8 +315,8 @@ export const deleteInterviewQuestion = async (
   idRespuesta: number,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.post<BaseResponseFMI>(
-    "fmi/interviews/questions/remove",
+  return axiosInstance.post<BaseResponseFMI>(
+    "bdt/interviews/questions/remove",
     null,
     { ...config, params: { idRespuesta } },
   );
@@ -327,8 +327,8 @@ export const listInterviewQuestions = async (
   idEntrevista: number,
   config?: ApiConfig,
 ) => {
-  return axiosInstanceFMI.get<OperationResult<InterviewQuestion[]>>(
-    `fmi/interviews/questions/${idEntrevista}`,
+  return axiosInstance.get<OperationResult<InterviewQuestion[]>>(
+    `bdt/interviews/questions/${idEntrevista}`,
     config,
   );
 };
@@ -356,8 +356,8 @@ export const listInterviewsByTalent = async (
 ) => {
   const tipo =
     idTipoEntrevista != null ? `&idTipoEntrevista=${idTipoEntrevista}` : "";
-  return axiosInstanceFMI.get<OperationResult<InterviewByTalent[]>>(
-    `fmi/interviews/by-talent?idTalento=${idTalento}${tipo}`,
+  return axiosInstance.get<OperationResult<InterviewByTalent[]>>(
+    `bdt/interviews/by-talent?idTalento=${idTalento}${tipo}`,
     config,
   );
 };
