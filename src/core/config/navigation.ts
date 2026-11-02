@@ -1,4 +1,4 @@
-import { Home, FileText, Angry, Users, Link2, User, BarChart3, FolderOpen } from "lucide-react";
+import { Home, FileText, Angry, Users, Link2, User, BarChart3, FolderOpen, Sparkles } from "lucide-react";
 import { NavModule } from "../models/interfaces/NavModule";
 import { Utils } from "../utilities/utils";
 
@@ -13,6 +13,7 @@ export const NAV_MODULES: NavModule[] = [
   { key: "lista-negra",    icon: Angry,    label: "Lista Negra",    path: "/dashboard/lista-negra" },
   { key: "entrevistas",    icon: Users,    label: "Entrevistas",    path: "/dashboard/entrevistas" },
   { key: "seleccion",      icon: BarChart3, label: "Selección",     path: "/dashboard/seleccion" },
+  { key: "asistente",      icon: Sparkles, label: "Asistente IA",   path: "/dashboard/asistente" },
   { key: "expediente",     icon: FolderOpen, label: "Expediente",    path: "/dashboard/expediente" },
   { key: "generar-enlace", icon: Link2,    label: "Generar enlace", path: "/dashboard/generarEnlaceRequerimiento" },
   { key: "mi-cuenta",      icon: User,     label: "Mi cuenta",      path: "/dashboard/mi-cuenta" },
