@@ -1,9 +1,9 @@
 /**
- * Asistente IA: contrato entre la pantalla y el backend que lo atenderá (RAG de
- * Fractal + MCP de BDT). OJO: ese backend todavía no está conectado y estos tipos
- * son una propuesta; hay que ajustarlos a lo que termine devolviendo el RAG.
- * En desarrollo responde una demo (asistente.demo.ts); fuera de desarrollo la
- * pantalla muestra el aviso de error.
+ * Asistente IA: conecta la pantalla con POST /api/v1/mcp/chat del RAG de Fractal,
+ * que consulta el MCP de BDT. Hoy el RAG responde solo texto y sin streaming; los
+ * demás eventos quedan listos para cuando devuelva resultados estructurados.
+ * OJO: la URL y los IDs están fijos en este archivo solo para probar en local, y el
+ * endpoint hoy no pide autenticación. Cada mensaje se procesa sin historial.
  */
 
 export interface TalentoResultado {
@@ -59,15 +59,45 @@ export type AsistenteEvento =
   | { tipo: "aviso"; aviso: AsistenteAviso; texto: string }
   | { tipo: "seguimiento"; preguntas: string[] };
 
+// Valores fijos solo para probar en local.
+const RAG_URL: string = "http://127.0.0.1:8000";
+const RAG_COMPANY_ID: number = 2007;
+const RAG_AREA_ID: number = 27;
+const INSTRUCCION_IDIOMA = "Responde siempre en español.";
+
+export interface MensajeHistorial {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export const enviarConsulta = async (
   mensaje: string,
+  historial: MensajeHistorial[],
   onEvento: (evento: AsistenteEvento) => void,
   signal: AbortSignal,
 ): Promise<void> => {
-  if (import.meta.env.DEV) {
-    const { responderDemo } = await import("./asistente.demo");
-    return responderDemo(mensaje, onEvento, signal);
+  if (!RAG_URL || !RAG_COMPANY_ID || !RAG_AREA_ID) {
+    throw new Error("Falta la configuración del Asistente IA.");
   }
 
-  throw new Error("El Asistente IA todavía no está conectado.");
+  onEvento({ tipo: "estado", texto: "Consultando Banco de Talentos…" });
+
+  const respuesta = await fetch(`${RAG_URL}/api/v1/mcp/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: `${mensaje}\n\n${INSTRUCCION_IDIOMA}`,
+      company_id: RAG_COMPANY_ID,
+      area_id: RAG_AREA_ID,
+      history: historial,
+    }),
+    signal,
+  });
+
+  if (!respuesta.ok) {
+    throw new Error(`El Asistente IA respondió HTTP ${respuesta.status}.`);
+  }
+
+  const data: { response: string } = await respuesta.json();
+  onEvento({ tipo: "texto", texto: data.response });
 };

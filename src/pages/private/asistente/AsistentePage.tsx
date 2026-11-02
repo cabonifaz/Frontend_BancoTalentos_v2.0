@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, Loader2, Lock, Plus, Search, Send, Sparkles } from "lucide-react";
+import { AlertCircle, Check, Loader2, Lock, Plus, Search, Send } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Dashboard } from "../Dashboard";
 import { AsistenteResultados } from "./AsistenteResultados";
 import {
@@ -7,7 +9,39 @@ import {
   AsistenteEvento,
   AsistenteResultado,
   enviarConsulta,
+  MensajeHistorial,
 } from "../../../core/services/asistente.service";
+
+const MAX_MENSAJES_HISTORIAL = 8;
+
+// El reset de Tailwind quita los estilos de listas y títulos: se definen aquí
+const ESTILOS_MARKDOWN = {
+  p: ({ node, ...props }: any) => <p className="leading-relaxed" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+  h1: ({ node, ...props }: any) => <h3 className="text-lg font-semibold" {...props} />,
+  h2: ({ node, ...props }: any) => <h3 className="text-base font-semibold" {...props} />,
+  h3: ({ node, ...props }: any) => <h4 className="font-semibold" {...props} />,
+  ul: ({ node, ordered, ...props }: any) => <ul className="flex list-disc flex-col gap-1 pl-5" {...props} />,
+  ol: ({ node, ordered, ...props }: any) => <ol className="flex list-decimal flex-col gap-1 pl-5" {...props} />,
+  li: ({ node, ordered, ...props }: any) => <li className="leading-relaxed" {...props} />,
+  a: ({ node, ...props }: any) => (
+    <a className="text-[var(--color-blue)] hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+  ),
+  code: ({ node, inline, ...props }: any) => (
+    <code className="rounded bg-gray-100 px-1 py-0.5 text-[13px] dark:bg-slate-700" {...props} />
+  ),
+  table: ({ node, ...props }: any) => (
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <table className="w-full border-collapse text-left" {...props} />
+    </div>
+  ),
+  th: ({ node, isHeader, ...props }: any) => (
+    <th className="border-b border-gray-200 px-3 py-2 font-semibold dark:border-slate-700" {...props} />
+  ),
+  td: ({ node, isHeader, ...props }: any) => (
+    <td className="border-b border-gray-100 px-3 py-2 dark:border-slate-700" {...props} />
+  ),
+};
 
 interface Mensaje {
   id: number;
@@ -99,6 +133,15 @@ export const AsistentePage = () => {
     const texto = pregunta.trim();
     if (!texto || enviando) return;
 
+    // Solo las preguntas que tuvieron respuesta, para no reenviar las que fallaron
+    const historial = mensajes
+      .filter((m) => m.texto)
+      .flatMap((m): MensajeHistorial[] => [
+        { role: "user", content: m.pregunta },
+        { role: "assistant", content: m.texto },
+      ])
+      .slice(-MAX_MENSAJES_HISTORIAL);
+
     const id = siguienteId.current++;
     const controller = new AbortController();
     abortRef.current = controller;
@@ -111,7 +154,7 @@ export const AsistentePage = () => {
     ]);
 
     try {
-      await enviarConsulta(texto, (evento) => aplicarEvento(id, evento), controller.signal);
+      await enviarConsulta(texto, historial, (evento) => aplicarEvento(id, evento), controller.signal);
       actualizar(id, (m) => ({ ...m, enCurso: false }));
     } catch {
       if (controller.signal.aborted) return;
@@ -139,25 +182,20 @@ export const AsistentePage = () => {
 
   return (
     <Dashboard>
-      <div className="-m-6 flex h-[calc(100%+3rem)] flex-col text-sm text-gray-800 dark:text-slate-100">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-6 py-3.5 dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-[#e6f5f5] text-[#00706f] dark:bg-teal-400/10 dark:text-teal-300">
-              <Sparkles className="h-[18px] w-[18px]" aria-hidden="true" />
-            </span>
-            <h1 className="text-base font-semibold">Asistente IA</h1>
-          </div>
+      <div className="flex h-full flex-col text-sm text-gray-800 dark:text-slate-100">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-semibold">Asistente IA</h2>
           <button
             type="button"
             onClick={nuevaConversacion}
-            className="flex h-11 items-center gap-2 rounded-lg border border-gray-400 px-3.5 font-medium hover:bg-gray-100 dark:border-slate-500 dark:hover:bg-slate-700"
+            className="btn btn-primary mx-0 flex h-10 items-center gap-2"
           >
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus size={18} strokeWidth={2} />
             Nueva conversación
           </button>
-        </header>
+        </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-7">
+        <div className="min-h-0 flex-1 overflow-y-auto py-6">
           <div className="mx-auto flex w-full max-w-[880px] flex-col gap-5" aria-live="polite">
             {mensajes.length === 0 && (
               <div className="pt-28 text-center">
@@ -187,13 +225,19 @@ export const AsistentePage = () => {
                         </div>
                       ))}
                       <div className="flex items-center gap-2.5 font-medium">
-                        <Loader2 className="h-4 w-4 flex-none animate-spin text-[#00706f] dark:text-teal-300" aria-hidden="true" />
+                        <Loader2 className="h-4 w-4 flex-none animate-spin text-[var(--color-primary)] dark:text-teal-300" aria-hidden="true" />
                         {hayPasos ? mensaje.pasos[mensaje.pasos.length - 1] : "Interpretando tu consulta…"}
                       </div>
                     </div>
                   )}
 
-                  {mensaje.texto && <p className="leading-relaxed">{mensaje.texto}</p>}
+                  {mensaje.texto && (
+                    <div className="flex flex-col gap-3">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} components={ESTILOS_MARKDOWN}>
+                        {mensaje.texto}
+                      </ReactMarkdown>
+                    </div>
+                  )}
 
                   {mensaje.resultado && (
                     <AsistenteResultados
@@ -239,7 +283,7 @@ export const AsistentePage = () => {
         </div>
 
         {/* El padding inferior evita que el logo fijo de Fractal tape el cuadro en pantallas angostas */}
-        <div className="px-6 pb-16 pt-1 xl:pb-[18px]">
+        <div className="pb-10 pt-1 xl:pb-0">
           <form onSubmit={onSubmit} className="mx-auto w-full max-w-[880px]">
             <label htmlFor="asistente-mensaje" className="sr-only">
               Escribe tu consulta
@@ -258,7 +302,7 @@ export const AsistentePage = () => {
                 type="submit"
                 aria-label="Enviar"
                 disabled={enviando || !entrada.trim()}
-                className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-[#00706f] text-white hover:bg-[#005f5e] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-11 flex-none items-center justify-center rounded-lg bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send className="h-[18px] w-[18px]" aria-hidden="true" />
               </button>
