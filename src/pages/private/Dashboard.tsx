@@ -12,6 +12,7 @@ import { LogOut, Moon, Sun, X } from "lucide-react";
 import { DashboardContext } from "../../core/context/DashboardContext";
 import { getAllowedModules } from "../../core/config/navigation";
 import { useTheme } from "../../core/context/ThemeContext";
+import { useAsistenteHabilitado } from "../../core/context/ParamsContext";
 
 interface Props {
   children: ReactNode;
@@ -32,6 +33,7 @@ export const Dashboard = ({ children }: Props) => {
   const navigate                       = useNavigate();
   const location                       = useLocation();
   const { isDark, toggleTheme }        = useTheme();
+  const { habilitado: asistenteOn }    = useAsistenteHabilitado();
 
   const themeLabel = isDark ? "Modo claro" : "Modo oscuro";
   const ThemeIcon  = isDark ? Sun : Moon;
@@ -151,7 +153,9 @@ export const Dashboard = ({ children }: Props) => {
   const fullName    = Utils.decodeJwt(token).fullname;
   const firstLetter = fullName.charAt(0);
   const rol         = Utils.decodeJwt(token).roles?.[0] ?? "";
-  const visibleNav  = getAllowedModules(Utils.getUserRoutes(token));
+  const visibleNav  = getAllowedModules(Utils.getUserRoutes(token)).filter(
+    (m) => m.key !== "asistente" || asistenteOn,
+  );
 
   if (redirect) return <Navigate to={"/login"} replace />;
 

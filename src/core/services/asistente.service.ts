@@ -2,9 +2,11 @@
  * Asistente IA: conecta la pantalla con POST /api/v1/mcp/chat del RAG de Fractal,
  * que consulta el MCP de BDT. Hoy el RAG responde solo texto y sin streaming; los
  * demás eventos quedan listos para cuando devuelva resultados estructurados.
- * OJO: la URL y los IDs están fijos en este archivo solo para probar en local, y el
- * endpoint hoy no pide autenticación. Cada mensaje se procesa sin historial.
+ * OJO: los IDs están fijos en este archivo solo para probar en local, y el endpoint
+ * hoy no pide autenticación.
  */
+
+import { BASE_URL_RAG } from "../utilities/constants";
 
 export interface TalentoResultado {
   idTalento: number;
@@ -60,7 +62,6 @@ export type AsistenteEvento =
   | { tipo: "seguimiento"; preguntas: string[] };
 
 // Valores fijos solo para probar en local.
-const RAG_URL: string = "http://127.0.0.1:8000";
 const RAG_COMPANY_ID: number = 2007;
 const RAG_AREA_ID: number = 27;
 const INSTRUCCION_IDIOMA = "Responde siempre en español.";
@@ -76,13 +77,13 @@ export const enviarConsulta = async (
   onEvento: (evento: AsistenteEvento) => void,
   signal: AbortSignal,
 ): Promise<void> => {
-  if (!RAG_URL || !RAG_COMPANY_ID || !RAG_AREA_ID) {
+  if (!RAG_COMPANY_ID || !RAG_AREA_ID) {
     throw new Error("Falta la configuración del Asistente IA.");
   }
 
   onEvento({ tipo: "estado", texto: "Consultando Banco de Talentos…" });
 
-  const respuesta = await fetch(`${RAG_URL}/api/v1/mcp/chat`, {
+  const respuesta = await fetch(`${BASE_URL_RAG}/api/v1/mcp/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, Loader2, Lock, Plus, Search, Send } from "lucide-react";
+import { AlertCircle, Check, Loader2, Lock, Plus, PowerOff, Search, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Dashboard } from "../Dashboard";
@@ -11,6 +11,7 @@ import {
   enviarConsulta,
   MensajeHistorial,
 } from "../../../core/services/asistente.service";
+import { useAsistenteHabilitado } from "../../../core/context/ParamsContext";
 
 const MAX_MENSAJES_HISTORIAL = 8;
 
@@ -92,10 +93,42 @@ const Aviso = ({
 );
 
 /**
- * Módulo Asistente IA (autorizado por ruta vía BD). Solo consulta información: la
- * conversación vive en memoria y se pierde al salir o al empezar una nueva.
+ * Módulo Asistente IA (autorizado por ruta vía BD y encendido con el NUM1 del
+ * maestro 57). Solo consulta información: la conversación vive en memoria y se
+ * pierde al salir o al empezar una nueva.
  */
 export const AsistentePage = () => {
+  const { habilitado, loading } = useAsistenteHabilitado();
+
+  if (loading || !habilitado) {
+    return (
+      <Dashboard>
+        <div className="flex h-full flex-col text-sm text-gray-800 dark:text-slate-100">
+          <h2 className="text-2xl font-semibold">Asistente IA</h2>
+          <div className="mx-auto w-full max-w-[880px] pt-28">
+            {loading ? (
+              <div className="flex items-center justify-center gap-2.5 text-gray-600 dark:text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin text-[var(--color-primary)] dark:text-teal-300" aria-hidden="true" />
+                Cargando…
+              </div>
+            ) : (
+              <Aviso
+                Icono={PowerOff}
+                color="text-gray-500 dark:text-slate-400"
+                titulo="El Asistente IA está desactivado"
+                texto="Este módulo no está disponible por el momento."
+              />
+            )}
+          </div>
+        </div>
+      </Dashboard>
+    );
+  }
+
+  return <AsistenteChat />;
+};
+
+const AsistenteChat = () => {
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [entrada, setEntrada] = useState("");
   const [enviando, setEnviando] = useState(false);

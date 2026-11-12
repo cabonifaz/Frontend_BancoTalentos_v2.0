@@ -2,6 +2,7 @@ export const BASE_URL = "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.can
 export const BASE_URL_FMI = "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net";
 //export const BASE_URL = "http://localhost:8080";
 //export const BASE_URL_FMI = "http://localhost:8081";
+export const BASE_URL_RAG = "http://127.0.0.1:8000";
 export const ARCHIVO_PDF = 1;
 export const ARCHIVO_IMAGEN = 0;
 export const DOCUMENTO_CV = 1;
@@ -93,6 +94,9 @@ export const DURACION_ENTREVISTA = "48";
 // Preguntas de la entrevista telefónica (maestro 55): NUM1 = ID_PREGUNTA,
 // string1 = texto de la pregunta. Se guardan en ENTREVISTAS_RESPUESTAS por id.
 export const PREGUNTA_ENTREVISTA = "55";
+// Interruptor del módulo Asistente IA (maestro 57): NUM1 = 1 lo activa; otro
+// valor o sin registro lo desactiva (se oculta del sidebar y no deja consultar).
+export const ASISTENTE_IA = "57";
 
 // Tipos de entrevista (valores en string1 del maestro 47). Se comparan de forma
 // normalizada (sin tildes/mayúsculas) para decidir el comportamiento condicional.
@@ -124,7 +128,7 @@ export const FORM_FILES_STORAGE_KEY = "addTalentFormFiles";
 
 // ALL PARAM IDS — single fetch on app load
 // El 9 (tipos de historial) lo usa el modal de Documentos del Expediente.
-export const ALL_PARAMS_IDS = "1,2,3,5,7,8,9,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54,55";
+export const ALL_PARAMS_IDS = "1,2,3,5,7,8,9,12,13,14,15,16,17,19,20,21,22,23,24,28,31,32,33,34,36,37,38,40,41,43,44,45,46,47,48,54,55,57";
 
 // El RECLUTADOR es el único rol al que se le ocultan las tarifas de un perfil
 // en la sección Perfiles de los modales de RQ (Agregar y Detalle).

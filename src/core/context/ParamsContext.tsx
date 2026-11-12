@@ -3,7 +3,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Param, ParamsResponse } from "../models";
 import { axiosInstanceNoToken } from "../services/axiosService";
-import { ALL_PARAMS_IDS } from "../utilities/constants";
+import { ALL_PARAMS_IDS, ASISTENTE_IA } from "../utilities/constants";
 
 const PARAMS_QUERY_KEY = ["params"];
 
@@ -50,6 +50,15 @@ export const useParams = () => {
     loading: isLoading,
     error: axios.isAxiosError(error) ? error.message : (error as Error)?.message ?? null,
     refetchParams,
+  };
+};
+
+/** Asistente IA activo solo si el NUM1 del maestro 57 es 1. */
+export const useAsistenteHabilitado = () => {
+  const { paramsByMaestro, loading } = useParams();
+  return {
+    habilitado: paramsByMaestro[ASISTENTE_IA]?.[0]?.num1 === 1,
+    loading,
   };
 };
 
