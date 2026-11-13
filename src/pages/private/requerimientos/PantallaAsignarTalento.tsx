@@ -99,6 +99,9 @@ interface TableRowProps {
   disabled: boolean;
 }
 
+const isPendingApproval = (talent: AsignarTalentoType) =>
+  talent.estado?.trim().toUpperCase() === "PENDIENTE DE APROBACIÓN";
+
 const TableRow: React.FC<TableRowProps> = ({
   talento,
   onRemove,
@@ -109,6 +112,8 @@ const TableRow: React.FC<TableRowProps> = ({
   disabled,
 }) => {
   const isConfirmedFromAPI = talento.isFromAPI && talento.confirmado;
+  const pendingApproval = isPendingApproval(talento);
+  const removeDisabled = disabled || isConfirmedFromAPI || pendingApproval;
   const isAceptado =
     talento.estado?.toUpperCase() === "DATOS COMPLETOS" ||
     talento.idEstado === 2;
@@ -165,7 +170,9 @@ const TableRow: React.FC<TableRowProps> = ({
       <td className="table-cell">
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${
-            isAceptado
+            pendingApproval
+              ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+              : isAceptado
               ? "bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300"
               : isObservado
               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/15 dark:text-yellow-300"
@@ -212,9 +219,9 @@ const TableRow: React.FC<TableRowProps> = ({
         </button>
         <button
           onClick={() => onRemove(talento.idTalento)}
-          disabled={disabled || isConfirmedFromAPI}
+          disabled={removeDisabled}
           className={`btn ${
-            disabled || isConfirmedFromAPI
+            removeDisabled
               ? "btn-disabled"
               : "btn-red"
           } text-sm`}
@@ -1049,6 +1056,7 @@ const TalentTable: React.FC = () => {
   // dejaría al talento asignado en BD. Los ya asignados y confirmados no llegan
   // aquí: para ellos el botón Remover está deshabilitado (isConfirmedFromAPI).
   const handleRemoveTalent = async (id: number) => {
+    if (localTalents.some((talent) => talent.idTalento === id && isPendingApproval(talent))) return;
     const nextTalents = localTalents.map((talent) =>
       talent.idTalento === id
         ? { ...talent, idEstadoRegistro: 0 } // marcar eliminado
@@ -1233,9 +1241,9 @@ const TalentTable: React.FC = () => {
           tieneEquipo: talent.tieneEquipo || 0,
           ubicacion: talent.ubicacion || saved.ubicacion || "",
           idMotivo: talent.idMotivo || saved.idMotivo || 0,
-          idMoneda: talent.idMoneda || saved.idMoneda || 1,
-          declararSunat: talent.declararSunat || saved.declararSunat || 0,
-          sedeDeclarar: talent.sedeDeclarar || saved.sedeDeclarar || "",
+          idMoneda: talent.idMoneda ?? saved.idMoneda ?? 1,
+          declararSunat: talent.declararSunat ?? saved.declararSunat ?? 0,
+          sedeDeclarar: talent.sedeDeclarar ?? saved.sedeDeclarar ?? "",
           montoBase: talent.montoBase || saved.montoBase || 0,
           montoMovilidad: talent.montoMovilidad || saved.montoMovilidad || 0,
           montoMensual: talent.montoMensual || saved.montoMensual || 0,
