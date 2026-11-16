@@ -1197,6 +1197,7 @@ const TalentTable: React.FC = () => {
         // los borran del talento. El estado de control (confirmado/estado/perfil) lo
         // manda el talento actual; los detalles de ingreso, el ref.
         const saved = confirmedByTalento.current[talent.idTalento] || {};
+        const tieneEquipo = saved.tieneEquipo ?? talent.tieneEquipo ?? 0;
         return {
           idTalento: talent.idTalento,
           nombres: talent.nombres,
@@ -1238,7 +1239,7 @@ const TalentTable: React.FC = () => {
           idModalidadContrato:
             talent.idModalidadContrato || saved.idModalidadContrato || 0,
           horario: talent.horario || saved.horario || "",
-          tieneEquipo: talent.tieneEquipo || 0,
+          tieneEquipo,
           ubicacion: talent.ubicacion || saved.ubicacion || "",
           idMotivo: talent.idMotivo || saved.idMotivo || 0,
           idMoneda: talent.idMoneda ?? saved.idMoneda ?? 1,
@@ -1251,7 +1252,9 @@ const TalentTable: React.FC = () => {
           montoSemestral: talent.montoSemestral || saved.montoSemestral || 0,
 
           solicitudEquipo:
-            talent?.solicitudEquipo || saved.solicitudEquipo || null,
+            tieneEquipo === 1
+              ? null
+              : saved.solicitudEquipo ?? talent.solicitudEquipo ?? null,
           idEstadoRegistro: talent?.idEstadoRegistro,
         };
       });
